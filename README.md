@@ -2,66 +2,6 @@
 
 ## Development
 
-### Copying a starter project
-
-1. Create a new public repository for your project (e.g. `new-repository`)
-2. Create a clone of the starter repo
-    ```
-    git clone --single-branch https://github.com/concord-consortium/starter-projects.git new-repository
-    ```
-3. Update the starter repo
-
-    First, update and run the starter project:
-    ```
-    cd new-repository
-    npm install
-    npm update
-    npm start
-    ```
-    Then, verify the project works by visiting [localhost:8080](http://localhost:8080) and checking for the words "Hello World".
-    Also verify that the test suite still passes:
-    ```
-    npm run test:full
-    ```
-    If the updates are functional, please commit any changes to `package.json` or `package-lock.json` back to the
-    Starter Projects repository for future use.
-
-4. Next, re-initialize the repo to create a new history
-    ```
-    rm -rf .git
-    git init
-    ```
-5. Create an initial commit for your new project
-    ```
-    git add .
-    git commit -m "Initial commit"
-    ```
-6. Push to your new repository
-    ```
-    git remote add origin https://github.com/concord-consortium/new-repository.git
-    git push -u origin main
-    ```
-7. Open your new repository and update all instances of `starter-projects` to `new-repository` and `Starter Projects` to `New Repository`.
-8. Set up S3 deployment by running `./scripts/create-deploy-role.sh new-repository` (requires AWS CLI credentials).
-   This creates the IAM role for OIDC-based deployment and updates `ci.yml` with the correct role ARN.
-   See [doc/deploy-setup.md](doc/deploy-setup.md) for details.
-9. Delete `doc/deploy-setup.md` and `scripts/create-deploy-role.sh` from your new repo. The canonical versions
-   of these files live in `starter-projects` and don't need to be duplicated.
-10. To record code coverage information to codecov.io:
-    - go to https://codecov.io/
-    - login with your GitHub credentials
-    - find your new repository
-    - go to the settings for this repository and copy the CODECOV_TOKEN, and create a secret in the GitHub repository's settings.
-11. Set up a GitHub autolink reference so that Jira issue references (e.g. `OE-123`) in commits, PRs, and issues automatically link to Jira:
-    ```
-    gh api --method POST repos/concord-consortium/new-repository/autolinks \
-      -f key_prefix="<JIRA_PREFIX>-" \
-      -f url_template="https://concord-consortium.atlassian.net/browse/<JIRA_PREFIX>-<num>" \
-      -F is_alphanumeric=false
-    ```
-    Replace `new-repository` with the actual repository name and `<JIRA_PREFIX>` with the Jira project prefix (e.g. `OE`).
-12. Your new repository is ready! Remove this section of the `README`, and follow the steps below to use it.
-
 ### Initial steps
 
 1. Clone this repo and `cd` into it
