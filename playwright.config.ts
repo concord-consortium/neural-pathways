@@ -4,7 +4,7 @@ import path from "path";
 
 const rootDir = __dirname;
 
-process.env.REPOSITORY_NAME = process.env.REPOSITORY_NAME || "starter-projects";
+process.env.REPOSITORY_NAME = process.env.REPOSITORY_NAME || "neural-pathways";
 process.env.BONJOUR_SERVICE_NAME = process.env.BONJOUR_SERVICE_NAME || process.env.REPOSITORY_NAME;
 
 const collectCoverage = !!process.env.CI;

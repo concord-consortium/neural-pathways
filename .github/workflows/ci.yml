@@ -56,16 +56,16 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v4
         if: always()
         with:
-          role-to-assume: arn:aws:iam::612297603577:role/starter-projects
+          role-to-assume: arn:aws:iam::612297603577:role/neural-pathways
           aws-region: us-east-1
       - name: Upload Playwright Report
         if: always()
-        run: aws s3 sync ./playwright-report s3://models-resources/starter-projects/playwright-report/${{ steps.s3-deploy-path.outputs.deployPath }} --delete --cache-control "no-cache, max-age=0"
+        run: aws s3 sync ./playwright-report s3://models-resources/neural-pathways/playwright-report/${{ steps.s3-deploy-path.outputs.deployPath }} --delete --cache-control "no-cache, max-age=0"
       - uses: daun/playwright-report-summary@v3
         if: always()
         with:
           report-file: test-results/results.json
-          report-url: https://models-resources.concord.org/starter-projects/playwright-report/${{ steps.s3-deploy-path.outputs.deployPath }}/
+          report-url: https://models-resources.concord.org/neural-pathways/playwright-report/${{ steps.s3-deploy-path.outputs.deployPath }}/
   s3-deploy:
     name: S3 Deploy
     needs:
@@ -83,15 +83,15 @@ jobs:
         run: npm ci
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::612297603577:role/starter-projects
+          role-to-assume: arn:aws:iam::612297603577:role/neural-pathways
           aws-region: us-east-1
       - uses: concord-consortium/s3-deploy-action@v1
         id: s3-deploy
         with:
           bucket: models-resources
-          prefix: starter-projects
+          prefix: neural-pathways
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          deployRunUrl: https://models-resources.concord.org/starter-projects/__deployPath__/index.html
+          deployRunUrl: https://models-resources.concord.org/neural-pathways/__deployPath__/index.html
           # Parameters to GHActions have to be strings, so a regular yaml array cannot
           # be used. Instead the `|` turns the following lines into a string
           topBranches: |

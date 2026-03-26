@@ -37,7 +37,7 @@ module.exports = (env, argv) => {
         },
       },
       bonjour: {
-        name: process.env.BONJOUR_SERVICE_NAME || 'starter-projects',
+        name: process.env.BONJOUR_SERVICE_NAME || 'neural-pathways',
       },
     },
     devtool: devMode ? 'eval-cheap-module-source-map' : 'source-map',

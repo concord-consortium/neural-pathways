@@ -8,7 +8,7 @@ on:
 run-name: Release ${{ github.event.inputs.version }}
 env:
   BUCKET: models-resources
-  PREFIX: starter-projects
+  PREFIX: neural-pathways
   SRC_FILE: index-top.html
   DEST_FILE: index.html
 jobs:
