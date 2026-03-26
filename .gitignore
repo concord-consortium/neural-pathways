@@ -1,0 +1,12 @@
+coverage
+dist
+node_modules
+npm-error.log
+top-test
+.DS_Store
+playwright-report
+test-results
+
+# Editors
+.idea
+
