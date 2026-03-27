@@ -9,6 +9,14 @@
   color: #888;
   padding-top: 8px;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scored-pathways-legend {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .animation-controls {

@@ -21,6 +21,7 @@ interface ScoredPathwaysViewProps {
   scaleType: ScaleType;
   valueScaling: ValueScaling;
   showStats: boolean;
+  legend?: React.ReactNode;
 }
 
 const NUM_PHASES = 5;
@@ -32,7 +33,7 @@ function phaseProgress(progress: number, phase: number): number {
 }
 
 export const ScoredPathwaysView: React.FC<ScoredPathwaysViewProps> = ({
-  scoredPathways, absMax, scaleType, valueScaling, showStats
+  scoredPathways, absMax, scaleType, valueScaling, showStats, legend
 }) => {
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -172,7 +173,10 @@ export const ScoredPathwaysView: React.FC<ScoredPathwaysViewProps> = ({
 
   return (
     <div className="scored-pathways-section">
-      <div className="scored-pathways-label">Scored pathways (pattern x score)</div>
+      <div className="scored-pathways-label">
+        Scored pathways (pattern x score)
+        {legend && <span className="scored-pathways-legend">{legend}</span>}
+      </div>
 
       <div className="animation-controls">
         <button className="play-pause-btn" onClick={handlePlayPause}>

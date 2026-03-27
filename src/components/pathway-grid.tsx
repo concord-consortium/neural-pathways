@@ -4,30 +4,28 @@ import { PathwayScoreInput } from "./pathway-score-input";
 import { ScaleType, ValueScaling } from "../utils/color-scale";
 import "./pathway-grid.scss";
 
-interface PathwayGridProps {
+function pathwayColumnTemplate(nPathways: number): string {
+  const nColumns = 2 * nPathways - 1;
+  return Array.from({ length: nColumns }, (_, i) => {
+    if (i % 2 === 0) return "auto";
+    return "20px";
+  }).join(" ");
+}
+
+interface PathwayPatternsProps {
   components: number[][];
-  pathwayScores: number[];
-  originalScores: number[];
   absMax: number;
   scaleType: ScaleType;
   valueScaling: ValueScaling;
   showStats: boolean;
-  onScoreChange: (pathwayIndex: number, value: number) => void;
+  legend?: React.ReactNode;
 }
 
-export const PathwayGrid: React.FC<PathwayGridProps> = ({
-  components, pathwayScores, originalScores,
-  absMax, scaleType, valueScaling, showStats, onScoreChange
+export const PathwayPatterns: React.FC<PathwayPatternsProps> = ({
+  components, absMax, scaleType, valueScaling, showStats, legend
 }) => {
   const nPathways = components.length;
-  // Columns: P1, +, P2, +, ..., +, P6
-  // nPathways heatmap cols + (nPathways - 1) operator cols = 2*nPathways - 1
-  const nColumns = 2 * nPathways - 1;
-
-  const columnTemplate = Array.from({ length: nColumns }, (_, i) => {
-    if (i % 2 === 0) return "auto"; // heatmap column
-    return "20px";                  // operator column (+)
-  }).join(" ");
+  const columnTemplate = pathwayColumnTemplate(nPathways);
 
   return (
     <div className="pathway-grid" style={{ gridTemplateColumns: columnTemplate }}>
@@ -40,7 +38,10 @@ export const PathwayGrid: React.FC<PathwayGridProps> = ({
       ))}
 
       {/* Row label: Unscored */}
-      <div className="pathway-grid-row-label">Pathway patterns (unscored)</div>
+      <div className="pathway-grid-row-label">
+        Pathway patterns (unscored)
+        {legend && <span className="pathway-grid-legend">{legend}</span>}
+      </div>
 
       {/* Unscored heatmaps row */}
       {components.map((comp, i) => (
@@ -52,7 +53,24 @@ export const PathwayGrid: React.FC<PathwayGridProps> = ({
           {i < nPathways - 1 && <div className="pathway-grid-empty" />}
         </React.Fragment>
       ))}
+    </div>
+  );
+};
 
+interface PathwayScoresRowProps {
+  pathwayScores: number[];
+  originalScores: number[];
+  onScoreChange: (pathwayIndex: number, value: number) => void;
+}
+
+export const PathwayScoresRow: React.FC<PathwayScoresRowProps> = ({
+  pathwayScores, originalScores, onScoreChange
+}) => {
+  const nPathways = pathwayScores.length;
+  const columnTemplate = pathwayColumnTemplate(nPathways);
+
+  return (
+    <div className="pathway-grid" style={{ gridTemplateColumns: columnTemplate }}>
       {/* Row label: Scores */}
       <div className="pathway-grid-row-label">Pathway scores for this review</div>
 
@@ -67,7 +85,6 @@ export const PathwayGrid: React.FC<PathwayGridProps> = ({
           {i < nPathways - 1 && <div className="pathway-grid-empty" />}
         </React.Fragment>
       ))}
-
     </div>
   );
 };

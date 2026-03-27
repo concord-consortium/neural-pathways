@@ -20,6 +20,14 @@
   color: #888;
   grid-column: 1 / -1;
   padding-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pathway-grid-legend {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .pathway-grid-operator {

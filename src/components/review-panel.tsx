@@ -6,10 +6,11 @@ interface ReviewPanelProps {
   reviews: Review[];
   selectedIndex: number;
   onSelectReview: (index: number) => void;
+  children?: React.ReactNode;
 }
 
 export const ReviewPanel: React.FC<ReviewPanelProps> = ({
-  reviews, selectedIndex, onSelectReview
+  reviews, selectedIndex, onSelectReview, children
 }) => {
   const review = reviews[selectedIndex];
 
@@ -37,6 +38,7 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
 
       <div className="review-text">{review.text}</div>
 
+      {children}
     </div>
   );
 };
