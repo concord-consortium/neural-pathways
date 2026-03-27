@@ -2,8 +2,15 @@ import React, { useRef, useEffect, useMemo } from "react";
 import { ScaleType, getPointStyle } from "../utils/color-scale";
 import "./heatmap.scss";
 
-const COLS = 26;
-const ROWS = 30;
+/**
+ * Choose grid dimensions for n items, aiming for a roughly square grid
+ * that is slightly taller than wide.
+ */
+function gridDimensions(n: number): { cols: number; rows: number } {
+  const cols = Math.round(Math.sqrt(n * 0.85));
+  const rows = Math.ceil(n / cols);
+  return { cols, rows };
+}
 
 interface HeatmapProps {
   data: number[];
@@ -17,9 +24,10 @@ interface HeatmapProps {
 export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, showStats, label, size = 130 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const cellSize = size / COLS;
+  const { cols, rows } = useMemo(() => gridDimensions(data.length), [data.length]);
+  const cellSize = size / cols;
   const canvasWidth = size;
-  const canvasHeight = Math.round(cellSize * ROWS);
+  const canvasHeight = Math.round(cellSize * rows);
   const radius = cellSize / 2;
 
   const stats = useMemo(() => {
@@ -46,9 +54,9 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, showS
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    for (let i = 0; i < data.length && i < COLS * ROWS; i++) {
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
+    for (let i = 0; i < data.length && i < cols * rows; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
       const cx = col * cellSize + radius;
       const cy = row * cellSize + radius;
 
@@ -62,7 +70,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, showS
         ctx.fill();
       }
     }
-  }, [data, absMax, scaleType, canvasWidth, canvasHeight, cellSize, radius]);
+  }, [data, absMax, scaleType, canvasWidth, canvasHeight, cellSize, radius, cols, rows]);
 
   return (
     <div className="heatmap-container">

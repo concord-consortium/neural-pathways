@@ -11,7 +11,6 @@ describe("App component", () => {
   it("renders pathway headers", () => {
     render(<App/>);
     expect(screen.getByText("P1")).toBeDefined();
-    expect(screen.getByText("P6")).toBeDefined();
   });
 
   it("renders the scale selector", () => {

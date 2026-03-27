@@ -136,7 +136,7 @@ export const ScoredPathwaysView: React.FC<ScoredPathwaysViewProps> = ({
   }, [scoredPathways, t4, n]);
 
   const lastIdx = n - 1;
-  const p6LeftX = lastIdx * (HEATMAP_WIDTH + GAP);
+  const lastLeftX = lastIdx * (HEATMAP_WIDTH + GAP);
 
   const getHeatmapStyle = (i: number) => {
     const originalLeftX = i * (HEATMAP_WIDTH + GAP);
@@ -156,7 +156,7 @@ export const ScoredPathwaysView: React.FC<ScoredPathwaysViewProps> = ({
     let worldZ: number;
 
     if (t4 > 0) {
-      worldX = phase3EndX + (p6LeftX - phase3EndX) * t4;
+      worldX = phase3EndX + (lastLeftX - phase3EndX) * t4;
       worldZ = phase3EndZ + (0 - phase3EndZ) * t4;
     } else {
       worldX = originalLeftX + slideX;
