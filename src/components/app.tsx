@@ -13,8 +13,8 @@ import "./app.scss";
 const data = vizData as VizData;
 
 const scaleOptions: { value: ScaleType; label: string }[] = [
-  { value: "blue-gray-red", label: "Fixed size: blue → gray → red" },
   { value: "blue-white-red", label: "Fixed size: blue → white → red" },
+  { value: "blue-gray-red", label: "Fixed size: blue → gray → red" },
   { value: "size-based", label: "Size based on value" },
 ];
 
@@ -22,7 +22,8 @@ export const App = () => {
   const [selectedReviewIndex, setSelectedReviewIndex] = useState(0);
   const [scoreOverrides, setScoreOverrides] = useState<Record<number, number>>({});
   const [overridesForReview, setOverridesForReview] = useState(0);
-  const [scaleType, setScaleType] = useState<ScaleType>("blue-gray-red");
+  const [scaleType, setScaleType] = useState<ScaleType>("blue-white-red");
+  const [showStats, setShowStats] = useState(false);
 
   const review = data.reviews[selectedReviewIndex];
 
@@ -73,7 +74,7 @@ export const App = () => {
       {/* Row 1, Col 2: Pathway grid */}
       <div className="pathway-grid-container">
         <div className="toolbar">
-          <ColorLegend absMax={absMax} scaleType={scaleType} />
+          <ColorLegend absMax={absMax} scaleType={scaleType} showStats={showStats} />
           <select
             className="scale-selector"
             value={scaleType}
@@ -83,6 +84,10 @@ export const App = () => {
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
+          <label className="stats-toggle">
+            <input type="checkbox" checked={showStats} onChange={e => setShowStats(e.target.checked)} />
+            Show stats
+          </label>
         </div>
         <PathwayGrid
           components={data.pathways.components}
@@ -91,6 +96,7 @@ export const App = () => {
           scoredPathways={scoredPathways}
           absMax={absMax}
           scaleType={scaleType}
+          showStats={showStats}
           onScoreChange={handleScoreChange}
         />
         <div className="comparison-equals">=</div>
@@ -98,12 +104,12 @@ export const App = () => {
       {/* Row 2, Col 1: Original activations */}
       <div className="comparison-original">
         <div className="comparison-section-label">Original Activations</div>
-        <Heatmap data={review.activations_standardized} absMax={absMax} scaleType={scaleType} />
+        <Heatmap data={review.activations_standardized} absMax={absMax} scaleType={scaleType} showStats={showStats} />
       </div>
       {/* Row 2, Col 2: Sum */}
       <div className="comparison-result">
         <div className="comparison-section-label">Sum</div>
-        <Heatmap data={sumActivations} absMax={absMax} scaleType={scaleType} />
+        <Heatmap data={sumActivations} absMax={absMax} scaleType={scaleType} showStats={showStats} />
       </div>
     </div>
   );

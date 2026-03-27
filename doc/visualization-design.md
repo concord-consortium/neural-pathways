@@ -61,8 +61,8 @@ All heatmaps have a **white background** so the heatmap boundary is visible even
 
 A dropdown lets the user switch between three rendering scales:
 
-- **Fixed size: blue → gray → red** — The default. Circle size is constant; color interpolates from blue (negative) through gray (zero) to red (positive). Gray midpoint makes zero values blend into the neutral background.
-- **Fixed size: blue → white → red** — Same as above but with white as the zero midpoint. The white heatmap background ensures zero-valued circles are invisible, making non-zero activations stand out more clearly.
+- **Fixed size: blue → white → red** — The default. Circle size is constant; color interpolates from blue (negative) through white (zero) to red (positive). The white heatmap background makes zero-valued circles invisible, so non-zero activations stand out clearly.
+- **Fixed size: blue → gray → red** — Same as above but with gray as the zero midpoint. Gray circles are visible against the white background, showing all neuron positions regardless of value.
 - **Size based on value** — Circle radius scales with the absolute magnitude of the value. Color is a fixed shade of blue (negative) or red (positive). Near-zero values shrink to nothing, emphasizing strong activations.
 
 All scales share a single **fixed range** symmetric around zero, computed from the global min/max across all displayed data. The range updates when pathway scores change.
@@ -74,6 +74,9 @@ A dropdown selects among the 10 reviews. Changing the review resets all pathway 
 
 ### Editable Pathway Scores
 Each pathway score has a numeric input and a range slider (range: -3 to +3). Users can "mess up" the equation by changing scores to see how it affects the sum. A reset button appears when a score differs from its original value.
+
+### Show Stats
+A toolbar checkbox toggles display of per-heatmap statistics (min, max, absMax) below each heatmap. When enabled, the color legend also shows the numeric range instead of "cold"/"hot" labels.
 
 ### Future Interactions (not yet implemented)
 - **Animated stacking**: Animate pathways being added one at a time

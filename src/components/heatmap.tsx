@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { ScaleType, getPointStyle } from "../utils/color-scale";
 import "./heatmap.scss";
 
@@ -9,17 +9,29 @@ interface HeatmapProps {
   data: number[];
   absMax: number;
   scaleType: ScaleType;
+  showStats?: boolean;
   label?: string;
   size?: number; // CSS width of the canvas in pixels; height scales proportionally
 }
 
-export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, label, size = 130 }) => {
+export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, showStats, label, size = 130 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const cellSize = size / COLS;
   const canvasWidth = size;
   const canvasHeight = Math.round(cellSize * ROWS);
   const radius = cellSize / 2;
+
+  const stats = useMemo(() => {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const v of data) {
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    const localAbsMax = Math.max(Math.abs(min), Math.abs(max));
+    return { min, max, absMax: localAbsMax };
+  }, [data]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -60,6 +72,13 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, label
         style={{ width: canvasWidth, height: canvasHeight }}
         className="heatmap-canvas"
       />
+      {showStats && (
+        <div className="heatmap-stats">
+          <div>min: {stats.min.toFixed(3)}</div>
+          <div>max: {stats.max.toFixed(3)}</div>
+          <div>absMax: {stats.absMax.toFixed(3)}</div>
+        </div>
+      )}
     </div>
   );
 };

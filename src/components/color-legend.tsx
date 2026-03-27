@@ -5,12 +5,13 @@ import "./color-legend.scss";
 interface ColorLegendProps {
   absMax: number;
   scaleType: ScaleType;
+  showStats?: boolean;
   width?: number;
   height?: number;
 }
 
 export const ColorLegend: React.FC<ColorLegendProps> = ({
-  absMax, scaleType, width = 200, height = 14
+  absMax, scaleType, showStats, width = 200, height = 14
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -52,14 +53,14 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
 
   return (
     <div className="color-legend">
-      <span className="color-legend-label">cold</span>
+      <span className="color-legend-label">{showStats ? (-absMax).toFixed(2) : "cold"}</span>
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
         className="color-legend-bar"
       />
-      <span className="color-legend-label">hot</span>
+      <span className="color-legend-label">{showStats ? absMax.toFixed(2) : "hot"}</span>
     </div>
   );
 };
