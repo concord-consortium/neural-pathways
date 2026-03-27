@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import { Heatmap } from "./heatmap";
-import { ScaleType } from "../utils/color-scale";
+import { ScaleType, ValueScaling } from "../utils/color-scale";
 import "./scored-pathways-view.scss";
 
 const HEATMAP_WIDTH = 130;
@@ -19,6 +19,7 @@ interface ScoredPathwaysViewProps {
   scoredPathways: number[][];
   absMax: number;
   scaleType: ScaleType;
+  valueScaling: ValueScaling;
   showStats: boolean;
 }
 
@@ -31,7 +32,7 @@ function phaseProgress(progress: number, phase: number): number {
 }
 
 export const ScoredPathwaysView: React.FC<ScoredPathwaysViewProps> = ({
-  scoredPathways, absMax, scaleType, showStats
+  scoredPathways, absMax, scaleType, valueScaling, showStats
 }) => {
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -213,7 +214,10 @@ export const ScoredPathwaysView: React.FC<ScoredPathwaysViewProps> = ({
                 className="scored-pathway-item"
                 style={style}
               >
-                <Heatmap data={data} absMax={absMax} scaleType={scaleType} showStats={showStats} />
+                <Heatmap
+                  data={data} absMax={absMax} scaleType={scaleType}
+                  valueScaling={valueScaling} showStats={showStats}
+                />
               </div>
             );
           })}

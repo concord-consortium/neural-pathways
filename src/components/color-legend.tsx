@@ -1,17 +1,18 @@
 import React, { useRef, useEffect } from "react";
-import { ScaleType, getPointStyle } from "../utils/color-scale";
+import { ScaleType, ValueScaling, getPointStyle } from "../utils/color-scale";
 import "./color-legend.scss";
 
 interface ColorLegendProps {
   absMax: number;
   scaleType: ScaleType;
+  valueScaling: ValueScaling;
   showStats?: boolean;
   width?: number;
   height?: number;
 }
 
 export const ColorLegend: React.FC<ColorLegendProps> = ({
-  absMax, scaleType, showStats, width = 200, height = 14
+  absMax, scaleType, valueScaling, showStats, width = 200, height = 14
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -24,13 +25,12 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
     ctx.clearRect(0, 0, width, height);
 
     if (scaleType === "size-based") {
-      // Draw circles of varying size
       const nDots = 20;
       const dotSpacing = width / nDots;
       const maxR = height / 2;
       for (let i = 0; i < nDots; i++) {
         const value = ((i / (nDots - 1)) * 2 - 1) * absMax;
-        const style = getPointStyle(value, absMax, scaleType);
+        const style = getPointStyle(value, absMax, scaleType, valueScaling);
         const cx = i * dotSpacing + dotSpacing / 2;
         const cy = height / 2;
         const r = maxR * style.radiusScale;
@@ -44,12 +44,12 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
     } else {
       for (let x = 0; x < width; x++) {
         const value = ((x / (width - 1)) * 2 - 1) * absMax;
-        const style = getPointStyle(value, absMax, scaleType);
+        const style = getPointStyle(value, absMax, scaleType, valueScaling);
         ctx.fillStyle = style.color;
         ctx.fillRect(x, 0, 1, height);
       }
     }
-  }, [absMax, scaleType, width, height]);
+  }, [absMax, scaleType, valueScaling, width, height]);
 
   return (
     <div className="color-legend">

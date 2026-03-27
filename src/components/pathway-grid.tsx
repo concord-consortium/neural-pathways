@@ -1,22 +1,23 @@
 import React from "react";
 import { Heatmap } from "./heatmap";
 import { PathwayScoreInput } from "./pathway-score-input";
-import { ScaleType } from "../utils/color-scale";
+import { ScaleType, ValueScaling } from "../utils/color-scale";
 import "./pathway-grid.scss";
 
 interface PathwayGridProps {
-  components: number[][];       // 6 x 780
-  pathwayScores: number[];      // current (possibly edited) scores
-  originalScores: number[];     // original scores for the selected review
+  components: number[][];
+  pathwayScores: number[];
+  originalScores: number[];
   absMax: number;
   scaleType: ScaleType;
+  valueScaling: ValueScaling;
   showStats: boolean;
   onScoreChange: (pathwayIndex: number, value: number) => void;
 }
 
 export const PathwayGrid: React.FC<PathwayGridProps> = ({
   components, pathwayScores, originalScores,
-  absMax, scaleType, showStats, onScoreChange
+  absMax, scaleType, valueScaling, showStats, onScoreChange
 }) => {
   const nPathways = components.length;
   // Columns: P1, +, P2, +, ..., +, P6
@@ -44,7 +45,10 @@ export const PathwayGrid: React.FC<PathwayGridProps> = ({
       {/* Unscored heatmaps row */}
       {components.map((comp, i) => (
         <React.Fragment key={`unscored-${i}`}>
-          <Heatmap data={comp} absMax={absMax} scaleType={scaleType} showStats={showStats} />
+          <Heatmap
+            data={comp} absMax={absMax} scaleType={scaleType}
+            valueScaling={valueScaling} showStats={showStats}
+          />
           {i < nPathways - 1 && <div className="pathway-grid-empty" />}
         </React.Fragment>
       ))}

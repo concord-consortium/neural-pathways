@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { VizData } from "../types/viz-data";
-import { ScaleType, computeAbsMax } from "../utils/color-scale";
+import { ScaleType, ValueScaling, computeAbsMax } from "../utils/color-scale";
 import { computeScoredPathway, computeSum } from "../utils/reconstruction";
 import { ReviewPanel } from "./review-panel";
 import { PathwayGrid } from "./pathway-grid";
@@ -16,7 +16,14 @@ const data = vizData as VizData;
 const scaleOptions: { value: ScaleType; label: string }[] = [
   { value: "blue-white-red", label: "Fixed size: blue → white → red" },
   { value: "blue-gray-red", label: "Fixed size: blue → gray → red" },
+  { value: "multi-hue", label: "Multi-hue: blue → cyan → white → yellow → red" },
   { value: "size-based", label: "Size based on value" },
+];
+
+const scalingOptions: { value: ValueScaling; label: string }[] = [
+  { value: "linear", label: "Linear" },
+  { value: "exponential", label: "Exponential" },
+  { value: "logarithmic", label: "Logarithmic" },
 ];
 
 export const App = () => {
@@ -24,6 +31,7 @@ export const App = () => {
   const [scoreOverrides, setScoreOverrides] = useState<Record<number, number>>({});
   const [overridesForReview, setOverridesForReview] = useState(0);
   const [scaleType, setScaleType] = useState<ScaleType>("blue-white-red");
+  const [valueScaling, setValueScaling] = useState<ValueScaling>("linear");
   const [showStats, setShowStats] = useState(false);
 
   const review = data.reviews[selectedReviewIndex];
@@ -81,13 +89,22 @@ export const App = () => {
       {/* Row 1, Col 2: Pathway grid */}
       <div className="pathway-grid-container">
         <div className="toolbar">
-          <ColorLegend absMax={absMax} scaleType={scaleType} showStats={showStats} />
+          <ColorLegend absMax={absMax} scaleType={scaleType} valueScaling={valueScaling} showStats={showStats} />
           <select
             className="scale-selector"
             value={scaleType}
             onChange={e => setScaleType(e.target.value as ScaleType)}
           >
             {scaleOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <select
+            className="scale-selector"
+            value={valueScaling}
+            onChange={e => setValueScaling(e.target.value as ValueScaling)}
+          >
+            {scalingOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
@@ -102,6 +119,7 @@ export const App = () => {
           originalScores={review.pathway_scores}
           absMax={absMax}
           scaleType={scaleType}
+          valueScaling={valueScaling}
           showStats={showStats}
           onScoreChange={handleScoreChange}
         />
@@ -109,6 +127,7 @@ export const App = () => {
           scoredPathways={scoredPathways}
           absMax={absMax}
           scaleType={scaleType}
+          valueScaling={valueScaling}
           showStats={showStats}
         />
         <div className="comparison-equals">=</div>
@@ -116,17 +135,26 @@ export const App = () => {
       {/* Row 2, Col 1: Original activations */}
       <div className="comparison-original">
         <div className="comparison-section-label">Original Activations</div>
-        <Heatmap data={review.activations_standardized} absMax={absMax} scaleType={scaleType} showStats={showStats} />
+        <Heatmap
+          data={review.activations_standardized} absMax={absMax}
+          scaleType={scaleType} valueScaling={valueScaling} showStats={showStats}
+        />
       </div>
       {/* Row 2, Col 2: Sum + Noise */}
       <div className="comparison-result">
         <div className="comparison-result-item">
           <div className="comparison-section-label">Sum</div>
-          <Heatmap data={sumActivations} absMax={absMax} scaleType={scaleType} showStats={showStats} />
+          <Heatmap
+            data={sumActivations} absMax={absMax}
+            scaleType={scaleType} valueScaling={valueScaling} showStats={showStats}
+          />
         </div>
         <div className="comparison-result-item">
           <div className="comparison-section-label">Noise</div>
-          <Heatmap data={noise} absMax={absMax} scaleType={scaleType} showStats={showStats} />
+          <Heatmap
+            data={noise} absMax={absMax}
+            scaleType={scaleType} valueScaling={valueScaling} showStats={showStats}
+          />
         </div>
         {showStats && review.reconstruction_r2 != null && (
           <div className="comparison-result-item comparison-r2">

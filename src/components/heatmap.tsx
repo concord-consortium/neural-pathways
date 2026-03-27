@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useMemo } from "react";
-import { ScaleType, getPointStyle } from "../utils/color-scale";
+import { ScaleType, ValueScaling, getPointStyle } from "../utils/color-scale";
 import "./heatmap.scss";
 
 /**
@@ -16,12 +16,15 @@ interface HeatmapProps {
   data: number[];
   absMax: number;
   scaleType: ScaleType;
+  valueScaling?: ValueScaling;
   showStats?: boolean;
   label?: string;
   size?: number; // CSS width of the canvas in pixels; height scales proportionally
 }
 
-export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, showStats, label, size = 130 }) => {
+export const Heatmap: React.FC<HeatmapProps> = ({
+  data, absMax, scaleType, valueScaling = "linear", showStats, label, size = 130
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const { cols, rows } = useMemo(() => gridDimensions(data.length), [data.length]);
@@ -60,7 +63,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, showS
       const cx = col * cellSize + radius;
       const cy = row * cellSize + radius;
 
-      const style = getPointStyle(data[i], absMax, scaleType);
+      const style = getPointStyle(data[i], absMax, scaleType, valueScaling);
       const pointRadius = radius * 0.85 * style.radiusScale;
 
       if (pointRadius > 0) {
@@ -70,7 +73,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, showS
         ctx.fill();
       }
     }
-  }, [data, absMax, scaleType, canvasWidth, canvasHeight, cellSize, radius, cols, rows]);
+  }, [data, absMax, scaleType, valueScaling, canvasWidth, canvasHeight, cellSize, radius, cols, rows]);
 
   return (
     <div className="heatmap-container">
