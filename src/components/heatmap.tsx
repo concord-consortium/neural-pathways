@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { valueToColor } from "../utils/color-scale";
+import { ScaleType, getPointStyle } from "../utils/color-scale";
 import "./heatmap.scss";
 
 const COLS = 26;
@@ -8,11 +8,12 @@ const ROWS = 30;
 interface HeatmapProps {
   data: number[];
   absMax: number;
+  scaleType: ScaleType;
   label?: string;
-  size?: number; // width of the canvas in pixels; height scales proportionally
+  size?: number; // CSS width of the canvas in pixels; height scales proportionally
 }
 
-export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, label, size = 130 }) => {
+export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, scaleType, label, size = 130 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const cellSize = size / COLS;
@@ -26,6 +27,11 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, label, size = 13
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvasWidth * dpr;
+    canvas.height = canvasHeight * dpr;
+    ctx.scale(dpr, dpr);
+
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     for (let i = 0; i < data.length && i < COLS * ROWS; i++) {
@@ -34,20 +40,24 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, absMax, label, size = 13
       const cx = col * cellSize + radius;
       const cy = row * cellSize + radius;
 
-      ctx.fillStyle = valueToColor(data[i], absMax);
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 0.85, 0, Math.PI * 2);
-      ctx.fill();
+      const style = getPointStyle(data[i], absMax, scaleType);
+      const pointRadius = radius * 0.85 * style.radiusScale;
+
+      if (pointRadius > 0) {
+        ctx.fillStyle = style.color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, pointRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
-  }, [data, absMax, canvasWidth, canvasHeight, cellSize, radius]);
+  }, [data, absMax, scaleType, canvasWidth, canvasHeight, cellSize, radius]);
 
   return (
     <div className="heatmap-container">
       {label && <div className="heatmap-label">{label}</div>}
       <canvas
         ref={canvasRef}
-        width={canvasWidth}
-        height={canvasHeight}
+        style={{ width: canvasWidth, height: canvasHeight }}
         className="heatmap-canvas"
       />
     </div>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { VizData } from "../types/viz-data";
-import { computeAbsMax } from "../utils/color-scale";
+import { ScaleType, computeAbsMax } from "../utils/color-scale";
 import { computeScoredPathway, computeSum } from "../utils/reconstruction";
 import { ReviewPanel } from "./review-panel";
 import { PathwayGrid } from "./pathway-grid";
@@ -12,10 +12,17 @@ import "./app.scss";
 
 const data = vizData as VizData;
 
+const scaleOptions: { value: ScaleType; label: string }[] = [
+  { value: "blue-gray-red", label: "Fixed size: blue → gray → red" },
+  { value: "blue-white-red", label: "Fixed size: blue → white → red" },
+  { value: "size-based", label: "Size based on value" },
+];
+
 export const App = () => {
   const [selectedReviewIndex, setSelectedReviewIndex] = useState(0);
   const [scoreOverrides, setScoreOverrides] = useState<Record<number, number>>({});
   const [overridesForReview, setOverridesForReview] = useState(0);
+  const [scaleType, setScaleType] = useState<ScaleType>("blue-gray-red");
 
   const review = data.reviews[selectedReviewIndex];
 
@@ -65,13 +72,25 @@ export const App = () => {
       />
       {/* Row 1, Col 2: Pathway grid */}
       <div className="pathway-grid-container">
-        <ColorLegend absMax={absMax} />
+        <div className="toolbar">
+          <ColorLegend absMax={absMax} scaleType={scaleType} />
+          <select
+            className="scale-selector"
+            value={scaleType}
+            onChange={e => setScaleType(e.target.value as ScaleType)}
+          >
+            {scaleOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
         <PathwayGrid
           components={data.pathways.components}
           pathwayScores={pathwayScores}
           originalScores={review.pathway_scores}
           scoredPathways={scoredPathways}
           absMax={absMax}
+          scaleType={scaleType}
           onScoreChange={handleScoreChange}
         />
         <div className="comparison-equals">=</div>
@@ -79,12 +98,12 @@ export const App = () => {
       {/* Row 2, Col 1: Original activations */}
       <div className="comparison-original">
         <div className="comparison-section-label">Original Activations</div>
-        <Heatmap data={review.activations_standardized} absMax={absMax} />
+        <Heatmap data={review.activations_standardized} absMax={absMax} scaleType={scaleType} />
       </div>
       {/* Row 2, Col 2: Sum */}
       <div className="comparison-result">
         <div className="comparison-section-label">Sum</div>
-        <Heatmap data={sumActivations} absMax={absMax} />
+        <Heatmap data={sumActivations} absMax={absMax} scaleType={scaleType} />
       </div>
     </div>
   );

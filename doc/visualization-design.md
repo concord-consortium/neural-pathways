@@ -53,9 +53,19 @@ The bottom row is for comparison — the original activations and the sum are ho
 
 ## Heatmap Rendering
 
-Each heatmap displays 780 neurons as a **26×30 grid of circles** on an HTML5 canvas. The circle/dot-matrix style gives an organic look.
+Each heatmap displays 780 neurons as a **26×30 grid of circles** on an HTML5 canvas. The circle/dot-matrix style gives an organic look. Canvases render at the display's `devicePixelRatio` for crisp circles on HiDPI/Retina screens.
 
-All heatmaps share a single **fixed diverging color scale** (blue → gray → red), symmetric around zero. The scale range is computed from the global min/max across all displayed data and updates when pathway scores change.
+All heatmaps have a **white background** so the heatmap boundary is visible even when most values are near zero.
+
+### Color Scales
+
+A dropdown lets the user switch between three rendering scales:
+
+- **Fixed size: blue → gray → red** — The default. Circle size is constant; color interpolates from blue (negative) through gray (zero) to red (positive). Gray midpoint makes zero values blend into the neutral background.
+- **Fixed size: blue → white → red** — Same as above but with white as the zero midpoint. The white heatmap background ensures zero-valued circles are invisible, making non-zero activations stand out more clearly.
+- **Size based on value** — Circle radius scales with the absolute magnitude of the value. Color is a fixed shade of blue (negative) or red (positive). Near-zero values shrink to nothing, emphasizing strong activations.
+
+All scales share a single **fixed range** symmetric around zero, computed from the global min/max across all displayed data. The range updates when pathway scores change.
 
 ## Interactivity
 

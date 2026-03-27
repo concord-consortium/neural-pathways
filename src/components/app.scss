@@ -22,6 +22,20 @@
   border-left: 1px solid #ccc;
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.scale-selector {
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+}
+
 .comparison-equals {
   font-size: 24px;
   font-weight: 700;

@@ -1,35 +1,51 @@
+export type ScaleType = "blue-gray-red" | "blue-white-red" | "size-based";
+
+export interface PointStyle {
+  color: string;
+  radiusScale: number; // multiplier on the base radius (0 to 1)
+}
+
+const BLUE = { r: 50, g: 100, b: 220 };
+const RED = { r: 220, g: 50, b: 50 };
+
 /**
- * Convert a value to an RGB color on a blue→gray→red diverging scale.
- * Negative values map to blue (cold), zero to gray, positive to red (hot).
- *
- * @param value - The data value
- * @param absMax - The symmetric range bound (values are clamped to [-absMax, absMax])
- * @returns An "rgb(r,g,b)" CSS color string
+ * Given a data value and scale type, return the fill color and radius scale for a heatmap point.
  */
-export function valueToColor(value: number, absMax: number): string {
-  if (absMax === 0) return "rgb(180,180,180)";
+export function getPointStyle(value: number, absMax: number, scaleType: ScaleType): PointStyle {
+  if (absMax === 0) return { color: "rgb(180,180,180)", radiusScale: 1 };
 
   const clamped = Math.max(-absMax, Math.min(absMax, value));
   const normalized = clamped / absMax; // range [-1, 1]
+  const t = Math.abs(normalized);
 
-  // Gray midpoint
-  const gray = 180;
-
-  if (normalized < 0) {
-    // gray → blue
-    const t = Math.abs(normalized);
-    const r = Math.round(gray * (1 - t) + 50 * t);
-    const g = Math.round(gray * (1 - t) + 100 * t);
-    const b = Math.round(gray * (1 - t) + 220 * t);
-    return `rgb(${r},${g},${b})`;
-  } else {
-    // gray → red
-    const t = normalized;
-    const r = Math.round(gray * (1 - t) + 220 * t);
-    const g = Math.round(gray * (1 - t) + 50 * t);
-    const b = Math.round(gray * (1 - t) + 50 * t);
-    return `rgb(${r},${g},${b})`;
+  switch (scaleType) {
+    case "blue-gray-red": {
+      const gray = 180;
+      const target = normalized < 0 ? BLUE : RED;
+      const r = Math.round(gray * (1 - t) + target.r * t);
+      const g = Math.round(gray * (1 - t) + target.g * t);
+      const b = Math.round(gray * (1 - t) + target.b * t);
+      return { color: `rgb(${r},${g},${b})`, radiusScale: 1 };
+    }
+    case "blue-white-red": {
+      const target = normalized < 0 ? BLUE : RED;
+      const r = Math.round(255 * (1 - t) + target.r * t);
+      const g = Math.round(255 * (1 - t) + target.g * t);
+      const b = Math.round(255 * (1 - t) + target.b * t);
+      return { color: `rgb(${r},${g},${b})`, radiusScale: 1 };
+    }
+    case "size-based": {
+      const color = normalized < 0 ? `rgb(${BLUE.r},${BLUE.g},${BLUE.b})` : `rgb(${RED.r},${RED.g},${RED.b})`;
+      return { color, radiusScale: t };
+    }
   }
+}
+
+/**
+ * Legacy helper — returns just a color string for the blue-gray-red scale.
+ */
+export function valueToColor(value: number, absMax: number): string {
+  return getPointStyle(value, absMax, "blue-gray-red").color;
 }
 
 /**
