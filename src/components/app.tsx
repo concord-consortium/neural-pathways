@@ -4,6 +4,7 @@ import { ScaleType, computeAbsMax } from "../utils/color-scale";
 import { computeScoredPathway, computeSum } from "../utils/reconstruction";
 import { ReviewPanel } from "./review-panel";
 import { PathwayGrid } from "./pathway-grid";
+import { ScoredPathwaysView } from "./scored-pathways-view";
 import { ColorLegend } from "./color-legend";
 import { Heatmap } from "./heatmap";
 import vizData from "../../viz_data.json";
@@ -93,11 +94,16 @@ export const App = () => {
           components={data.pathways.components}
           pathwayScores={pathwayScores}
           originalScores={review.pathway_scores}
-          scoredPathways={scoredPathways}
           absMax={absMax}
           scaleType={scaleType}
           showStats={showStats}
           onScoreChange={handleScoreChange}
+        />
+        <ScoredPathwaysView
+          scoredPathways={scoredPathways}
+          absMax={absMax}
+          scaleType={scaleType}
+          showStats={showStats}
         />
         <div className="comparison-equals">=</div>
       </div>

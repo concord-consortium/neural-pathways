@@ -78,6 +78,19 @@ Each pathway score has a numeric input and a range slider (range: -3 to +3). Use
 ### Show Stats
 A toolbar checkbox toggles display of per-heatmap statistics (min, max, absMax) below each heatmap. When enabled, the color legend also shows the numeric range instead of "cold"/"hot" labels.
 
+### Summation Animation
+
+A play/pause button and scrubber control an animation that visually demonstrates how the scored pathways combine into the sum. The animation uses CSS 3D transforms with perspective to create a physical "stacking" metaphor. It proceeds through five phases:
+
+**Phase 1 — Tilt** (0–20%): The `+` operators fade out and each heatmap rotates 80 degrees around its vertical center axis (right edge goes back). The camera stays fixed.
+
+**Phase 2 — Orbit** (20–40%): The camera orbits 45 degrees to the right, revealing the row of tilted heatmaps from an angled view. Perspective makes farther heatmaps appear smaller.
+
+**Phase 3 — Align** (40–60%): Each heatmap slides along its own tilted plane until all centers lie on a line perpendicular to the heatmap faces. P6 (rightmost) stays fixed; others slide toward it. Because of perspective, the farther heatmaps still appear smaller than the closer ones.
+
+**Phase 4 — Merge & Collapse** (60–80%): The back heatmaps move forward to P6's depth plane, closing the depth gaps. Simultaneously, the data merges back-to-front: P1 keeps its own data, P2 blends in a growing portion of P1's values, P3 blends in the computed P2, and so on. At the end of this phase, P6 displays the full cumulative sum of all pathways.
+
+**Phase 5 — Face camera** (80–100%): The stacked sandwich of heatmaps and the camera both rotate back to their original orientations, so the merged result faces the viewer straight on.
+
 ### Future Interactions (not yet implemented)
-- **Animated stacking**: Animate pathways being added one at a time
 - **Interactive toggle**: Checkboxes to toggle individual pathways on/off

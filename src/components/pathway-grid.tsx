@@ -8,7 +8,6 @@ interface PathwayGridProps {
   components: number[][];       // 6 x 780
   pathwayScores: number[];      // current (possibly edited) scores
   originalScores: number[];     // original scores for the selected review
-  scoredPathways: number[][];   // 6 x 780 (component * score)
   absMax: number;
   scaleType: ScaleType;
   showStats: boolean;
@@ -17,7 +16,7 @@ interface PathwayGridProps {
 
 export const PathwayGrid: React.FC<PathwayGridProps> = ({
   components, pathwayScores, originalScores,
-  scoredPathways, absMax, scaleType, showStats, onScoreChange
+  absMax, scaleType, showStats, onScoreChange
 }) => {
   const nPathways = components.length;
   // Columns: P1, +, P2, +, ..., +, P6
@@ -65,16 +64,6 @@ export const PathwayGrid: React.FC<PathwayGridProps> = ({
         </React.Fragment>
       ))}
 
-      {/* Row label: Scored */}
-      <div className="pathway-grid-row-label">Scored pathways (pattern x score)</div>
-
-      {/* Scored heatmaps row with + operators */}
-      {scoredPathways.map((scored, i) => (
-        <React.Fragment key={`scored-${i}`}>
-          <Heatmap data={scored} absMax={absMax} scaleType={scaleType} showStats={showStats} />
-          {i < nPathways - 1 && <div className="pathway-grid-operator">+</div>}
-        </React.Fragment>
-      ))}
     </div>
   );
 };
