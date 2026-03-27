@@ -31,6 +31,10 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
         Sentiment: {review.target_label}
       </div>
 
+      {review.source && (
+        <div className="review-source">Source: {review.source}</div>
+      )}
+
       <div className="review-text">{review.text}</div>
 
     </div>

@@ -54,15 +54,21 @@ export const App = () => {
     [scoredPathways]
   );
 
+  const noise = useMemo(() =>
+    review.activations_standardized.map((v, i) => v - sumActivations[i]),
+    [review, sumActivations]
+  );
+
   const absMax = useMemo(() => {
     const allArrays = [
       ...data.pathways.components,
       ...scoredPathways,
       sumActivations,
       review.activations_standardized,
+      noise,
     ];
     return computeAbsMax(...allArrays);
-  }, [scoredPathways, sumActivations, review]);
+  }, [scoredPathways, sumActivations, review, noise]);
 
   return (
     <div className="app">
@@ -112,10 +118,22 @@ export const App = () => {
         <div className="comparison-section-label">Original Activations</div>
         <Heatmap data={review.activations_standardized} absMax={absMax} scaleType={scaleType} showStats={showStats} />
       </div>
-      {/* Row 2, Col 2: Sum */}
+      {/* Row 2, Col 2: Sum + Noise */}
       <div className="comparison-result">
-        <div className="comparison-section-label">Sum</div>
-        <Heatmap data={sumActivations} absMax={absMax} scaleType={scaleType} showStats={showStats} />
+        <div className="comparison-result-item">
+          <div className="comparison-section-label">Sum</div>
+          <Heatmap data={sumActivations} absMax={absMax} scaleType={scaleType} showStats={showStats} />
+        </div>
+        <div className="comparison-result-item">
+          <div className="comparison-section-label">Noise</div>
+          <Heatmap data={noise} absMax={absMax} scaleType={scaleType} showStats={showStats} />
+        </div>
+        {showStats && review.reconstruction_r2 != null && (
+          <div className="comparison-result-item comparison-r2">
+            <div className="comparison-section-label">R²</div>
+            <div className="r2-value">{(review.reconstruction_r2 * 100).toFixed(1)}%</div>
+          </div>
+        )}
       </div>
     </div>
   );

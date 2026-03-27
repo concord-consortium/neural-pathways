@@ -66,9 +66,25 @@
   padding: 0 16px 16px;
   border-left: 1px solid #ccc;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
+  gap: 16px;
+}
+
+.comparison-result-item {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
+}
+
+.comparison-r2 {
+  justify-content: center;
+}
+
+.r2-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
 }
 
 .comparison-section-label {
