@@ -7,7 +7,7 @@ import { PathwayPatterns, PathwayScoresRow } from "./pathway-grid";
 import { ScoredPathwaysView } from "./scored-pathways-view";
 import { ColorLegend } from "./color-legend";
 import { Heatmap } from "./heatmap";
-import vizData from "../../../viz_data.json";
+import vizData from "../viz_data.json";
 
 import "./app.scss";
 
