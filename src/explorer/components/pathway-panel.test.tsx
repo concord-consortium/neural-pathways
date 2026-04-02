@@ -39,7 +39,7 @@ describe("PathwayPanel", () => {
   });
 
   it("does not show variance fractions when disabled", () => {
-    const { container } = render(
+    render(
       <PathwayPanel
         scores={mockScores}
         varianceFractions={mockVarianceFractions}
@@ -48,6 +48,6 @@ describe("PathwayPanel", () => {
         showVarianceFractions={false}
       />
     );
-    expect(container.querySelector(".pathway-bar-variance")).toBeNull();
+    expect(screen.queryByText("98.3%")).toBeNull();
   });
 });

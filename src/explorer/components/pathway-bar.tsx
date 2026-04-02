@@ -31,6 +31,7 @@ export const PathwayBar: React.FC<PathwayBarProps> = ({
         <div className="pathway-bar-center" />
         <div
           className={`pathway-bar-fill ${isPositive ? "positive" : "negative"}`}
+          data-testid={`pathway-bar-fill-${index}`}
           style={isPositive
             ? { left: "50%", width: `${clampedWidth}%` }
             : { right: "50%", width: `${clampedWidth}%` }

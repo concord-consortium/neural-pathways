@@ -31,12 +31,12 @@ const reviews = [
 
 describe("ReviewSelector", () => {
   it("renders the search input", () => {
-    render(<ReviewSelector reviews={reviews} onSelect={() => {}} />);
+    render(<ReviewSelector reviews={reviews} onSelect={jest.fn()} />);
     expect(screen.getByPlaceholderText(/Search by review/)).toBeDefined();
   });
 
   it("filters by index number", () => {
-    render(<ReviewSelector reviews={reviews} onSelect={() => {}} />);
+    render(<ReviewSelector reviews={reviews} onSelect={jest.fn()} />);
     const input = screen.getByPlaceholderText(/Search by review/);
     fireEvent.change(input, { target: { value: "719" } });
     expect(screen.getAllByText(/#719/).length).toBeGreaterThanOrEqual(1);
@@ -44,7 +44,7 @@ describe("ReviewSelector", () => {
   });
 
   it("filters by text content", () => {
-    render(<ReviewSelector reviews={reviews} onSelect={() => {}} />);
+    render(<ReviewSelector reviews={reviews} onSelect={jest.fn()} />);
     const input = screen.getByPlaceholderText(/Search by review/);
     fireEvent.change(input, { target: { value: "pizza" } });
     expect(screen.getByText(/#0/)).toBeDefined();

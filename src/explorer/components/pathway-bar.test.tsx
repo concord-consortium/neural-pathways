@@ -38,39 +38,37 @@ describe("PathwayBar", () => {
   });
 
   it("does not show variance fraction when not provided", () => {
-    const { container } = render(
+    render(
       <PathwayBar
         index={0}
         score={1.0}
         scaleExtent={[-3, 3]}
       />
     );
-    expect(container.querySelector(".pathway-bar-variance")).toBeNull();
+    expect(screen.queryByText(/^\d+\.\d+%$/)).toBeNull();
   });
 
   it("renders a positive bar to the right of center", () => {
-    const { container } = render(
+    render(
       <PathwayBar
         index={0}
         score={1.5}
         scaleExtent={[-3, 3]}
       />
     );
-    const fill = container.querySelector(".pathway-bar-fill");
-    expect(fill).not.toBeNull();
-    expect(fill!.classList.contains("positive")).toBe(true);
+    const fill = screen.getByTestId("pathway-bar-fill-0");
+    expect(fill.classList.contains("positive")).toBe(true);
   });
 
   it("renders a negative bar to the left of center", () => {
-    const { container } = render(
+    render(
       <PathwayBar
         index={0}
         score={-1.5}
         scaleExtent={[-3, 3]}
       />
     );
-    const fill = container.querySelector(".pathway-bar-fill");
-    expect(fill).not.toBeNull();
-    expect(fill!.classList.contains("negative")).toBe(true);
+    const fill = screen.getByTestId("pathway-bar-fill-0");
+    expect(fill.classList.contains("negative")).toBe(true);
   });
 });
