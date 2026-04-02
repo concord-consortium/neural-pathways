@@ -12,7 +12,7 @@ This metaphor supports both addition and subtraction symmetrically, unlike light
 
 ## Data
 
-Source: `viz_data.json` (variable number of neurons, pathways, and reviews)
+Source: `src/heatmap/viz_data.json` (variable number of neurons, pathways, and reviews)
 
 Each review has standardized neuron activations. The pathways are computed via factor analysis, where each pathway is a vector of coefficients (one per neuron). Each review gets a score per pathway, and optionally a `source` label and `reconstruction_r2` value.
 

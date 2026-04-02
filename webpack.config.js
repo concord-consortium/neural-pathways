@@ -41,11 +41,14 @@ module.exports = (env, argv) => {
       },
     },
     devtool: devMode ? 'eval-cheap-module-source-map' : 'source-map',
-    entry: './src/index.tsx',
+    entry: {
+      heatmap: './src/heatmap/index.tsx',
+      explorer: './src/explorer/index.tsx',
+    },
     mode: 'development',
     output: {
       path: path.resolve(__dirname, 'dist'),
-      filename: 'assets/index.[contenthash].js',
+      filename: 'assets/[name].[contenthash].js',
     },
     performance: { hints: false },
     module: {
@@ -145,12 +148,28 @@ module.exports = (env, argv) => {
         template: 'src/index.html',
         favicon: 'src/public/favicon.ico',
         publicPath: '.',
+        chunks: [],
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'heatmap.html',
+        template: 'src/heatmap/index.html',
+        favicon: 'src/public/favicon.ico',
+        publicPath: '.',
+        chunks: ['heatmap'],
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'explorer.html',
+        template: 'src/explorer/index.html',
+        favicon: 'src/public/favicon.ico',
+        publicPath: '.',
+        chunks: ['explorer'],
       }),
       ...(DEPLOY_PATH ? [new HtmlWebpackPlugin({
         filename: 'index-top.html',
         template: 'src/index.html',
         favicon: 'src/public/favicon.ico',
-        publicPath: DEPLOY_PATH
+        publicPath: DEPLOY_PATH,
+        chunks: [],
       })] : []),
       new CleanWebpackPlugin(),
     ]

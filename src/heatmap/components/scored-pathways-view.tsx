@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import { Heatmap } from "./heatmap";
-import { ScaleType, ValueScaling } from "../utils/color-scale";
+import { ScaleType, ValueScaling } from "../../shared/color-scale";
 import "./scored-pathways-view.scss";
 
 const HEATMAP_WIDTH = 130;

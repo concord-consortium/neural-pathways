@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { VizData } from "../types/viz-data";
-import { ScaleType, ValueScaling, computeAbsMax } from "../utils/color-scale";
+import { ScaleType, ValueScaling, computeAbsMax } from "../../shared/color-scale";
 import { computeScoredPathway, computeSum } from "../utils/reconstruction";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPatterns, PathwayScoresRow } from "./pathway-grid";
 import { ScoredPathwaysView } from "./scored-pathways-view";
 import { ColorLegend } from "./color-legend";
 import { Heatmap } from "./heatmap";
-import vizData from "../../viz_data.json";
+import vizData from "../viz_data.json";
 
 import "./app.scss";
 

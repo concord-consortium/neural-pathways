@@ -1,7 +1,7 @@
 import React from "react";
 import { Heatmap } from "./heatmap";
 import { PathwayScoreInput } from "./pathway-score-input";
-import { ScaleType, ValueScaling } from "../utils/color-scale";
+import { ScaleType, ValueScaling } from "../../shared/color-scale";
 import "./pathway-grid.scss";
 
 function pathwayColumnTemplate(nPathways: number): string {

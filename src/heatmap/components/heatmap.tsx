@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useMemo } from "react";
-import { ScaleType, ValueScaling, getPointStyle } from "../utils/color-scale";
+import { ScaleType, ValueScaling, getPointStyle } from "../../shared/color-scale";
 import "./heatmap.scss";
 
 /**
