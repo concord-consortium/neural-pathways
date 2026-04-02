@@ -11,11 +11,13 @@ interface PathwayPanelProps {
   showVarianceFractions: boolean;
   showScores: boolean;
   showExtents: boolean;
+  onPathwayClick?: (index: number) => void;
+  selectedPathways?: Set<number>;
 }
 
 export const PathwayPanel: React.FC<PathwayPanelProps> = ({
   scores, varianceFractions, scaleMode, scaleExtents, showVarianceFractions,
-  showScores, showExtents
+  showScores, showExtents, onPathwayClick, selectedPathways
 }) => {
   return (
     <div className="pathway-panel">
@@ -32,6 +34,8 @@ export const PathwayPanel: React.FC<PathwayPanelProps> = ({
             varianceFraction={showVarianceFractions ? varianceFractions?.[i] : undefined}
             showScore={showScores}
             showExtents={showExtents}
+            onClick={onPathwayClick}
+            selected={selectedPathways?.has(i)}
           />
         );
       })}

@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { PathwayBar } from "./pathway-bar";
 
 describe("PathwayBar", () => {
@@ -82,5 +82,36 @@ describe("PathwayBar", () => {
     );
     const fill = screen.getByTestId("pathway-bar-fill-0");
     expect(fill.classList.contains("negative")).toBe(true);
+  });
+
+  it("calls onClick with the pathway index when clicked", () => {
+    const onClick = jest.fn();
+    render(
+      <PathwayBar
+        index={3}
+        score={0.5}
+        scaleExtent={[-3, 3]}
+        showScore={false}
+        showExtents={false}
+        onClick={onClick}
+      />
+    );
+    fireEvent.click(screen.getByText("Pathway 3").closest(".pathway-bar-row")!);
+    expect(onClick).toHaveBeenCalledWith(3);
+  });
+
+  it("applies selected styling when selected", () => {
+    render(
+      <PathwayBar
+        index={0}
+        score={0.5}
+        scaleExtent={[-3, 3]}
+        showScore={false}
+        showExtents={false}
+        selected={true}
+      />
+    );
+    const row = screen.getByText("Pathway 0").closest(".pathway-bar-row")!;
+    expect(row.classList.contains("pathway-bar-selected")).toBe(true);
   });
 });

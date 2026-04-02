@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { PathwayPanel } from "./pathway-panel";
 
 const mockScores = [1.01, -0.52, -0.11, -0.50, -1.15, -0.21];
@@ -55,5 +55,23 @@ describe("PathwayPanel", () => {
       />
     );
     expect(screen.queryByText("98.3%")).toBeNull();
+  });
+
+  it("calls onPathwayClick when a pathway bar is clicked", () => {
+    const onPathwayClick = jest.fn();
+    render(
+      <PathwayPanel
+        scores={mockScores}
+        scaleMode="shared"
+        scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
+        showVarianceFractions={false}
+        showScores={false}
+        showExtents={false}
+        onPathwayClick={onPathwayClick}
+        selectedPathways={new Set()}
+      />
+    );
+    fireEvent.click(screen.getByText("Pathway 2").closest(".pathway-bar-row")!);
+    expect(onPathwayClick).toHaveBeenCalledWith(2);
   });
 });
