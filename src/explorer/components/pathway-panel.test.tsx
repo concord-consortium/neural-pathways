@@ -18,6 +18,8 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
+        showScores={false}
+        showExtents={false}
       />
     );
     for (let i = 0; i < 6; i++) {
@@ -33,6 +35,8 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={true}
+        showScores={false}
+        showExtents={false}
       />
     );
     expect(screen.getByText("98.3%")).toBeDefined();
@@ -46,6 +50,8 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
+        showScores={false}
+        showExtents={false}
       />
     );
     expect(screen.queryByText("98.3%")).toBeNull();

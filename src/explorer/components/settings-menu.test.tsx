@@ -10,6 +10,10 @@ describe("SettingsMenu", () => {
     onScaleModeChange: jest.fn(),
     showVarianceFractions: false,
     onShowVarianceFractionsChange: jest.fn(),
+    showScores: false,
+    onShowScoresChange: jest.fn(),
+    showExtents: false,
+    onShowExtentsChange: jest.fn(),
   };
 
   it("opens the popover when gear icon is clicked", () => {

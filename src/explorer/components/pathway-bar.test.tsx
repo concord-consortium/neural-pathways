@@ -9,17 +9,21 @@ describe("PathwayBar", () => {
         index={0}
         score={0.5}
         scaleExtent={[-3, 3]}
+        showScore={false}
+        showExtents={false}
       />
     );
     expect(screen.getByText("Pathway 0")).toBeDefined();
   });
 
-  it("renders the numeric score", () => {
+  it("renders the numeric score when showScore is true", () => {
     render(
       <PathwayBar
         index={2}
         score={-1.234}
         scaleExtent={[-3, 3]}
+        showScore={true}
+        showExtents={false}
       />
     );
     expect(screen.getByText("-1.234")).toBeDefined();
@@ -32,6 +36,8 @@ describe("PathwayBar", () => {
         score={1.0}
         scaleExtent={[-3, 3]}
         varianceFraction={0.9827}
+        showScore={false}
+        showExtents={false}
       />
     );
     expect(screen.getByText("98.3%")).toBeDefined();
@@ -43,6 +49,8 @@ describe("PathwayBar", () => {
         index={0}
         score={1.0}
         scaleExtent={[-3, 3]}
+        showScore={false}
+        showExtents={false}
       />
     );
     expect(screen.queryByText(/^\d+\.\d+%$/)).toBeNull();
@@ -54,6 +62,8 @@ describe("PathwayBar", () => {
         index={0}
         score={1.5}
         scaleExtent={[-3, 3]}
+        showScore={false}
+        showExtents={false}
       />
     );
     const fill = screen.getByTestId("pathway-bar-fill-0");
@@ -66,6 +76,8 @@ describe("PathwayBar", () => {
         index={0}
         score={-1.5}
         scaleExtent={[-3, 3]}
+        showScore={false}
+        showExtents={false}
       />
     );
     const fill = screen.getByTestId("pathway-bar-fill-0");

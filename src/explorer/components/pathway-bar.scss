@@ -19,12 +19,44 @@
   margin-bottom: 4px;
 }
 
+.pathway-bar-meta {
+  display: flex;
+  gap: 8px;
+}
+
+.pathway-bar-score {
+  font-size: 11px;
+  color: #999;
+}
+
 .pathway-bar-variance {
   color: #aaa;
   font-size: 11px;
 }
 
+.pathway-bar-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pathway-bar-extent {
+  font-size: 10px;
+  color: #aaa;
+  white-space: nowrap;
+  min-width: 3em;
+
+  &:first-child {
+    text-align: right;
+  }
+
+  &:last-child {
+    text-align: left;
+  }
+}
+
 .pathway-bar-container {
+  flex: 1;
   height: 18px;
   position: relative;
   background: #f5f5f5;
@@ -54,11 +86,4 @@
   &.negative {
     background: #3498db;
   }
-}
-
-.pathway-bar-score {
-  font-size: 11px;
-  color: #999;
-  text-align: center;
-  margin-top: 2px;
 }

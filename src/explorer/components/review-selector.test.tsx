@@ -32,33 +32,31 @@ const reviews = [
 describe("ReviewSelector", () => {
   it("renders the search input", () => {
     render(<ReviewSelector reviews={reviews} onSelect={jest.fn()} />);
-    expect(screen.getByPlaceholderText(/Search by review/)).toBeDefined();
+    expect(screen.getByText(/Search by review/)).toBeDefined();
   });
 
   it("filters by index number", () => {
     render(<ReviewSelector reviews={reviews} onSelect={jest.fn()} />);
-    const input = screen.getByPlaceholderText(/Search by review/);
+    const input = screen.getByRole("combobox");
     fireEvent.change(input, { target: { value: "719" } });
-    expect(screen.getAllByText(/#719/).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText(/#7190/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/719: /)).toBeDefined();
+    expect(screen.getByText(/7190: /)).toBeDefined();
   });
 
   it("filters by text content", () => {
     render(<ReviewSelector reviews={reviews} onSelect={jest.fn()} />);
-    const input = screen.getByPlaceholderText(/Search by review/);
+    const input = screen.getByRole("combobox");
     fireEvent.change(input, { target: { value: "pizza" } });
-    expect(screen.getByText(/#0/)).toBeDefined();
-    // "Terrible experience" should not match
-    expect(screen.queryByText(/#1\b/)).toBeNull();
+    expect(screen.getByText(/0: /)).toBeDefined();
+    expect(screen.queryByText(/^1: /)).toBeNull();
   });
 
   it("calls onSelect when a dropdown item is clicked", () => {
     const onSelect = jest.fn();
     render(<ReviewSelector reviews={reviews} onSelect={onSelect} />);
-    const input = screen.getByPlaceholderText(/Search by review/);
+    const input = screen.getByRole("combobox");
     fireEvent.change(input, { target: { value: "719" } });
-    // Click the index span that shows exactly "#719" (not "#7190")
-    fireEvent.click(screen.getByText("#719"));
+    fireEvent.click(screen.getByText(/719: Delivery/));
     expect(onSelect).toHaveBeenCalledWith(reviews[2]);
   });
 });

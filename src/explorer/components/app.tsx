@@ -15,6 +15,8 @@ export const App = () => {
   const [selectedReview, setSelectedReview] = useState<ExplorerReview | null>(null);
   const [scaleMode, setScaleMode] = useState<ScaleMode>("shared");
   const [showVarianceFractions, setShowVarianceFractions] = useState(false);
+  const [showScores, setShowScores] = useState(false);
+  const [showExtents, setShowExtents] = useState(false);
 
   const scaleExtents = useMemo<ScaleExtents>(() => {
     let globalMin = Infinity;
@@ -50,6 +52,10 @@ export const App = () => {
           onScaleModeChange={setScaleMode}
           showVarianceFractions={showVarianceFractions}
           onShowVarianceFractionsChange={setShowVarianceFractions}
+          showScores={showScores}
+          onShowScoresChange={setShowScores}
+          showExtents={showExtents}
+          onShowExtentsChange={setShowExtents}
         />
       </div>
 
@@ -62,6 +68,8 @@ export const App = () => {
             scaleMode={scaleMode}
             scaleExtents={scaleExtents}
             showVarianceFractions={showVarianceFractions}
+            showScores={showScores}
+            showExtents={showExtents}
           />
         </div>
       ) : (

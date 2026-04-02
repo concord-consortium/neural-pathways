@@ -8,10 +8,15 @@ interface SettingsMenuProps {
   onScaleModeChange: (mode: ScaleMode) => void;
   showVarianceFractions: boolean;
   onShowVarianceFractionsChange: (show: boolean) => void;
+  showScores: boolean;
+  onShowScoresChange: (show: boolean) => void;
+  showExtents: boolean;
+  onShowExtentsChange: (show: boolean) => void;
 }
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({
-  scaleMode, onScaleModeChange, showVarianceFractions, onShowVarianceFractionsChange
+  scaleMode, onScaleModeChange, showVarianceFractions, onShowVarianceFractionsChange,
+  showScores, onShowScoresChange, showExtents, onShowExtentsChange
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,6 +65,22 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
           </div>
           <div className="settings-menu-group">
             <div className="settings-menu-group-label">Display</div>
+            <label>
+              <input
+                type="checkbox"
+                checked={showScores}
+                onChange={e => onShowScoresChange(e.target.checked)}
+              />
+              Show scores
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={showExtents}
+                onChange={e => onShowExtentsChange(e.target.checked)}
+              />
+              Show scale extents
+            </label>
             <label>
               <input
                 type="checkbox"
