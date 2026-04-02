@@ -19,10 +19,10 @@ describe("WordEffectsPanel", () => {
 
   it("renders nothing when no pathways are selected", () => {
     const selected = new Set<number>();
-    const { container } = render(
+    render(
       <WordEffectsPanel words={mockWords} selectedPathways={selected} />
     );
-    expect(container.querySelector(".word-effects-panel")).toBeNull();
+    expect(screen.queryByText(/^Pathway \d+$/)).toBeNull();
   });
 
   it("renders pathways in ascending index order", () => {

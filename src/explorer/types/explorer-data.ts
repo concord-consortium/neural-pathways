@@ -19,9 +19,9 @@ export interface ExplorerReview {
   review_stars: number;
   categories: string;
   rating: string;
-  words?: WordEffect[];
-  base_values?: number[];
-  unmasked_values?: number[];
+  words: WordEffect[];
+  base_values: number[];
+  unmasked_values: number[];
 }
 
 export interface ExplorerData {
@@ -31,7 +31,7 @@ export interface ExplorerData {
     explained_variance_total: number;
     explained_variance_per_pathway: number[];
     n_reviews: number;
-    word_effect_metric?: Record<string, unknown>;
+    word_effect_metric: Record<string, unknown>;
     data_sources: Record<string, unknown>;
   };
   reviews: ExplorerReview[];

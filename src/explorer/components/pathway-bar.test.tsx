@@ -96,7 +96,7 @@ describe("PathwayBar", () => {
         onClick={onClick}
       />
     );
-    fireEvent.click(screen.getByText("Pathway 3").closest(".pathway-bar-row")!);
+    fireEvent.click(screen.getByTestId("pathway-bar-row-3"));
     expect(onClick).toHaveBeenCalledWith(3);
   });
 
@@ -111,7 +111,7 @@ describe("PathwayBar", () => {
         selected={true}
       />
     );
-    const row = screen.getByText("Pathway 0").closest(".pathway-bar-row")!;
+    const row = screen.getByTestId("pathway-bar-row-0");
     expect(row.classList.contains("pathway-bar-selected")).toBe(true);
   });
 });

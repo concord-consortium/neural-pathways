@@ -30,6 +30,7 @@ export const PathwayBar: React.FC<PathwayBarProps> = ({
   return (
     <div
       className={`pathway-bar-row${selected ? " pathway-bar-selected" : ""}`}
+      data-testid={`pathway-bar-row-${index}`}
       onClick={() => onClick?.(index)}
     >
       <div className="pathway-bar-label">
