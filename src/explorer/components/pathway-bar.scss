@@ -1,0 +1,64 @@
+.pathway-bar-row {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: #aaa;
+  }
+}
+
+.pathway-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.pathway-bar-variance {
+  color: #aaa;
+  font-size: 11px;
+}
+
+.pathway-bar-container {
+  height: 18px;
+  position: relative;
+  background: #f5f5f5;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pathway-bar-center {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #ccc;
+}
+
+.pathway-bar-fill {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 2px;
+
+  &.positive {
+    background: #e74c3c;
+  }
+
+  &.negative {
+    background: #3498db;
+  }
+}
+
+.pathway-bar-score {
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  margin-top: 2px;
+}
