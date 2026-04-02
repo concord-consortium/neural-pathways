@@ -1,0 +1,15 @@
+.color-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #666;
+}
+
+.color-legend-label {
+  white-space: nowrap;
+}
+
+.color-legend-bar {
+  border-radius: 3px;
+}
