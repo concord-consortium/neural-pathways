@@ -108,6 +108,21 @@ export const App = () => {
     [review, sumActivations, noise]
   );
 
+  const rawAbsMax = useMemo(() =>
+    computeAbsMax(review.activations_raw),
+    [review]
+  );
+
+  const scalerMeanAbsMax = useMemo(() =>
+    computeAbsMax(data.scaler.mean),
+    []
+  );
+
+  const scalerScaleAbsMax = useMemo(() =>
+    computeAbsMax(data.scaler.scale),
+    []
+  );
+
   // absMax for review-specific content (used in current-review and same-across-reviews)
   const absMax = scaleMode === "same-across-reviews"
     ? globalAbsMax : perReviewAbsMax;
@@ -254,6 +269,42 @@ export const App = () => {
           </div>
         )}
       </div>
+
+      {showScaler &&
+        <>
+          <div className="row-divider" />
+        {/* Row 5, Col 1: Raw Activations */}
+        <div className="scaler-original">
+          <div className="comparison-section-label">Raw Activations</div>
+          <Heatmap
+            data={review.activations_raw} absMax={rawAbsMax}
+            scaleType={scaleType} valueScaling={valueScaling}
+            showStats={showStats}
+          />
+          <ColorLegend absMax={rawAbsMax} {...colorLegendProps} />
+        </div>
+        {/* Row 5, Col 2: Scaler Mean + Scaler Scale */}
+        <div className="scaler-result">
+          <div className="comparison-result-item">
+            <div className="comparison-section-label">Scaler Mean</div>
+            <Heatmap
+              data={data.scaler.mean} absMax={scalerMeanAbsMax}
+              scaleType={scaleType} valueScaling={valueScaling}
+              showStats={showStats}
+            />
+            <ColorLegend absMax={scalerMeanAbsMax} {...colorLegendProps} />
+          </div>
+          <div className="comparison-result-item">
+            <div className="comparison-section-label">Scaler Scale</div>
+            <Heatmap
+              data={data.scaler.scale} absMax={scalerScaleAbsMax}
+              scaleType={scaleType} valueScaling={valueScaling}
+              showStats={showStats}
+            />
+            <ColorLegend absMax={scalerScaleAbsMax} {...colorLegendProps} />
+          </div>
+        </div>
+        </>}
     </div>
   );
 };

@@ -11,7 +11,7 @@
 .app {
   display: grid;
   grid-template-columns: 300px 1fr;
-  grid-template-rows: auto auto auto auto 1fr;
+  grid-template-rows: auto auto auto auto 1fr auto;
   height: 100vh;
   overflow: auto;
 }
@@ -117,4 +117,21 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #888;
+}
+
+.scaler-original {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.scaler-result {
+  padding: 0 16px 16px;
+  border-left: 1px solid #ccc;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
 }

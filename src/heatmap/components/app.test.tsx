@@ -24,4 +24,20 @@ describe("App component", () => {
     expect(checkbox).toBeDefined();
     expect((checkbox as HTMLInputElement).checked).toBe(false);
   });
+
+  it("shows raw activations, scaler mean, and scaler scale when Show Scaler is checked", () => {
+    render(<App/>);
+    // Row should not be visible by default
+    expect(screen.queryByText("Raw Activations")).toBeNull();
+    expect(screen.queryByText("Scaler Mean")).toBeNull();
+    expect(screen.queryByText("Scaler Scale")).toBeNull();
+
+    // Check the toggle
+    fireEvent.click(screen.getByLabelText("Show Scaler"));
+
+    // All three labels should now be visible
+    expect(screen.getByText("Raw Activations")).toBeDefined();
+    expect(screen.getByText("Scaler Mean")).toBeDefined();
+    expect(screen.getByText("Scaler Scale")).toBeDefined();
+  });
 });
