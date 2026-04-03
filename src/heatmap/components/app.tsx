@@ -38,11 +38,11 @@ export const App = () => {
   const [selectedReviewIndex, setSelectedReviewIndex] = useState(0);
   const [scoreOverrides, setScoreOverrides] = useState<Record<number, number>>({});
   const [overridesForReview, setOverridesForReview] = useState(0);
-  const [scaleType, setScaleType] = useState<ScaleType>("blue-white-red");
-  const [valueScaling, setValueScaling] = useState<ValueScaling>("linear");
-  const [showStats, setShowStats] = useState(false);
+  const [scaleType, setScaleType] = useState<ScaleType>("multi-hue");
+  const [valueScaling, setValueScaling] = useState<ValueScaling>("logarithmic");
+  const [showStats, setShowStats] = useState(true);
   const [showScaler, setShowScaler] = useState(false);
-  const [scaleMode, setScaleMode] = useState<ScaleMode>("current-review");
+  const [scaleMode, setScaleMode] = useState<ScaleMode>("multiple-scales");
 
   const review = data.reviews[selectedReviewIndex];
 
@@ -76,6 +76,19 @@ export const App = () => {
     review.activations_standardized.map((v, i) => v - sumActivations[i]),
     [review, sumActivations]
   );
+
+  const computedR2 = useMemo(() => {
+    const original = review.activations_standardized;
+    const n = original.length;
+    const mean = original.reduce((s, v) => s + v, 0) / n;
+    let ssRes = 0;
+    let ssTot = 0;
+    for (let i = 0; i < n; i++) {
+      ssRes += (original[i] - sumActivations[i]) ** 2;
+      ssTot += (original[i] - mean) ** 2;
+    }
+    return 1 - ssRes / ssTot;
+  }, [review, sumActivations]);
 
   const globalAbsMax = useMemo(() =>
     computeAbsMax(...data.reviews.map(r => r.activations_standardized)),
@@ -261,7 +274,7 @@ export const App = () => {
       {/* Row 4, Col 2: Sum + Noise */}
       <div className="comparison-result">
         <div className="comparison-result-item">
-          <div className="comparison-section-label">Sum</div>
+          <div className="comparison-section-label">Reconstructed</div>
           <Heatmap
             data={sumActivations} absMax={activationsScale}
             scaleType={scaleType} valueScaling={valueScaling}
@@ -276,12 +289,22 @@ export const App = () => {
             showStats={showStats}
           />
         </div>
-        {showStats && review.reconstruction_r2 != null && (
+        {showStats && (
           <div className="comparison-result-item comparison-r2">
             <div className="comparison-section-label">R²</div>
             <div className="r2-value">
-              {(review.reconstruction_r2 * 100).toFixed(1)}%
+              {(computedR2 * 100).toFixed(1)}%
             </div>
+            {review.reconstruction_r2 != null && (
+              <>
+                <div className="comparison-section-label">
+                  R² with optimal scores
+                </div>
+                <div className="r2-value r2-value-secondary">
+                  {(review.reconstruction_r2 * 100).toFixed(1)}%
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
