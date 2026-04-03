@@ -210,6 +210,7 @@ export const App = () => {
           scaleType={scaleType}
           valueScaling={valueScaling}
           showStats={showStats}
+          explainedVariance={data.metadata.explained_variance_per_pathway}
           legend={scaleMode === "multiple-scales"
             ? <ColorLegend absMax={patternsScale} {...colorLegendProps} />
             : undefined}
