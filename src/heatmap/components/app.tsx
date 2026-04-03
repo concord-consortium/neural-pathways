@@ -41,6 +41,7 @@ export const App = () => {
   const [scaleType, setScaleType] = useState<ScaleType>("blue-white-red");
   const [valueScaling, setValueScaling] = useState<ValueScaling>("linear");
   const [showStats, setShowStats] = useState(false);
+  const [showScaler, setShowScaler] = useState(false);
   const [scaleMode, setScaleMode] = useState<ScaleMode>("current-review");
 
   const review = data.reviews[selectedReviewIndex];
@@ -157,6 +158,11 @@ export const App = () => {
           <input type="checkbox" checked={showStats}
             onChange={e => setShowStats(e.target.checked)} />
           Show stats
+        </label>
+        <label className="stats-toggle">
+          <input type="checkbox" checked={showScaler}
+            onChange={e => setShowScaler(e.target.checked)} />
+          Show Scaler
         </label>
       </div>
 
