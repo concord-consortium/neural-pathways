@@ -1,0 +1,31 @@
+// src/explorer/components/app.scss
+.explorer-app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.explorer-title {
+  font-size: 22px;
+  margin-bottom: 16px;
+  color: #222;
+}
+
+.explorer-top-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.explorer-main {
+  display: flex;
+  gap: 16px;
+}
+
+.explorer-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 16px;
+}
