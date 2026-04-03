@@ -20,6 +20,9 @@ const makeReview = (index: number, text: string): ExplorerReview => ({
   review_stars: 5,
   categories: "Food",
   rating: "positive",
+  words: [],
+  base_values: [0],
+  unmasked_values: [0],
 });
 
 const reviews = [

@@ -87,3 +87,12 @@
     background: #3498db;
   }
 }
+
+.pathway-bar-selected {
+  border-color: #5b9bd5;
+  background: #f0f6ff;
+
+  &:hover {
+    border-color: #5b9bd5;
+  }
+}

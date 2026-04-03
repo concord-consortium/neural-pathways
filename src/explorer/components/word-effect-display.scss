@@ -1,0 +1,31 @@
+.word-effect-display {
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.word-effect-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid #5b9bd5;
+}
+
+.word-effect-text {
+  font-size: 14px;
+  line-height: 2;
+  color: #333;
+}
+
+.word-effect-word {
+  padding: 2px 1px;
+  border-radius: 2px;
+
+  & + & {
+    margin-left: 4px;
+  }
+}

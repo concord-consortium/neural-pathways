@@ -4,8 +4,9 @@ import { ExplorerData, ExplorerReview, ScaleMode, ScaleExtents } from "../types/
 import { ReviewSelector } from "./review-selector";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPanel } from "./pathway-panel";
+import { WordEffectsPanel } from "./word-effects-panel";
 import { SettingsMenu } from "./settings-menu";
-import explorerData from "../explorer_data.json";
+import explorerData from "../explorer_data_with_words.json";
 
 import "./app.scss";
 
@@ -17,6 +18,19 @@ export const App = () => {
   const [showVarianceFractions, setShowVarianceFractions] = useState(false);
   const [showScores, setShowScores] = useState(false);
   const [showExtents, setShowExtents] = useState(false);
+  const [selectedPathways, setSelectedPathways] = useState<Set<number>>(new Set());
+
+  const handlePathwayClick = (index: number) => {
+    setSelectedPathways(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  };
 
   const scaleExtents = useMemo<ScaleExtents>(() => {
     let globalMin = Infinity;
@@ -61,7 +75,15 @@ export const App = () => {
 
       {selectedReview ? (
         <div className="explorer-main">
-          <ReviewPanel review={selectedReview} />
+          <div className="explorer-left-column">
+            <ReviewPanel review={selectedReview} />
+            {selectedPathways.size > 0 && (
+              <WordEffectsPanel
+                words={selectedReview.words}
+                selectedPathways={selectedPathways}
+              />
+            )}
+          </div>
           <PathwayPanel
             scores={selectedReview.pathway_scores}
             varianceFractions={selectedReview.pathway_variance_fractions}
@@ -70,6 +92,8 @@ export const App = () => {
             showVarianceFractions={showVarianceFractions}
             showScores={showScores}
             showExtents={showExtents}
+            onPathwayClick={handlePathwayClick}
+            selectedPathways={selectedPathways}
           />
         </div>
       ) : (

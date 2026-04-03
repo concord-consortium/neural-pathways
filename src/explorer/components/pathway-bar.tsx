@@ -8,6 +8,8 @@ interface PathwayBarProps {
   varianceFraction?: number;
   showScore: boolean;
   showExtents: boolean;
+  onClick?: (index: number) => void;
+  selected?: boolean;
 }
 
 function roundExtent(value: number): string {
@@ -17,7 +19,7 @@ function roundExtent(value: number): string {
 }
 
 export const PathwayBar: React.FC<PathwayBarProps> = ({
-  index, score, scaleExtent, varianceFraction, showScore, showExtents
+  index, score, scaleExtent, varianceFraction, showScore, showExtents, onClick, selected
 }) => {
   const [min, max] = scaleExtent;
   const range = Math.max(Math.abs(min), Math.abs(max));
@@ -26,7 +28,11 @@ export const PathwayBar: React.FC<PathwayBarProps> = ({
   const isPositive = score >= 0;
 
   return (
-    <div className="pathway-bar-row">
+    <div
+      className={`pathway-bar-row${selected ? " pathway-bar-selected" : ""}`}
+      data-testid={`pathway-bar-row-${index}`}
+      onClick={() => onClick?.(index)}
+    >
       <div className="pathway-bar-label">
         <span>Pathway {index}</span>
         <span className="pathway-bar-meta">

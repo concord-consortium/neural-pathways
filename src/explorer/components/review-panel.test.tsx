@@ -19,6 +19,9 @@ const mockReview: ExplorerReview = {
   review_stars: 5,
   categories: "Pizza, Italian",
   rating: "positive",
+  words: [{ word: "Delivery", scores: [0.1] }, { word: "was", scores: [0.0] }],
+  base_values: [0],
+  unmasked_values: [0],
 };
 
 describe("ReviewPanel", () => {
