@@ -14,6 +14,12 @@ describe("SettingsMenu", () => {
     onShowScoresChange: jest.fn(),
     showExtents: false,
     onShowExtentsChange: jest.fn(),
+    wordColorMode: "score" as const,
+    onWordColorModeChange: jest.fn(),
+    showPathwayValues: false,
+    onShowPathwayValuesChange: jest.fn(),
+    wordScaleScope: "per-pathway" as const,
+    onWordScaleScopeChange: jest.fn(),
   };
 
   it("opens the popover when gear icon is clicked", () => {

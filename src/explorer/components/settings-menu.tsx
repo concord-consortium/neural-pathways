@@ -1,6 +1,6 @@
 // src/explorer/components/settings-menu.tsx
 import React, { useState, useRef, useEffect } from "react";
-import { ScaleMode } from "../types/explorer-data";
+import { ScaleMode, WordColorMode, WordScaleScope } from "../types/explorer-data";
 import "./settings-menu.scss";
 
 interface SettingsMenuProps {
@@ -12,11 +12,20 @@ interface SettingsMenuProps {
   onShowScoresChange: (show: boolean) => void;
   showExtents: boolean;
   onShowExtentsChange: (show: boolean) => void;
+  wordColorMode: WordColorMode;
+  onWordColorModeChange: (mode: WordColorMode) => void;
+  showPathwayValues: boolean;
+  onShowPathwayValuesChange: (show: boolean) => void;
+  wordScaleScope: WordScaleScope;
+  onWordScaleScopeChange: (scope: WordScaleScope) => void;
 }
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({
   scaleMode, onScaleModeChange, showVarianceFractions, onShowVarianceFractionsChange,
-  showScores, onShowScoresChange, showExtents, onShowExtentsChange
+  showScores, onShowScoresChange, showExtents, onShowExtentsChange,
+  wordColorMode, onWordColorModeChange,
+  showPathwayValues, onShowPathwayValuesChange,
+  wordScaleScope, onWordScaleScopeChange
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -88,6 +97,56 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
                 onChange={e => onShowVarianceFractionsChange(e.target.checked)}
               />
               Show variance fractions
+            </label>
+          </div>
+          <div className="settings-menu-group">
+            <div className="settings-menu-group-label">Word Color</div>
+            <label>
+              <input
+                type="radio"
+                name="wordColorMode"
+                checked={wordColorMode === "score"}
+                onChange={() => onWordColorModeChange("score")}
+              />
+              Score
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="wordColorMode"
+                checked={wordColorMode === "impact"}
+                onChange={() => onWordColorModeChange("impact")}
+              />
+              Normalized impact
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={showPathwayValues}
+                onChange={e => onShowPathwayValuesChange(e.target.checked)}
+              />
+              Show pathway values
+            </label>
+          </div>
+          <div className="settings-menu-group">
+            <div className="settings-menu-group-label">Word Color Scale</div>
+            <label>
+              <input
+                type="radio"
+                name="wordScaleScope"
+                checked={wordScaleScope === "per-pathway"}
+                onChange={() => onWordScaleScopeChange("per-pathway")}
+              />
+              Per pathway
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="wordScaleScope"
+                checked={wordScaleScope === "full-review"}
+                onChange={() => onWordScaleScopeChange("full-review")}
+              />
+              Full review
             </label>
           </div>
         </div>

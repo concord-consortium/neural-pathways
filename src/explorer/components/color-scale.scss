@@ -1,0 +1,27 @@
+.color-scale {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.color-scale-bar {
+  flex: 1;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  background: linear-gradient(
+    to right,
+    rgba(52, 152, 219, 1.0),
+    rgba(52, 152, 219, 0.0) 50%,
+    rgba(231, 76, 60, 0.0) 50%,
+    rgba(231, 76, 60, 1.0)
+  );
+}
+
+.color-scale-label {
+  font-size: 10px;
+  color: #666;
+  white-space: nowrap;
+  min-width: 0;
+}

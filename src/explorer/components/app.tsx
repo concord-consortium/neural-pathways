@@ -1,6 +1,8 @@
 // src/explorer/components/app.tsx
 import React, { useState, useMemo } from "react";
-import { ExplorerData, ExplorerReview, ScaleMode, ScaleExtents } from "../types/explorer-data";
+import {
+  ExplorerData, ExplorerReview, ScaleMode, ScaleExtents, WordColorMode, WordScaleScope
+} from "../types/explorer-data";
 import { ReviewSelector } from "./review-selector";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPanel } from "./pathway-panel";
@@ -19,6 +21,9 @@ export const App = () => {
   const [showScores, setShowScores] = useState(false);
   const [showExtents, setShowExtents] = useState(false);
   const [selectedPathways, setSelectedPathways] = useState<Set<number>>(new Set());
+  const [wordColorMode, setWordColorMode] = useState<WordColorMode>("score");
+  const [showPathwayValues, setShowPathwayValues] = useState(false);
+  const [wordScaleScope, setWordScaleScope] = useState<WordScaleScope>("per-pathway");
 
   const handlePathwayClick = (index: number) => {
     setSelectedPathways(prev => {
@@ -70,6 +75,12 @@ export const App = () => {
           onShowScoresChange={setShowScores}
           showExtents={showExtents}
           onShowExtentsChange={setShowExtents}
+          wordColorMode={wordColorMode}
+          onWordColorModeChange={setWordColorMode}
+          showPathwayValues={showPathwayValues}
+          onShowPathwayValuesChange={setShowPathwayValues}
+          wordScaleScope={wordScaleScope}
+          onWordScaleScopeChange={setWordScaleScope}
         />
       </div>
 
@@ -81,6 +92,11 @@ export const App = () => {
               <WordEffectsPanel
                 words={selectedReview.words}
                 selectedPathways={selectedPathways}
+                wordColorMode={wordColorMode}
+                wordScaleScope={wordScaleScope}
+                showPathwayValues={showPathwayValues}
+                baseValues={selectedReview.base_values}
+                unmaskedValues={selectedReview.unmasked_values}
               />
             )}
           </div>
