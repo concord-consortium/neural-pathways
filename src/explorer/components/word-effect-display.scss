@@ -7,12 +7,21 @@
 }
 
 .word-effect-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   font-size: 12px;
   font-weight: 600;
   color: #444;
   padding-bottom: 4px;
   margin-bottom: 8px;
   border-bottom: 2px solid #5b9bd5;
+}
+
+.word-effect-values {
+  font-weight: 400;
+  color: #888;
+  font-size: 11px;
 }
 
 .word-effect-text {
@@ -22,10 +31,31 @@
 }
 
 .word-effect-word {
+  position: relative;
   padding: 2px 1px;
   border-radius: 2px;
+  cursor: pointer;
 
   & + & {
     margin-left: 4px;
   }
+
+  &.word-effect-word-selected {
+    outline: 1px solid #666;
+  }
+}
+
+.word-effect-label {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+  margin-bottom: 2px;
 }
