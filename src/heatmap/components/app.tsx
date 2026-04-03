@@ -118,9 +118,14 @@ export const App = () => {
     []
   );
 
-  const scalerScaleAbsMax = useMemo(() =>
-    computeAbsMax(data.scaler.scale),
+  const logScalerScale = useMemo(() =>
+    data.scaler.scale.map(v => Math.log(v)),
     []
+  );
+
+  const logScalerScaleAbsMax = useMemo(() =>
+    computeAbsMax(logScalerScale),
+    [logScalerScale]
   );
 
   // absMax for review-specific content (used in current-review and same-across-reviews)
@@ -295,13 +300,20 @@ export const App = () => {
             <ColorLegend absMax={scalerMeanAbsMax} {...colorLegendProps} />
           </div>
           <div className="comparison-result-item">
-            <div className="comparison-section-label">Scaler Scale</div>
+            <div className="comparison-section-label">Scaler Scale (log)</div>
             <Heatmap
-              data={data.scaler.scale} absMax={scalerScaleAbsMax}
-              scaleType={scaleType} valueScaling={valueScaling}
+              data={logScalerScale} absMax={logScalerScaleAbsMax}
+              scaleType={scaleType} valueScaling="linear"
               showStats={showStats}
+              formatStat={v => Math.exp(v).toFixed(3)}
             />
-            <ColorLegend absMax={scalerScaleAbsMax} {...colorLegendProps} />
+            <ColorLegend
+              absMax={logScalerScaleAbsMax} scaleType={scaleType}
+              valueScaling="linear" showStats={showStats}
+              minLabel={Math.exp(-logScalerScaleAbsMax).toFixed(2)}
+              centerLabel="1"
+              maxLabel={Math.exp(logScalerScaleAbsMax).toFixed(2)}
+            />
           </div>
         </div>
         </>}

@@ -1,9 +1,4 @@
 #app {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   color: #242424;
   background-color: #f8f8f8;
 }
@@ -12,8 +7,7 @@
   display: grid;
   grid-template-columns: 300px 1fr;
   grid-template-rows: auto auto auto auto 1fr auto;
-  height: 100vh;
-  overflow: auto;
+  min-height: 100vh;
 }
 
 .toolbar {

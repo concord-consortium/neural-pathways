@@ -30,7 +30,7 @@ describe("App component", () => {
     // Row should not be visible by default
     expect(screen.queryByText("Raw Activations")).toBeNull();
     expect(screen.queryByText("Scaler Mean")).toBeNull();
-    expect(screen.queryByText("Scaler Scale")).toBeNull();
+    expect(screen.queryByText("Scaler Scale (log)")).toBeNull();
 
     // Check the toggle
     fireEvent.click(screen.getByLabelText("Show Scaler"));
@@ -38,6 +38,6 @@ describe("App component", () => {
     // All three labels should now be visible
     expect(screen.getByText("Raw Activations")).toBeDefined();
     expect(screen.getByText("Scaler Mean")).toBeDefined();
-    expect(screen.getByText("Scaler Scale")).toBeDefined();
+    expect(screen.getByText("Scaler Scale (log)")).toBeDefined();
   });
 });
