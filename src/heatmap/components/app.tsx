@@ -118,15 +118,25 @@ export const App = () => {
     []
   );
 
-  const logScalerScale = useMemo(() =>
-    data.scaler.scale.map(v => Math.log(v)),
-    []
-  );
-
-  const logScalerScaleAbsMax = useMemo(() =>
-    computeAbsMax(logScalerScale),
-    [logScalerScale]
-  );
+  const scalerScaleNormalized = useMemo(() => {
+    const vals = data.scaler.scale;
+    let min = Infinity;
+    let max = -Infinity;
+    for (const v of vals) {
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    const logMin = Math.log(min);
+    const logMax = Math.log(max);
+    return {
+      min,
+      max,
+      data: vals.map(v => v <= 1
+        ? -Math.log(v) / logMin   // [min,1] → [-1,0]
+        : Math.log(v) / logMax    // [1,max] → [0,1]
+      ),
+    };
+  }, []);
 
   // absMax for review-specific content (used in current-review and same-across-reviews)
   const absMax = scaleMode === "same-across-reviews"
@@ -302,17 +312,19 @@ export const App = () => {
           <div className="comparison-result-item">
             <div className="comparison-section-label">Scaler Scale (log)</div>
             <Heatmap
-              data={logScalerScale} absMax={logScalerScaleAbsMax}
+              data={scalerScaleNormalized.data} absMax={1}
               scaleType={scaleType} valueScaling="linear"
               showStats={showStats}
-              formatStat={v => Math.exp(v).toFixed(3)}
+              formatStat={v => v < 0
+                ? Math.exp(-v * Math.log(scalerScaleNormalized.min))
+                : Math.exp(v * Math.log(scalerScaleNormalized.max))}
             />
             <ColorLegend
-              absMax={logScalerScaleAbsMax} scaleType={scaleType}
+              absMax={1} scaleType={scaleType}
               valueScaling="linear" showStats={showStats}
-              minLabel={Math.exp(-logScalerScaleAbsMax).toFixed(2)}
+              minLabel={scalerScaleNormalized.min.toFixed(2)}
               centerLabel="1"
-              maxLabel={Math.exp(logScalerScaleAbsMax).toFixed(2)}
+              maxLabel={scalerScaleNormalized.max.toFixed(2)}
             />
           </div>
         </div>
