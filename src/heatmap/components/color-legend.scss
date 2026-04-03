@@ -10,6 +10,21 @@
   white-space: nowrap;
 }
 
+.color-legend-bar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .color-legend-bar {
   border-radius: 3px;
+}
+
+.color-legend-center-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: #666;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff;
 }

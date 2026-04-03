@@ -9,10 +9,14 @@ interface ColorLegendProps {
   showStats?: boolean;
   width?: number;
   height?: number;
+  minLabel?: string;
+  centerLabel?: string;
+  maxLabel?: string;
 }
 
 export const ColorLegend: React.FC<ColorLegendProps> = ({
-  absMax, scaleType, valueScaling, showStats, width = 200, height = 14
+  absMax, scaleType, valueScaling, showStats, width = 200, height = 14,
+  minLabel, centerLabel, maxLabel,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -51,16 +55,24 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
     }
   }, [absMax, scaleType, valueScaling, width, height]);
 
+  const leftLabel = minLabel ?? (showStats ? (-absMax).toFixed(2) : "cold");
+  const rightLabel = maxLabel ?? (showStats ? absMax.toFixed(2) : "hot");
+
   return (
     <div className="color-legend">
-      <span className="color-legend-label">{showStats ? (-absMax).toFixed(2) : "cold"}</span>
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className="color-legend-bar"
-      />
-      <span className="color-legend-label">{showStats ? absMax.toFixed(2) : "hot"}</span>
+      <span className="color-legend-label">{leftLabel}</span>
+      <div className="color-legend-bar-container">
+        <canvas
+          ref={canvasRef}
+          width={width}
+          height={height}
+          className="color-legend-bar"
+        />
+        {centerLabel && (
+          <span className="color-legend-center-label">{centerLabel}</span>
+        )}
+      </div>
+      <span className="color-legend-label">{rightLabel}</span>
     </div>
   );
 };

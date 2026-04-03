@@ -19,10 +19,11 @@ interface PathwayPatternsProps {
   valueScaling: ValueScaling;
   showStats: boolean;
   legend?: React.ReactNode;
+  explainedVariance?: number[];
 }
 
 export const PathwayPatterns: React.FC<PathwayPatternsProps> = ({
-  components, absMax, scaleType, valueScaling, showStats, legend
+  components, absMax, scaleType, valueScaling, showStats, legend, explainedVariance
 }) => {
   const nPathways = components.length;
   const columnTemplate = pathwayColumnTemplate(nPathways);
@@ -32,7 +33,14 @@ export const PathwayPatterns: React.FC<PathwayPatternsProps> = ({
       {/* Header row */}
       {Array.from({ length: nPathways }, (_, i) => (
         <React.Fragment key={`h-${i}`}>
-          <div className="pathway-grid-header">P{i + 1}</div>
+          <div className="pathway-grid-header">
+            P{i + 1}
+            {explainedVariance && (
+              <span className="pathway-grid-ev">
+                {" "}({(explainedVariance[i] * 100).toFixed(0)}% EV)
+              </span>
+            )}
+          </div>
           {i < nPathways - 1 && <div className="pathway-grid-empty" />}
         </React.Fragment>
       ))}

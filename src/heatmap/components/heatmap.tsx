@@ -20,10 +20,12 @@ interface HeatmapProps {
   showStats?: boolean;
   label?: string;
   size?: number; // CSS width of the canvas in pixels; height scales proportionally
+  formatStat?: (value: number) => number;
 }
 
 export const Heatmap: React.FC<HeatmapProps> = ({
-  data, absMax, scaleType, valueScaling = "linear", showStats, label, size = 130
+  data, absMax, scaleType, valueScaling = "linear", showStats, label, size = 130,
+  formatStat,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -85,9 +87,17 @@ export const Heatmap: React.FC<HeatmapProps> = ({
       />
       {showStats && (
         <div className="heatmap-stats">
-          <div>min: {stats.min.toFixed(3)}</div>
-          <div>max: {stats.max.toFixed(3)}</div>
-          <div>absMax: {stats.absMax.toFixed(3)}</div>
+          <div>min: {(formatStat?.(stats.min) ?? stats.min).toFixed(3)}</div>
+          <div>max: {(formatStat?.(stats.max) ?? stats.max).toFixed(3)}</div>
+          <div>
+            absMax: {(formatStat
+              ? Math.max(
+                Math.abs(formatStat(stats.min)),
+                Math.abs(formatStat(stats.max))
+              )
+              : stats.absMax
+            ).toFixed(3)}
+          </div>
         </div>
       )}
     </div>

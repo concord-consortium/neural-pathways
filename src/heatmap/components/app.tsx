@@ -38,10 +38,11 @@ export const App = () => {
   const [selectedReviewIndex, setSelectedReviewIndex] = useState(0);
   const [scoreOverrides, setScoreOverrides] = useState<Record<number, number>>({});
   const [overridesForReview, setOverridesForReview] = useState(0);
-  const [scaleType, setScaleType] = useState<ScaleType>("blue-white-red");
-  const [valueScaling, setValueScaling] = useState<ValueScaling>("linear");
-  const [showStats, setShowStats] = useState(false);
-  const [scaleMode, setScaleMode] = useState<ScaleMode>("current-review");
+  const [scaleType, setScaleType] = useState<ScaleType>("multi-hue");
+  const [valueScaling, setValueScaling] = useState<ValueScaling>("logarithmic");
+  const [showStats, setShowStats] = useState(true);
+  const [showScaler, setShowScaler] = useState(false);
+  const [scaleMode, setScaleMode] = useState<ScaleMode>("multiple-scales");
 
   const review = data.reviews[selectedReviewIndex];
 
@@ -76,6 +77,19 @@ export const App = () => {
     [review, sumActivations]
   );
 
+  const computedR2 = useMemo(() => {
+    const original = review.activations_standardized;
+    const n = original.length;
+    const mean = original.reduce((s, v) => s + v, 0) / n;
+    let ssRes = 0;
+    let ssTot = 0;
+    for (let i = 0; i < n; i++) {
+      ssRes += (original[i] - sumActivations[i]) ** 2;
+      ssTot += (original[i] - mean) ** 2;
+    }
+    return 1 - ssRes / ssTot;
+  }, [review, sumActivations]);
+
   const globalAbsMax = useMemo(() =>
     computeAbsMax(...data.reviews.map(r => r.activations_standardized)),
     []
@@ -106,6 +120,36 @@ export const App = () => {
     computeAbsMax(review.activations_standardized, sumActivations, noise),
     [review, sumActivations, noise]
   );
+
+  const rawAbsMax = useMemo(() =>
+    computeAbsMax(review.activations_raw),
+    [review]
+  );
+
+  const scalerMeanAbsMax = useMemo(() =>
+    computeAbsMax(data.scaler.mean),
+    []
+  );
+
+  const scalerScaleNormalized = useMemo(() => {
+    const vals = data.scaler.scale;
+    let min = Infinity;
+    let max = -Infinity;
+    for (const v of vals) {
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    const logMin = Math.log(min);
+    const logMax = Math.log(max);
+    return {
+      min,
+      max,
+      data: vals.map(v => v <= 1
+        ? -Math.log(v) / logMin   // [min,1] → [-1,0]
+        : Math.log(v) / logMax    // [1,max] → [0,1]
+      ),
+    };
+  }, []);
 
   // absMax for review-specific content (used in current-review and same-across-reviews)
   const absMax = scaleMode === "same-across-reviews"
@@ -158,6 +202,11 @@ export const App = () => {
             onChange={e => setShowStats(e.target.checked)} />
           Show stats
         </label>
+        <label className="stats-toggle">
+          <input type="checkbox" checked={showScaler}
+            onChange={e => setShowScaler(e.target.checked)} />
+          Show Scaler
+        </label>
       </div>
 
       {/* Row 2, Col 1: Color legend when same across reviews */}
@@ -174,6 +223,7 @@ export const App = () => {
           scaleType={scaleType}
           valueScaling={valueScaling}
           showStats={showStats}
+          explainedVariance={data.metadata.explained_variance_per_pathway}
           legend={scaleMode === "multiple-scales"
             ? <ColorLegend absMax={patternsScale} {...colorLegendProps} />
             : undefined}
@@ -224,7 +274,7 @@ export const App = () => {
       {/* Row 4, Col 2: Sum + Noise */}
       <div className="comparison-result">
         <div className="comparison-result-item">
-          <div className="comparison-section-label">Sum</div>
+          <div className="comparison-section-label">Reconstructed</div>
           <Heatmap
             data={sumActivations} absMax={activationsScale}
             scaleType={scaleType} valueScaling={valueScaling}
@@ -239,15 +289,70 @@ export const App = () => {
             showStats={showStats}
           />
         </div>
-        {showStats && review.reconstruction_r2 != null && (
+        {showStats && (
           <div className="comparison-result-item comparison-r2">
             <div className="comparison-section-label">R²</div>
             <div className="r2-value">
-              {(review.reconstruction_r2 * 100).toFixed(1)}%
+              {(computedR2 * 100).toFixed(1)}%
             </div>
+            {review.reconstruction_r2 != null && (
+              <>
+                <div className="comparison-section-label">
+                  R² with optimal scores
+                </div>
+                <div className="r2-value r2-value-secondary">
+                  {(review.reconstruction_r2 * 100).toFixed(1)}%
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
+
+      {showScaler &&
+        <>
+          <div className="row-divider" />
+        {/* Row 5, Col 1: Raw Activations */}
+        <div className="scaler-original">
+          <div className="comparison-section-label">Raw Activations</div>
+          <Heatmap
+            data={review.activations_raw} absMax={rawAbsMax}
+            scaleType={scaleType} valueScaling={valueScaling}
+            showStats={showStats}
+          />
+          <ColorLegend absMax={rawAbsMax} {...colorLegendProps} />
+        </div>
+        {/* Row 5, Col 2: Scaler Mean + Scaler Scale */}
+        <div className="scaler-result">
+          <div className="comparison-result-item">
+            <div className="comparison-section-label">Scaler Mean</div>
+            <Heatmap
+              data={data.scaler.mean} absMax={scalerMeanAbsMax}
+              scaleType={scaleType} valueScaling={valueScaling}
+              showStats={showStats}
+            />
+            <ColorLegend absMax={scalerMeanAbsMax} {...colorLegendProps} />
+          </div>
+          <div className="comparison-result-item">
+            <div className="comparison-section-label">Scaler Scale (log)</div>
+            <Heatmap
+              data={scalerScaleNormalized.data} absMax={1}
+              scaleType={scaleType} valueScaling="linear"
+              showStats={showStats}
+              formatStat={v => v < 0
+                ? Math.exp(-v * Math.log(scalerScaleNormalized.min))
+                : Math.exp(v * Math.log(scalerScaleNormalized.max))}
+            />
+            <ColorLegend
+              absMax={1} scaleType={scaleType}
+              valueScaling="linear" showStats={showStats}
+              minLabel={scalerScaleNormalized.min.toFixed(2)}
+              centerLabel="1"
+              maxLabel={scalerScaleNormalized.max.toFixed(2)}
+            />
+          </div>
+        </div>
+        </>}
     </div>
   );
 };
