@@ -1,5 +1,18 @@
 # Terminology
 
+## FA terminology mapping
+
+Factor Analysis has standard terminology that maps to project-specific terms. The [factor-analysis.md](factor-analysis.md) document uses FA terminology throughout; this table helps translate.
+
+| FA term | Project term | Notes |
+|---------|-------------|-------|
+| **factor** | **pathway** | A latent pattern discovered by FA across neuron activations |
+| **observation** | **review** | Specifically, a review's 780-dimensional neuron activation vector |
+| **variable** | **neuron activation** | One of the 780 activation values per review |
+| **factor loadings** | **loadings** | No project-specific rename — "loadings" is used directly. A factor's loadings are the pattern of weights across all 780 neurons that define that pathway. |
+| **factor scores** | **pathway scores** | Per-review values saying how strongly each pathway is expressed in that review |
+| **noise variance / uniquenesses** | **noise variance** | No project-specific rename. Per-variable variance not explained by any factor. |
+
 ## Activations
 
 The numeric outputs of neurons (or layers) in the neural network when processing a review. In this project, activations are collected from three layers of the trained DistilBERT classifier:
@@ -51,24 +64,10 @@ In this project, the scaler is always fit on the same data as the FA (e.g. train
 
 StandardScaler is a standard scikit-learn utility, not specific to this project.
 
-## Test split
+## Train / dev / test splits
 
-The 3,000 reviews in `yelp_review_test.csv`, with activations in `yelp_test_NN_activations_simple.json`. These reviews were held out entirely during model training — the DistilBERT classifier never saw them. This is the standard meaning of "test set" in machine learning.
+See [review-datasets.md](review-datasets.md) for descriptions of the review sets (train, dev, test, synthetic GPT) and their annotations.
 
-In filenames, `_test_` can mean two different things:
-- The reviews being analyzed are from the test split (e.g. `yelp_test_NN_activations_simple.json`)
-- The FA was fit on the test split (e.g. `yelp_test_shap_pathway_associations_test_fa_simple.csv` — the `_test_fa_` part means "using an FA fit on test-split activations")
-
-## Dev split
-
-A 10% random sample (300 reviews) taken from the original train CSV (3,000 reviews) using `random_state=42`. The remaining 2,700 reviews become the train split.
-
-The dev split is a **validation set** — used during training to monitor performance and tune hyperparameters without touching the test set. "Dev" (short for "development") and "validation" are interchangeable terms in machine learning.
-
-In filenames, `_dev_` follows the same dual-meaning pattern as `_test_`:
-- The reviews being analyzed are from the dev split (e.g. `yelp_dev_NN_activations_simple.json`)
-- The FA was fit on the dev split (e.g. `pathway_importance_simple_dev.csv` — "pathways obtained from the dev activations")
-
-## Train split
-
-The 2,700 reviews remaining after the dev split is removed from the original train CSV. Activations are in `yelp_train_NN_activations_simple.json`. These are the reviews the DistilBERT classifier was actually trained on.
+In filenames, `_test_` and `_dev_` can each mean two different things:
+- The reviews being analyzed are from that split (e.g. `yelp_test_NN_activations_simple.json`)
+- The FA was fit on that split (e.g. `yelp_test_shap_pathway_associations_test_fa_simple.csv` — the `_test_fa_` part means "using an FA fit on test-split activations")
