@@ -7,6 +7,7 @@ import { PathwayPatterns, PathwayScoresRow } from "./pathway-grid";
 import { ScoredPathwaysView } from "./scored-pathways-view";
 import { ColorLegend } from "./color-legend";
 import { Heatmap } from "./heatmap";
+import { TerminologyMode, getLabel } from "../utils/terminology";
 import vizData from "../viz_data.json";
 
 import "./app.scss";
@@ -43,6 +44,7 @@ export const App = () => {
   const [showStats, setShowStats] = useState(true);
   const [showScaler, setShowScaler] = useState(false);
   const [scaleMode, setScaleMode] = useState<ScaleMode>("multiple-scales");
+  const [terminologyMode, setTerminologyMode] = useState<TerminologyMode>("project");
 
   const review = data.reviews[selectedReviewIndex];
 
@@ -207,6 +209,11 @@ export const App = () => {
             onChange={e => setShowScaler(e.target.checked)} />
           Show Scaler
         </label>
+        <label className="stats-toggle">
+          <input type="checkbox" checked={terminologyMode === "fa"}
+            onChange={e => setTerminologyMode(e.target.checked ? "fa" : "project")} />
+          FA terminology
+        </label>
       </div>
 
       {/* Row 2, Col 1: Color legend when same across reviews */}
@@ -224,6 +231,8 @@ export const App = () => {
           valueScaling={valueScaling}
           showStats={showStats}
           explainedVariance={data.metadata.explained_variance_per_pathway}
+          noiseVariance={data.pathways.noise_variance}
+          terminologyMode={terminologyMode}
           legend={scaleMode === "multiple-scales"
             ? <ColorLegend absMax={patternsScale} {...colorLegendProps} />
             : undefined}
@@ -248,6 +257,8 @@ export const App = () => {
           pathwayScores={pathwayScores}
           originalScores={review.pathway_scores}
           onScoreChange={handleScoreChange}
+          terminologyMode={terminologyMode}
+          extraColumns={data.pathways.noise_variance ? 1 : 0}
         />
         <ScoredPathwaysView
           scoredPathways={scoredPathways}
@@ -255,6 +266,7 @@ export const App = () => {
           scaleType={scaleType}
           valueScaling={valueScaling}
           showStats={showStats}
+          terminologyMode={terminologyMode}
           legend={scaleMode === "multiple-scales"
             ? <ColorLegend absMax={scoredScale} {...colorLegendProps} />
             : undefined}
@@ -264,7 +276,7 @@ export const App = () => {
 
       {/* Row 4, Col 1: Original activations */}
       <div className="comparison-original">
-        <div className="comparison-section-label">Original Activations</div>
+        <div className="comparison-section-label">{getLabel("originalActivations", terminologyMode)}</div>
         <Heatmap
           data={review.activations_standardized} absMax={activationsScale}
           scaleType={scaleType} valueScaling={valueScaling}
@@ -282,7 +294,7 @@ export const App = () => {
           />
         </div>
         <div className="comparison-result-item">
-          <div className="comparison-section-label">Noise</div>
+          <div className="comparison-section-label">Residual</div>
           <Heatmap
             data={noise} absMax={activationsScale}
             scaleType={scaleType} valueScaling={valueScaling}
@@ -295,10 +307,10 @@ export const App = () => {
             <div className="r2-value">
               {(computedR2 * 100).toFixed(1)}%
             </div>
-            {review.reconstruction_r2 != null && (
+            {Object.keys(scoreOverrides).length > 0 && review.reconstruction_r2 != null && (
               <>
                 <div className="comparison-section-label">
-                  R² with optimal scores
+                  Original R²
                 </div>
                 <div className="r2-value r2-value-secondary">
                   {(review.reconstruction_r2 * 100).toFixed(1)}%
@@ -314,7 +326,7 @@ export const App = () => {
           <div className="row-divider" />
         {/* Row 5, Col 1: Raw Activations */}
         <div className="scaler-original">
-          <div className="comparison-section-label">Raw Activations</div>
+          <div className="comparison-section-label">Raw neuron activations</div>
           <Heatmap
             data={review.activations_raw} absMax={rawAbsMax}
             scaleType={scaleType} valueScaling={valueScaling}

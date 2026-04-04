@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import { Heatmap } from "./heatmap";
 import { ScaleType, ValueScaling } from "../../shared/color-scale";
+import { TerminologyMode, getLabel } from "../utils/terminology";
 import "./scored-pathways-view.scss";
 
 const HEATMAP_WIDTH = 130;
@@ -21,6 +22,7 @@ interface ScoredPathwaysViewProps {
   scaleType: ScaleType;
   valueScaling: ValueScaling;
   showStats: boolean;
+  terminologyMode: TerminologyMode;
   legend?: React.ReactNode;
 }
 
@@ -33,7 +35,7 @@ function phaseProgress(progress: number, phase: number): number {
 }
 
 export const ScoredPathwaysView: React.FC<ScoredPathwaysViewProps> = ({
-  scoredPathways, absMax, scaleType, valueScaling, showStats, legend
+  scoredPathways, absMax, scaleType, valueScaling, showStats, terminologyMode, legend
 }) => {
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -174,7 +176,7 @@ export const ScoredPathwaysView: React.FC<ScoredPathwaysViewProps> = ({
   return (
     <div className="scored-pathways-section">
       <div className="scored-pathways-label">
-        Scored pathways (pattern x score)
+        {getLabel("scoredPathways", terminologyMode)}
         {legend && <span className="scored-pathways-legend">{legend}</span>}
       </div>
 
