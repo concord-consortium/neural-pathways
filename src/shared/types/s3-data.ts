@@ -42,7 +42,7 @@ export interface S3Review {
 // --- Activation Types (heatmap) ---
 
 export interface ActivationBucket {
-  reviews: Array<{ id: string; activations: number[] }>;
+  reviews: { id: string; activations: number[] }[];
 }
 
 // --- SHAP Types (explorer) ---
@@ -55,11 +55,11 @@ export interface S3ShapReview {
   id: string;
   base_values: number[];
   unmasked_values: number[];
-  words: Array<{ word: string; scores: number[] }>;
+  words: { word: string; scores: number[] }[];
 }
 
 export interface ReviewShapData {
-  words: Array<{ word: string; scores: number[] }>;
+  words: { word: string; scores: number[] }[];
   base_values: number[];
   unmasked_values: number[];
 }
