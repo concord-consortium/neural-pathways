@@ -5,7 +5,7 @@ import { computeScoredPathway, computeSum } from "../utils/reconstruction";
 import {
   fetchIndex, fetchActivations, fitToPathways, fitToScaler, fitToMetadata,
   standardizeActivations,
-} from "../utils/data-loader";
+} from "../../shared/data-loader";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPatterns, PathwayScoresRow } from "./pathway-grid";
 import { ScoredPathwaysView } from "./scored-pathways-view";
