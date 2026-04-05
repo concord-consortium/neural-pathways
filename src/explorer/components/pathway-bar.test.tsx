@@ -114,4 +114,5 @@ describe("PathwayBar", () => {
     const row = screen.getByTestId("pathway-bar-row-0");
     expect(row.classList.contains("pathway-bar-selected")).toBe(true);
   });
+
 });

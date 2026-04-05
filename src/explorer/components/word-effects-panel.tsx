@@ -1,24 +1,28 @@
 import React, { useMemo } from "react";
-import { WordEffect, WordColorMode, WordScaleScope } from "../types/explorer-data";
+import { WordColorMode, WordScaleScope } from "../types/explorer-data";
+import { ReviewShapData } from "../../shared/types/s3-data";
 import { WordEffectDisplay } from "./word-effect-display";
 import { ColorScale } from "./color-scale";
 import "./word-effects-panel.scss";
 
-const FILTERED_TOKENS = new Set(["[CLS]", "[SEP]"]);
-
 interface WordEffectsPanelProps {
-  words: WordEffect[];
+  shapData: ReviewShapData | null;
+  shapLoading: boolean;
+  hasShapForCurrentFit: boolean;
+  shapAvailableFits: string[];
+  currentFitName: string;
   selectedPathways: Set<number>;
   wordColorMode: WordColorMode;
   wordScaleScope: WordScaleScope;
   showPathwayValues: boolean;
-  baseValues: number[];
-  unmaskedValues: number[];
+  onSwitchFit?: (fitName: string) => void;
 }
 
+const FILTERED_TOKENS = new Set(["[CLS]", "[SEP]"]);
+
 export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
-  words, selectedPathways, wordColorMode, wordScaleScope, showPathwayValues,
-  baseValues, unmaskedValues
+  shapData, shapLoading, hasShapForCurrentFit, shapAvailableFits, currentFitName,
+  selectedPathways, wordColorMode, wordScaleScope, showPathwayValues, onSwitchFit
 }) => {
   const sortedIndices = useMemo(
     () => Array.from(selectedPathways).sort((a, b) => a - b),
@@ -26,16 +30,16 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
   );
 
   const filteredWords = useMemo(
-    () => words.filter(w => !FILTERED_TOKENS.has(w.word)),
-    [words]
+    () => shapData ? shapData.words.filter(w => !FILTERED_TOKENS.has(w.word)) : [],
+    [shapData]
   );
 
   const sharedMaxAbsValue = useMemo(() => {
-    if (wordScaleScope !== "full-review" || sortedIndices.length === 0) return undefined;
+    if (wordScaleScope !== "full-review" || sortedIndices.length === 0 || !shapData) return undefined;
     let max = 0;
     for (const w of filteredWords) {
       for (const idx of sortedIndices) {
-        const range = unmaskedValues[idx] - baseValues[idx];
+        const range = shapData.unmasked_values[idx] - shapData.base_values[idx];
         const value = (wordColorMode === "impact" && range !== 0)
           ? w.scores[idx] / range
           : w.scores[idx];
@@ -44,8 +48,49 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
       }
     }
     return max;
-  }, [wordScaleScope, filteredWords, sortedIndices, wordColorMode, baseValues, unmaskedValues]);
+  }, [wordScaleScope, filteredWords, sortedIndices, wordColorMode, shapData]);
 
+  // Show availability message when no SHAP for current fit
+  if (!hasShapForCurrentFit) {
+    if (shapAvailableFits.length > 0) {
+      return (
+        <div className="word-effects-panel">
+          <div className="word-effects-unavailable">
+            No word effects for <strong>{currentFitName}</strong>. Available for:{" "}
+            {shapAvailableFits.map((fit, i) => (
+              <span key={fit}>
+                {i > 0 && ", "}
+                <button
+                  className="word-effects-fit-link"
+                  onClick={() => onSwitchFit?.(fit)}
+                >
+                  {fit}
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="word-effects-panel">
+        <div className="word-effects-unavailable">
+          No word effects available for this review.
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (shapLoading || !shapData) {
+    return (
+      <div className="word-effects-panel">
+        <div className="word-effects-unavailable">Loading word effects...</div>
+      </div>
+    );
+  }
+
+  // No pathways selected
   if (selectedPathways.size === 0) return null;
 
   return (
@@ -57,12 +102,12 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
         <WordEffectDisplay
           key={i}
           pathwayIndex={i}
-          words={words}
+          words={shapData.words}
           wordColorMode={wordColorMode}
           showPathwayValues={showPathwayValues}
           showColorScale={wordScaleScope === "per-pathway"}
-          baseValue={baseValues[i]}
-          unmaskedValue={unmaskedValues[i]}
+          baseValue={shapData.base_values[i]}
+          unmaskedValue={shapData.unmasked_values[i]}
           sharedMaxAbsValue={sharedMaxAbsValue}
         />
       ))}

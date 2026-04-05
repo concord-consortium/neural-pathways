@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { App } from "./app";
-import { S3Index } from "../types/viz-data";
+import { S3Index } from "../../shared/types/s3-data";
 
 const mockFit = {
   source_split: "train",
@@ -15,6 +15,8 @@ const mockFit = {
   noise_variance: Array(780).fill(0.2),
   scaler_mean: Array(780).fill(0.0),
   scaler_scale: Array(780).fill(1.0),
+  pathway_score_min: [-1.0, -1.0],
+  pathway_score_max: [1.0, 1.0],
 };
 
 const mockIndex: S3Index = {

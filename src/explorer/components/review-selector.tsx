@@ -1,19 +1,20 @@
 // src/explorer/components/review-selector.tsx
 import React, { useMemo } from "react";
 import Select, { SingleValue, StylesConfig } from "react-select";
-import { ExplorerReview } from "../types/explorer-data";
+import { S3Review } from "../../shared/types/s3-data";
 
 interface ReviewSelectorProps {
-  reviews: ExplorerReview[];
-  onSelect: (review: ExplorerReview) => void;
+  reviews: S3Review[];
+  selectedReview?: S3Review;
+  onSelect: (review: S3Review) => void;
 }
 
 const TRUNCATE_LENGTH = 60;
 
 interface ReviewOption {
-  value: number;
+  value: string;
   label: string;
-  review: ExplorerReview;
+  review: S3Review;
 }
 
 const selectStyles: StylesConfig<ReviewOption, false> = {
@@ -24,14 +25,19 @@ const selectStyles: StylesConfig<ReviewOption, false> = {
   input: (base) => ({ ...base, flex: "1 1 auto" }),
 };
 
-export const ReviewSelector: React.FC<ReviewSelectorProps> = ({ reviews, onSelect }) => {
+export const ReviewSelector: React.FC<ReviewSelectorProps> = ({ reviews, selectedReview, onSelect }) => {
   const options = useMemo<ReviewOption[]>(
-    () => reviews.map(r => ({
-      value: r.index,
-      label: `${r.index}: ${r.text.slice(0, TRUNCATE_LENGTH)}`,
+    () => reviews.map((r, i) => ({
+      value: r.id,
+      label: `${i}: ${r.text.slice(0, TRUNCATE_LENGTH)}`,
       review: r,
     })),
     [reviews]
+  );
+
+  const selectedOption = useMemo(
+    () => options.find(o => o.value === selectedReview?.id) ?? null,
+    [options, selectedReview],
   );
 
   const handleChange = (option: SingleValue<ReviewOption>) => {
@@ -43,6 +49,7 @@ export const ReviewSelector: React.FC<ReviewSelectorProps> = ({ reviews, onSelec
   return (
     <Select<ReviewOption>
       options={options}
+      value={selectedOption}
       onChange={handleChange}
       placeholder="Search by review # or text..."
       isSearchable

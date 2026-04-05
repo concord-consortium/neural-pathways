@@ -1,15 +1,15 @@
 import {
   fetchIndex,
   fetchActivations,
+  fetchShap,
   fitToPathways,
   fitToScaler,
   fitToMetadata,
   standardizeActivations,
   BASE_URL,
 } from "./data-loader";
-import { S3FaFit, S3Index } from "../types/viz-data";
+import { S3FaFit, S3Index } from "./types/s3-data";
 
-// Minimal FA fit for testing
 const mockFit: S3FaFit = {
   source_split: "train",
   n_pathways: 2,
@@ -22,6 +22,8 @@ const mockFit: S3FaFit = {
   noise_variance: [0.1, 0.2, 0.3],
   scaler_mean: [10.0, 20.0, 30.0],
   scaler_scale: [2.0, 4.0, 5.0],
+  pathway_score_min: [-2.0, -1.5],
+  pathway_score_max: [3.0, 2.0],
 };
 
 const mockIndex: S3Index = {
@@ -39,14 +41,30 @@ const mockIndex: S3Index = {
       pathway_scores: { "train-fa-2": [0.5, -0.3] },
       reconstruction_r2: { "train-fa-2": 0.9 },
       pathway_variance_fractions: { "train-fa-2": [0.6, 0.3] },
+      has_shap: ["train-fa-2"],
     },
   ],
 };
 
-const mockBucket = {
+const mockActivationBucket = {
   reviews: [
     { id: "a3f7c2d81e09", activations: [12.0, 24.0, 35.0] },
     { id: "bbbb00000000", activations: [1.0, 2.0, 3.0] },
+  ],
+};
+
+const mockShapBucket = {
+  reviews: [
+    {
+      id: "a3f7c2d81e09",
+      base_values: [0.1, -0.2],
+      unmasked_values: [0.8, 0.5],
+      words: [
+        { word: "[CLS]", scores: [0.01, -0.01] },
+        { word: "great", scores: [0.3, 0.2] },
+        { word: "food", scores: [0.1, 0.05] },
+      ],
+    },
   ],
 };
 
@@ -82,7 +100,7 @@ describe("fetchActivations", () => {
   it("fetches the correct bucket and caches it", async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockBucket),
+      json: () => Promise.resolve(mockActivationBucket),
     });
     const cache = new Map();
 
@@ -95,26 +113,23 @@ describe("fetchActivations", () => {
   it("uses cached bucket on second call", async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockBucket),
+      json: () => Promise.resolve(mockActivationBucket),
     });
     const cache = new Map();
 
     await fetchActivations("a3f7c2d81e09", cache);
     await fetchActivations("bbbb00000000", cache);
-
-    // Only one fetch for a3 bucket, second call hits different bucket
     expect(fetch).toHaveBeenCalledTimes(2);
 
-    // But fetching another review from the same bucket uses cache
     const activations = await fetchActivations("a3f7c2d81e09", cache);
-    expect(fetch).toHaveBeenCalledTimes(2); // no new fetch
+    expect(fetch).toHaveBeenCalledTimes(2);
     expect(activations).toEqual([12.0, 24.0, 35.0]);
   });
 
   it("throws if review not found in bucket", async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockBucket),
+      json: () => Promise.resolve(mockActivationBucket),
     });
     const cache = new Map();
 
@@ -124,12 +139,67 @@ describe("fetchActivations", () => {
   });
 });
 
+describe("fetchShap", () => {
+  it("fetches the correct SHAP bucket and caches it", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockShapBucket),
+    });
+    const cache = new Map();
+
+    const shap = await fetchShap("a3f7c2d81e09", "train-fa-2", cache);
+    expect(fetch).toHaveBeenCalledWith(`${BASE_URL}shap/train-fa-2/a3.json`);
+    expect(shap.words).toHaveLength(3);
+    expect(shap.base_values).toEqual([0.1, -0.2]);
+    expect(cache.has("train-fa-2/a3")).toBe(true);
+  });
+
+  it("uses cached SHAP bucket on second call", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockShapBucket),
+    });
+    const cache = new Map();
+
+    await fetchShap("a3f7c2d81e09", "train-fa-2", cache);
+    const shap = await fetchShap("a3f7c2d81e09", "train-fa-2", cache);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(shap.words).toHaveLength(3);
+  });
+
+  it("fetches different buckets for different fits", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockShapBucket),
+    });
+    const cache = new Map();
+
+    await fetchShap("a3f7c2d81e09", "train-fa-2", cache);
+    await fetchShap("a3f7c2d81e09", "test-fa-7", cache);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledWith(`${BASE_URL}shap/train-fa-2/a3.json`);
+    expect(fetch).toHaveBeenCalledWith(`${BASE_URL}shap/test-fa-7/a3.json`);
+  });
+
+  it("throws if review not found in SHAP bucket", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockShapBucket),
+    });
+    const cache = new Map();
+
+    await expect(fetchShap("a3zzzzzzzzzz", "train-fa-2", cache)).rejects.toThrow(
+      "Review a3zzzzzzzzzz not found in SHAP bucket train-fa-2/a3"
+    );
+  });
+});
+
 describe("fitToPathways", () => {
   it("translates an S3FaFit to Pathways shape", () => {
     const pathways = fitToPathways(mockFit);
     expect(pathways.components).toEqual(mockFit.loadings);
     expect(pathways.noise_variance).toEqual(mockFit.noise_variance);
-    expect(pathways.mean).toEqual([0, 0, 0]); // zero vector, length = n_neurons
+    expect(pathways.mean).toEqual([0, 0, 0]);
   });
 });
 
@@ -144,7 +214,7 @@ describe("fitToScaler", () => {
 describe("fitToMetadata", () => {
   it("translates an S3FaFit to Metadata shape", () => {
     const metadata = fitToMetadata(mockFit);
-    expect(metadata.n_neurons).toBe(3); // inferred from loadings[0].length
+    expect(metadata.n_neurons).toBe(3);
     expect(metadata.n_pathways).toBe(2);
     expect(metadata.explained_variance_total).toBe(0.85);
     expect(metadata.explained_variance_per_pathway).toEqual([0.7, 0.15]);

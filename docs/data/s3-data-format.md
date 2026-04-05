@@ -66,6 +66,8 @@ Each key is a Factor Analysis fit name like `train-fa-6` (fit on train split, 6 
 | `noise_variance` | Per-neuron noise variance, length 780 |
 | `scaler_mean` | StandardScaler mean per neuron, length 780 |
 | `scaler_scale` | StandardScaler scale per neuron, length 780 |
+| `pathway_score_min` | Minimum pathway score across all reviews, per pathway (length `n_pathways`) |
+| `pathway_score_max` | Maximum pathway score across all reviews, per pathway (length `n_pathways`) |
 
 Current fits: `train-fa-6`, `test-fa-7`, `dev-fa-6`.
 
@@ -111,7 +113,8 @@ Each entry:
     "train-fa-6": [0.85, 0.05, 0.04, 0.03, 0.02, 0.01],
     "test-fa-7": [0.80, 0.08, ...],
     "dev-fa-6": [0.82, 0.06, ...]
-  }
+  },
+  "has_shap": ["test-fa-7", "dev-fa-6"]
 }
 ```
 
@@ -131,6 +134,7 @@ Each entry:
 | `pathway_scores` | object | Per-FA-fit array of pathway scores (length = `n_pathways` for that fit) |
 | `reconstruction_r2` | object | Per-FA-fit R² measuring how well pathways reconstruct this review's activations |
 | `pathway_variance_fractions` | object | Per-FA-fit array showing each pathway's share of the reconstruction variance |
+| `has_shap` | string[] or absent | List of FA fit names that have SHAP data for this review. Omitted if the review has no SHAP data. |
 
 Metadata fields (`name`, `city`, `state`, `stars`, `review_stars`, `categories`) are present only for Yelp reviews. Synthetic reviews omit these fields.
 
