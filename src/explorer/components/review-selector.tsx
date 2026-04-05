@@ -1,19 +1,19 @@
 // src/explorer/components/review-selector.tsx
 import React, { useMemo } from "react";
 import Select, { SingleValue, StylesConfig } from "react-select";
-import { ExplorerReview } from "../types/explorer-data";
+import { S3Review } from "../../shared/types/s3-data";
 
 interface ReviewSelectorProps {
-  reviews: ExplorerReview[];
-  onSelect: (review: ExplorerReview) => void;
+  reviews: S3Review[];
+  onSelect: (review: S3Review) => void;
 }
 
 const TRUNCATE_LENGTH = 60;
 
 interface ReviewOption {
-  value: number;
+  value: string;
   label: string;
-  review: ExplorerReview;
+  review: S3Review;
 }
 
 const selectStyles: StylesConfig<ReviewOption, false> = {
@@ -26,9 +26,9 @@ const selectStyles: StylesConfig<ReviewOption, false> = {
 
 export const ReviewSelector: React.FC<ReviewSelectorProps> = ({ reviews, onSelect }) => {
   const options = useMemo<ReviewOption[]>(
-    () => reviews.map(r => ({
-      value: r.index,
-      label: `${r.index}: ${r.text.slice(0, TRUNCATE_LENGTH)}`,
+    () => reviews.map((r, i) => ({
+      value: r.id,
+      label: `${i}: ${r.text.slice(0, TRUNCATE_LENGTH)}`,
       review: r,
     })),
     [reviews]
