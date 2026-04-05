@@ -6,3 +6,25 @@
   min-width: 0;
   overflow-wrap: break-word;
 }
+
+.word-effects-unavailable {
+  font-size: 14px;
+  color: #666;
+  padding: 16px;
+  font-style: italic;
+}
+
+.word-effects-fit-link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: inherit;
+  font-style: inherit;
+  padding: 0;
+  text-decoration: underline;
+
+  &:hover {
+    color: #1d4ed8;
+  }
+}
