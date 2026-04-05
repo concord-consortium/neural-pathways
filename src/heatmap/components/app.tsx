@@ -181,12 +181,29 @@ export const App = () => {
     setSelectedFitName(fitName);
   }, []);
 
-  // --- Sync hash with selected review and fit ---
+  // --- Sync hash (write on state change, read on hashchange) ---
   useEffect(() => {
     if (selectedReviewId && selectedFitName) {
       updateHash(selectedReviewId, selectedFitName);
     }
   }, [selectedReviewId, selectedFitName]);
+
+  useEffect(() => {
+    if (!indexData) return;
+    const handleHashChange = () => {
+      const hashParams = getHashParams();
+      const validFits = Object.keys(indexData.metadata.fa_fits);
+      if (hashParams.fit && validFits.includes(hashParams.fit)) {
+        setSelectedFitName(hashParams.fit);
+      }
+      if (hashParams.review && indexData.reviews.some(r => r.id === hashParams.review)) {
+        setSelectedReviewId(hashParams.review);
+        setActivationsLoading(true);
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [indexData]);
 
   // --- Computed pathway data (no activations needed) ---
   const scoredPathways = useMemo(() =>

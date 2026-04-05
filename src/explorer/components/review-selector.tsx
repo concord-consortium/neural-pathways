@@ -5,6 +5,7 @@ import { S3Review } from "../../shared/types/s3-data";
 
 interface ReviewSelectorProps {
   reviews: S3Review[];
+  selectedReview?: S3Review;
   onSelect: (review: S3Review) => void;
 }
 
@@ -24,7 +25,7 @@ const selectStyles: StylesConfig<ReviewOption, false> = {
   input: (base) => ({ ...base, flex: "1 1 auto" }),
 };
 
-export const ReviewSelector: React.FC<ReviewSelectorProps> = ({ reviews, onSelect }) => {
+export const ReviewSelector: React.FC<ReviewSelectorProps> = ({ reviews, selectedReview, onSelect }) => {
   const options = useMemo<ReviewOption[]>(
     () => reviews.map((r, i) => ({
       value: r.id,
@@ -32,6 +33,11 @@ export const ReviewSelector: React.FC<ReviewSelectorProps> = ({ reviews, onSelec
       review: r,
     })),
     [reviews]
+  );
+
+  const selectedOption = useMemo(
+    () => options.find(o => o.value === selectedReview?.id) ?? null,
+    [options, selectedReview],
   );
 
   const handleChange = (option: SingleValue<ReviewOption>) => {
@@ -43,6 +49,7 @@ export const ReviewSelector: React.FC<ReviewSelectorProps> = ({ reviews, onSelec
   return (
     <Select<ReviewOption>
       options={options}
+      value={selectedOption}
       onChange={handleChange}
       placeholder="Search by review # or text..."
       isSearchable

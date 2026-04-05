@@ -110,12 +110,28 @@ export const App = () => {
   const currentShapData = shapDataCurrent ? rawShapData : null;
   const shapLoading = shapRequestKey !== "" && !shapDataCurrent && !shapFetchFailed;
 
-  // --- Sync hash ---
+  // --- Sync hash (write on state change, read on hashchange) ---
   useEffect(() => {
     if (selectedReviewId && selectedFitName) {
       updateHash(selectedReviewId, selectedFitName);
     }
   }, [selectedReviewId, selectedFitName]);
+
+  useEffect(() => {
+    if (!indexData) return;
+    const handleHashChange = () => {
+      const hashParams = getHashParams();
+      const validFits = Object.keys(indexData.metadata.fa_fits);
+      if (hashParams.fit && validFits.includes(hashParams.fit)) {
+        setSelectedFitName(hashParams.fit);
+      }
+      if (hashParams.review && indexData.reviews.some(r => r.id === hashParams.review)) {
+        setSelectedReviewId(hashParams.review);
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [indexData]);
 
   // --- Derived fit data ---
   const selectedFit = indexData?.metadata.fa_fits[selectedFitName] ?? null;
@@ -147,9 +163,6 @@ export const App = () => {
       perPathway: mins.map((min, i) => [min, maxs[i]] as [number, number]),
     };
   }, [selectedFit]);
-
-  // --- Pathway click (disabled when no SHAP) ---
-  const pathwaysDisabled = !hasShapForCurrentFit;
 
   const handlePathwayClick = useCallback((index: number) => {
     setSelectedPathways(prev => {
@@ -201,7 +214,7 @@ export const App = () => {
             <option key={name} value={name}>{name}</option>
           ))}
         </select>
-        <ReviewSelector reviews={indexData.reviews} onSelect={handleSelectReview} />
+        <ReviewSelector reviews={indexData.reviews} selectedReview={selectedReview} onSelect={handleSelectReview} />
         <SettingsMenu
           scaleMode={scaleMode}
           onScaleModeChange={setScaleMode}
@@ -247,7 +260,6 @@ export const App = () => {
             showExtents={showExtents}
             onPathwayClick={handlePathwayClick}
             selectedPathways={selectedPathways}
-            disabled={pathwaysDisabled}
           />
         </div>
       ) : (

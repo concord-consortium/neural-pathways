@@ -115,22 +115,4 @@ describe("PathwayBar", () => {
     expect(row.classList.contains("pathway-bar-selected")).toBe(true);
   });
 
-  it("applies disabled styling and suppresses onClick when disabled", () => {
-    const onClick = jest.fn();
-    render(
-      <PathwayBar
-        index={0}
-        score={0.5}
-        scaleExtent={[-3, 3]}
-        showScore={false}
-        showExtents={false}
-        onClick={onClick}
-        disabled={true}
-      />
-    );
-    const row = screen.getByTestId("pathway-bar-row-0");
-    expect(row.classList.contains("pathway-bar-disabled")).toBe(true);
-    fireEvent.click(row);
-    expect(onClick).not.toHaveBeenCalled();
-  });
 });

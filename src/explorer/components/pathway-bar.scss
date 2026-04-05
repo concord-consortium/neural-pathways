@@ -96,12 +96,3 @@
     border-color: #5b9bd5;
   }
 }
-
-.pathway-bar-disabled {
-  opacity: 0.6;
-  cursor: default;
-
-  &:hover {
-    background: inherit;
-  }
-}
