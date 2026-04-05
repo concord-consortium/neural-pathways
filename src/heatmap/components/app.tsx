@@ -1,18 +1,39 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { VizData } from "../types/viz-data";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { S3Index, S3Review, ActivationBucket } from "../types/viz-data";
 import { ScaleType, ValueScaling, computeAbsMax } from "../../shared/color-scale";
 import { computeScoredPathway, computeSum } from "../utils/reconstruction";
+import {
+  fetchIndex, fetchActivations, fitToPathways, fitToScaler, fitToMetadata,
+  standardizeActivations,
+} from "../utils/data-loader";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPatterns, PathwayScoresRow } from "./pathway-grid";
 import { ScoredPathwaysView } from "./scored-pathways-view";
 import { ColorLegend } from "./color-legend";
 import { Heatmap } from "./heatmap";
 import { TerminologyMode, getLabel } from "../utils/terminology";
-import vizData from "../viz_data.json";
 
 import "./app.scss";
 
-const data = vizData as VizData;
+function getHashParams(): Record<string, string> {
+  const hash = window.location.hash.slice(1);
+  const params: Record<string, string> = {};
+  for (const part of hash.split("&")) {
+    const [key, value] = part.split("=");
+    if (key && value) params[decodeURIComponent(key)] = decodeURIComponent(value);
+  }
+  return params;
+}
+
+function updateHash(reviewId: string | null, fitName: string) {
+  const parts: string[] = [];
+  if (reviewId) parts.push(`review=${encodeURIComponent(reviewId)}`);
+  if (fitName) parts.push(`fit=${encodeURIComponent(fitName)}`);
+  const newHash = parts.length > 0 ? `#${parts.join("&")}` : "";
+  if (window.location.hash !== newHash) {
+    history.replaceState(null, "", newHash || window.location.pathname);
+  }
+}
 
 const scaleOptions: { value: ScaleType; label: string }[] = [
   { value: "blue-white-red", label: "Fixed size: blue → white → red" },
@@ -27,18 +48,25 @@ const scalingOptions: { value: ValueScaling; label: string }[] = [
   { value: "logarithmic", label: "Logarithmic" },
 ];
 
-type ScaleMode = "same-across-reviews" | "current-review" | "multiple-scales";
+type ScaleMode = "current-review" | "multiple-scales";
 
 const scaleModeOptions: { value: ScaleMode; label: string }[] = [
   { value: "current-review", label: "Current review" },
-  { value: "same-across-reviews", label: "Same across reviews" },
   { value: "multiple-scales", label: "Multiple scales" },
 ];
 
 export const App = () => {
-  const [selectedReviewIndex, setSelectedReviewIndex] = useState(0);
+  // --- Data loading state ---
+  const [indexData, setIndexData] = useState<S3Index | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedFitName, setSelectedFitName] = useState<string>("");
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
+  const activationCacheRef = useRef<Map<string, ActivationBucket>>(new Map());
+  const [rawActivations, setRawActivations] = useState<number[] | null>(null);
+  const [activationsLoading, setActivationsLoading] = useState(false);
+
+  // --- UI state ---
   const [scoreOverrides, setScoreOverrides] = useState<Record<number, number>>({});
-  const [overridesForReview, setOverridesForReview] = useState(0);
   const [scaleType, setScaleType] = useState<ScaleType>("multi-hue");
   const [valueScaling, setValueScaling] = useState<ValueScaling>("logarithmic");
   const [showStats, setShowStats] = useState(true);
@@ -46,41 +74,148 @@ export const App = () => {
   const [scaleMode, setScaleMode] = useState<ScaleMode>("multiple-scales");
   const [terminologyMode, setTerminologyMode] = useState<TerminologyMode>("project");
 
-  const review = data.reviews[selectedReviewIndex];
+  // --- Fetch index on mount ---
+  useEffect(() => {
+    fetchIndex()
+      .then(data => {
+        setIndexData(data);
+        const hashParams = getHashParams();
+        const names = Object.keys(data.metadata.fa_fits);
+        const fitName = hashParams.fit && names.includes(hashParams.fit)
+          ? hashParams.fit : names[0];
+        setSelectedFitName(fitName);
+        if (data.reviews.length > 0) {
+          const reviewId = hashParams.review && data.reviews.some(r => r.id === hashParams.review)
+            ? hashParams.review : data.reviews[0].id;
+          setSelectedReviewId(reviewId);
+          setActivationsLoading(true);
+        }
+      })
+      .catch(err => setLoadError(err.message));
+  }, []);
 
-  if (overridesForReview !== selectedReviewIndex) {
-    setScoreOverrides({});
-    setOverridesForReview(selectedReviewIndex);
-  }
+  // --- Fetch activations when review changes ---
+  const [activationReviewId, setActivationReviewId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selectedReviewId) return;
+    let cancelled = false;
+    fetchActivations(selectedReviewId, activationCacheRef.current)
+      .then(activations => {
+        if (!cancelled) {
+          setRawActivations(activations);
+          setActivationReviewId(selectedReviewId);
+          setActivationsLoading(false);
+        }
+      })
+      .catch(err => {
+        if (!cancelled) {
+          console.error("Failed to fetch activations:", err);
+          setActivationsLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [selectedReviewId]);
+
+  // Treat activations as null if they don't match the current review
+  const currentRawActivations = activationReviewId === selectedReviewId ? rawActivations : null;
+
+  // --- Derived data from selected fit ---
+  const selectedFit = indexData?.metadata.fa_fits[selectedFitName] ?? null;
+
+  const pathways = useMemo(
+    () => selectedFit ? fitToPathways(selectedFit) : null,
+    [selectedFit],
+  );
+
+  const scaler = useMemo(
+    () => selectedFit ? fitToScaler(selectedFit) : null,
+    [selectedFit],
+  );
+
+  const metadata = useMemo(
+    () => selectedFit ? fitToMetadata(selectedFit) : null,
+    [selectedFit],
+  );
+
+  // --- Selected review ---
+  const selectedReview = useMemo(
+    () => indexData?.reviews.find(r => r.id === selectedReviewId),
+    [indexData, selectedReviewId],
+  );
+
+  const pathwayScoresFromIndex = useMemo(
+    () => selectedReview?.pathway_scores[selectedFitName] ?? [],
+    [selectedReview, selectedFitName],
+  );
+
+  const reviewR2 = selectedReview?.reconstruction_r2[selectedFitName] ?? null;
+
+  // --- Score overrides (keyed on review + fit, auto-resets when either changes) ---
+  const [scoreOverrideKey, setScoreOverrideKey] = useState("");
+  const currentOverrideKey = `${selectedReviewId}:${selectedFitName}`;
+  const effectiveOverrides = useMemo(
+    () => scoreOverrideKey === currentOverrideKey ? scoreOverrides : {},
+    [scoreOverrideKey, currentOverrideKey, scoreOverrides],
+  );
 
   const pathwayScores = useMemo(() =>
-    review.pathway_scores.map((original, i) =>
-      i in scoreOverrides ? scoreOverrides[i] : original
+    pathwayScoresFromIndex.map((original, i) =>
+      i in effectiveOverrides ? effectiveOverrides[i] : original
     ),
-    [review, scoreOverrides]
+    [pathwayScoresFromIndex, effectiveOverrides],
   );
 
   const handleScoreChange = useCallback((pathwayIndex: number, value: number) => {
+    setScoreOverrideKey(currentOverrideKey);
     setScoreOverrides(prev => ({ ...prev, [pathwayIndex]: value }));
+  }, [currentOverrideKey]);
+
+  // --- Review selection handler ---
+  const handleSelectReview = useCallback((review: S3Review) => {
+    setSelectedReviewId(review.id);
+    setActivationsLoading(true);
   }, []);
 
+  // --- FA fit change handler ---
+  const handleFitChange = useCallback((fitName: string) => {
+    setSelectedFitName(fitName);
+  }, []);
+
+  // --- Sync hash with selected review and fit ---
+  useEffect(() => {
+    if (selectedReviewId && selectedFitName) {
+      updateHash(selectedReviewId, selectedFitName);
+    }
+  }, [selectedReviewId, selectedFitName]);
+
+  // --- Computed pathway data (no activations needed) ---
   const scoredPathways = useMemo(() =>
-    data.pathways.components.map((comp, i) => computeScoredPathway(comp, pathwayScores[i])),
-    [pathwayScores]
+    pathways
+      ? pathways.components.map((comp, i) => computeScoredPathway(comp, pathwayScores[i] ?? 0))
+      : [],
+    [pathways, pathwayScores],
   );
 
   const sumActivations = useMemo(() =>
-    computeSum(data.pathways.mean, scoredPathways),
-    [scoredPathways]
+    pathways ? computeSum(pathways.mean, scoredPathways) : [],
+    [pathways, scoredPathways],
   );
 
-  const noise = useMemo(() =>
-    review.activations_standardized.map((v, i) => v - sumActivations[i]),
-    [review, sumActivations]
-  );
+  // --- Standardized activations (needs raw activations + scaler) ---
+  const activationsStandardized = useMemo(() => {
+    if (!currentRawActivations || !scaler) return null;
+    return standardizeActivations(currentRawActivations, scaler.mean, scaler.scale);
+  }, [currentRawActivations, scaler]);
+
+  // --- Noise / residual (needs standardized activations) ---
+  const noise = useMemo(() => {
+    if (!activationsStandardized) return null;
+    return activationsStandardized.map((v, i) => v - sumActivations[i]);
+  }, [activationsStandardized, sumActivations]);
 
   const computedR2 = useMemo(() => {
-    const original = review.activations_standardized;
+    if (!activationsStandardized) return null;
+    const original = activationsStandardized;
     const n = original.length;
     const mean = original.reduce((s, v) => s + v, 0) / n;
     let ssRes = 0;
@@ -90,51 +225,52 @@ export const App = () => {
       ssTot += (original[i] - mean) ** 2;
     }
     return 1 - ssRes / ssTot;
-  }, [review, sumActivations]);
+  }, [activationsStandardized, sumActivations]);
 
-  const globalAbsMax = useMemo(() =>
-    computeAbsMax(...data.reviews.map(r => r.activations_standardized)),
-    []
+  // --- Scale computations ---
+  const patternsAbsMax = useMemo(() =>
+    pathways ? computeAbsMax(...pathways.components) : 1,
+    [pathways],
   );
 
-  const patternsAbsMax = useMemo(() =>
-    computeAbsMax(...data.pathways.components),
-    []
+  const scoredAbsMax = useMemo(() =>
+    scoredPathways.length > 0 ? computeAbsMax(...scoredPathways) : 1,
+    [scoredPathways],
   );
 
   const perReviewAbsMax = useMemo(() => {
     const allArrays = [
-      ...data.pathways.components,
+      ...(pathways ? pathways.components : []),
       ...scoredPathways,
       sumActivations,
-      review.activations_standardized,
-      noise,
+      ...(activationsStandardized ? [activationsStandardized] : []),
+      ...(noise ? [noise] : []),
     ];
-    return computeAbsMax(...allArrays);
-  }, [scoredPathways, sumActivations, review, noise]);
+    return allArrays.length > 0 ? computeAbsMax(...allArrays) : 1;
+  }, [pathways, scoredPathways, sumActivations, activationsStandardized, noise]);
 
-  const scoredAbsMax = useMemo(() =>
-    computeAbsMax(...scoredPathways),
-    [scoredPathways]
-  );
-
-  const activationsAbsMax = useMemo(() =>
-    computeAbsMax(review.activations_standardized, sumActivations, noise),
-    [review, sumActivations, noise]
-  );
+  const activationsAbsMax = useMemo(() => {
+    const arrays = [
+      ...(activationsStandardized ? [activationsStandardized] : []),
+      sumActivations,
+      ...(noise ? [noise] : []),
+    ];
+    return arrays.length > 0 ? computeAbsMax(...arrays) : 1;
+  }, [activationsStandardized, sumActivations, noise]);
 
   const rawAbsMax = useMemo(() =>
-    computeAbsMax(review.activations_raw),
-    [review]
+    currentRawActivations ? computeAbsMax(currentRawActivations) : 1,
+    [currentRawActivations],
   );
 
   const scalerMeanAbsMax = useMemo(() =>
-    computeAbsMax(data.scaler.mean),
-    []
+    scaler ? computeAbsMax(scaler.mean) : 1,
+    [scaler],
   );
 
   const scalerScaleNormalized = useMemo(() => {
-    const vals = data.scaler.scale;
+    if (!scaler) return { min: 1, max: 1, data: [] };
+    const vals = scaler.scale;
     let min = Infinity;
     let max = -Infinity;
     for (const v of vals) {
@@ -147,30 +283,46 @@ export const App = () => {
       min,
       max,
       data: vals.map(v => v <= 1
-        ? -Math.log(v) / logMin   // [min,1] → [-1,0]
-        : Math.log(v) / logMax    // [1,max] → [0,1]
+        ? -Math.log(v) / logMin
+        : Math.log(v) / logMax
       ),
     };
-  }, []);
+  }, [scaler]);
 
-  // absMax for review-specific content (used in current-review and same-across-reviews)
-  const absMax = scaleMode === "same-across-reviews"
-    ? globalAbsMax : perReviewAbsMax;
+  const absMax = perReviewAbsMax;
 
-  // Per-section scales for multiple-scales mode
-  const patternsScale = scaleMode === "multiple-scales"
-    ? patternsAbsMax : absMax;
-  const scoredScale = scaleMode === "multiple-scales"
-    ? scoredAbsMax : absMax;
-  const activationsScale = scaleMode === "multiple-scales"
-    ? activationsAbsMax : absMax;
+  const patternsScale = scaleMode === "multiple-scales" ? patternsAbsMax : absMax;
+  const scoredScale = scaleMode === "multiple-scales" ? scoredAbsMax : absMax;
+  const activationsScale = scaleMode === "multiple-scales" ? activationsAbsMax : absMax;
 
   const colorLegendProps = { scaleType, valueScaling, showStats };
+
+  // --- Loading / error states ---
+  if (loadError) {
+    return <div className="app-loading">Error loading data: {loadError}</div>;
+  }
+
+  if (!indexData || !pathways || !metadata || !scaler) {
+    return <div className="app-loading">Loading index data...</div>;
+  }
+
+  const fitNames = Object.keys(indexData.metadata.fa_fits);
+  const hasActivations = activationsStandardized != null;
 
   return (
     <div className="app">
       {/* Row 1: Toolbar spanning both columns */}
       <div className="toolbar">
+        <label className="scale-mode-label">FA Fit:</label>
+        <select
+          className="scale-selector"
+          value={selectedFitName}
+          onChange={e => handleFitChange(e.target.value)}
+        >
+          {fitNames.map(name => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
         <select
           className="scale-selector"
           value={scaleType}
@@ -216,22 +368,22 @@ export const App = () => {
         </label>
       </div>
 
-      {/* Row 2, Col 1: Color legend when same across reviews */}
+      {/* Row 2, Col 1: Color legend when current-review mode */}
       <div className="color-legend-cell">
-        {scaleMode === "same-across-reviews" && (
+        {scaleMode === "current-review" && (
           <ColorLegend absMax={absMax} {...colorLegendProps} />
         )}
       </div>
       {/* Row 2, Col 2: Pathway patterns */}
       <div className="pathway-patterns-container">
         <PathwayPatterns
-          components={data.pathways.components}
+          components={pathways.components}
           absMax={patternsScale}
           scaleType={scaleType}
           valueScaling={valueScaling}
           showStats={showStats}
-          explainedVariance={data.metadata.explained_variance_per_pathway}
-          noiseVariance={data.pathways.noise_variance}
+          explainedVariance={metadata.explained_variance_per_pathway}
+          noiseVariance={pathways.noise_variance}
           terminologyMode={terminologyMode}
           legend={scaleMode === "multiple-scales"
             ? <ColorLegend absMax={patternsScale} {...colorLegendProps} />
@@ -243,11 +395,12 @@ export const App = () => {
 
       {/* Row 3, Col 1: Review info */}
       <ReviewPanel
-        reviews={data.reviews}
-        selectedIndex={selectedReviewIndex}
-        onSelectReview={setSelectedReviewIndex}
+        reviews={indexData.reviews}
+        selectedReview={selectedReview}
+        onSelectReview={handleSelectReview}
+        activationsLoading={activationsLoading}
       >
-        {scaleMode !== "same-across-reviews" && (
+        {scaleMode !== "current-review" && (
           <ColorLegend absMax={activationsScale} {...colorLegendProps} />
         )}
       </ReviewPanel>
@@ -255,10 +408,10 @@ export const App = () => {
       <div className="pathway-grid-container">
         <PathwayScoresRow
           pathwayScores={pathwayScores}
-          originalScores={review.pathway_scores}
+          originalScores={pathwayScoresFromIndex}
           onScoreChange={handleScoreChange}
           terminologyMode={terminologyMode}
-          extraColumns={data.pathways.noise_variance ? 1 : 0}
+          extraColumns={pathways.noise_variance ? 1 : 0}
         />
         <ScoredPathwaysView
           scoredPathways={scoredPathways}
@@ -274,96 +427,110 @@ export const App = () => {
         <div className="comparison-equals">=</div>
       </div>
 
-      {/* Row 4, Col 1: Original activations */}
-      <div className="comparison-original">
-        <div className="comparison-section-label">{getLabel("originalActivations", terminologyMode)}</div>
-        <Heatmap
-          data={review.activations_standardized} absMax={activationsScale}
-          scaleType={scaleType} valueScaling={valueScaling}
-          showStats={showStats}
-        />
-      </div>
-      {/* Row 4, Col 2: Sum + Noise */}
-      <div className="comparison-result">
-        <div className="comparison-result-item">
-          <div className="comparison-section-label">Reconstructed</div>
-          <Heatmap
-            data={sumActivations} absMax={activationsScale}
-            scaleType={scaleType} valueScaling={valueScaling}
-            showStats={showStats}
-          />
-        </div>
-        <div className="comparison-result-item">
-          <div className="comparison-section-label">Residual</div>
-          <Heatmap
-            data={noise} absMax={activationsScale}
-            scaleType={scaleType} valueScaling={valueScaling}
-            showStats={showStats}
-          />
-        </div>
-        {showStats && (
-          <div className="comparison-result-item comparison-r2">
-            <div className="comparison-section-label">R²</div>
-            <div className="r2-value">
-              {(computedR2 * 100).toFixed(1)}%
-            </div>
-            {Object.keys(scoreOverrides).length > 0 && review.reconstruction_r2 != null && (
-              <>
-                <div className="comparison-section-label">
-                  Original R²
-                </div>
-                <div className="r2-value r2-value-secondary">
-                  {(review.reconstruction_r2 * 100).toFixed(1)}%
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      {showScaler &&
+      {/* Row 4: Activation comparison (only when activations loaded) */}
+      {hasActivations ? (
         <>
-          <div className="row-divider" />
-        {/* Row 5, Col 1: Raw Activations */}
-        <div className="scaler-original">
-          <div className="comparison-section-label">Raw neuron activations</div>
-          <Heatmap
-            data={review.activations_raw} absMax={rawAbsMax}
-            scaleType={scaleType} valueScaling={valueScaling}
-            showStats={showStats}
-          />
-          <ColorLegend absMax={rawAbsMax} {...colorLegendProps} />
-        </div>
-        {/* Row 5, Col 2: Scaler Mean + Scaler Scale */}
-        <div className="scaler-result">
-          <div className="comparison-result-item">
-            <div className="comparison-section-label">Scaler Mean</div>
+          <div className="comparison-original">
+            <div className="comparison-section-label">{getLabel("originalActivations", terminologyMode)}</div>
             <Heatmap
-              data={data.scaler.mean} absMax={scalerMeanAbsMax}
+              data={activationsStandardized} absMax={activationsScale}
               scaleType={scaleType} valueScaling={valueScaling}
               showStats={showStats}
             />
-            <ColorLegend absMax={scalerMeanAbsMax} {...colorLegendProps} />
           </div>
-          <div className="comparison-result-item">
-            <div className="comparison-section-label">Scaler Scale (log)</div>
+          <div className="comparison-result">
+            <div className="comparison-result-item">
+              <div className="comparison-section-label">Reconstructed</div>
+              <Heatmap
+                data={sumActivations} absMax={activationsScale}
+                scaleType={scaleType} valueScaling={valueScaling}
+                showStats={showStats}
+              />
+            </div>
+            <div className="comparison-result-item">
+              <div className="comparison-section-label">Residual</div>
+              <Heatmap
+                data={noise!} absMax={activationsScale}
+                scaleType={scaleType} valueScaling={valueScaling}
+                showStats={showStats}
+              />
+            </div>
+            {showStats && (
+              <div className="comparison-result-item comparison-r2">
+                <div className="comparison-section-label">R²</div>
+                <div className="r2-value">
+                  {computedR2 != null ? `${(computedR2 * 100).toFixed(1)}%` : "—"}
+                </div>
+                {Object.keys(effectiveOverrides).length > 0 && reviewR2 != null && (
+                  <>
+                    <div className="comparison-section-label">Original R²</div>
+                    <div className="r2-value r2-value-secondary">
+                      {(reviewR2 * 100).toFixed(1)}%
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="comparison-original">
+            <div className="comparison-section-label">{getLabel("originalActivations", terminologyMode)}</div>
+            {activationsLoading
+              ? <div className="activation-placeholder">Loading...</div>
+              : <div className="activation-placeholder">Select a review</div>}
+          </div>
+          <div className="comparison-result">
+            <div className="comparison-section-label">Reconstructed</div>
+            {activationsLoading
+              ? <div className="activation-placeholder">Loading...</div>
+              : <div className="activation-placeholder">Select a review</div>}
+          </div>
+        </>
+      )}
+
+      {showScaler && hasActivations && currentRawActivations &&
+        <>
+          <div className="row-divider" />
+          <div className="scaler-original">
+            <div className="comparison-section-label">Raw neuron activations</div>
             <Heatmap
-              data={scalerScaleNormalized.data} absMax={1}
-              scaleType={scaleType} valueScaling="linear"
+              data={currentRawActivations} absMax={rawAbsMax}
+              scaleType={scaleType} valueScaling={valueScaling}
               showStats={showStats}
-              formatStat={v => v < 0
-                ? Math.exp(-v * Math.log(scalerScaleNormalized.min))
-                : Math.exp(v * Math.log(scalerScaleNormalized.max))}
             />
-            <ColorLegend
-              absMax={1} scaleType={scaleType}
-              valueScaling="linear" showStats={showStats}
-              minLabel={scalerScaleNormalized.min.toFixed(2)}
-              centerLabel="1"
-              maxLabel={scalerScaleNormalized.max.toFixed(2)}
-            />
+            <ColorLegend absMax={rawAbsMax} {...colorLegendProps} />
           </div>
-        </div>
+          <div className="scaler-result">
+            <div className="comparison-result-item">
+              <div className="comparison-section-label">Scaler Mean</div>
+              <Heatmap
+                data={scaler.mean} absMax={scalerMeanAbsMax}
+                scaleType={scaleType} valueScaling={valueScaling}
+                showStats={showStats}
+              />
+              <ColorLegend absMax={scalerMeanAbsMax} {...colorLegendProps} />
+            </div>
+            <div className="comparison-result-item">
+              <div className="comparison-section-label">Scaler Scale (log)</div>
+              <Heatmap
+                data={scalerScaleNormalized.data} absMax={1}
+                scaleType={scaleType} valueScaling="linear"
+                showStats={showStats}
+                formatStat={v => v < 0
+                  ? Math.exp(-v * Math.log(scalerScaleNormalized.min))
+                  : Math.exp(v * Math.log(scalerScaleNormalized.max))}
+              />
+              <ColorLegend
+                absMax={1} scaleType={scaleType}
+                valueScaling="linear" showStats={showStats}
+                minLabel={scalerScaleNormalized.min.toFixed(2)}
+                centerLabel="1"
+                maxLabel={scalerScaleNormalized.max.toFixed(2)}
+              />
+            </div>
+          </div>
         </>}
     </div>
   );
