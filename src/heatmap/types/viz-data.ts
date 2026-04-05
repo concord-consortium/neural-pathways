@@ -16,24 +16,6 @@ export interface Scaler {
   scale: number[];
 }
 
-export interface Review {
-  index: number;
-  source?: string;
-  text: string;
-  target: number;
-  target_label: string;
-  activations_raw: number[];
-  activations_standardized: number[];
-  pathway_scores: number[];
-  reconstruction_r2?: number;
-}
-
-export interface VizData {
-  metadata: Metadata;
-  pathways: Pathways;
-  scaler: Scaler;
-  reviews: Review[];
-}
 
 // --- S3 Data Types ---
 

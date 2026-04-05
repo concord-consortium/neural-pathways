@@ -63,6 +63,7 @@ export const App = () => {
         setSelectedFitName(names[0]);
         if (data.reviews.length > 0) {
           setSelectedReviewId(data.reviews[0].id);
+          setActivationsLoading(true);
         }
       })
       .catch(err => setLoadError(err.message));
