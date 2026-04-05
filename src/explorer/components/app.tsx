@@ -1,21 +1,47 @@
-// src/explorer/components/app.tsx
-import React, { useState, useMemo } from "react";
-import {
-  ExplorerData, ExplorerReview, ScaleMode, ScaleExtents, WordColorMode, WordScaleScope
-} from "../types/explorer-data";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { S3Index, S3Review, S3ShapBucket, ReviewShapData } from "../../shared/types/s3-data";
+import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope } from "../types/explorer-data";
+import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { ReviewSelector } from "./review-selector";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPanel } from "./pathway-panel";
 import { WordEffectsPanel } from "./word-effects-panel";
 import { SettingsMenu } from "./settings-menu";
-import explorerData from "../explorer_data_with_words.json";
 
 import "./app.scss";
 
-const data = explorerData as ExplorerData;
+function getHashParams(): Record<string, string> {
+  const hash = window.location.hash.slice(1);
+  const params: Record<string, string> = {};
+  for (const part of hash.split("&")) {
+    const [key, value] = part.split("=");
+    if (key && value) params[decodeURIComponent(key)] = decodeURIComponent(value);
+  }
+  return params;
+}
+
+function updateHash(reviewId: string | null, fitName: string) {
+  const parts: string[] = [];
+  if (reviewId) parts.push(`review=${encodeURIComponent(reviewId)}`);
+  if (fitName) parts.push(`fit=${encodeURIComponent(fitName)}`);
+  const newHash = parts.length > 0 ? `#${parts.join("&")}` : "";
+  if (window.location.hash !== newHash) {
+    history.replaceState(null, "", newHash || window.location.pathname);
+  }
+}
 
 export const App = () => {
-  const [selectedReview, setSelectedReview] = useState<ExplorerReview | null>(null);
+  // --- Data loading state ---
+  const [indexData, setIndexData] = useState<S3Index | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedFitName, setSelectedFitName] = useState<string>("");
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
+  const shapCacheRef = useRef<Map<string, S3ShapBucket>>(new Map());
+  const [rawShapData, setRawShapData] = useState<ReviewShapData | null>(null);
+  const [shapLoadedKey, setShapLoadedKey] = useState<string>("");
+  const [shapFetchFailed, setShapFetchFailed] = useState(false);
+
+  // --- UI state ---
   const [scaleMode, setScaleMode] = useState<ScaleMode>("shared");
   const [showVarianceFractions, setShowVarianceFractions] = useState(false);
   const [showScores, setShowScores] = useState(false);
@@ -25,7 +51,107 @@ export const App = () => {
   const [showPathwayValues, setShowPathwayValues] = useState(false);
   const [wordScaleScope, setWordScaleScope] = useState<WordScaleScope>("per-pathway");
 
-  const handlePathwayClick = (index: number) => {
+  // --- Fetch index on mount ---
+  useEffect(() => {
+    fetchIndex()
+      .then(data => {
+        setIndexData(data);
+        const hashParams = getHashParams();
+        const names = Object.keys(data.metadata.fa_fits);
+        const fitName = hashParams.fit && names.includes(hashParams.fit)
+          ? hashParams.fit : names[0];
+        setSelectedFitName(fitName);
+        if (data.reviews.length > 0) {
+          const reviewId = hashParams.review && data.reviews.some(r => r.id === hashParams.review)
+            ? hashParams.review : null;
+          if (reviewId) {
+            setSelectedReviewId(reviewId);
+          }
+        }
+      })
+      .catch(err => setLoadError(err.message));
+  }, []);
+
+  // --- Selected review ---
+  const selectedReview = useMemo(
+    () => indexData?.reviews.find(r => r.id === selectedReviewId),
+    [indexData, selectedReviewId],
+  );
+
+  // --- SHAP availability ---
+  const hasShapForCurrentFit = selectedReview?.has_shap?.includes(selectedFitName) ?? false;
+  const shapAvailableFits = selectedReview?.has_shap ?? [];
+
+  // --- Fetch SHAP when review or fit changes ---
+  const shapRequestKey = hasShapForCurrentFit ? `${selectedReviewId}:${selectedFitName}` : "";
+  useEffect(() => {
+    if (!selectedReviewId || !hasShapForCurrentFit) return;
+    let cancelled = false;
+    const key = `${selectedReviewId}:${selectedFitName}`;
+    fetchShap(selectedReviewId, selectedFitName, shapCacheRef.current)
+      .then(data => {
+        if (!cancelled) {
+          setRawShapData(data);
+          setShapLoadedKey(key);
+          setShapFetchFailed(false);
+        }
+      })
+      .catch(err => {
+        if (!cancelled) {
+          console.error("Failed to fetch SHAP:", err);
+          setShapFetchFailed(true);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [selectedReviewId, selectedFitName, hasShapForCurrentFit]);
+
+  // Treat SHAP data as null if it doesn't match the current review+fit
+  const shapDataCurrent = shapLoadedKey === shapRequestKey;
+  const currentShapData = shapDataCurrent ? rawShapData : null;
+  const shapLoading = shapRequestKey !== "" && !shapDataCurrent && !shapFetchFailed;
+
+  // --- Sync hash ---
+  useEffect(() => {
+    if (selectedReviewId && selectedFitName) {
+      updateHash(selectedReviewId, selectedFitName);
+    }
+  }, [selectedReviewId, selectedFitName]);
+
+  // --- Derived fit data ---
+  const selectedFit = indexData?.metadata.fa_fits[selectedFitName] ?? null;
+
+  const pathwayScores = useMemo(
+    () => selectedReview?.pathway_scores[selectedFitName] ?? [],
+    [selectedReview, selectedFitName],
+  );
+
+  const varianceFractions = useMemo(
+    () => selectedReview?.pathway_variance_fractions[selectedFitName] ?? [],
+    [selectedReview, selectedFitName],
+  );
+
+  const reconstructionR2 = selectedReview?.reconstruction_r2[selectedFitName] ?? null;
+
+  const scaleExtents = useMemo<ScaleExtents>(() => {
+    if (!selectedFit) return { shared: [0, 0], perPathway: [] };
+    const mins = selectedFit.pathway_score_min;
+    const maxs = selectedFit.pathway_score_max;
+    let globalMin = Infinity;
+    let globalMax = -Infinity;
+    for (let i = 0; i < mins.length; i++) {
+      if (mins[i] < globalMin) globalMin = mins[i];
+      if (maxs[i] > globalMax) globalMax = maxs[i];
+    }
+    return {
+      shared: [globalMin, globalMax],
+      perPathway: mins.map((min, i) => [min, maxs[i]] as [number, number]),
+    };
+  }, [selectedFit]);
+
+  // --- Pathway click (disabled when no SHAP) ---
+  const pathwaysDisabled = !hasShapForCurrentFit;
+
+  const handlePathwayClick = useCallback((index: number) => {
     setSelectedPathways(prev => {
       const next = new Set(prev);
       if (next.has(index)) {
@@ -35,37 +161,47 @@ export const App = () => {
       }
       return next;
     });
-  };
-
-  const scaleExtents = useMemo<ScaleExtents>(() => {
-    let globalMin = Infinity;
-    let globalMax = -Infinity;
-    const nPathways = data.metadata.n_pathways;
-    const perPathwayMins = new Array(nPathways).fill(Infinity);
-    const perPathwayMaxs = new Array(nPathways).fill(-Infinity);
-
-    for (const review of data.reviews) {
-      for (let i = 0; i < nPathways; i++) {
-        const score = review.pathway_scores[i];
-        if (score < globalMin) globalMin = score;
-        if (score > globalMax) globalMax = score;
-        if (score < perPathwayMins[i]) perPathwayMins[i] = score;
-        if (score > perPathwayMaxs[i]) perPathwayMaxs[i] = score;
-      }
-    }
-
-    return {
-      shared: [globalMin, globalMax],
-      perPathway: perPathwayMins.map((min, i) => [min, perPathwayMaxs[i]]),
-    };
   }, []);
+
+  // --- Review selection (resets selected pathways) ---
+  const handleSelectReview = useCallback((review: S3Review) => {
+    setSelectedReviewId(review.id);
+    setSelectedPathways(new Set());
+  }, []);
+
+  // --- Fit change (resets selected pathways) ---
+  const handleFitChange = useCallback((fitName: string) => {
+    setSelectedFitName(fitName);
+    setSelectedPathways(new Set());
+  }, []);
+
+  // --- Loading / error states ---
+  if (loadError) {
+    return <div className="explorer-loading">Error loading data: {loadError}</div>;
+  }
+
+  if (!indexData) {
+    return <div className="explorer-loading">Loading index data...</div>;
+  }
+
+  const fitNames = Object.keys(indexData.metadata.fa_fits);
 
   return (
     <div className="explorer-app">
       <h1 className="explorer-title">Pathway Explorer</h1>
 
       <div className="explorer-top-bar">
-        <ReviewSelector reviews={data.reviews} onSelect={setSelectedReview} />
+        <label className="explorer-fit-label">FA Fit:</label>
+        <select
+          className="explorer-fit-selector"
+          value={selectedFitName}
+          onChange={e => handleFitChange(e.target.value)}
+        >
+          {fitNames.map(name => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
+        <ReviewSelector reviews={indexData.reviews} onSelect={handleSelectReview} />
         <SettingsMenu
           scaleMode={scaleMode}
           onScaleModeChange={setScaleMode}
@@ -87,22 +223,23 @@ export const App = () => {
       {selectedReview ? (
         <div className="explorer-main">
           <div className="explorer-left-column">
-            <ReviewPanel review={selectedReview} />
-            {selectedPathways.size > 0 && (
-              <WordEffectsPanel
-                words={selectedReview.words}
-                selectedPathways={selectedPathways}
-                wordColorMode={wordColorMode}
-                wordScaleScope={wordScaleScope}
-                showPathwayValues={showPathwayValues}
-                baseValues={selectedReview.base_values}
-                unmaskedValues={selectedReview.unmasked_values}
-              />
-            )}
+            <ReviewPanel review={selectedReview} reconstructionR2={reconstructionR2} />
+            <WordEffectsPanel
+              shapData={currentShapData}
+              shapLoading={shapLoading}
+              hasShapForCurrentFit={hasShapForCurrentFit}
+              shapAvailableFits={shapAvailableFits}
+              currentFitName={selectedFitName}
+              selectedPathways={selectedPathways}
+              wordColorMode={wordColorMode}
+              wordScaleScope={wordScaleScope}
+              showPathwayValues={showPathwayValues}
+              onSwitchFit={handleFitChange}
+            />
           </div>
           <PathwayPanel
-            scores={selectedReview.pathway_scores}
-            varianceFractions={selectedReview.pathway_variance_fractions}
+            scores={pathwayScores}
+            varianceFractions={varianceFractions}
             scaleMode={scaleMode}
             scaleExtents={scaleExtents}
             showVarianceFractions={showVarianceFractions}
@@ -110,6 +247,7 @@ export const App = () => {
             showExtents={showExtents}
             onPathwayClick={handlePathwayClick}
             selectedPathways={selectedPathways}
+            disabled={pathwaysDisabled}
           />
         </div>
       ) : (

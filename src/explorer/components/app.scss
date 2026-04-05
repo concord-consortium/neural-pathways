@@ -38,3 +38,25 @@
   color: #999;
   font-size: 16px;
 }
+
+.explorer-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 16px;
+  color: #555;
+}
+
+.explorer-fit-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.explorer-fit-selector {
+  padding: 4px 8px;
+  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
