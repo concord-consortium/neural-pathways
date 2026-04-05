@@ -56,9 +56,6 @@ module.exports = (env, argv) => {
         {
           test: /\.tsx?$/,
           loader: 'ts-loader',
-          options: {
-            transpileOnly: true,
-          },
         },
         {
           test: /\.(sa|sc|le|c)ss$/i,
