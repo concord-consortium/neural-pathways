@@ -17,6 +17,7 @@ const selectStyles: StylesConfig<ReviewOption, false> = {
   valueContainer: (base) => ({ ...base, overflow: "hidden", flexWrap: "nowrap" }),
   singleValue: (base) => ({ ...base, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }),
   input: (base) => ({ ...base, flex: "1 1 auto" }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
 };
 
 interface ReviewPanelProps {
@@ -60,6 +61,7 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
         isSearchable
         isClearable
         styles={selectStyles}
+        menuPortalTarget={document.body}
       />
 
       {selectedReview && (

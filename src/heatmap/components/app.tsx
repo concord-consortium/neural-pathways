@@ -15,6 +15,26 @@ import { TerminologyMode, getLabel } from "../utils/terminology";
 
 import "./app.scss";
 
+function getHashParams(): Record<string, string> {
+  const hash = window.location.hash.slice(1);
+  const params: Record<string, string> = {};
+  for (const part of hash.split("&")) {
+    const [key, value] = part.split("=");
+    if (key && value) params[decodeURIComponent(key)] = decodeURIComponent(value);
+  }
+  return params;
+}
+
+function updateHash(reviewId: string | null, fitName: string) {
+  const parts: string[] = [];
+  if (reviewId) parts.push(`review=${encodeURIComponent(reviewId)}`);
+  if (fitName) parts.push(`fit=${encodeURIComponent(fitName)}`);
+  const newHash = parts.length > 0 ? `#${parts.join("&")}` : "";
+  if (window.location.hash !== newHash) {
+    history.replaceState(null, "", newHash || window.location.pathname);
+  }
+}
+
 const scaleOptions: { value: ScaleType; label: string }[] = [
   { value: "blue-white-red", label: "Fixed size: blue → white → red" },
   { value: "blue-gray-red", label: "Fixed size: blue → gray → red" },
@@ -59,10 +79,15 @@ export const App = () => {
     fetchIndex()
       .then(data => {
         setIndexData(data);
+        const hashParams = getHashParams();
         const names = Object.keys(data.metadata.fa_fits);
-        setSelectedFitName(names[0]);
+        const fitName = hashParams.fit && names.includes(hashParams.fit)
+          ? hashParams.fit : names[0];
+        setSelectedFitName(fitName);
         if (data.reviews.length > 0) {
-          setSelectedReviewId(data.reviews[0].id);
+          const reviewId = hashParams.review && data.reviews.some(r => r.id === hashParams.review)
+            ? hashParams.review : data.reviews[0].id;
+          setSelectedReviewId(reviewId);
           setActivationsLoading(true);
         }
       })
@@ -155,6 +180,13 @@ export const App = () => {
   const handleFitChange = useCallback((fitName: string) => {
     setSelectedFitName(fitName);
   }, []);
+
+  // --- Sync hash with selected review and fit ---
+  useEffect(() => {
+    if (selectedReviewId && selectedFitName) {
+      updateHash(selectedReviewId, selectedFitName);
+    }
+  }, [selectedReviewId, selectedFitName]);
 
   // --- Computed pathway data (no activations needed) ---
   const scoredPathways = useMemo(() =>
