@@ -13,11 +13,12 @@ interface PathwayPanelProps {
   showExtents: boolean;
   onPathwayClick?: (index: number) => void;
   selectedPathways?: Set<number>;
+  disabled?: boolean;
 }
 
 export const PathwayPanel: React.FC<PathwayPanelProps> = ({
   scores, varianceFractions, scaleMode, scaleExtents, showVarianceFractions,
-  showScores, showExtents, onPathwayClick, selectedPathways
+  showScores, showExtents, onPathwayClick, selectedPathways, disabled
 }) => {
   return (
     <div className="pathway-panel">
@@ -36,6 +37,7 @@ export const PathwayPanel: React.FC<PathwayPanelProps> = ({
             showExtents={showExtents}
             onClick={onPathwayClick}
             selected={selectedPathways?.has(i)}
+            disabled={disabled}
           />
         );
       })}
