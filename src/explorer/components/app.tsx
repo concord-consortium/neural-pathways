@@ -1,8 +1,11 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import React, { useState, useMemo, useDeferredValue, useCallback, useEffect, useRef } from "react";
+import { filter, parse } from "liqe";
 import { S3Index, S3Review, S3ShapBucket, ReviewShapData } from "../../shared/types/s3-data";
 import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope } from "../types/explorer-data";
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
-import { ReviewSelector } from "./review-selector";
+import { flattenReview } from "../utils/flatten-review";
+import { SearchInput } from "./search-input";
+import { ResultsPanel } from "./results-panel";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPanel } from "./pathway-panel";
 import { WordEffectsPanel } from "./word-effects-panel";
@@ -20,10 +23,11 @@ function getHashParams(): Record<string, string> {
   return params;
 }
 
-function updateHash(reviewId: string | null, fitName: string) {
+function updateHash(reviewId: string | null, fitName: string, query?: string) {
   const parts: string[] = [];
   if (reviewId) parts.push(`review=${encodeURIComponent(reviewId)}`);
   if (fitName) parts.push(`fit=${encodeURIComponent(fitName)}`);
+  if (query) parts.push(`q=${encodeURIComponent(query)}`);
   const newHash = parts.length > 0 ? `#${parts.join("&")}` : "";
   if (window.location.hash !== newHash) {
     history.replaceState(null, "", newHash || window.location.pathname);
@@ -50,6 +54,38 @@ export const App = () => {
   const [showPathwayValues, setShowPathwayValues] = useState(false);
   const [wordScaleScope, setWordScaleScope] = useState<WordScaleScope>("per-pathway");
 
+  // --- Search state ---
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const deferredQuery = useDeferredValue(searchQuery);
+
+  // --- Flatten reviews for search ---
+  const flatReviews = useMemo(() => {
+    if (!indexData) return [];
+    return indexData.reviews.map(r => flattenReview(r, selectedFitName));
+  }, [indexData, selectedFitName]);
+
+  // --- Filter reviews with liqe ---
+  const { filteredReviews, searchError } = useMemo(() => {
+    if (!indexData) return { filteredReviews: [] as S3Review[], searchError: false };
+    if (!deferredQuery.trim()) {
+      return { filteredReviews: indexData.reviews, searchError: false };
+    }
+    try {
+      const ast = parse(deferredQuery);
+      const matched = filter(ast, flatReviews);
+      // Map flat results back to S3Review objects by index
+      const matchedSet = new Set(matched.map(m => flatReviews.indexOf(m)));
+      return { filteredReviews: indexData.reviews.filter((_, i) => matchedSet.has(i)), searchError: false };
+    } catch {
+      // On parse error, return all reviews as a safe fallback
+      return { filteredReviews: indexData.reviews, searchError: true };
+    }
+  }, [indexData, deferredQuery, flatReviews]);
+
+  // --- Clear selection when it's not in filtered results ---
+  const effectiveSelectedReviewId = selectedReviewId && filteredReviews.some(r => r.id === selectedReviewId)
+    ? selectedReviewId : null;
+
   // --- Fetch index on mount ---
   useEffect(() => {
     fetchIndex()
@@ -60,6 +96,9 @@ export const App = () => {
         const fitName = hashParams.fit && names.includes(hashParams.fit)
           ? hashParams.fit : names[0];
         setSelectedFitName(fitName);
+        if (hashParams.q) {
+          setSearchQuery(hashParams.q);
+        }
         if (data.reviews.length > 0) {
           const reviewId = hashParams.review && data.reviews.some(r => r.id === hashParams.review)
             ? hashParams.review : null;
@@ -73,8 +112,8 @@ export const App = () => {
 
   // --- Selected review ---
   const selectedReview = useMemo(
-    () => indexData?.reviews.find(r => r.id === selectedReviewId),
-    [indexData, selectedReviewId],
+    () => indexData?.reviews.find(r => r.id === effectiveSelectedReviewId),
+    [indexData, effectiveSelectedReviewId],
   );
 
   // --- SHAP availability ---
@@ -82,12 +121,12 @@ export const App = () => {
   const shapAvailableFits = selectedReview?.has_shap ?? [];
 
   // --- Fetch SHAP when review or fit changes ---
-  const shapRequestKey = hasShapForCurrentFit ? `${selectedReviewId}:${selectedFitName}` : "";
+  const shapRequestKey = hasShapForCurrentFit ? `${effectiveSelectedReviewId}:${selectedFitName}` : "";
   useEffect(() => {
-    if (!selectedReviewId || !hasShapForCurrentFit) return;
+    if (!effectiveSelectedReviewId || !hasShapForCurrentFit) return;
     let cancelled = false;
-    const key = `${selectedReviewId}:${selectedFitName}`;
-    fetchShap(selectedReviewId, selectedFitName, shapCacheRef.current)
+    const key = `${effectiveSelectedReviewId}:${selectedFitName}`;
+    fetchShap(effectiveSelectedReviewId, selectedFitName, shapCacheRef.current)
       .then(data => {
         if (!cancelled) {
           setRawShapData(data);
@@ -102,7 +141,7 @@ export const App = () => {
         }
       });
     return () => { cancelled = true; };
-  }, [selectedReviewId, selectedFitName, hasShapForCurrentFit]);
+  }, [effectiveSelectedReviewId, selectedFitName, hasShapForCurrentFit]);
 
   // Treat SHAP data as null if it doesn't match the current review+fit
   const shapDataCurrent = shapLoadedKey === shapRequestKey;
@@ -111,10 +150,10 @@ export const App = () => {
 
   // --- Sync hash (write on state change, read on hashchange) ---
   useEffect(() => {
-    if (selectedReviewId && selectedFitName) {
-      updateHash(selectedReviewId, selectedFitName);
+    if (selectedFitName) {
+      updateHash(effectiveSelectedReviewId, selectedFitName, searchQuery || undefined);
     }
-  }, [selectedReviewId, selectedFitName]);
+  }, [effectiveSelectedReviewId, selectedFitName, searchQuery]);
 
   useEffect(() => {
     if (!indexData) return;
@@ -126,6 +165,9 @@ export const App = () => {
       }
       if (hashParams.review && indexData.reviews.some(r => r.id === hashParams.review)) {
         setSelectedReviewId(hashParams.review);
+      }
+      if (hashParams.q !== undefined) {
+        setSearchQuery(hashParams.q);
       }
     };
     window.addEventListener("hashchange", handleHashChange);
@@ -213,7 +255,12 @@ export const App = () => {
             <option key={name} value={name}>{name}</option>
           ))}
         </select>
-        <ReviewSelector reviews={indexData.reviews} selectedReview={selectedReview} onSelect={handleSelectReview} />
+        <SearchInput
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          hasError={searchError}
+          numPathways={selectedFit?.n_pathways}
+        />
         <SettingsMenu
           scaleMode={scaleMode}
           onScaleModeChange={setScaleMode}
@@ -230,41 +277,52 @@ export const App = () => {
         />
       </div>
 
-      {selectedReview ? (
-        <div className="explorer-main">
-          <div className="explorer-left-column">
-            <ReviewPanel review={selectedReview} reconstructionR2={reconstructionR2} />
-            <WordEffectsPanel
-              shapData={currentShapData}
-              shapLoading={shapLoading}
-              hasShapForCurrentFit={hasShapForCurrentFit}
-              shapAvailableFits={shapAvailableFits}
-              currentFitName={selectedFitName}
+      <div className="explorer-body">
+        <ResultsPanel
+          reviews={filteredReviews}
+          fitName={selectedFitName}
+          selectedReviewId={effectiveSelectedReviewId}
+          onSelectReview={handleSelectReview}
+          maxAbsScore={Math.max(Math.abs(scaleExtents.shared[0]), Math.abs(scaleExtents.shared[1]))}
+          resultCount={filteredReviews.length}
+          totalCount={indexData.reviews.length}
+        />
+        {selectedReview ? (
+          <div className="explorer-main">
+            <div className="explorer-left-column">
+              <ReviewPanel review={selectedReview} reconstructionR2={reconstructionR2} />
+              <WordEffectsPanel
+                shapData={currentShapData}
+                shapLoading={shapLoading}
+                hasShapForCurrentFit={hasShapForCurrentFit}
+                shapAvailableFits={shapAvailableFits}
+                currentFitName={selectedFitName}
+                selectedPathways={selectedPathways}
+                wordColorMode={wordColorMode}
+                wordScaleScope={wordScaleScope}
+                showPathwayValues={showPathwayValues}
+                onSwitchFit={handleFitChange}
+              />
+            </div>
+            <PathwayPanel
+              scores={pathwayScores}
+              varianceFractions={varianceFractions}
+              scaleMode={scaleMode}
+              scaleExtents={scaleExtents}
+              showVarianceFractions={showVarianceFractions}
+              showExtents={showExtents}
+              explainedVariancePerPathway={selectedFit?.explained_variance_per_pathway}
+              pathwayImportance={selectedFit?.pathway_importance}
+              onPathwayClick={handlePathwayClick}
               selectedPathways={selectedPathways}
-              wordColorMode={wordColorMode}
-              wordScaleScope={wordScaleScope}
-              showPathwayValues={showPathwayValues}
-              onSwitchFit={handleFitChange}
             />
           </div>
-          <PathwayPanel
-            scores={pathwayScores}
-            varianceFractions={varianceFractions}
-            scaleMode={scaleMode}
-            scaleExtents={scaleExtents}
-            showVarianceFractions={showVarianceFractions}
-            showExtents={showExtents}
-            explainedVariancePerPathway={selectedFit?.explained_variance_per_pathway}
-            pathwayImportance={selectedFit?.pathway_importance}
-            onPathwayClick={handlePathwayClick}
-            selectedPathways={selectedPathways}
-          />
-        </div>
-      ) : (
-        <div className="explorer-empty">
-          Select a review above to see its pathway scores.
-        </div>
-      )}
+        ) : (
+          <div className="explorer-empty">
+            Select a review from the results to see its pathway scores.
+          </div>
+        )}
+      </div>
     </div>
   );
 };

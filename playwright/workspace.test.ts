@@ -17,5 +17,5 @@ test("heatmap renders the visualization", async ({ page }) => {
 test("explorer renders the app", async ({ page }) => {
   await page.goto("/explorer.html");
   await expect(page.getByText("Pathway Explorer")).toBeVisible();
-  await expect(page.getByText("Search by review")).toBeVisible();
+  await expect(page.getByPlaceholder("stars:5")).toBeVisible();
 });

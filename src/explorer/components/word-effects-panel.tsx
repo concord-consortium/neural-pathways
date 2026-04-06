@@ -91,7 +91,15 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
   }
 
   // No pathways selected
-  if (selectedPathways.size === 0) return null;
+  if (selectedPathways.size === 0) {
+    return (
+      <div className="word-effects-panel">
+        <div className="word-effects-hint">
+          Click a pathway to see its word-level effects on this review.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="word-effects-panel">
