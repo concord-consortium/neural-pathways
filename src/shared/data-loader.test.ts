@@ -15,6 +15,7 @@ const mockFit: S3FaFit = {
   n_pathways: 2,
   explained_variance_total: 0.85,
   explained_variance_per_pathway: [0.7, 0.15],
+  pathway_importance: [1.2, -0.3],
   loadings: [
     [1.0, 2.0, 3.0],
     [4.0, 5.0, 6.0],

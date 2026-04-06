@@ -13,6 +13,7 @@ export interface S3FaFit {
   n_pathways: number;
   explained_variance_total: number;
   explained_variance_per_pathway: number[];
+  pathway_importance: number[];
   loadings: number[][];       // n_pathways x 780
   noise_variance: number[];   // 780
   scaler_mean: number[];      // 780

@@ -44,7 +44,6 @@ export const App = () => {
   // --- UI state ---
   const [scaleMode, setScaleMode] = useState<ScaleMode>("shared");
   const [showVarianceFractions, setShowVarianceFractions] = useState(false);
-  const [showScores, setShowScores] = useState(false);
   const [showExtents, setShowExtents] = useState(false);
   const [selectedPathways, setSelectedPathways] = useState<Set<number>>(new Set());
   const [wordColorMode, setWordColorMode] = useState<WordColorMode>("score");
@@ -220,8 +219,6 @@ export const App = () => {
           onScaleModeChange={setScaleMode}
           showVarianceFractions={showVarianceFractions}
           onShowVarianceFractionsChange={setShowVarianceFractions}
-          showScores={showScores}
-          onShowScoresChange={setShowScores}
           showExtents={showExtents}
           onShowExtentsChange={setShowExtents}
           wordColorMode={wordColorMode}
@@ -256,8 +253,9 @@ export const App = () => {
             scaleMode={scaleMode}
             scaleExtents={scaleExtents}
             showVarianceFractions={showVarianceFractions}
-            showScores={showScores}
             showExtents={showExtents}
+            explainedVariancePerPathway={selectedFit?.explained_variance_per_pathway}
+            pathwayImportance={selectedFit?.pathway_importance}
             onPathwayClick={handlePathwayClick}
             selectedPathways={selectedPathways}
           />

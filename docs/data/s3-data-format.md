@@ -48,6 +48,7 @@ Each key is a Factor Analysis fit name like `train-fa-6` (fit on train split, 6 
     "n_pathways": 6,
     "explained_variance_total": 0.902385,
     "explained_variance_per_pathway": [0.855, 0.022, ...],
+    "pathway_importance": [1.234, -0.567, ...],
     "loadings": [[...], ...],
     "noise_variance": [...],
     "scaler_mean": [...],
@@ -62,6 +63,7 @@ Each key is a Factor Analysis fit name like `train-fa-6` (fit on train split, 6 
 | `n_pathways` | Number of factors (pathways) extracted |
 | `explained_variance_total` | Fraction of total variance captured by all pathways combined |
 | `explained_variance_per_pathway` | Fraction of variance per pathway (array of length `n_pathways`) |
+| `pathway_importance` | Signed logistic regression coefficients predicting sentiment from standardized pathway scores, trained on the train split (array of length `n_pathways`). Positive = pathway pushes toward positive class. Browser can derive unsigned percentages via `abs(c) / sum(abs(c)) * 100`. |
 | `loadings` | Factor loading matrix, shape `[n_pathways, 780]` — maps activations to pathway scores |
 | `noise_variance` | Per-neuron noise variance, length 780 |
 | `scaler_mean` | StandardScaler mean per neuron, length 780 |

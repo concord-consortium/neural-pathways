@@ -8,6 +8,7 @@ const mockFit = {
   n_pathways: 2,
   explained_variance_total: 0.85,
   explained_variance_per_pathway: [0.7, 0.15],
+  pathway_importance: [1.2, -0.3],
   loadings: [
     Array(780).fill(0.1),
     Array(780).fill(-0.05),
