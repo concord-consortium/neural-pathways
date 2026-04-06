@@ -41,7 +41,7 @@ describe("ResultsPanel", () => {
     // 2 reviews x 2 pathways = 4 bars
     expect(bars.length).toBe(4);
     // First review, first pathway: 0.8 / 1 = 80%
-    expect((bars[0] as HTMLElement).style.width).toBe("80%");
+    expect((bars[0] as HTMLElement).style.height).toBe("80%");
     expect((bars[0] as HTMLElement).style.backgroundColor).toBe("rgb(231, 76, 60)");
   });
 

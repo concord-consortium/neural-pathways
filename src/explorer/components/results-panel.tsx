@@ -62,10 +62,12 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
                   const pct = maxAbsScore > 0 ? (Math.abs(score) / maxAbsScore) * 100 : 0;
                   const color = score >= 0 ? "#e74c3c" : "#3498db";
                   return (
-                    <div key={i} className="results-panel-bar" style={{
-                      width: `${pct}%`,
-                      backgroundColor: color,
-                    }} />
+                    <div key={i} className="results-panel-bar-col">
+                      <div className="results-panel-bar" style={{
+                        height: `${pct}%`,
+                        backgroundColor: color,
+                      }} />
+                    </div>
                   );
                 })}
               </div>
