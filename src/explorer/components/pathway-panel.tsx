@@ -39,7 +39,7 @@ export const PathwayPanel: React.FC<PathwayPanelProps> = ({
         <div className="pathway-panel-legend-columns">
           <div className="pathway-panel-legend-col">
             <span className="legend-title">This Review</span>
-            <span className="legend-item">Score</span>
+            <span className="legend-item">Pathway activation</span>
             {showVarianceFractions && <span className="legend-item">Var. Fraction</span>}
           </div>
           <div className="pathway-panel-legend-col">
