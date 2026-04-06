@@ -36,6 +36,16 @@ describe("flattenReview", () => {
     expect(result.pathway_1).toBe(0.3);
     expect(result.pathway_2).toBe(0.5);
     expect(result.reconstruction_r2).toBe(0.91);
+    expect(result.has_word_scores).toBe(false);
+  });
+
+  it("sets has_word_scores true when fit is in has_shap", () => {
+    const review = makeReview({ has_shap: ["fit_a"] });
+    const result = flattenReview(review, "fit_a");
+    expect(result.has_word_scores).toBe(true);
+
+    const resultB = flattenReview(review, "fit_b");
+    expect(resultB.has_word_scores).toBe(false);
   });
 
   it("uses pathway scores from the specified fit", () => {
