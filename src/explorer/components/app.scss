@@ -18,10 +18,18 @@
   margin-bottom: 16px;
 }
 
+.explorer-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
 .explorer-main {
   display: flex;
   gap: 16px;
   align-items: flex-start;
+  flex: 1;
+  min-width: 0;
 }
 
 .explorer-left-column {

@@ -19,7 +19,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         type="text"
         value={query}
         onChange={e => onQueryChange(e.target.value)}
-        placeholder='stars:5 AND pathway_0:>0.8'
+        placeholder="stars:5 AND pathway_0:>0.8"
       />
       <span className="search-input-count">
         {resultCount} of {totalCount}
