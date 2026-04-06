@@ -22,7 +22,8 @@ describe("SearchInput", () => {
 
   it("shows error styling when hasError is true", () => {
     render(<SearchInput query="bad[" onQueryChange={jest.fn()} resultCount={0} totalCount={0} hasError />);
-    const input = screen.getByRole("textbox");
-    expect(input.closest(".search-input-container")?.classList.contains("search-input-error")).toBe(true);
+    // eslint-disable-next-line testing-library/no-node-access -- checking CSS class on parent element
+    const container = screen.getByRole("textbox").closest(".search-input-container");
+    expect(container?.classList.contains("search-input-error")).toBe(true);
   });
 });

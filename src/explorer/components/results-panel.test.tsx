@@ -40,6 +40,7 @@ describe("ResultsPanel", () => {
     render(
       <ResultsPanel reviews={reviews} fitName="fit_a" selectedReviewId="r0" onSelectReview={jest.fn()} />
     );
+    // eslint-disable-next-line testing-library/no-node-access -- checking CSS class on parent element
     const selectedCard = screen.getByText(/Great pizza/).closest(".results-panel-card");
     expect(selectedCard?.classList.contains("selected")).toBe(true);
   });

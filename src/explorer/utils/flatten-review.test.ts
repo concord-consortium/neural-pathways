@@ -1,4 +1,4 @@
-import { flattenReview, FlatReview } from "./flatten-review";
+import { flattenReview } from "./flatten-review";
 import { S3Review } from "../../shared/types/s3-data";
 
 const makeReview = (overrides: Partial<S3Review> = {}): S3Review => ({
