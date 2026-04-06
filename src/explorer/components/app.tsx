@@ -259,6 +259,7 @@ export const App = () => {
           query={searchQuery}
           onQueryChange={setSearchQuery}
           hasError={searchError}
+          numPathways={selectedFit?.n_pathways}
         />
         <SettingsMenu
           scaleMode={scaleMode}

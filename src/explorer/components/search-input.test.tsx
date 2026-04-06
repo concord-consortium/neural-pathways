@@ -21,4 +21,20 @@ describe("SearchInput", () => {
     const container = screen.getByRole("textbox").closest(".search-input-container");
     expect(container?.classList.contains("search-input-error")).toBe(true);
   });
+
+  it("shows help dialog when help button is clicked", () => {
+    render(<SearchInput query="" onQueryChange={jest.fn()} numPathways={5} />);
+    fireEvent.click(screen.getByRole("button", { name: /search help/i }));
+    expect(screen.getByText("Search Syntax")).toBeDefined();
+    expect(screen.getByText("pathway_0 through pathway_4")).toBeDefined();
+  });
+
+  it("hides help dialog when help button is clicked again", () => {
+    render(<SearchInput query="" onQueryChange={jest.fn()} />);
+    const helpButton = screen.getByRole("button", { name: /search help/i });
+    fireEvent.click(helpButton);
+    expect(screen.getByText("Search Syntax")).toBeDefined();
+    fireEvent.click(helpButton);
+    expect(screen.queryByText("Search Syntax")).toBeNull();
+  });
 });
