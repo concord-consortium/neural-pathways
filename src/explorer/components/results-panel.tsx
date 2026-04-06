@@ -9,10 +9,11 @@ interface ResultsPanelProps {
   fitName: string;
   selectedReviewId: string | null;
   onSelectReview: (review: S3Review) => void;
+  maxAbsScore: number;
 }
 
 export const ResultsPanel: React.FC<ResultsPanelProps> = ({
-  reviews, fitName, selectedReviewId, onSelectReview,
+  reviews, fitName, selectedReviewId, onSelectReview, maxAbsScore,
 }) => {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -56,12 +57,17 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
                 {review.text.slice(0, SNIPPET_LENGTH)}
                 {review.text.length > SNIPPET_LENGTH ? "..." : ""}
               </div>
-              <div className="results-panel-card-scores">
-                {scores.map((score, i) => (
-                  <span key={i} className="results-panel-score-badge">
-                    P{i}: {score.toFixed(2)}
-                  </span>
-                ))}
+              <div className="results-panel-card-bars">
+                {scores.map((score, i) => {
+                  const pct = maxAbsScore > 0 ? (Math.abs(score) / maxAbsScore) * 100 : 0;
+                  const color = score >= 0 ? "#e74c3c" : "#3498db";
+                  return (
+                    <div key={i} className="results-panel-bar" style={{
+                      width: `${pct}%`,
+                      backgroundColor: color,
+                    }} />
+                  );
+                })}
               </div>
             </div>
           );

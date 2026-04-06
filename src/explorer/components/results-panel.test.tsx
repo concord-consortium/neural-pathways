@@ -19,27 +19,34 @@ const reviews = [
   makeReview("r1", "Terrible experience, never coming back to this place ever again", [0.1, 0.9]),
 ];
 
+const defaultProps = {
+  reviews,
+  fitName: "fit_a",
+  selectedReviewId: null as string | null,
+  onSelectReview: jest.fn(),
+  maxAbsScore: 1,
+};
+
 describe("ResultsPanel", () => {
   it("renders a list of review cards", () => {
-    render(
-      <ResultsPanel reviews={reviews} fitName="fit_a" selectedReviewId={null} onSelectReview={jest.fn()} />
-    );
+    render(<ResultsPanel {...defaultProps} />);
     expect(screen.getByText(/Great pizza/)).toBeDefined();
     expect(screen.getByText(/Terrible experience/)).toBeDefined();
   });
 
-  it("shows pathway scores as badges", () => {
-    render(
-      <ResultsPanel reviews={reviews} fitName="fit_a" selectedReviewId={null} onSelectReview={jest.fn()} />
-    );
-    expect(screen.getByText("P0: 0.80")).toBeDefined();
-    expect(screen.getByText("P1: 0.30")).toBeDefined();
+  it("renders pathway score bars with correct widths and colors", () => {
+    render(<ResultsPanel {...defaultProps} />);
+    // eslint-disable-next-line testing-library/no-node-access -- checking inline styles on bar elements
+    const bars = document.querySelectorAll(".results-panel-bar");
+    // 2 reviews x 2 pathways = 4 bars
+    expect(bars.length).toBe(4);
+    // First review, first pathway: 0.8 / 1 = 80%
+    expect((bars[0] as HTMLElement).style.width).toBe("80%");
+    expect((bars[0] as HTMLElement).style.backgroundColor).toBe("rgb(231, 76, 60)");
   });
 
   it("highlights the selected review", () => {
-    render(
-      <ResultsPanel reviews={reviews} fitName="fit_a" selectedReviewId="r0" onSelectReview={jest.fn()} />
-    );
+    render(<ResultsPanel {...defaultProps} selectedReviewId="r0" />);
     // eslint-disable-next-line testing-library/no-node-access -- checking CSS class on parent element
     const selectedCard = screen.getByText(/Great pizza/).closest(".results-panel-card");
     expect(selectedCard?.classList.contains("selected")).toBe(true);
@@ -47,17 +54,13 @@ describe("ResultsPanel", () => {
 
   it("calls onSelectReview when a card is clicked", () => {
     const onSelect = jest.fn();
-    render(
-      <ResultsPanel reviews={reviews} fitName="fit_a" selectedReviewId={null} onSelectReview={onSelect} />
-    );
+    render(<ResultsPanel {...defaultProps} onSelectReview={onSelect} />);
     fireEvent.click(screen.getByText(/Terrible experience/));
     expect(onSelect).toHaveBeenCalledWith(reviews[1]);
   });
 
   it("can be collapsed and expanded", () => {
-    render(
-      <ResultsPanel reviews={reviews} fitName="fit_a" selectedReviewId={null} onSelectReview={jest.fn()} />
-    );
+    render(<ResultsPanel {...defaultProps} />);
     const collapseButton = screen.getByRole("button", { name: /collapse/i });
     fireEvent.click(collapseButton);
     expect(screen.queryByText(/Great pizza/)).toBeNull();

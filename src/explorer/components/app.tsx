@@ -284,6 +284,7 @@ export const App = () => {
           fitName={selectedFitName}
           selectedReviewId={effectiveSelectedReviewId}
           onSelectReview={handleSelectReview}
+          maxAbsScore={Math.max(Math.abs(scaleExtents.shared[0]), Math.abs(scaleExtents.shared[1]))}
         />
         {selectedReview ? (
           <div className="explorer-main">

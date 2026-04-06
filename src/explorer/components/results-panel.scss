@@ -66,17 +66,15 @@
   line-height: 1.4;
 }
 
-.results-panel-card-scores {
+.results-panel-card-bars {
   display: flex;
-  gap: 4px;
+  flex-direction: column;
+  gap: 1px;
   margin-top: 5px;
-  flex-wrap: wrap;
 }
 
-.results-panel-score-badge {
-  font-size: 10px;
-  background: #eee;
-  padding: 1px 5px;
-  border-radius: 2px;
-  color: #666;
+.results-panel-bar {
+  height: 4px;
+  border-radius: 1px;
+  min-width: 1px;
 }
