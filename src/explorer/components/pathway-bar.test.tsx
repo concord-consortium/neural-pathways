@@ -9,38 +9,39 @@ describe("PathwayBar", () => {
         index={0}
         score={0.5}
         scaleExtent={[-3, 3]}
-        showScore={false}
+        
         showExtents={false}
       />
     );
     expect(screen.getByText("Pathway 0")).toBeDefined();
   });
 
-  it("renders the numeric score when showScore is true", () => {
+  it("always renders the numeric score", () => {
     render(
       <PathwayBar
         index={2}
         score={-1.234}
         scaleExtent={[-3, 3]}
-        showScore={true}
         showExtents={false}
       />
     );
     expect(screen.getByText("-1.234")).toBeDefined();
   });
 
-  it("shows variance fraction when provided", () => {
+  it("shows variance fraction as a fill bar when provided", () => {
     render(
       <PathwayBar
         index={0}
         score={1.0}
         scaleExtent={[-3, 3]}
         varianceFraction={0.9827}
-        showScore={false}
+        
         showExtents={false}
       />
     );
     expect(screen.getByText("98.3%")).toBeDefined();
+    const fill = screen.getByTestId("variance-fill-0");
+    expect(fill.style.width).toBe("98.27%");
   });
 
   it("does not show variance fraction when not provided", () => {
@@ -49,7 +50,7 @@ describe("PathwayBar", () => {
         index={0}
         score={1.0}
         scaleExtent={[-3, 3]}
-        showScore={false}
+        
         showExtents={false}
       />
     );
@@ -62,7 +63,7 @@ describe("PathwayBar", () => {
         index={0}
         score={1.5}
         scaleExtent={[-3, 3]}
-        showScore={false}
+        
         showExtents={false}
       />
     );
@@ -76,7 +77,7 @@ describe("PathwayBar", () => {
         index={0}
         score={-1.5}
         scaleExtent={[-3, 3]}
-        showScore={false}
+        
         showExtents={false}
       />
     );
@@ -91,7 +92,7 @@ describe("PathwayBar", () => {
         index={3}
         score={0.5}
         scaleExtent={[-3, 3]}
-        showScore={false}
+        
         showExtents={false}
         onClick={onClick}
       />
@@ -106,7 +107,7 @@ describe("PathwayBar", () => {
         index={0}
         score={0.5}
         scaleExtent={[-3, 3]}
-        showScore={false}
+        
         showExtents={false}
         selected={true}
       />
@@ -115,4 +116,39 @@ describe("PathwayBar", () => {
     expect(row.classList.contains("pathway-bar-selected")).toBe(true);
   });
 
+  it("renders explained variance fill bar when provided", () => {
+    render(
+      <PathwayBar
+        index={0}
+        score={0.5}
+        scaleExtent={[-3, 3]}
+        
+        showExtents={false}
+        explainedVariance={0.855}
+      />
+    );
+    const fill = screen.getByTestId("ev-fill-0");
+    expect(fill.style.width).toBe("85.5%");
+    expect(screen.getByText("85.5%")).toBeDefined();
+  });
+
+  it("renders importance bar when both importance and percent provided", () => {
+    render(
+      <PathwayBar
+        index={0}
+        score={0.5}
+        scaleExtent={[-3, 3]}
+        
+        showExtents={false}
+        pathwayImportance={-0.567}
+        importancePercent={42.1}
+        maxImportance={1.0}
+      />
+    );
+    const fill = screen.getByTestId("imp-fill-0");
+    expect(fill.classList.contains("imp-negative")).toBe(true);
+    expect(screen.getByText("-0.57")).toBeDefined();
+    expect(screen.getByTestId("imp-pct-fill-0")).toBeDefined();
+    expect(screen.getByText("42.1%")).toBeDefined();
+  });
 });

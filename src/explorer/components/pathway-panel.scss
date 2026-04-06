@@ -1,7 +1,45 @@
 .pathway-panel {
-  width: 220px;
+  width: 400px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.pathway-panel-legend {
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #888;
+}
+
+.pathway-panel-legend-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.pathway-panel-legend-columns {
+  display: flex;
+  gap: 12px;
+}
+
+.pathway-panel-legend-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.legend-title {
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.legend-item {
+  color: #999;
 }

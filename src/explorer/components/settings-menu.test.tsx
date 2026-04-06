@@ -10,8 +10,6 @@ describe("SettingsMenu", () => {
     onScaleModeChange: jest.fn(),
     showVarianceFractions: false,
     onShowVarianceFractionsChange: jest.fn(),
-    showScores: false,
-    onShowScoresChange: jest.fn(),
     showExtents: false,
     onShowExtentsChange: jest.fn(),
     wordColorMode: "score" as const,

@@ -18,7 +18,7 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
-        showScores={false}
+
         showExtents={false}
       />
     );
@@ -35,7 +35,7 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={true}
-        showScores={false}
+
         showExtents={false}
       />
     );
@@ -50,7 +50,7 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
-        showScores={false}
+
         showExtents={false}
       />
     );
@@ -65,7 +65,7 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
-        showScores={false}
+
         showExtents={false}
         onPathwayClick={onPathwayClick}
         selectedPathways={new Set()}
@@ -73,5 +73,41 @@ describe("PathwayPanel", () => {
     );
     fireEvent.click(screen.getByTestId("pathway-bar-row-2"));
     expect(onPathwayClick).toHaveBeenCalledWith(2);
+  });
+
+  it("renders the legend card", () => {
+    render(
+      <PathwayPanel
+        scores={mockScores}
+        scaleMode="shared"
+        scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
+        showVarianceFractions={false}
+
+        showExtents={false}
+      />
+    );
+    expect(screen.getByTestId("pathway-panel-legend")).toBeDefined();
+    expect(screen.getByText("This Review")).toBeDefined();
+    expect(screen.getByText("Fit Properties")).toBeDefined();
+  });
+
+  it("passes explained variance and importance to pathway bars", () => {
+    const ev = [0.82, 0.05, 0.04, 0.03, 0.02, 0.01, 0.005];
+    const imp = [-5.0, -0.1, 0.3, 0.7, 0.3, -0.07, -0.004];
+    render(
+      <PathwayPanel
+        scores={mockScores}
+        scaleMode="shared"
+        scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
+        showVarianceFractions={false}
+
+        showExtents={false}
+        explainedVariancePerPathway={ev}
+        pathwayImportance={imp}
+      />
+    );
+    const evFill = screen.getByTestId("ev-fill-0");
+    expect(evFill.style.width).toBe("82%");
+    expect(screen.getByTestId("imp-fill-0")).toBeDefined();
   });
 });

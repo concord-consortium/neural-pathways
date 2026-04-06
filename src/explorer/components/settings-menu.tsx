@@ -8,8 +8,6 @@ interface SettingsMenuProps {
   onScaleModeChange: (mode: ScaleMode) => void;
   showVarianceFractions: boolean;
   onShowVarianceFractionsChange: (show: boolean) => void;
-  showScores: boolean;
-  onShowScoresChange: (show: boolean) => void;
   showExtents: boolean;
   onShowExtentsChange: (show: boolean) => void;
   wordColorMode: WordColorMode;
@@ -22,7 +20,7 @@ interface SettingsMenuProps {
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({
   scaleMode, onScaleModeChange, showVarianceFractions, onShowVarianceFractionsChange,
-  showScores, onShowScoresChange, showExtents, onShowExtentsChange,
+  showExtents, onShowExtentsChange,
   wordColorMode, onWordColorModeChange,
   showPathwayValues, onShowPathwayValuesChange,
   wordScaleScope, onWordScaleScopeChange
@@ -74,14 +72,6 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
           </div>
           <div className="settings-menu-group">
             <div className="settings-menu-group-label">Display</div>
-            <label>
-              <input
-                type="checkbox"
-                checked={showScores}
-                onChange={e => onShowScoresChange(e.target.checked)}
-              />
-              Show scores
-            </label>
             <label>
               <input
                 type="checkbox"
