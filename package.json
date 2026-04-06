@@ -121,6 +121,7 @@
     "webpack-dev-server": "^5.2.0"
   },
   "dependencies": {
+    "liqe": "^3.8.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-select": "^5.10.2",
