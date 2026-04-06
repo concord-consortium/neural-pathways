@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import React, { useState, useMemo, useDeferredValue, useCallback, useEffect, useRef } from "react";
 import { filter, parse } from "liqe";
 import { S3Index, S3Review, S3ShapBucket, ReviewShapData } from "../../shared/types/s3-data";
 import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope } from "../types/explorer-data";
@@ -56,6 +56,7 @@ export const App = () => {
 
   // --- Search state ---
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const deferredQuery = useDeferredValue(searchQuery);
 
   // --- Flatten reviews for search ---
   const flatReviews = useMemo(() => {
@@ -66,11 +67,11 @@ export const App = () => {
   // --- Filter reviews with liqe ---
   const { filteredReviews, searchError } = useMemo(() => {
     if (!indexData) return { filteredReviews: [] as S3Review[], searchError: false };
-    if (!searchQuery.trim()) {
+    if (!deferredQuery.trim()) {
       return { filteredReviews: indexData.reviews, searchError: false };
     }
     try {
-      const ast = parse(searchQuery);
+      const ast = parse(deferredQuery);
       const matched = filter(ast, flatReviews);
       // Map flat results back to S3Review objects by index
       const matchedSet = new Set(matched.map(m => flatReviews.indexOf(m)));
@@ -79,7 +80,7 @@ export const App = () => {
       // On parse error, return all reviews as a safe fallback
       return { filteredReviews: indexData.reviews, searchError: true };
     }
-  }, [indexData, searchQuery, flatReviews]);
+  }, [indexData, deferredQuery, flatReviews]);
 
   // --- Clear selection when it's not in filtered results ---
   const effectiveSelectedReviewId = selectedReviewId && filteredReviews.some(r => r.id === selectedReviewId)
