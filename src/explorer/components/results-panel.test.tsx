@@ -25,6 +25,8 @@ const defaultProps = {
   selectedReviewId: null as string | null,
   onSelectReview: jest.fn(),
   maxAbsScore: 1,
+  resultCount: 2,
+  totalCount: 100,
 };
 
 describe("ResultsPanel", () => {
@@ -32,6 +34,11 @@ describe("ResultsPanel", () => {
     render(<ResultsPanel {...defaultProps} />);
     expect(screen.getByText(/Great pizza/)).toBeDefined();
     expect(screen.getByText(/Terrible experience/)).toBeDefined();
+  });
+
+  it("displays the result count in the header", () => {
+    render(<ResultsPanel {...defaultProps} />);
+    expect(screen.getByText("2 of 100")).toBeDefined();
   });
 
   it("renders pathway score bars with correct widths and colors", () => {

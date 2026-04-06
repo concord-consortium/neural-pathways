@@ -258,8 +258,6 @@ export const App = () => {
         <SearchInput
           query={searchQuery}
           onQueryChange={setSearchQuery}
-          resultCount={filteredReviews.length}
-          totalCount={indexData.reviews.length}
           hasError={searchError}
         />
         <SettingsMenu
@@ -285,6 +283,8 @@ export const App = () => {
           selectedReviewId={effectiveSelectedReviewId}
           onSelectReview={handleSelectReview}
           maxAbsScore={Math.max(Math.abs(scaleExtents.shared[0]), Math.abs(scaleExtents.shared[1]))}
+          resultCount={filteredReviews.length}
+          totalCount={indexData.reviews.length}
         />
         {selectedReview ? (
           <div className="explorer-main">

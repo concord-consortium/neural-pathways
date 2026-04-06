@@ -10,10 +10,12 @@ interface ResultsPanelProps {
   selectedReviewId: string | null;
   onSelectReview: (review: S3Review) => void;
   maxAbsScore: number;
+  resultCount: number;
+  totalCount: number;
 }
 
 export const ResultsPanel: React.FC<ResultsPanelProps> = ({
-  reviews, fitName, selectedReviewId, onSelectReview, maxAbsScore,
+  reviews, fitName, selectedReviewId, onSelectReview, maxAbsScore, resultCount, totalCount,
 }) => {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -35,6 +37,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
     <div className="results-panel">
       <div className="results-panel-header">
         <span className="results-panel-title">Results</span>
+        <span className="results-panel-count">{resultCount} of {totalCount}</span>
         <button
           className="results-panel-toggle"
           onClick={() => setCollapsed(true)}
