@@ -63,4 +63,29 @@ describe("ReviewPanel", () => {
     render(<ReviewPanel review={mockReview} reconstructionR2={null} />);
     expect(screen.queryByText("0.9662")).toBeNull();
   });
+
+  it("renders classification badge with probability when classification is present", () => {
+    const reviewWithClassification = {
+      ...mockReview,
+      classification: 1,
+      classification_probability: 0.987654,
+    };
+    render(<ReviewPanel review={reviewWithClassification} reconstructionR2={0.9662} />);
+    expect(screen.getByText("predicted: positive (98.8%)")).toBeDefined();
+  });
+
+  it("renders negative classification badge", () => {
+    const reviewWithClassification = {
+      ...mockReview,
+      classification: 0,
+      classification_probability: 0.234,
+    };
+    render(<ReviewPanel review={reviewWithClassification} reconstructionR2={0.9662} />);
+    expect(screen.getByText("predicted: negative (23.4%)")).toBeDefined();
+  });
+
+  it("does not render classification badge when classification is absent", () => {
+    render(<ReviewPanel review={mockReview} reconstructionR2={0.9662} />);
+    expect(screen.queryByText(/predicted:/)).toBeNull();
+  });
 });

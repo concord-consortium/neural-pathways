@@ -38,6 +38,8 @@ export interface S3Review {
   reconstruction_r2: Record<string, number>;
   pathway_variance_fractions: Record<string, number[]>;
   has_shap?: string[];
+  classification?: number;
+  classification_probability?: number;
 }
 
 // --- Activation Types (heatmap) ---

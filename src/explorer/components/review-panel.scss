@@ -40,6 +40,16 @@
     background: #e8f4fd;
     color: #2980b9;
   }
+
+  &.badge-classification-positive {
+    background: #fdf2f2;
+    color: #d4605a;
+  }
+
+  &.badge-classification-negative {
+    background: #f0f1fd;
+    color: #5a6ab0;
+  }
 }
 
 .explorer-review-text {
