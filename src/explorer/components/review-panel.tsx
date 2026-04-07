@@ -28,6 +28,11 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({ review, reconstruction
             {review.target_label}
           </span>
         )}
+        {review.classification != null && (
+          <span className={`explorer-review-badge badge-classification-${review.classification === 1 ? "positive" : "negative"}`}>
+            predicted: {review.classification === 1 ? "positive" : "negative"} ({(review.classification_probability! * 100).toFixed(1)}%)
+          </span>
+        )}
         <span className="explorer-review-badge badge-source">
           {Object.keys(review.sources).join(", ")}
         </span>
