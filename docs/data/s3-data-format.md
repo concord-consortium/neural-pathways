@@ -116,7 +116,9 @@ Each entry:
     "test-fa-7": [0.80, 0.08, ...],
     "dev-fa-6": [0.82, 0.06, ...]
   },
-  "has_shap": ["test-fa-7", "dev-fa-6"]
+  "has_shap": ["test-fa-7", "dev-fa-6"],
+  "classification": 1,
+  "classification_probability": 0.987654
 }
 ```
 
@@ -137,6 +139,8 @@ Each entry:
 | `reconstruction_r2` | object | Per-FA-fit R² measuring how well pathways reconstruct this review's activations |
 | `pathway_variance_fractions` | object | Per-FA-fit array showing each pathway's share of the reconstruction variance |
 | `has_shap` | string[] or absent | List of FA fit names that have SHAP data for this review. Omitted if the review has no SHAP data. |
+| `classification` | int or absent | Model's predicted sentiment: `1` = positive, `0` = negative. Only present for review sets with model predictions (currently test only). |
+| `classification_probability` | number or absent | Model's confidence in the predicted class (0–1). Only present when `classification` is present. |
 
 Metadata fields (`name`, `city`, `state`, `stars`, `review_stars`, `categories`) are present only for Yelp reviews. Synthetic reviews omit these fields.
 
@@ -198,6 +202,14 @@ Per-word SHAP values explaining each pathway's score for a review. Not all revie
 
 The SHAP scores are additive: `base_values[p] + sum(word.scores[p] for word in words)` approximates the pathway score for pathway `p`.
 
+To compute a word's **normalized impact** on a pathway (i.e. what fraction of the pathway's activation this word is responsible for):
+
+```
+normalized_impact = score / (unmasked_value - base_value)
+```
+
+Where `score` is the word's SHAP value for that pathway, and `unmasked_value - base_value` is the total pathway activation attributable to all words combined.
+
 Current SHAP fits: `dev-fa-6`, `test-fa-7`. 256 bucket files per fit, ~9 reviews per file.
 
 ## Typical access pattern
@@ -207,3 +219,53 @@ Current SHAP fits: `dev-fa-6`, `test-fa-7`. 256 bucket files per fit, ~9 reviews
    - `activations/{id[:2]}.json` for raw activation vectors
    - `shap/{fa-fit}/{id[:2]}.json` for word-level SHAP explanations
 3. Cache fetched bucket files — other reviews in the same bucket are available immediately.
+
+## Reconstruction
+
+Factor Analysis decomposes 780 neuron activations into a small number of pathway scores. The reconstruction formula recovers approximate activations from those scores:
+
+```
+reconstructed = pathway_scores × loadings + scaler_mean_fa
+```
+
+Where `loadings` is the factor loading matrix (`n_pathways × 780`) from the FA fit metadata, and `scaler_mean_fa` is the per-neuron mean from the FA fit (the mean of the standardized activations used to fit FA — in practice close to zero since StandardScaler centers the data, but included for correctness).
+
+Note: reconstruction operates on **standardized** activations, not raw. To convert between raw and standardized:
+
+```
+standardized = (raw - scaler_mean) / scaler_scale
+raw = standardized × scaler_scale + scaler_mean
+```
+
+Where `scaler_mean` and `scaler_scale` are the 780-element vectors from the FA fit metadata. StandardScaler transforms each neuron to mean=0, std=1 across the training set, putting all neurons on equal footing for Factor Analysis regardless of their original scale.
+
+### Reconstruction R²
+
+`reconstruction_r2` measures how well the pathways reconstruct a single review's standardized activations:
+
+```
+R² = 1 - mean((original - reconstructed)²) / variance(original)
+```
+
+Both `original` and `reconstructed` are 780-element vectors (one value per neuron). Step by step:
+
+1. `original - reconstructed` — subtract element-wise, giving 780 differences
+2. `(...)²` — square each of the 780 differences
+3. `mean(...)` — average the 780 squared differences (the mean squared error)
+4. `variance(original)` — how spread out the 780 activation values are for this review
+
+The ratio asks: are the reconstruction errors large or small relative to how spread out the activations are? An R² of 0.90 means the pathways explain 90% of the variance in that review's neuron activations. The remaining 10% is variation that doesn't follow any pattern captured by the pathways.
+
+This is a **per-review** R², computed across the 780 neurons of a single review — not across reviews.
+
+## Neuron layers
+
+The 780 activations come from three layers of the DistilBERT model:
+
+| Layer | Neuron indices | Size |
+|-------|---------------|------|
+| CLS embedding (final hidden state) | 0–767 | 768 |
+| Classifier hidden layer 1 | 768–773 | 6 |
+| Classifier hidden layer 2 | 774–779 | 6 |
+
+The CLS embedding is the general-purpose text representation from the pre-trained language model. The classifier layers are the small head fine-tuned for sentiment classification. Because StandardScaler normalizes each neuron independently, every neuron contributes equally to the variance — so the 12 classifier neurons account for only ~1.5% (12/780) of the variation in the Factor Analysis.
