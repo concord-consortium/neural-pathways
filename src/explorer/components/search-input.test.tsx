@@ -29,6 +29,13 @@ describe("SearchInput", () => {
     expect(screen.getByText("pathway_0 through pathway_4")).toBeDefined();
   });
 
+  it("shows classification fields in help dialog", () => {
+    render(<SearchInput query="" onQueryChange={jest.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: /search help/i }));
+    expect(screen.getByText("classification_label")).toBeDefined();
+    expect(screen.getByText("classification_probability")).toBeDefined();
+  });
+
   it("hides help dialog when help button is clicked again", () => {
     render(<SearchInput query="" onQueryChange={jest.fn()} />);
     const helpButton = screen.getByRole("button", { name: /search help/i });

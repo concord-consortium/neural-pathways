@@ -68,6 +68,8 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                 <tr><td><code>{pathwayRange}</code></td><td>Pathway scores (current fit)</td></tr>
                 <tr><td><code>reconstruction_r2</code></td><td>Reconstruction R²</td></tr>
                 <tr><td><code>has_word_scores</code></td><td>Has word scores for current fit (true/false)</td></tr>
+                <tr><td><code>classification_label</code></td><td>Model&apos;s predicted sentiment</td></tr>
+                <tr><td><code>classification_probability</code></td><td>Prediction confidence (0–1)</td></tr>
               </tbody>
             </table>
 
