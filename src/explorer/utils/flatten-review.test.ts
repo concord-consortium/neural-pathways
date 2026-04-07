@@ -58,6 +58,27 @@ describe("flattenReview", () => {
     expect(result.reconstruction_r2).toBe(0.85);
   });
 
+  it("derives classification_label from classification field", () => {
+    const review = makeReview({ classification: 1, classification_probability: 0.987 });
+    const result = flattenReview(review, "fit_a");
+    expect(result.classification_label).toBe("positive");
+    expect(result.classification_probability).toBe(0.987);
+  });
+
+  it("derives negative classification_label when classification is 0", () => {
+    const review = makeReview({ classification: 0, classification_probability: 0.123 });
+    const result = flattenReview(review, "fit_a");
+    expect(result.classification_label).toBe("negative");
+    expect(result.classification_probability).toBe(0.123);
+  });
+
+  it("omits classification fields when classification is absent", () => {
+    const review = makeReview();
+    const result = flattenReview(review, "fit_a");
+    expect(result.classification_label).toBeUndefined();
+    expect(result.classification_probability).toBeUndefined();
+  });
+
   it("handles reviews with missing optional fields", () => {
     const review = makeReview({
       name: undefined,
