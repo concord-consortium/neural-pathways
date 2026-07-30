@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { AttributeDefinition } from "../../shared/types/attributes";
 import "./search-input.scss";
 
 interface SearchInputProps {
@@ -6,10 +7,21 @@ interface SearchInputProps {
   onQueryChange: (query: string) => void;
   hasError?: boolean;
   numPathways?: number;
+  attributes?: AttributeDefinition[];
+}
+
+function describeAttribute(definition: AttributeDefinition): string {
+  if (definition.type === "binary") {
+    return `${definition.label} (0 or 1)`;
+  }
+  if (definition.min != null && definition.max != null) {
+    return `${definition.label} (${definition.min}–${definition.max})`;
+  }
+  return definition.label;
 }
 
 export const SearchInput: React.FC<SearchInputProps> = ({
-  query, onQueryChange, hasError, numPathways,
+  query, onQueryChange, hasError, numPathways, attributes = [],
 }) => {
   const [showHelp, setShowHelp] = useState(false);
   const helpRef = useRef<HTMLDivElement>(null);
@@ -72,6 +84,22 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                 <tr><td><code>classification_probability</code></td><td>Prediction confidence (0–1)</td></tr>
               </tbody>
             </table>
+
+            {attributes.length > 0 && (
+              <>
+                <h4>Attributes</h4>
+                <table>
+                  <tbody>
+                    {attributes.map(attribute => (
+                      <tr key={attribute.key}>
+                        <td><code>{attribute.key}</code></td>
+                        <td>{describeAttribute(attribute)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
 
             <h4>Operators</h4>
             <table>

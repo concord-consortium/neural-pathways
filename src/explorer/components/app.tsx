@@ -261,6 +261,7 @@ export const App = () => {
           onQueryChange={setSearchQuery}
           hasError={searchError}
           numPathways={selectedFit?.n_pathways}
+          attributes={yelpDataset.attributes}
         />
         <SettingsMenu
           scaleMode={scaleMode}

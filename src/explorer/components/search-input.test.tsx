@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { SearchInput } from "./search-input";
+import { AttributeDefinition } from "../../shared/types/attributes";
 
 describe("SearchInput", () => {
   it("renders an input with placeholder text", () => {
@@ -43,5 +44,49 @@ describe("SearchInput", () => {
     expect(screen.getByText("Search Syntax")).toBeDefined();
     fireEvent.click(helpButton);
     expect(screen.queryByText("Search Syntax")).toBeNull();
+  });
+});
+
+describe("SearchInput attribute fields", () => {
+  const attributes: AttributeDefinition[] = [
+    {
+      key: "model_correct",
+      label: "Model was correct",
+      description: "Whether the prediction matched the truth.",
+      type: "binary",
+    },
+    {
+      key: "review_stars",
+      label: "Review rating",
+      description: "Stars on this review.",
+      type: "integer",
+      min: 1,
+      max: 5,
+    },
+  ];
+
+  const openHelp = (attrs: AttributeDefinition[] = attributes) => {
+    render(<SearchInput query="" onQueryChange={() => undefined} attributes={attrs} />);
+    fireEvent.click(screen.getByLabelText("Search help"));
+  };
+
+  it("lists each attribute key in the help dialog", () => {
+    openHelp();
+    expect(screen.getByText("model_correct")).toBeDefined();
+  });
+
+  it("shows the attribute label and range for a numeric attribute", () => {
+    openHelp();
+    expect(screen.getByText(/Review rating \(1–5\)/)).toBeDefined();
+  });
+
+  it("shows the label without a range for a binary attribute", () => {
+    openHelp();
+    expect(screen.getByText("Model was correct (0 or 1)")).toBeDefined();
+  });
+
+  it("omits the attributes section entirely when there are none", () => {
+    openHelp([]);
+    expect(screen.queryByText("Attributes")).toBeNull();
   });
 });
