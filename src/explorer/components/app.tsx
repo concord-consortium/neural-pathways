@@ -291,7 +291,12 @@ export const App = () => {
         {selectedReview ? (
           <div className="explorer-main">
             <div className="explorer-left-column">
-              <ReviewPanel review={selectedReview} reconstructionR2={reconstructionR2} />
+              <ReviewPanel
+                review={selectedReview}
+                reconstructionR2={reconstructionR2}
+                attributes={yelpDataset.attributes}
+                getAttributeValue={yelpDataset.getAttributeValue}
+              />
               <WordEffectsPanel
                 shapData={currentShapData}
                 shapLoading={shapLoading}

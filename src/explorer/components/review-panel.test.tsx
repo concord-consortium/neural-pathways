@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { ReviewPanel } from "./review-panel";
 import { S3Review } from "../../shared/types/s3-data";
+import { AttributeDefinition } from "../../shared/types/attributes";
 
 const mockReview: S3Review = {
   id: "r719",
@@ -20,47 +21,65 @@ const mockReview: S3Review = {
   categories: "Pizza, Italian",
 };
 
+const testAttributes: AttributeDefinition[] = [
+  { key: "target", label: "Actual sentiment", description: "Ground truth.", type: "binary" },
+  { key: "model_correct", label: "Model was correct", description: "Match.", type: "binary" },
+];
+
+const testGetValue = (_review: S3Review, key: string): number | null =>
+  key === "target" ? 1 : null;
+
+const renderPanel = (review: S3Review = mockReview, r2: number | null = 0.9662) =>
+  render(
+    <ReviewPanel
+      review={review}
+      reconstructionR2={r2}
+      attributes={testAttributes}
+      getAttributeValue={testGetValue}
+    />,
+  );
+
 describe("ReviewPanel", () => {
   it("renders the review text", () => {
-    render(<ReviewPanel review={mockReview} reconstructionR2={0.9662} />);
+    renderPanel();
     expect(screen.getByText("Delivery was FAST. White pizza was delicious.")).toBeDefined();
   });
 
   it("renders the classification badge", () => {
-    render(<ReviewPanel review={mockReview} reconstructionR2={0.9662} />);
+    renderPanel();
     expect(screen.getByText("positive")).toBeDefined();
   });
 
   it("renders the source badge", () => {
-    render(<ReviewPanel review={mockReview} reconstructionR2={0.9662} />);
+    renderPanel();
     expect(screen.getByText("test")).toBeDefined();
   });
 
   it("renders business info", () => {
-    render(<ReviewPanel review={mockReview} reconstructionR2={0.9662} />);
+    renderPanel();
     expect(screen.getByText(/Joe's Pizza/)).toBeDefined();
     expect(screen.getByText(/Philadelphia/)).toBeDefined();
   });
 
   it("renders categories", () => {
-    render(<ReviewPanel review={mockReview} reconstructionR2={0.9662} />);
+    renderPanel();
     expect(screen.getByText("Pizza, Italian")).toBeDefined();
   });
 
   it("renders R² value", () => {
-    render(<ReviewPanel review={mockReview} reconstructionR2={0.9662} />);
+    renderPanel();
     expect(screen.getByText("0.9662")).toBeDefined();
   });
 
   it("renders star rating", () => {
-    render(<ReviewPanel review={mockReview} reconstructionR2={0.9662} />);
+    renderPanel();
     // review_stars = 5, so 5 filled stars
     const starContainer = screen.getByTestId("review-stars");
     expect(starContainer.textContent).toContain("★★★★★");
   });
 
   it("hides R² when reconstructionR2 is null", () => {
-    render(<ReviewPanel review={mockReview} reconstructionR2={null} />);
+    renderPanel(mockReview, null);
     expect(screen.queryByText("0.9662")).toBeNull();
   });
 
@@ -70,7 +89,7 @@ describe("ReviewPanel", () => {
       classification: 1,
       classification_probability: 0.987654,
     };
-    render(<ReviewPanel review={reviewWithClassification} reconstructionR2={0.9662} />);
+    renderPanel(reviewWithClassification);
     expect(screen.getByText("predicted: positive (98.8%)")).toBeDefined();
   });
 
@@ -80,12 +99,36 @@ describe("ReviewPanel", () => {
       classification: 0,
       classification_probability: 0.234,
     };
-    render(<ReviewPanel review={reviewWithClassification} reconstructionR2={0.9662} />);
+    renderPanel(reviewWithClassification);
     expect(screen.getByText("predicted: negative (23.4%)")).toBeDefined();
   });
 
   it("does not render classification badge when classification is absent", () => {
-    render(<ReviewPanel review={mockReview} reconstructionR2={0.9662} />);
+    renderPanel();
     expect(screen.queryByText(/predicted:/)).toBeNull();
+  });
+});
+
+describe("ReviewPanel attributes", () => {
+  it("renders chips for attributes that have values", () => {
+    renderPanel();
+    expect(screen.getByTestId("attribute-chip-target")).toBeDefined();
+  });
+
+  it("omits chips for attributes with no value", () => {
+    renderPanel();
+    expect(screen.queryByTestId("attribute-chip-model_correct")).toBeNull();
+  });
+
+  it("renders no chip container when the attribute list is empty", () => {
+    render(
+      <ReviewPanel
+        review={mockReview}
+        reconstructionR2={0.9662}
+        attributes={[]}
+        getAttributeValue={testGetValue}
+      />,
+    );
+    expect(screen.queryByTestId("attribute-chips")).toBeNull();
   });
 });
