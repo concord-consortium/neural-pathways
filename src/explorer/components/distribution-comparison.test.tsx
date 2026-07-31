@@ -55,7 +55,7 @@ describe("DistributionComparison", () => {
   it("renders a group whose bins are all empty without dividing by zero", () => {
     const empty: GroupComparison = {
       groups: [{ value: 0, n: 0, mean: 0, sd: 0, counts: [0, 0] }],
-      binEdges: [0, 1, 2],
+      bins: { mode: "numeric", edges: [0, 1, 2] },
       separationSd: null,
     };
     render(<DistributionComparison comparison={empty} groupLabels={{}} />);

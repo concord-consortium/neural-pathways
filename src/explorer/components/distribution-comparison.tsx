@@ -13,10 +13,10 @@ const BAR_AREA_HEIGHT = 48;
 export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
   comparison, groupLabels,
 }) => {
-  const { groups, binEdges, separationSd } = comparison;
+  const { groups, bins, separationSd } = comparison;
   if (groups.length === 0) return null;
 
-  const binCount = binEdges.length - 1;
+  const binCount = bins.mode === "categorical" ? bins.values.length : bins.edges.length - 1;
   const barWidth = binCount > 0 ? 100 / binCount : 100;
 
   return (

@@ -116,22 +116,39 @@ describe("compareGroups", () => {
     expect(result.separationSd).toBeCloseTo(6, 6);
   });
 
-  it("shares bin edges across both groups", () => {
-    const result = compareGroups(groupValues, scores, 4);
-    expect(result.binEdges).toHaveLength(5);
-    expect(result.binEdges[0]).toBeCloseTo(1, 10);
-    expect(result.binEdges[4]).toBeCloseTo(9, 10);
+  it("shares categorical bin values across both groups", () => {
+    // Six distinct scores is well under MAX_DISTINCT_FOR_BARS, so this is categorical.
+    const result = compareGroups(groupValues, scores);
+    expect(result.bins).toEqual({ mode: "categorical", values: [1, 2, 3, 7, 8, 9] });
+    for (const group of result.groups) {
+      expect(group.counts).toHaveLength(6);
+    }
+  });
+
+  it("shares numeric bin edges across both groups when the column is continuous", () => {
+    // 30 distinct values exceeds MAX_DISTINCT_FOR_BARS, so binning is numeric.
+    const many = Array.from({ length: 30 }, (_, i) => i + 1);
+    const halves = many.map((_, i) => (i < 15 ? 0 : 1));
+    const result = compareGroups(halves, many, 4);
+    expect(result.bins.mode).toBe("numeric");
+    expect(result.bins).toHaveProperty("edges");
+    const edges = (result.bins as { edges: number[] }).edges;
+    expect(edges).toHaveLength(5);
+    expect(edges[0]).toBeCloseTo(1, 10);
+    expect(edges[4]).toBeCloseTo(30, 10);
     for (const group of result.groups) {
       expect(group.counts).toHaveLength(4);
     }
   });
 
-  it("counts every observation exactly once across the bins", () => {
-    const result = compareGroups(groupValues, scores, 4);
+  it("counts every observation exactly once across numeric bins", () => {
+    const many = Array.from({ length: 30 }, (_, i) => i + 1);
+    const halves = many.map((_, i) => (i < 15 ? 0 : 1));
+    const result = compareGroups(halves, many, 4);
     const total = result.groups.reduce(
       (sum, g) => sum + g.counts.reduce((a, b) => a + b, 0), 0,
     );
-    expect(total).toBe(6);
+    expect(total).toBe(30);
   });
 
   it("skips pairs where either value is null", () => {
@@ -161,6 +178,44 @@ describe("compareGroups", () => {
     const result = compareGroups([], []);
     expect(result.groups).toEqual([]);
     expect(result.separationSd).toBeNull();
+  });
+
+  it("uses one categorical bar per distinct value, ascending", () => {
+    const result = compareGroups([0, 0, 1, 1], [2.5, 1, 1, 2.5]);
+    expect(result.bins).toEqual({ mode: "categorical", values: [1, 2.5] });
+    expect(result.groups[0].counts).toEqual([1, 1]);
+  });
+
+  it("spaces unevenly distributed discrete values evenly", () => {
+    // The whole point of categorical mode: 1, 2, 100 get three equal bars rather
+    // than two crushed together and one far away with empty bins between.
+    const result = compareGroups([0, 0, 0], [1, 2, 100]);
+    expect(result.bins).toEqual({ mode: "categorical", values: [1, 2, 100] });
+    expect(result.groups[0].counts).toEqual([1, 1, 1]);
+  });
+
+  it("stays categorical at exactly the distinct-value limit", () => {
+    const twenty = Array.from({ length: 20 }, (_, i) => i);
+    const result = compareGroups(twenty.map(() => 0), twenty);
+    expect(result.bins.mode).toBe("categorical");
+    expect(result.groups[0].counts).toHaveLength(20);
+  });
+
+  it("switches to numeric bins one value past the limit", () => {
+    const twentyOne = Array.from({ length: 21 }, (_, i) => i);
+    const result = compareGroups(twentyOne.map(() => 0), twentyOne);
+    expect(result.bins.mode).toBe("numeric");
+    expect(result.groups[0].counts).toHaveLength(20);
+  });
+
+  it("gives a single distinct score one categorical bar", () => {
+    const result = compareGroups([0, 0, 1, 1], [3, 3, 3, 3]);
+    expect(result.bins).toEqual({ mode: "categorical", values: [3] });
+    expect(result.groups.map(g => g.counts)).toEqual([[2], [2]]);
+  });
+
+  it("reports numeric mode with no edges for empty input", () => {
+    expect(compareGroups([], []).bins).toEqual({ mode: "numeric", edges: [] });
   });
 });
 

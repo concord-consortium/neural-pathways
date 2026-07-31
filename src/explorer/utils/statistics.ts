@@ -89,17 +89,39 @@ export interface GroupSummary {
   n: number;
   mean: number;
   sd: number;
-  /** Counts per bin, aligned with the shared binEdges. */
+  /** Counts per bin, aligned with the shared bins. */
   counts: number[];
 }
 
+/**
+ * How a column's values were divided into bars.
+ *
+ * A discriminated union rather than two optional fields, so a consumer cannot
+ * read bin edges from a categorical comparison — the two modes have genuinely
+ * different meanings and the type should say so.
+ */
+export type Bins =
+  /** One bar per distinct value, ascending. values.length === counts.length. */
+  | { mode: "categorical"; values: number[] }
+  /** Equal-width bins. edges.length === counts.length + 1. */
+  | { mode: "numeric"; edges: number[] };
+
 export interface GroupComparison {
   groups: GroupSummary[];
-  /** binEdges.length === counts.length + 1 */
-  binEdges: number[];
+  bins: Bins;
   /** |meanA - meanB| / pooled SD, or null when it cannot be computed. */
   separationSd: number | null;
 }
+
+/**
+ * At or below this many distinct column values, bars are one-per-value rather
+ * than equal-width bins. Binning discrete data on a continuous scale leaves
+ * empty bins between the occupied ones, and those gaps carry no information.
+ *
+ * Set to match DEFAULT_BIN_COUNT so categorical mode never renders more bars
+ * than numeric mode would have.
+ */
+export const MAX_DISTINCT_FOR_BARS = 20;
 
 const DEFAULT_BIN_COUNT = 20;
 
@@ -111,8 +133,9 @@ function binIndex(value: number, min: number, max: number, binCount: number): nu
 
 /**
  * Splits scores by the distinct values of groupValues and summarises each group.
- * Bin edges are computed once across the pooled scores so the histograms are
- * directly comparable. Pairs where either input is null are skipped.
+ * Bins are derived once from the pooled scores so the histograms are directly
+ * comparable — bar i means the same thing in every group. A column with few
+ * distinct values gets one bar per value; a continuous one gets equal-width bins.
  *
  * separationSd is only defined for exactly two groups — it is the difference in
  * means over the pooled standard deviation.
@@ -138,21 +161,39 @@ export function compareGroups(
   }
 
   if (pooled.length === 0) {
-    return { groups: [], binEdges: [], separationSd: null };
+    return { groups: [], bins: { mode: "numeric", edges: [] }, separationSd: null };
   }
 
-  const min = Math.min(...pooled);
-  const max = Math.max(...pooled);
-  const binEdges: number[] = [];
-  for (let i = 0; i <= binCount; i++) {
-    binEdges.push(min + ((max - min) * i) / binCount);
+  const distinct = [...new Set(pooled)].sort((a, b) => a - b);
+  const categorical = distinct.length <= MAX_DISTINCT_FOR_BARS;
+
+  let bins: Bins;
+  let barCount: number;
+  let indexOf: (value: number) => number;
+
+  if (categorical) {
+    const position = new Map<number, number>();
+    distinct.forEach((value, i) => position.set(value, i));
+    bins = { mode: "categorical", values: distinct };
+    barCount = distinct.length;
+    indexOf = value => position.get(value) as number;
+  } else {
+    const min = distinct[0];
+    const max = distinct[distinct.length - 1];
+    const edges: number[] = [];
+    for (let i = 0; i <= binCount; i++) {
+      edges.push(min + ((max - min) * i) / binCount);
+    }
+    bins = { mode: "numeric", edges };
+    barCount = binCount;
+    indexOf = value => binIndex(value, min, max, binCount);
   }
 
   const groups: GroupSummary[] = [...buckets.keys()].sort((a, b) => a - b).map(value => {
     const values = buckets.get(value) as number[];
-    const counts = new Array<number>(binCount).fill(0);
+    const counts = new Array<number>(barCount).fill(0);
     for (const v of values) {
-      counts[binIndex(v, min, max, binCount)]++;
+      counts[indexOf(v)]++;
     }
     return {
       value,
@@ -174,7 +215,7 @@ export function compareGroups(
     }
   }
 
-  return { groups, binEdges, separationSd };
+  return { groups, bins, separationSd };
 }
 
 export interface LinearFit {
