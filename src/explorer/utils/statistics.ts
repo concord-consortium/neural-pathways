@@ -114,12 +114,17 @@ export interface GroupComparison {
 }
 
 /**
- * At or below this many distinct column values, bars are one-per-value rather
- * than equal-width bins. Binning discrete data on a continuous scale leaves
- * empty bins between the occupied ones, and those gaps carry no information.
+ * Upper bound on the distinct column values that categorical mode will render,
+ * one bar per value rather than equal-width bins. Binning discrete data on a
+ * continuous scale leaves empty bins between the occupied ones, and those gaps
+ * carry no information.
  *
  * Set to match DEFAULT_BIN_COUNT so categorical mode never renders more bars
  * than numeric mode would have.
+ *
+ * This is only the first of two conditions — see compareGroups. Being under the
+ * limit is necessary for categorical mode but not sufficient; the values must
+ * also repeat.
  */
 export const MAX_DISTINCT_FOR_BARS = 20;
 
@@ -134,8 +139,9 @@ function binIndex(value: number, min: number, max: number, binCount: number): nu
 /**
  * Splits scores by the distinct values of groupValues and summarises each group.
  * Bins are derived once from the pooled scores so the histograms are directly
- * comparable — bar i means the same thing in every group. A column with few
- * distinct values gets one bar per value; a continuous one gets equal-width bins.
+ * comparable — bar i means the same thing in every group. A column whose few
+ * distinct values repeat gets one bar per value; anything else gets equal-width
+ * bins.
  *
  * separationSd is only defined for exactly two groups — it is the difference in
  * means over the pooled standard deviation.
@@ -165,7 +171,15 @@ export function compareGroups(
   }
 
   const distinct = [...new Set(pooled)].sort((a, b) => a - b);
-  const categorical = distinct.length <= MAX_DISTINCT_FOR_BARS;
+  // Few distinct values is not by itself evidence that a column is discrete — a
+  // continuous column looks discrete when the filter is narrow enough. Fifteen
+  // reviews of a continuous pathway score have fifteen distinct values, and
+  // charting those as evenly spaced bars misrepresents them as categories.
+  // Genuine discreteness shows up as REPETITION, so also require each distinct
+  // value to appear at least twice on average. A single distinct value is always
+  // categorical, because there is no spread to bin.
+  const categorical = distinct.length === 1
+    || (distinct.length <= MAX_DISTINCT_FOR_BARS && distinct.length * 2 <= pooled.length);
 
   let bins: Bins;
   let barCount: number;

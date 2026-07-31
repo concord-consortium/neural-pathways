@@ -90,8 +90,10 @@ describe("pearson", () => {
 });
 
 describe("compareGroups", () => {
-  const groupValues = [0, 0, 0, 1, 1, 1];
-  const scores = [1, 2, 3, 7, 8, 9];
+  // Each score appears twice, so the six distinct values are genuinely repeated
+  // and the column reads as discrete rather than as a narrow sample.
+  const groupValues = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1];
+  const scores = [1, 1, 2, 2, 3, 3, 7, 7, 8, 8, 9, 9];
 
   it("returns one group per distinct value, ascending", () => {
     const result = compareGroups(groupValues, scores);
@@ -100,24 +102,27 @@ describe("compareGroups", () => {
 
   it("computes each group's n and mean", () => {
     const result = compareGroups(groupValues, scores);
-    expect(result.groups[0].n).toBe(3);
+    expect(result.groups[0].n).toBe(6);
     expect(result.groups[0].mean).toBeCloseTo(2, 10);
     expect(result.groups[1].mean).toBeCloseTo(8, 10);
   });
 
   it("computes each group's sample standard deviation", () => {
     const result = compareGroups(groupValues, scores);
-    expect(result.groups[0].sd).toBeCloseTo(1, 10);
+    // values 1,1,2,2,3,3 -> mean 2, sum of squares 4, variance 4/5 -> sd sqrt(0.8)
+    expect(result.groups[0].sd).toBeCloseTo(Math.sqrt(0.8), 10);
   });
 
   it("computes separation in pooled standard deviations", () => {
     const result = compareGroups(groupValues, scores);
-    // means differ by 6, pooled sd is 1 -> 6
-    expect(result.separationSd).toBeCloseTo(6, 6);
+    // means differ by 6; both groups have variance 0.8 so the pooled sd is also
+    // sqrt(0.8) -> 6 / sqrt(0.8) = 6.708203...
+    expect(result.separationSd).toBeCloseTo(6 / Math.sqrt(0.8), 6);
   });
 
   it("shares categorical bin values across both groups", () => {
-    // Six distinct scores is well under MAX_DISTINCT_FOR_BARS, so this is categorical.
+    // Six distinct scores is well under MAX_DISTINCT_FOR_BARS and each repeats,
+    // so this is categorical.
     const result = compareGroups(groupValues, scores);
     expect(result.bins).toEqual({ mode: "categorical", values: [1, 2, 3, 7, 8, 9] });
     for (const group of result.groups) {
@@ -189,21 +194,33 @@ describe("compareGroups", () => {
   it("spaces unevenly distributed discrete values evenly", () => {
     // The whole point of categorical mode: 1, 2, 100 get three equal bars rather
     // than two crushed together and one far away with empty bins between.
-    const result = compareGroups([0, 0, 0], [1, 2, 100]);
+    const result = compareGroups([0, 0, 0, 0, 0, 0], [1, 2, 100, 1, 2, 100]);
     expect(result.bins).toEqual({ mode: "categorical", values: [1, 2, 100] });
-    expect(result.groups[0].counts).toEqual([1, 1, 1]);
+    expect(result.groups[0].counts).toEqual([2, 2, 2]);
   });
 
-  it("stays categorical at exactly the distinct-value limit", () => {
+  it("uses numeric bins when few distinct values are merely a small sample", () => {
+    // 15 all-distinct values: few enough to look categorical, but with no repetition
+    // there is no evidence the column is discrete rather than narrowly filtered.
+    const sparse = Array.from({ length: 15 }, (_, i) => i / 100);
+    const result = compareGroups(sparse.map(() => 0), sparse);
+    expect(result.bins.mode).toBe("numeric");
+  });
+
+  it("stays categorical when values repeat, even at the distinct-value limit", () => {
     const twenty = Array.from({ length: 20 }, (_, i) => i);
-    const result = compareGroups(twenty.map(() => 0), twenty);
+    const repeated = [...twenty, ...twenty];
+    const result = compareGroups(repeated.map(() => 0), repeated);
     expect(result.bins.mode).toBe("categorical");
     expect(result.groups[0].counts).toHaveLength(20);
   });
 
   it("switches to numeric bins one value past the limit", () => {
+    // Repeated, so only the distinct-value limit — not the repetition test —
+    // can be what pushes this to numeric.
     const twentyOne = Array.from({ length: 21 }, (_, i) => i);
-    const result = compareGroups(twentyOne.map(() => 0), twentyOne);
+    const repeated = [...twentyOne, ...twentyOne];
+    const result = compareGroups(repeated.map(() => 0), repeated);
     expect(result.bins.mode).toBe("numeric");
     expect(result.groups[0].counts).toHaveLength(20);
   });
@@ -212,6 +229,14 @@ describe("compareGroups", () => {
     const result = compareGroups([0, 0, 1, 1], [3, 3, 3, 3]);
     expect(result.bins).toEqual({ mode: "categorical", values: [3] });
     expect(result.groups.map(g => g.counts)).toEqual([[2], [2]]);
+  });
+
+  it("gives a lone observation a categorical bar, since there is no spread to bin", () => {
+    // One distinct value in one observation fails the repetition test, but a
+    // single value is categorical regardless: there is no range to divide.
+    const result = compareGroups([0], [3]);
+    expect(result.bins).toEqual({ mode: "categorical", values: [3] });
+    expect(result.groups[0].counts).toEqual([1]);
   });
 
   it("reports numeric mode with no edges for empty input", () => {

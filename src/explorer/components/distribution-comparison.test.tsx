@@ -3,7 +3,11 @@ import { render, screen, within } from "@testing-library/react";
 import { DistributionComparison } from "./distribution-comparison";
 import { compareGroups, GroupComparison } from "../utils/statistics";
 
-const comparison = compareGroups([0, 0, 0, 1, 1, 1], [1, 2, 3, 7, 8, 9], 4);
+// Each score appears twice within its group, so the six distinct values repeat
+// and the comparison is categorical: six bars, three per group.
+const comparison = compareGroups(
+  [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1], [1, 1, 2, 2, 3, 3, 7, 7, 8, 8, 9, 9], 4,
+);
 
 describe("DistributionComparison", () => {
   it("renders the container", () => {
@@ -31,7 +35,7 @@ describe("DistributionComparison", () => {
         comparison={comparison} groupLabels={{ 0: "no", 1: "yes" }} scoreLabel="Score"
       />,
     );
-    expect(screen.getByTestId("group-row-0").textContent).toContain("n = 3");
+    expect(screen.getByTestId("group-row-0").textContent).toContain("n = 6");
     expect(screen.getByTestId("group-row-0").textContent).toContain("2.00");
   });
 
@@ -41,7 +45,8 @@ describe("DistributionComparison", () => {
         comparison={comparison} groupLabels={{ 0: "no", 1: "yes" }} scoreLabel="Score"
       />,
     );
-    expect(screen.getByText(/6\.00σ/)).toBeDefined();
+    // means 2 and 8, pooled sd sqrt(0.8) -> 6 / sqrt(0.8) = 6.708..., shown as 6.71
+    expect(screen.getByText(/6\.71σ/)).toBeDefined();
   });
 
   it("falls back to the raw value when no label is supplied", () => {
@@ -109,7 +114,10 @@ describe("DistributionComparison", () => {
   });
 
   it("thins the categorical labels when there are too many bars", () => {
-    const many = Array.from({ length: 18 }, (_, i) => i + 1);
+    // Each of the 18 values appears twice, so the column stays categorical and
+    // there really are 18 bars to thin.
+    const values = Array.from({ length: 18 }, (_, i) => i + 1);
+    const many = [...values, ...values];
     const wide = compareGroups(many.map(() => 0), many);
     render(<DistributionComparison comparison={wide} groupLabels={{}} scoreLabel="Score" />);
     const ticks = within(screen.getByTestId("histogram-axis")).getAllByTestId("axis-tick");
@@ -139,11 +147,12 @@ describe("DistributionComparison", () => {
     );
     const hits = within(screen.getByTestId("group-row-0")).getAllByTestId("group-bar-hit");
     expect(hits).toHaveLength(6);
-    expect(hits[0].textContent).toBe("Business stars 1 — 1 reviews");
+    // Group 0 holds two observations of score 1.
+    expect(hits[0].textContent).toBe("Business stars 1 — 2 reviews");
   });
 
   it("keeps a zero-count bar hoverable", () => {
-    // Group 0 holds only score 1, so its bar for score 9 is empty — and must still
+    // Group 0 holds only scores 1-3, so its bar for score 9 is empty — and must still
     // report itself, because "nothing here" is information.
     render(
       <DistributionComparison
