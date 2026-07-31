@@ -48,3 +48,36 @@ test("explorer search help lists attribute fields", async ({ page }) => {
   await expect(page.getByText("Attributes")).toBeVisible();
   await expect(page.getByText("is_synthetic")).toBeVisible();
 });
+
+test("explorer switches to the correlations view and drills into a cell", async ({ page }) => {
+  await page.goto("/explorer.html");
+  await expect(page.getByText("Pathway Explorer")).toBeVisible();
+
+  await page.getByRole("button", { name: "Correlations" }).click();
+  await expect(page.getByTestId("correlations-view")).toBeVisible();
+  await expect(page.getByTestId("correlation-matrix")).toBeVisible();
+  await expect(page.getByTestId("drilldown-prompt")).toBeVisible();
+
+  // A binary attribute against a pathway gives the group-comparison drill-down.
+  await page.getByTestId("cell-target-pathway_0").click();
+  await expect(page.getByTestId("distribution-comparison")).toBeVisible();
+  await expect(page.getByTestId("drilldown-summary")).toContainText("n =");
+
+  // A continuous attribute against a pathway gives the scatter drill-down.
+  await page.getByTestId("cell-review_stars-pathway_0").click();
+  await expect(page.getByTestId("scatter-plot")).toBeVisible();
+});
+
+test("correlation matrix is scoped to the search results", async ({ page }) => {
+  await page.goto("/explorer.html");
+  await page.getByPlaceholder("stars:5").fill("model_correct:0");
+  await page.getByRole("button", { name: "Correlations" }).click();
+
+  // The 145 misclassified test-split reviews.
+  await expect(page.getByTestId("correlations-view")).toContainText("145");
+});
+
+test("correlations view survives a reload via the url hash", async ({ page }) => {
+  await page.goto("/explorer.html#view=correlations");
+  await expect(page.getByTestId("correlations-view")).toBeVisible();
+});
