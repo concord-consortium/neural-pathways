@@ -44,4 +44,22 @@ describe("ScatterPlot", () => {
     // eslint-disable-next-line testing-library/no-node-access -- asserting the component renders nothing
     expect(container.firstChild).toBeNull();
   });
+
+  it("labels the x-axis endpoints", () => {
+    render(<ScatterPlot xs={xs} ys={ys} xLabel="Rating" yLabel="P0" />);
+    expect(screen.getByTestId("scatter-x-min").textContent).toBe("1");
+    expect(screen.getByTestId("scatter-x-max").textContent).toBe("5");
+  });
+
+  it("labels the y-axis endpoints", () => {
+    render(<ScatterPlot xs={xs} ys={ys} xLabel="Rating" yLabel="P0" />);
+    expect(screen.getByTestId("scatter-y-min").textContent).toBe("2");
+    expect(screen.getByTestId("scatter-y-max").textContent).toBe("6");
+  });
+
+  it("formats fractional endpoints without trailing zeros", () => {
+    render(<ScatterPlot xs={[1.5, 2.25]} ys={[0, 1]} xLabel="X" yLabel="Y" />);
+    expect(screen.getByTestId("scatter-x-min").textContent).toBe("1.5");
+    expect(screen.getByTestId("scatter-x-max").textContent).toBe("2.25");
+  });
 });

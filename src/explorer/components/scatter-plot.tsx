@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { linearFit, isUsable } from "../utils/statistics";
+import { formatAxisValue } from "../utils/axis";
 import "./scatter-plot.scss";
 
 interface ScatterPlotProps {
@@ -42,7 +43,15 @@ export const ScatterPlot: React.FC<ScatterPlotProps> = ({ xs, ys, xLabel, yLabel
 
   return (
     <div className="explorer-scatter-plot" data-testid="scatter-plot">
-      <div className="explorer-scatter-y-label">{yLabel}</div>
+      <div className="explorer-scatter-y-axis">
+        <div className="explorer-scatter-axis-end" data-testid="scatter-y-max">
+          {formatAxisValue(maxY)}
+        </div>
+        <div className="explorer-scatter-y-label">{yLabel}</div>
+        <div className="explorer-scatter-axis-end" data-testid="scatter-y-min">
+          {formatAxisValue(minY)}
+        </div>
+      </div>
       <svg
         className="explorer-scatter-canvas"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -69,7 +78,15 @@ export const ScatterPlot: React.FC<ScatterPlotProps> = ({ xs, ys, xLabel, yLabel
           />
         )}
       </svg>
-      <div className="explorer-scatter-x-label">{xLabel}</div>
+      <div className="explorer-scatter-x-axis">
+        <div className="explorer-scatter-axis-end" data-testid="scatter-x-min">
+          {formatAxisValue(minX)}
+        </div>
+        <div className="explorer-scatter-x-label">{xLabel}</div>
+        <div className="explorer-scatter-axis-end" data-testid="scatter-x-max">
+          {formatAxisValue(maxX)}
+        </div>
+      </div>
     </div>
   );
 };
