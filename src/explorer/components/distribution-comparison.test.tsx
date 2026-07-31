@@ -1,7 +1,7 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { DistributionComparison } from "./distribution-comparison";
-import { compareGroups } from "../utils/statistics";
+import { compareGroups, GroupComparison } from "../utils/statistics";
 
 const comparison = compareGroups([0, 0, 0, 1, 1, 1], [1, 2, 3, 7, 8, 9], 4);
 
@@ -37,6 +37,30 @@ describe("DistributionComparison", () => {
     const single = compareGroups([0, 0, 0], [1, 2, 3], 4);
     render(<DistributionComparison comparison={single} groupLabels={{ 0: "no" }} />);
     expect(screen.queryByText(/σ/)).toBeNull();
+  });
+
+  it("scales each group against its own peak, not a shared one", () => {
+    // Group 0 has three observations in its tallest bin, group 1 has one. Under a
+    // shared peak group 1's only bar would be a third of the height and would read
+    // as "nothing here"; scaled against its own peak it fills the panel.
+    const lopsided = compareGroups([0, 0, 0, 1], [1, 1, 1, 2], 2);
+    render(<DistributionComparison comparison={lopsided} groupLabels={{}} />);
+
+    const big = within(screen.getByTestId("group-row-0")).getAllByTestId("group-bar");
+    const small = within(screen.getByTestId("group-row-1")).getAllByTestId("group-bar");
+    expect(big.map(bar => bar.getAttribute("height"))).toEqual(["48", "0"]);
+    expect(small.map(bar => bar.getAttribute("height"))).toEqual(["0", "48"]);
+  });
+
+  it("renders a group whose bins are all empty without dividing by zero", () => {
+    const empty: GroupComparison = {
+      groups: [{ value: 0, n: 0, mean: 0, sd: 0, counts: [0, 0] }],
+      binEdges: [0, 1, 2],
+      separationSd: null,
+    };
+    render(<DistributionComparison comparison={empty} groupLabels={{}} />);
+    const bars = within(screen.getByTestId("group-row-0")).getAllByTestId("group-bar");
+    expect(bars.map(bar => bar.getAttribute("height"))).toEqual(["0", "0"]);
   });
 
   it("renders nothing when there are no groups", () => {
