@@ -1,0 +1,60 @@
+.explorer-correlation-matrix {
+  border-collapse: collapse;
+  font-size: 12px;
+
+  .explorer-matrix-corner {
+    background: transparent;
+  }
+
+  .explorer-matrix-col-header,
+  .explorer-matrix-row-header {
+    font-weight: normal;
+    color: #555;
+    padding: 4px 6px;
+    white-space: nowrap;
+  }
+
+  .explorer-matrix-col-header {
+    text-align: center;
+    vertical-align: bottom;
+  }
+
+  .explorer-matrix-row-header {
+    text-align: right;
+  }
+
+  .explorer-matrix-cell {
+    width: 48px;
+    height: 30px;
+    text-align: center;
+    border: 1px solid #eee;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    color: #222;
+
+    &.diagonal {
+      background: #f7f7f7;
+      color: #bbb;
+      cursor: default;
+    }
+
+    &.undefined-r {
+      background: #fafafa;
+      color: #bbb;
+      cursor: default;
+    }
+
+    &.selected {
+      outline: 2px solid #2c3e80;
+      outline-offset: -2px;
+    }
+  }
+
+  .boundary-left {
+    border-left: 2px solid #999;
+  }
+
+  .boundary-top {
+    border-top: 2px solid #999;
+  }
+}
