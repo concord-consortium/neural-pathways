@@ -252,6 +252,9 @@ Re-check `Model was correct` before continuing.
 
 ## 11. β versus partial r
 
+Term rows are ordered by descending |β|, largest magnitude first, regardless of
+sign — so the strongest standardized effect always leads the table.
+
 The term table's two number columns answer different questions. **β** is the
 standardized coefficient: how many standard deviations the target moves per one
 standard deviation of that predictor, holding every other included term fixed.
