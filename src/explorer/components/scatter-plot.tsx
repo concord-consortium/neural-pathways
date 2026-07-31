@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { linearFit } from "../utils/statistics";
+import { linearFit, isUsable } from "../utils/statistics";
 import "./scatter-plot.scss";
 
 interface ScatterPlotProps {
@@ -19,7 +19,7 @@ export const ScatterPlot: React.FC<ScatterPlotProps> = ({ xs, ys, xLabel, yLabel
     for (let i = 0; i < xs.length; i++) {
       const x = xs[i];
       const y = ys[i];
-      if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) continue;
+      if (!isUsable(x) || !isUsable(y)) continue;
       collected.push([x, y]);
     }
     return collected;

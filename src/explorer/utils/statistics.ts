@@ -24,7 +24,12 @@ export function standardDeviation(values: number[]): number {
   return Math.sqrt(sumSquares / (values.length - 1));
 }
 
-function isUsable(value: number | null): value is number {
+/**
+ * Determines whether a value is a usable observation: not null, not NaN, and not infinite.
+ * This is the module's single definition of a usable observation, used consistently
+ * across all statistics functions to ensure predictable filtering behavior.
+ */
+export function isUsable(value: number | null): value is number {
   return value != null && Number.isFinite(value);
 }
 
@@ -126,7 +131,7 @@ export function compareGroups(
   for (let i = 0; i < groupValues.length; i++) {
     const g = groupValues[i];
     const s = scores[i];
-    if (g == null || s == null || !Number.isFinite(g) || !Number.isFinite(s)) continue;
+    if (!isUsable(g) || !isUsable(s)) continue;
     if (!buckets.has(g)) buckets.set(g, []);
     (buckets.get(g) as number[]).push(s);
     pooled.push(s);
