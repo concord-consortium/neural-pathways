@@ -1,0 +1,103 @@
+import { S3Review } from "../../shared/types/s3-data";
+import { DatasetConfig } from "../../shared/datasets/dataset-config";
+import { buildSeries } from "./build-series";
+
+const dataset: DatasetConfig = {
+  id: "test",
+  label: "Test",
+  attributes: [
+    { key: "flag", label: "Flag", description: "A flag.", type: "binary" },
+    { key: "rating", label: "Rating", description: "A rating.", type: "integer", min: 1, max: 5 },
+  ],
+  getAttributeValue: (review, key) => {
+    if (key === "flag") return review.target;
+    if (key === "rating") return review.review_stars ?? null;
+    return null;
+  },
+};
+
+const makeReview = (overrides: Partial<S3Review> = {}): S3Review => ({
+  id: "r1",
+  sources: { test: [0] },
+  text: "text",
+  target: 1,
+  target_label: "positive",
+  pathway_scores: { fit_a: [0.8, -0.3] },
+  reconstruction_r2: { fit_a: 0.9 },
+  pathway_variance_fractions: { fit_a: [0.7, 0.3] },
+  review_stars: 5,
+  ...overrides,
+});
+
+describe("buildSeries", () => {
+  const reviews = [
+    makeReview({ id: "a", target: 1, review_stars: 5, pathway_scores: { fit_a: [0.8, -0.3] } }),
+    makeReview({ id: "b", target: 0, review_stars: 2, pathway_scores: { fit_a: [-0.5, 0.1] } }),
+  ];
+
+  it("emits attributes first, then pathways", () => {
+    const series = buildSeries(reviews, dataset, "fit_a", 2);
+    expect(series.map(s => s.key)).toEqual(["flag", "rating", "pathway_0", "pathway_1"]);
+  });
+
+  it("marks each series with its kind", () => {
+    const series = buildSeries(reviews, dataset, "fit_a", 2);
+    expect(series.map(s => s.kind)).toEqual(["attribute", "attribute", "pathway", "pathway"]);
+  });
+
+  it("carries the attribute type only for attributes", () => {
+    const series = buildSeries(reviews, dataset, "fit_a", 2);
+    expect(series[0].attributeType).toBe("binary");
+    expect(series[1].attributeType).toBe("integer");
+    expect(series[2].attributeType).toBeUndefined();
+  });
+
+  it("uses the attribute label and a P-prefixed label for pathways", () => {
+    const series = buildSeries(reviews, dataset, "fit_a", 2);
+    expect(series[0].label).toBe("Flag");
+    expect(series[2].label).toBe("P0");
+    expect(series[3].label).toBe("P1");
+  });
+
+  it("collects attribute values aligned with the review order", () => {
+    const series = buildSeries(reviews, dataset, "fit_a", 2);
+    expect(series[0].values).toEqual([1, 0]);
+    expect(series[1].values).toEqual([5, 2]);
+  });
+
+  it("collects pathway scores for the selected fit", () => {
+    const series = buildSeries(reviews, dataset, "fit_a", 2);
+    expect(series[2].values).toEqual([0.8, -0.5]);
+    expect(series[3].values).toEqual([-0.3, 0.1]);
+  });
+
+  it("records null for a review missing an attribute value", () => {
+    const withMissing = [reviews[0], makeReview({ id: "c", review_stars: undefined })];
+    const series = buildSeries(withMissing, dataset, "fit_a", 2);
+    expect(series[1].values).toEqual([5, null]);
+  });
+
+  it("records null for a review with no scores for the selected fit", () => {
+    const withMissing = [reviews[0], makeReview({ id: "d", pathway_scores: {} })];
+    const series = buildSeries(withMissing, dataset, "fit_a", 2);
+    expect(series[2].values).toEqual([0.8, null]);
+  });
+
+  it("gives every series the same length as the review list", () => {
+    const series = buildSeries(reviews, dataset, "fit_a", 2);
+    for (const s of series) {
+      expect(s.values).toHaveLength(reviews.length);
+    }
+  });
+
+  it("returns only attribute series when there are no pathways", () => {
+    const series = buildSeries(reviews, dataset, "fit_a", 0);
+    expect(series.map(s => s.key)).toEqual(["flag", "rating"]);
+  });
+
+  it("returns empty values arrays for an empty review list", () => {
+    const series = buildSeries([], dataset, "fit_a", 2);
+    expect(series).toHaveLength(4);
+    expect(series[0].values).toEqual([]);
+  });
+});
