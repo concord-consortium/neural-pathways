@@ -55,6 +55,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
               key={review.id}
               className={`results-panel-card${isSelected ? " selected" : ""}`}
               onClick={() => onSelectReview(review)}
+              data-testid="result-card"
             >
               <div className="results-panel-card-text">
                 {review.text.slice(0, SNIPPET_LENGTH)}
