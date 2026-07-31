@@ -13,6 +13,12 @@ const series: Series[] = [
     description: "No variance.", values: [1, 1, 1, 1],
   },
   {
+    // Missing for one of the four reviews, so its cells cover 3 of 4 — below the
+    // 0.95 partial-coverage threshold.
+    key: "sparse", label: "Sparse", kind: "attribute", attributeType: "integer",
+    description: "Often missing.", values: [1, 2, 3, null],
+  },
+  {
     key: "pathway_0", label: "P0", kind: "pathway",
     description: "", values: [1, 2, 3, 4],
   },
@@ -84,6 +90,28 @@ describe("CorrelationMatrix", () => {
     renderMatrix();
     expect(screen.getByTestId("cell-flag-pathway_0").className).toContain("boundary-left");
     expect(screen.getByTestId("cell-pathway_0-flag").className).toContain("boundary-top");
+  });
+
+  it("marks a cell whose n falls materially below the scope count", () => {
+    renderMatrix();
+    // sparse x pathway_0 has 3 complete pairs of the 4 scoped reviews.
+    expect(screen.getByTestId("cell-sparse-pathway_0").className).toContain("partial-n");
+    expect(screen.getByTestId("cell-pathway_0-sparse").className).toContain("partial-n");
+  });
+
+  it("leaves a full-coverage cell unmarked", () => {
+    renderMatrix();
+    expect(screen.getByTestId("cell-flag-pathway_0").className).not.toContain("partial-n");
+  });
+
+  it("still distinguishes an undefined correlation from a marked one", () => {
+    renderMatrix();
+    // "flat" has no missing values, so it is never marked despite r being null —
+    // the marker reports coverage, not whether r could be computed.
+    const flat = screen.getByTestId("cell-flat-pathway_0");
+    expect(flat.className).toContain("undefined-r");
+    expect(flat.className).not.toContain("partial-n");
+    expect(flat.textContent).toBe("—");
   });
 
   it("renders the series labels as headers", () => {

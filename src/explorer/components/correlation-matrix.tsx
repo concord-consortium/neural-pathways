@@ -19,6 +19,15 @@ function firstPathwayIndex(series: Series[]): number {
   return series.findIndex(s => s.kind === "pathway");
 }
 
+/**
+ * A cell computed over fewer than this fraction of the scoped reviews gets a
+ * "partial coverage" marker. The header states one scope count, but each cell
+ * drops rows where either series is missing — an attribute that is null for half
+ * the reviews produces cells that look identical to full-coverage ones. The
+ * marker only prompts the hover; the title carries the exact n.
+ */
+const PARTIAL_COVERAGE_THRESHOLD = 0.95;
+
 export const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({
   series, selectedCell, onSelectCell,
 }) => {
@@ -29,11 +38,15 @@ export const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({
   if (series.length === 0) return null;
 
   const boundary = firstPathwayIndex(series);
+  // buildSeries gives every series exactly one entry per review, so any series'
+  // length is the scope the header reports.
+  const scopeCount = series[0].values.length;
 
   const cellClass = (rowIndex: number, colIndex: number, result: CorrelationResult) => {
     const classes = ["explorer-matrix-cell"];
     if (rowIndex === colIndex) classes.push("diagonal");
     if (result.r === null) classes.push("undefined-r");
+    if (result.n < PARTIAL_COVERAGE_THRESHOLD * scopeCount) classes.push("partial-n");
     if (colIndex === boundary && boundary > 0) classes.push("boundary-left");
     if (rowIndex === boundary && boundary > 0) classes.push("boundary-top");
     if (selectedCell

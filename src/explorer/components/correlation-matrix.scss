@@ -24,6 +24,7 @@
   }
 
   .explorer-matrix-cell {
+    position: relative;
     width: 48px;
     height: 30px;
     text-align: center;
@@ -31,6 +32,21 @@
     cursor: pointer;
     font-variant-numeric: tabular-nums;
     color: #222;
+
+    // Corner dot marking a cell whose n is materially below the scope count.
+    // White fill with a dark ring so it stays visible against every background
+    // the r colour scale produces, from deep blue through white to red.
+    &.partial-n::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid #333;
+    }
 
     &.diagonal {
       background: #f7f7f7;
