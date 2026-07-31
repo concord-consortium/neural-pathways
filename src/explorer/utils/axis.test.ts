@@ -9,16 +9,24 @@ describe("formatAxisValue", () => {
     expect(formatAxisValue(3)).toBe("3");
   });
 
-  it("rounds to two decimal places", () => {
-    expect(formatAxisValue(0.33333)).toBe("0.33");
+  it("rounds to three decimal places", () => {
+    expect(formatAxisValue(0.33333)).toBe("0.333");
   });
 
   it("formats a negative value", () => {
-    expect(formatAxisValue(-1.204)).toBe("-1.2");
+    expect(formatAxisValue(-1.204)).toBe("-1.204");
   });
 
   it("renders a negative zero as plain zero", () => {
-    expect(formatAxisValue(-0.001)).toBe("0");
+    // -0.0001 rounds to "-0.000", whose Number() is -0. -0.001 is now a
+    // representable value, so it no longer exercises the guard.
+    expect(formatAxisValue(-0.0001)).toBe("0");
+  });
+
+  it("keeps closely spaced values distinct", () => {
+    expect(formatAxisValue(0.412)).toBe("0.412");
+    expect(formatAxisValue(0.415)).toBe("0.415");
+    expect(formatAxisValue(0.418)).toBe("0.418");
   });
 
   it("leaves a large value intact", () => {

@@ -1,10 +1,18 @@
 /**
- * Formats a number for an axis tick: at most two decimal places, with trailing
- * zeros removed so a whole number reads as "3" rather than "3.00".
+ * Formats a number for an axis tick: at most three decimal places, with trailing
+ * zeros removed so a whole number reads as "3" rather than "3.000".
+ *
+ * Three decimals matches how the rest of the app prints pathway scores, and it is
+ * the precision those scores need: at two decimals, neighbouring values such as
+ * 0.412, 0.415 and 0.418 all collapse to "0.41", so adjacent bars end up with the
+ * same tick label AND the same hover text, leaving nothing to tell them apart.
+ *
+ * Fixed decimals rather than toPrecision, which would render a count like 6427 as
+ * "6.43e+3".
  */
 export function formatAxisValue(value: number): string {
-  const rounded = Number(value.toFixed(2));
-  // Number("-0.00") is -0, whose default string form is "0" — but be explicit,
+  const rounded = Number(value.toFixed(3));
+  // Number("-0.000") is -0, whose default string form is "0" — but be explicit,
   // because a tick reading "-0" looks like a bug to a reader.
   if (rounded === 0) return "0";
   return String(rounded);
