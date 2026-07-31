@@ -171,3 +171,43 @@ export function compareGroups(
 
   return { groups, binEdges, separationSd };
 }
+
+export interface LinearFit {
+  slope: number;
+  intercept: number;
+}
+
+/**
+ * Ordinary least-squares fit of y on x over pairwise-complete observations.
+ * Returns null when the fit is undefined — fewer than two complete pairs, or
+ * zero variance in x.
+ */
+export function linearFit(xs: (number | null)[], ys: (number | null)[]): LinearFit | null {
+  if (xs.length !== ys.length) {
+    throw new Error(`linearFit: length mismatch (${xs.length} vs ${ys.length})`);
+  }
+
+  const pairs: [number, number][] = [];
+  for (let i = 0; i < xs.length; i++) {
+    if (!isUsable(xs[i]) || !isUsable(ys[i])) continue;
+    pairs.push([xs[i] as number, ys[i] as number]);
+  }
+
+  if (pairs.length < 2) return null;
+
+  const meanX = mean(pairs.map(p => p[0]));
+  const meanY = mean(pairs.map(p => p[1]));
+
+  let sxx = 0;
+  let sxy = 0;
+  for (const [x, y] of pairs) {
+    const dx = x - meanX;
+    sxx += dx * dx;
+    sxy += dx * (y - meanY);
+  }
+
+  if (sxx === 0) return null;
+
+  const slope = sxy / sxx;
+  return { slope, intercept: meanY - slope * meanX };
+}

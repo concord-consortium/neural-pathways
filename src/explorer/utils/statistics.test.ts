@@ -1,4 +1,4 @@
-import { mean, standardDeviation, pearson, compareGroups } from "./statistics";
+import { mean, standardDeviation, pearson, compareGroups, linearFit } from "./statistics";
 
 describe("mean", () => {
   it("averages the values", () => {
@@ -161,5 +161,36 @@ describe("compareGroups", () => {
     const result = compareGroups([], []);
     expect(result.groups).toEqual([]);
     expect(result.separationSd).toBeNull();
+  });
+});
+
+describe("linearFit", () => {
+  it("recovers the slope and intercept of an exact line", () => {
+    const fit = linearFit([1, 2, 3, 4], [3, 5, 7, 9]);
+    expect(fit).not.toBeNull();
+    expect((fit as { slope: number }).slope).toBeCloseTo(2, 10);
+    expect((fit as { intercept: number }).intercept).toBeCloseTo(1, 10);
+  });
+
+  it("handles a negative slope", () => {
+    const fit = linearFit([1, 2, 3, 4], [9, 7, 5, 3]);
+    expect((fit as { slope: number }).slope).toBeCloseTo(-2, 10);
+  });
+
+  it("skips pairs where either value is null", () => {
+    const fit = linearFit([1, 2, null, 4], [3, 5, 100, 9]);
+    expect((fit as { slope: number }).slope).toBeCloseTo(2, 10);
+  });
+
+  it("returns null when x has zero variance", () => {
+    expect(linearFit([2, 2, 2], [1, 2, 3])).toBeNull();
+  });
+
+  it("returns null with fewer than two complete pairs", () => {
+    expect(linearFit([1, null], [1, 2])).toBeNull();
+  });
+
+  it("throws when the arrays have different lengths", () => {
+    expect(() => linearFit([1, 2], [1, 2, 3])).toThrow(/length mismatch/);
   });
 });
