@@ -207,3 +207,25 @@ work.
   which is more work than this change warrants.
 - The scatter's points remain slightly elliptical, a consequence of
   `preserveAspectRatio="none"`, and its fit-line endpoints remain unclamped.
+
+## Amendment (2026-07-31)
+
+**Mode selection is no longer cardinality alone.** Categorical mode now requires
+both that the pooled column have at most `MAX_DISTINCT_FOR_BARS` distinct values
+*and* that those values repeat — `distinct.length * 2 <= pooled.length`, i.e. each
+value appears at least twice on average. A single distinct value stays categorical
+unconditionally, since there is no spread to bin.
+
+**Why.** The original rule counted cardinality over the *filtered* reviews, not the
+whole dataset. Narrowing a search to roughly 15 results and opening **Review rating
+× P0** made `pathway_0` — a continuous NMF score — render as an evenly spaced
+categorical axis, indistinguishable from the genuinely discrete Business rating case,
+because 15 rows cannot have more than 15 distinct values. Few distinct values is not
+evidence of discreteness; repetition is.
+
+**Axis precision raised to three decimals.** `formatAxisValue` rounded to two, so
+clustered pathway scores such as 0.412 / 0.415 / 0.418 produced three adjacent bars
+whose tick labels *and* hover titles all read `0.41`. Three decimals matches the
+`toFixed(3)` convention used everywhere else the app prints pathway scores. Axis ticks
+also gained `text-overflow: ellipsis`, so a label too wide for its cell is marked as
+truncated rather than centre-clipped into a different number.
