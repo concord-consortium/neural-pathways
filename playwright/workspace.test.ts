@@ -73,8 +73,10 @@ test("correlation matrix is scoped to the search results", async ({ page }) => {
   await page.getByPlaceholder("stars:5").fill("model_correct:0");
   await page.getByRole("button", { name: "Correlations" }).click();
 
-  // The 145 misclassified test-split reviews.
-  await expect(page.getByTestId("correlations-view")).toContainText("145");
+  // The 145 misclassified test-split reviews. Anchor to the scope element's resultCount
+  // slot (rendered as "Correlations over <strong>145</strong> of {total} reviews") rather
+  // than matching "145" anywhere in the view, so this can't be satisfied by the total count.
+  await expect(page.getByTestId("correlations-scope")).toContainText("145 of ");
 });
 
 test("correlations view survives a reload via the url hash", async ({ page }) => {
