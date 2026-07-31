@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Series } from "../types/explorer-data";
-import { pearson, compareGroups } from "../utils/statistics";
+import { pearson, compareGroups, isUsable } from "../utils/statistics";
 import { CorrelationMatrix, MatrixCell } from "./correlation-matrix";
 import { DistributionComparison } from "./distribution-comparison";
 import { ScatterPlot } from "./scatter-plot";
@@ -12,7 +12,23 @@ interface CorrelationsViewProps {
   totalCount: number;
 }
 
-const BINARY_LABELS: Record<number, string> = { 0: "no", 1: "yes" };
+/**
+ * A row with at most this many distinct values gets the grouped-histogram
+ * drill-down; anything above it gets the scatter. Routing on observed
+ * cardinality rather than the declared attribute type is what keeps a 5-valued
+ * "integer" or a 9-valued "float" out of a scatter that would stack thousands of
+ * points on a handful of x positions. A binary attribute has 2 distinct values,
+ * so it lands in the grouped branch without a special case.
+ */
+const MAX_DISTINCT_FOR_GROUPS = 10;
+
+function distinctValueCount(values: (number | null)[]): number {
+  const seen = new Set<number>();
+  for (const value of values) {
+    if (isUsable(value)) seen.add(value);
+  }
+  return seen.size;
+}
 
 export const CorrelationsView: React.FC<CorrelationsViewProps> = ({
   series, resultCount, totalCount,
@@ -28,7 +44,8 @@ export const CorrelationsView: React.FC<CorrelationsViewProps> = ({
   }, [selectedCell, series]);
 
   const comparison = useMemo(() => {
-    if (!selected || selected.row.attributeType !== "binary") return null;
+    if (!selected) return null;
+    if (distinctValueCount(selected.row.values) > MAX_DISTINCT_FOR_GROUPS) return null;
     return compareGroups(selected.row.values, selected.col.values);
   }, [selected]);
 
@@ -68,7 +85,10 @@ export const CorrelationsView: React.FC<CorrelationsViewProps> = ({
                   {" · "}n = {selected.result.n}
                 </div>
                 {comparison ? (
-                  <DistributionComparison comparison={comparison} groupLabels={BINARY_LABELS} />
+                  <DistributionComparison
+                    comparison={comparison}
+                    groupLabels={selected.row.valueLabels ?? {}}
+                  />
                 ) : (
                   <ScatterPlot
                     xs={selected.row.values}

@@ -1,5 +1,5 @@
 import { test } from "./lib/base-url";
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 test("renders the landing page with links to visualizations", async ({ page }) => {
   await page.goto("/");
@@ -58,13 +58,22 @@ test("explorer switches to the correlations view and drills into a cell", async 
   await expect(page.getByTestId("correlation-matrix")).toBeVisible();
   await expect(page.getByTestId("drilldown-prompt")).toBeVisible();
 
-  // A binary attribute against a pathway gives the group-comparison drill-down.
+  // A binary attribute against a pathway gives the group-comparison drill-down,
+  // labelled from the dataset config rather than a hardcoded yes/no.
   await page.getByTestId("cell-target-pathway_0").click();
   await expect(page.getByTestId("distribution-comparison")).toBeVisible();
+  await expect(page.getByTestId("group-row-1")).toContainText("positive");
   await expect(page.getByTestId("drilldown-summary")).toContainText("n =");
 
-  // A continuous attribute against a pathway gives the scatter drill-down.
+  // review_stars is declared "integer" but has only five distinct values, so the
+  // drill-down routes on cardinality and gives the group comparison too.
   await page.getByTestId("cell-review_stars-pathway_0").click();
+  await expect(page.getByTestId("distribution-comparison")).toBeVisible();
+  await expect(page.getByTestId("group-row-5")).toBeVisible();
+  await expect(page.getByTestId("scatter-plot")).toHaveCount(0);
+
+  // A genuinely continuous row — a pathway — gives the scatter drill-down.
+  await page.getByTestId("cell-pathway_1-pathway_0").click();
   await expect(page.getByTestId("scatter-plot")).toBeVisible();
 });
 
@@ -82,4 +91,47 @@ test("correlation matrix is scoped to the search results", async ({ page }) => {
 test("correlations view survives a reload via the url hash", async ({ page }) => {
   await page.goto("/explorer.html#view=correlations");
   await expect(page.getByTestId("correlations-view")).toBeVisible();
+});
+
+/** Measures how the correlations panel sits inside .explorer-body. */
+async function measureCorrelationsLayout(page: Page) {
+  return page.evaluate(() => {
+    const view = document.querySelector(".explorer-correlations-view") as HTMLElement;
+    const body = document.querySelector(".explorer-body") as HTMLElement;
+    const results = document.querySelector(".results-panel") as HTMLElement;
+    const wrapper = document.querySelector(".explorer-correlations-matrix-wrapper") as HTMLElement;
+    const gap = parseFloat(getComputedStyle(body).columnGap) || 0;
+    return {
+      pageOverflows: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      wrapperScrolls: wrapper.scrollWidth > wrapper.clientWidth,
+      viewWidth: view.getBoundingClientRect().width,
+      availableWidth: body.getBoundingClientRect().width - results.getBoundingClientRect().width - gap,
+    };
+  });
+}
+
+test("the correlations panel fills the body row beside the results panel", async ({ page }) => {
+  // Wide enough that the matrix is narrower than the space beside the results
+  // panel. Without flex: 1 the panel is sized to its content and stops short,
+  // leaving a ragged gap at the right edge of the body.
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto("/explorer.html#view=correlations");
+  await expect(page.getByTestId("correlation-matrix")).toBeVisible();
+
+  const layout = await measureCorrelationsLayout(page);
+  expect(layout.wrapperScrolls).toBe(false);
+  expect(layout.viewWidth).toBeCloseTo(layout.availableWidth, 0);
+  expect(layout.pageOverflows).toBe(false);
+});
+
+test("a matrix too wide to fit scrolls inside its wrapper, not the page", async ({ page }) => {
+  // Narrow enough that the matrix cannot fit, so the scroll container has to engage.
+  await page.setViewportSize({ width: 700, height: 900 });
+  await page.goto("/explorer.html#view=correlations");
+  await expect(page.getByTestId("correlation-matrix")).toBeVisible();
+
+  const layout = await measureCorrelationsLayout(page);
+  expect(layout.wrapperScrolls).toBe(true);
+  expect(layout.viewWidth).toBeCloseTo(layout.availableWidth, 0);
+  expect(layout.pageOverflows).toBe(false);
 });
