@@ -6,7 +6,10 @@ const dataset: DatasetConfig = {
   id: "test",
   label: "Test",
   attributes: [
-    { key: "flag", label: "Flag", description: "A flag.", type: "binary" },
+    {
+      key: "flag", label: "Flag", description: "A flag.", type: "binary",
+      valueLabels: { 0: "negative", 1: "positive" },
+    },
     { key: "rating", label: "Rating", description: "A rating.", type: "integer", min: 1, max: 5 },
   ],
   getAttributeValue: (review, key) => {
@@ -50,6 +53,14 @@ describe("buildSeries", () => {
     expect(series[0].attributeType).toBe("binary");
     expect(series[1].attributeType).toBe("integer");
     expect(series[2].attributeType).toBeUndefined();
+  });
+
+  it("carries the attribute's value labels onto the series", () => {
+    const series = buildSeries(reviews, dataset, "fit_a", 2);
+    expect(series[0].valueLabels).toEqual({ 0: "negative", 1: "positive" });
+    // "rating" declares none, and pathways never have any.
+    expect(series[1].valueLabels).toBeUndefined();
+    expect(series[2].valueLabels).toBeUndefined();
   });
 
   it("uses the attribute label and a P-prefixed label for pathways", () => {

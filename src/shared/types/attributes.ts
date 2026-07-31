@@ -15,4 +15,10 @@ export interface AttributeDefinition {
   /** Required for "integer" and "float"; ignored for "binary". */
   min?: number;
   max?: number;
+  /**
+   * Display labels for individual values, e.g. { 0: "negative", 1: "positive" }.
+   * Consumers must fall back to the raw value for any value not listed here, so a
+   * partial map — or none at all — degrades to showing the number rather than lying.
+   */
+  valueLabels?: Record<number, string>;
 }

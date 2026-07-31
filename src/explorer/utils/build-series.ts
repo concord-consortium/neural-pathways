@@ -22,6 +22,7 @@ export function buildSeries(
       label: definition.label,
       kind: "attribute",
       attributeType: definition.type,
+      valueLabels: definition.valueLabels,
       description: definition.description,
       values: reviews.map(review => dataset.getAttributeValue(review, definition.key)),
     });

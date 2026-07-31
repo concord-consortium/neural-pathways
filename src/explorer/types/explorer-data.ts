@@ -28,8 +28,14 @@ export interface Series {
   key: string;
   label: string;
   kind: "attribute" | "pathway";
-  /** Present only for attributes; selects the drill-down renderer. */
+  /** Present only for attributes; describes how the dataset declares the values. */
   attributeType?: AttributeType;
+  /**
+   * Display labels for individual values, carried from the attribute definition.
+   * Absent for pathways and for attributes whose numbers speak for themselves;
+   * consumers fall back to the raw value.
+   */
+  valueLabels?: Record<number, string>;
   description: string;
   /** One entry per review, aligned by index. null means missing. */
   values: (number | null)[];
