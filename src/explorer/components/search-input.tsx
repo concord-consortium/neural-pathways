@@ -70,8 +70,6 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             <table>
               <tbody>
                 <tr><td><code>text</code></td><td>Review text</td></tr>
-                <tr><td><code>stars</code></td><td>Business rating (1-5)</td></tr>
-                <tr><td><code>review_stars</code></td><td>Review rating (1-5)</td></tr>
                 <tr><td><code>name</code></td><td>Business name</td></tr>
                 <tr><td><code>city</code></td><td>City</td></tr>
                 <tr><td><code>state</code></td><td>State</td></tr>

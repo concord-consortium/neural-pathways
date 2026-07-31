@@ -55,7 +55,7 @@ describe("flattenReview", () => {
 
     expect(result.pathway_0).toBe(0.1);
     expect(result.pathway_1).toBe(0.9);
-    expect((result as unknown as Record<string, unknown>).pathway_2).toBeUndefined();
+    expect(result.pathway_2).toBeUndefined();
     expect(result.reconstruction_r2).toBe(0.85);
   });
 

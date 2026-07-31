@@ -14,7 +14,10 @@ export interface DatasetConfig {
  * field holds a different kind of value than an attribute would.
  *
  * `stars` and `review_stars` are deliberately absent: they are numeric fields
- * whose values an attribute may legitimately alias. See yelp-dataset.ts.
+ * whose values an attribute may legitimately alias. See yelp-dataset.ts. Such an
+ * alias MUST derive the identical value as the search field it shadows — nothing
+ * here enforces that, so a future dataset config that aliased one of these names
+ * with a different value would silently change search semantics.
  */
 export const RESERVED_FIELD_NAMES = [
   "text",

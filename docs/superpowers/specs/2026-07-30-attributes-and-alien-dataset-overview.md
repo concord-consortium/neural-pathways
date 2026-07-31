@@ -114,6 +114,10 @@ changing when non-binary attributes arrive.
 `has_word_scores`, `pathway_<n>`, or any existing Yelp metadata field). The dataset config
 validates this at load time.
 
+An attribute key MAY alias an existing numeric search field when the attribute's derived
+value is identical to that field's value — this is why `stars` and `review_stars` are
+permitted and are deliberately absent from `RESERVED_FIELD_NAMES`.
+
 ### Dataset configuration
 
 ```ts
@@ -148,7 +152,7 @@ Derived entirely from existing `index.json` fields — no labeling, no regenerat
 | Key | Type | Source |
 |---|---|---|
 | `review_stars` | integer 1–5 | `review.review_stars` |
-| `business_stars` | float 1–5 | `review.stars` |
+| `stars` | float 1–5 | `review.stars` |
 | `target` | binary | `review.target` |
 | `model_correct` | binary | `review.classification === review.target` |
 | `is_synthetic` | binary | `"synthetic-gpt" in review.sources` |

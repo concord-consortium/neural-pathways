@@ -1,7 +1,8 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { SearchInput } from "./search-input";
 import { AttributeDefinition } from "../../shared/types/attributes";
+import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 
 describe("SearchInput", () => {
   it("renders an input with placeholder text", () => {
@@ -88,5 +89,30 @@ describe("SearchInput attribute fields", () => {
   it("omits the attributes section entirely when there are none", () => {
     openHelp([]);
     expect(screen.queryByText("Attributes")).toBeNull();
+  });
+});
+
+describe("SearchInput field/attribute key deduplication", () => {
+  // Regression test: `stars` and `review_stars` are real yelpDataset attributes that
+  // intentionally alias existing search fields of the same name. Before this fix, the
+  // hardcoded Fields table also listed them, so they rendered twice in the help dialog.
+  // A later phase hides attributes from students, so a stale duplicate row would leak
+  // an answer the student was not meant to see.
+  it("renders each of stars and review_stars exactly once in the help dialog", () => {
+    render(
+      <SearchInput query="" onQueryChange={() => undefined} attributes={yelpDataset.attributes} />,
+    );
+    fireEvent.click(screen.getByLabelText("Search help"));
+    const dialog = (
+      // eslint-disable-next-line testing-library/no-node-access -- scoping queries to the help dialog
+      screen.getByText("Search Syntax").closest(".search-input-help-dialog")
+    ) as HTMLElement;
+
+    // getAllByText's default matcher only compares an element's own direct text nodes
+    // (see testing-library/dom's getNodeText), so this matches only <code> elements whose
+    // full text is exactly "stars" or "review_stars" — not ancestor <td>s or the longer
+    // example query strings that merely contain these words as a substring.
+    expect(within(dialog).getAllByText("stars")).toHaveLength(1);
+    expect(within(dialog).getAllByText("review_stars")).toHaveLength(1);
   });
 });
