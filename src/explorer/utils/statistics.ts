@@ -78,3 +78,96 @@ export function pearson(
 
   return { r: sxy / Math.sqrt(sxx * syy), n };
 }
+
+export interface GroupSummary {
+  value: number;
+  n: number;
+  mean: number;
+  sd: number;
+  /** Counts per bin, aligned with the shared binEdges. */
+  counts: number[];
+}
+
+export interface GroupComparison {
+  groups: GroupSummary[];
+  /** binEdges.length === counts.length + 1 */
+  binEdges: number[];
+  /** |meanA - meanB| / pooled SD, or null when it cannot be computed. */
+  separationSd: number | null;
+}
+
+const DEFAULT_BIN_COUNT = 20;
+
+function binIndex(value: number, min: number, max: number, binCount: number): number {
+  if (max === min) return 0;
+  const raw = Math.floor(((value - min) / (max - min)) * binCount);
+  return Math.min(Math.max(raw, 0), binCount - 1);
+}
+
+/**
+ * Splits scores by the distinct values of groupValues and summarises each group.
+ * Bin edges are computed once across the pooled scores so the histograms are
+ * directly comparable. Pairs where either input is null are skipped.
+ *
+ * separationSd is only defined for exactly two groups — it is the difference in
+ * means over the pooled standard deviation.
+ */
+export function compareGroups(
+  groupValues: (number | null)[],
+  scores: (number | null)[],
+  binCount: number = DEFAULT_BIN_COUNT,
+): GroupComparison {
+  if (groupValues.length !== scores.length) {
+    throw new Error(`compareGroups: length mismatch (${groupValues.length} vs ${scores.length})`);
+  }
+
+  const buckets = new Map<number, number[]>();
+  const pooled: number[] = [];
+  for (let i = 0; i < groupValues.length; i++) {
+    const g = groupValues[i];
+    const s = scores[i];
+    if (g == null || s == null || !Number.isFinite(g) || !Number.isFinite(s)) continue;
+    if (!buckets.has(g)) buckets.set(g, []);
+    (buckets.get(g) as number[]).push(s);
+    pooled.push(s);
+  }
+
+  if (pooled.length === 0) {
+    return { groups: [], binEdges: [], separationSd: null };
+  }
+
+  const min = Math.min(...pooled);
+  const max = Math.max(...pooled);
+  const binEdges: number[] = [];
+  for (let i = 0; i <= binCount; i++) {
+    binEdges.push(min + ((max - min) * i) / binCount);
+  }
+
+  const groups: GroupSummary[] = [...buckets.keys()].sort((a, b) => a - b).map(value => {
+    const values = buckets.get(value) as number[];
+    const counts = new Array<number>(binCount).fill(0);
+    for (const v of values) {
+      counts[binIndex(v, min, max, binCount)]++;
+    }
+    return {
+      value,
+      n: values.length,
+      mean: mean(values),
+      sd: values.length < 2 ? 0 : standardDeviation(values),
+      counts,
+    };
+  });
+
+  let separationSd: number | null = null;
+  if (groups.length === 2) {
+    const [a, b] = groups;
+    const pooledVariance = ((a.n - 1) * a.sd * a.sd + (b.n - 1) * b.sd * b.sd)
+      / (a.n + b.n - 2);
+    const pooledSd = Math.sqrt(pooledVariance);
+    if (Number.isFinite(pooledSd) && pooledSd > 0) {
+      separationSd = Math.abs(a.mean - b.mean) / pooledSd;
+    }
+  }
+
+  return { groups, binEdges, separationSd };
+}

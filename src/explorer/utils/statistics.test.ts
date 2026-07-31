@@ -1,4 +1,4 @@
-import { mean, standardDeviation, pearson } from "./statistics";
+import { mean, standardDeviation, pearson, compareGroups } from "./statistics";
 
 describe("mean", () => {
   it("averages the values", () => {
@@ -86,5 +86,80 @@ describe("pearson", () => {
 
   it("throws when the arrays have different lengths", () => {
     expect(() => pearson([1, 2], [1, 2, 3])).toThrow(/length mismatch/);
+  });
+});
+
+describe("compareGroups", () => {
+  const groupValues = [0, 0, 0, 1, 1, 1];
+  const scores = [1, 2, 3, 7, 8, 9];
+
+  it("returns one group per distinct value, ascending", () => {
+    const result = compareGroups(groupValues, scores);
+    expect(result.groups.map(g => g.value)).toEqual([0, 1]);
+  });
+
+  it("computes each group's n and mean", () => {
+    const result = compareGroups(groupValues, scores);
+    expect(result.groups[0].n).toBe(3);
+    expect(result.groups[0].mean).toBeCloseTo(2, 10);
+    expect(result.groups[1].mean).toBeCloseTo(8, 10);
+  });
+
+  it("computes each group's sample standard deviation", () => {
+    const result = compareGroups(groupValues, scores);
+    expect(result.groups[0].sd).toBeCloseTo(1, 10);
+  });
+
+  it("computes separation in pooled standard deviations", () => {
+    const result = compareGroups(groupValues, scores);
+    // means differ by 6, pooled sd is 1 -> 6
+    expect(result.separationSd).toBeCloseTo(6, 6);
+  });
+
+  it("shares bin edges across both groups", () => {
+    const result = compareGroups(groupValues, scores, 4);
+    expect(result.binEdges).toHaveLength(5);
+    expect(result.binEdges[0]).toBeCloseTo(1, 10);
+    expect(result.binEdges[4]).toBeCloseTo(9, 10);
+    for (const group of result.groups) {
+      expect(group.counts).toHaveLength(4);
+    }
+  });
+
+  it("counts every observation exactly once across the bins", () => {
+    const result = compareGroups(groupValues, scores, 4);
+    const total = result.groups.reduce(
+      (sum, g) => sum + g.counts.reduce((a, b) => a + b, 0), 0,
+    );
+    expect(total).toBe(6);
+  });
+
+  it("skips pairs where either value is null", () => {
+    const result = compareGroups([0, null, 1, 1], [1, 2, 3, null]);
+    expect(result.groups.map(g => g.n)).toEqual([1, 1]);
+  });
+
+  it("returns null separation when there are not exactly two groups", () => {
+    expect(compareGroups([0, 0, 0], [1, 2, 3]).separationSd).toBeNull();
+    expect(compareGroups([0, 1, 2], [1, 2, 3]).separationSd).toBeNull();
+  });
+
+  it("returns null separation when pooled sd is zero", () => {
+    const result = compareGroups([0, 0, 1, 1], [5, 5, 9, 9]);
+    expect(result.separationSd).toBeNull();
+  });
+
+  it("handles all scores being identical without dividing by a zero range", () => {
+    const result = compareGroups([0, 0, 1, 1], [3, 3, 3, 3]);
+    const total = result.groups.reduce(
+      (sum, g) => sum + g.counts.reduce((a, b) => a + b, 0), 0,
+    );
+    expect(total).toBe(4);
+  });
+
+  it("returns no groups for empty input", () => {
+    const result = compareGroups([], []);
+    expect(result.groups).toEqual([]);
+    expect(result.separationSd).toBeNull();
   });
 });
