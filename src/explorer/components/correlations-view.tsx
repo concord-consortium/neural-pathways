@@ -88,6 +88,7 @@ export const CorrelationsView: React.FC<CorrelationsViewProps> = ({
                   <DistributionComparison
                     comparison={comparison}
                     groupLabels={selected.row.valueLabels ?? {}}
+                    scoreLabel={selected.col.label}
                   />
                 ) : (
                   <ScatterPlot

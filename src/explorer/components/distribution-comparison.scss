@@ -24,8 +24,15 @@
   background: #fafafa;
   border: 1px solid #eee;
 
-  rect {
+  .explorer-group-bar {
     fill: #2c3e80;
+  }
+
+  .explorer-group-hit {
+    fill: transparent;
+    // A transparent fill is not reliably treated as painted, so the default
+    // visiblePainted would drop the hover in some engines. Be explicit.
+    pointer-events: all;
   }
 }
 
@@ -35,8 +42,29 @@
   font-variant-numeric: tabular-nums;
 }
 
+.explorer-histogram-axis {
+  display: flex;
+  font-size: 11px;
+  color: #666;
+  font-variant-numeric: tabular-nums;
+}
+
+.explorer-axis-tick {
+  flex: 1;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.explorer-axis-end {
+  flex: 1;
+
+  &:last-child {
+    text-align: right;
+  }
+}
+
 .explorer-group-separation {
   font-size: 12px;
   color: #333;
-  padding-left: 90px;
 }
