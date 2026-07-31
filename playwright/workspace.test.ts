@@ -135,3 +135,47 @@ test("a matrix too wide to fit scrolls inside its wrapper, not the page", async 
   expect(layout.viewWidth).toBeCloseTo(layout.availableWidth, 0);
   expect(layout.pageOverflows).toBe(false);
 });
+
+test("a discrete drill-down shows one labelled bar per value, with no gaps", async ({ page }) => {
+  await page.goto("/explorer.html");
+  await page.getByRole("button", { name: "Correlations" }).click();
+  await page.getByTestId("cell-review_stars-stars").click();
+
+  await expect(page.getByTestId("distribution-comparison")).toBeVisible();
+
+  // One shared axis under the whole stack, not one per row.
+  await expect(page.getByTestId("histogram-axis")).toHaveCount(1);
+
+  // Business rating is half-star valued, so every bar is a real value and none of
+  // the bins are the empty spacers that 20 continuous bins used to produce.
+  const firstRow = page.getByTestId("group-row-1");
+  const bars = firstRow.getByTestId("group-bar-hit");
+  const barCount = await bars.count();
+  expect(barCount).toBeGreaterThan(1);
+  expect(barCount).toBeLessThanOrEqual(20);
+
+  const axisTicks = await page.getByTestId("axis-tick").count();
+  expect(axisTicks).toBe(barCount);
+});
+
+test("histogram bars report their value and count on hover", async ({ page }) => {
+  await page.goto("/explorer.html");
+  await page.getByRole("button", { name: "Correlations" }).click();
+  await page.getByTestId("cell-review_stars-stars").click();
+
+  const firstBar = page.getByTestId("group-row-1").getByTestId("group-bar-hit").first();
+  await expect(firstBar.locator("title")).toContainText("Business rating");
+  await expect(firstBar.locator("title")).toContainText("reviews");
+});
+
+test("a continuous drill-down labels both scatter axes", async ({ page }) => {
+  await page.goto("/explorer.html");
+  await page.getByRole("button", { name: "Correlations" }).click();
+  await page.getByTestId("cell-pathway_1-pathway_0").click();
+
+  await expect(page.getByTestId("scatter-plot")).toBeVisible();
+  await expect(page.getByTestId("scatter-x-min")).not.toBeEmpty();
+  await expect(page.getByTestId("scatter-x-max")).not.toBeEmpty();
+  await expect(page.getByTestId("scatter-y-min")).not.toBeEmpty();
+  await expect(page.getByTestId("scatter-y-max")).not.toBeEmpty();
+});
