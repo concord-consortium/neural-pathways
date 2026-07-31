@@ -131,4 +131,25 @@ describe("RegressionPanel", () => {
     // eslint-disable-next-line testing-library/no-node-access -- asserting the component renders nothing
     expect(container.firstChild).toBeNull();
   });
+
+  it("shows a dropped column by name with its reason, not silently", () => {
+    renderPanel();
+    // "sparse" duplicates "rating" exactly on the rows that survive listwise
+    // deletion (both were built from the same values), so it is dropped as a
+    // duplicate rather than fitted.
+    expect(screen.getByTestId("regression-dropped").textContent).toContain("Sparse (duplicate)");
+  });
+
+  it("sorts term rows by descending |β|, regardless of predictor order", () => {
+    renderPanel();
+    // With "Rating" as the target, "Sparse" (a near-exact duplicate of "Rating")
+    // dominates the fit and "Flag" carries almost nothing — the reverse of their
+    // checkbox order, which lists "Flag" before "Sparse".
+    fireEvent.change(screen.getByTestId("regression-target"), { target: { value: "rating" } });
+    const rows = screen.getAllByTestId(/^term-row-/);
+    expect(rows.map(row => row.getAttribute("data-testid"))).toEqual([
+      "term-row-Sparse",
+      "term-row-Flag",
+    ]);
+  });
 });

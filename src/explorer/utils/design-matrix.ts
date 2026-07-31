@@ -32,6 +32,10 @@ function variance(values: number[]): number {
   return sum / (values.length - 1);
 }
 
+// Not statistics.ts's pearson(): that returns { r: number | null } to represent an
+// undefined correlation, and unwrapping that per pair across this O(k^2) duplicate
+// check buys nothing here — zero-variance columns are already dropped in the loop
+// above, before this runs, so a genuinely undefined correlation cannot occur.
 function correlation(a: number[], b: number[]): number {
   const meanA = mean(a);
   const meanB = mean(b);

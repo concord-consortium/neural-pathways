@@ -37,6 +37,12 @@ const IRLS_TOLERANCE = 1e-8;
 const MIN_IRLS_WEIGHT = 1e-6;
 /** Residual variance at or below this counts as an exact fit. */
 const PERFECT_FIT_TOLERANCE = 1e-12;
+/**
+ * How far above 1 a raw R^2 may land before it is treated as broken rather than
+ * rounding noise. Rounding from an ill-conditioned but accepted correlation matrix
+ * stays within this band; anything further out means the fit itself is unreliable.
+ */
+const R_SQUARED_OVERAGE_TOLERANCE = 1e-6;
 
 function columnOf(matrix: number[][], index: number): number[] {
   return matrix.map(row => row[index]);
@@ -107,8 +113,14 @@ export function multipleRegression(X: number[][], y: number[]): OlsResult | null
   const rawRSquared = beta.reduce((sum, b, j) => sum + b * c[j], 0);
   if (!Number.isFinite(rawRSquared)) return null;
 
-  // Rounding can push R^2 a hair outside [0, 1]; clamp rather than reject, since
-  // an exact fit is a legitimate result, not a failure.
+  // Rounding can push R^2 a hair outside [0, 1], and a hair is absorbed by clamping
+  // rather than rejected, since an exact fit is a legitimate result, not a failure.
+  // But a correlation matrix that is ill-conditioned enough to squeak past
+  // PIVOT_TOLERANCE without actually being invertible reliably can send beta, and
+  // therefore rawRSquared, arbitrarily far past 1 — clamping that down to a
+  // confident "R^2 = 1.000" would be the most misleading output this function could
+  // produce, so anything past the rounding band is rejected instead.
+  if (rawRSquared > 1 + R_SQUARED_OVERAGE_TOLERANCE) return null;
   const rSquared = Math.min(Math.max(rawRSquared, 0), 1);
   const residual = 1 - rSquared;
 
@@ -142,11 +154,14 @@ export function logisticRegression(X: number[][], y: number[]): LogisticResult |
   const n = y.length;
   if (X.length !== n || n === 0 || X[0].length === 0) return null;
 
-  const distinct = new Set(y);
-  if (distinct.size !== 2) return null;
-  for (const value of distinct) {
-    if (value !== 0 && value !== 1) return null;
-  }
+  // Recode to {0, 1} rather than requiring it: the target only needs two distinct
+  // values, not literal 0/1 (a filter like review_stars:[1 TO 2] yields {1, 2}). The
+  // lower value becomes 0 and the higher becomes 1, and every downstream use of the
+  // target — IRLS, accuracy, baseline accuracy — reads the recoded vector.
+  const distinctValues = Array.from(new Set(y)).sort((a, b) => a - b);
+  if (distinctValues.length !== 2) return null;
+  const lowValue = distinctValues[0];
+  const target = y.map(value => (value === lowValue ? 0 : 1));
 
   const k = X[0].length;
   if (n < k + 2) return null;
@@ -161,7 +176,6 @@ export function logisticRegression(X: number[][], y: number[]): LogisticResult |
   let converged = false;
 
   for (let iteration = 0; iteration < MAX_IRLS_ITERATIONS; iteration++) {
-    const p: number[] = [];
     const w: number[] = [];
     const zTarget: number[] = [];
     for (let i = 0; i < n; i++) {
@@ -169,9 +183,8 @@ export function logisticRegression(X: number[][], y: number[]): LogisticResult |
       for (let j = 0; j < width; j++) eta += design[i][j] * beta[j];
       const prob = 1 / (1 + Math.exp(-eta));
       const weight = Math.max(prob * (1 - prob), MIN_IRLS_WEIGHT);
-      p.push(prob);
       w.push(weight);
-      zTarget.push(eta + (y[i] - prob) / weight);
+      zTarget.push(eta + (target[i] - prob) / weight);
     }
 
     const xtwx: number[][] = [];
@@ -211,10 +224,10 @@ export function logisticRegression(X: number[][], y: number[]): LogisticResult |
     let eta = 0;
     for (let j = 0; j < width; j++) eta += design[i][j] * beta[j];
     const predicted = eta >= 0 ? 1 : 0;
-    if (predicted === y[i]) correct++;
+    if (predicted === target[i]) correct++;
   }
 
-  const positiveRate = mean(y);
+  const positiveRate = mean(target);
   const baselineAccuracy = Math.max(positiveRate, 1 - positiveRate);
 
   const terms: LogisticTerm[] = [];

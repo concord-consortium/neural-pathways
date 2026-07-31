@@ -1,7 +1,10 @@
 /**
- * Threshold below which a pivot counts as zero. The matrices here are
- * correlation matrices and weighted cross-products of standardized columns, so
- * entries are O(1) and an absolute tolerance is appropriate.
+ * Threshold below which a pivot counts as zero. For the OLS correlation matrix in
+ * multipleRegression, entries are O(1) by construction, so an absolute tolerance is
+ * appropriate. logisticRegression's XtWX is a weighted cross-product of standardized
+ * columns whose entries scale with n, so the same claim does not hold there — but no
+ * failure from that has been observed in practice: pivots stay around 1e-3 even with
+ * IRLS weights pinned at their floor.
  */
 const PIVOT_TOLERANCE = 1e-10;
 

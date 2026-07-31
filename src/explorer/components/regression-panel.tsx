@@ -64,7 +64,12 @@ export const RegressionPanel: React.FC<RegressionPanelProps> = ({ series }) => {
     [predictors, target, includeInteractions],
   );
 
-  const isBinaryTarget = target ? distinctUsableCount(target.values) === 2 : false;
+  // Derived from the fitted cases (design.y), not every value in the series: the
+  // fitted set is complete cases only, and can have a different distinct-value count
+  // than the full series (e.g. a third value present only among rows some predictor
+  // drops as missing). Routing that mismatch to the wrong model is exactly the bug
+  // this guards against — the method line and the fit it names must agree.
+  const isBinaryTarget = design ? distinctUsableCount(design.y) === 2 : false;
 
   const fit = useMemo(() => {
     if (!design || design.columnLabels.length === 0) return null;

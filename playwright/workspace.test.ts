@@ -189,7 +189,7 @@ test("regression panel fits a model for a pathway", async ({ page }) => {
   await expect(page.getByTestId("regression-rows")).toContainText("of 6427 rows");
 });
 
-test("unchecking a sparse predictor restores the row count", async ({ page }) => {
+test("unchecking a sparse predictor recovers most of the row count", async ({ page }) => {
   await page.goto("/explorer.html#view=correlations");
 
   const rows = page.getByTestId("regression-rows");

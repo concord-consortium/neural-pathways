@@ -83,6 +83,35 @@ describe("multipleRegression", () => {
     const X = [[1, 2], [2, 4], [3, 6], [4, 8], [5, 10]];
     expect(multipleRegression(X, [1, 3, 2, 5, 4])).toBeNull();
   });
+
+  it("rejects a fit whose raw R-squared overshoots 1 by more than rounding noise", () => {
+    // Five predictors, the fifth built as the sum of the other four plus a sliver of
+    // noise: not an exact duplicate of any single column (so design-matrix.ts's
+    // pairwise duplicate check would not catch it), but collinear enough as a set
+    // that the correlation matrix is ill-conditioned. It still clears
+    // PIVOT_TOLERANCE, so invertSymmetric returns an answer — just one imprecise
+    // enough that beta blows up (coefficients past 30 in magnitude) and the raw R^2
+    // computed from beta . c lands at roughly 1.0000028, not merely a rounding hair
+    // over 1. That must be rejected rather than clamped down to a confident 1.000.
+    const X = [
+      [-2.5043631938772104, 1.7995262177658855, -3.4243023388200915, 0.288333895284838, -3.8407006260809933],
+      [-4.742754101633445, 1.5878677398841212, 4.813236300746555, -3.6203765862716253, -1.9620465238429197],
+      [-4.570918418267238, 4.620609287927211, 0.6186127688822396, 3.699322048900333, 4.3676872473779405],
+      [1.5703840584356266, -4.527359008568972, -1.6739344581374593, 2.6559388673193474, -1.9748587583169577],
+      [-4.387544393254232, 4.213238064764644, 4.605410103502408, -4.059125184574689, 0.37187015967100534],
+      [3.6150184313836595, 0.5477845694626615, 3.756115440631339, -3.02503198293272, 4.893948518436021],
+      [-4.439039230085462, 0.5270564581859194, -3.78282308521812, -0.7936447839223054, -8.488376834063443],
+      [-3.8405701512659762, 3.743766550321024, -4.301535784872964, -0.3344339110583222, -4.732838649213627],
+      [-2.009692786731614, -2.4927437293775117, 4.1207855982337085, -1.6952437147010317, -2.07688427384358],
+      [0.5385750557941271, 1.465429070622395, 4.34055328804094, -4.861158728534896, 1.4834578982923579],
+    ];
+    const y = [
+      -3.3449739257988758, -0.15638568213821652, -1.5394933635593024, -0.25058061163485906,
+      0.146329154130797, 4.177923946680172, -4.9550303221528855, -4.543439159980598,
+      0.8467631041140276, 2.592818248307596,
+    ];
+    expect(multipleRegression(X, y)).toBeNull();
+  });
 });
 
 describe("logisticRegression", () => {
@@ -145,5 +174,17 @@ describe("logisticRegression", () => {
 
   it("returns null when there are too few rows for the terms", () => {
     expect(logisticRegression([[1, 2], [2, 1]], [0, 1])).toBeNull();
+  });
+
+  it("recodes a non-0/1 binary target consistently with the equivalent 0/1 target", () => {
+    // A filter like review_stars:[1 TO 2] yields a target of {1, 2}, not {0, 1}. The
+    // fit should treat that the same as {0, 1}: same separating relationship, same
+    // sign of the coefficient.
+    const X = [[-3], [-2], [-1], [1], [2], [3]];
+    const zeroOne = logisticRegression(X, [0, 0, 0, 1, 1, 1]) as { terms: { coefficient: number }[] };
+    const oneTwo = logisticRegression(X, [1, 1, 1, 2, 2, 2]) as { terms: { coefficient: number }[] };
+    expect(zeroOne).not.toBeNull();
+    expect(oneTwo).not.toBeNull();
+    expect(Math.sign(oneTwo.terms[0].coefficient)).toBe(Math.sign(zeroOne.terms[0].coefficient));
   });
 });
