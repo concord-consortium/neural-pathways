@@ -68,3 +68,28 @@
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
+.explorer-view-toggle {
+  display: inline-flex;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.explorer-view-button {
+  padding: 5px 12px;
+  font-size: 13px;
+  border: none;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+
+  & + & {
+    border-left: 1px solid #ccc;
+  }
+
+  &.active {
+    background: #2c3e80;
+    color: #fff;
+  }
+}

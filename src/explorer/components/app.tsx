@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useDeferredValue, useCallback, useEffect, useRef } from "react";
 import { filter, parse } from "liqe";
 import { S3Index, S3Review, S3ShapBucket, ReviewShapData } from "../../shared/types/s3-data";
-import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope } from "../types/explorer-data";
+import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope, ViewMode } from "../types/explorer-data";
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { flattenReview } from "../utils/flatten-review";
+import { buildSeries } from "../utils/build-series";
 import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 import { SearchInput } from "./search-input";
 import { ResultsPanel } from "./results-panel";
@@ -11,6 +12,7 @@ import { ReviewPanel } from "./review-panel";
 import { PathwayPanel } from "./pathway-panel";
 import { WordEffectsPanel } from "./word-effects-panel";
 import { SettingsMenu } from "./settings-menu";
+import { CorrelationsView } from "./correlations-view";
 
 import "./app.scss";
 
@@ -24,11 +26,12 @@ function getHashParams(): Record<string, string> {
   return params;
 }
 
-function updateHash(reviewId: string | null, fitName: string, query?: string) {
+function updateHash(reviewId: string | null, fitName: string, query?: string, view?: ViewMode) {
   const parts: string[] = [];
   if (reviewId) parts.push(`review=${encodeURIComponent(reviewId)}`);
   if (fitName) parts.push(`fit=${encodeURIComponent(fitName)}`);
   if (query) parts.push(`q=${encodeURIComponent(query)}`);
+  if (view && view !== "explore") parts.push(`view=${encodeURIComponent(view)}`);
   const newHash = parts.length > 0 ? `#${parts.join("&")}` : "";
   if (window.location.hash !== newHash) {
     history.replaceState(null, "", newHash || window.location.pathname);
@@ -54,6 +57,7 @@ export const App = () => {
   const [wordColorMode, setWordColorMode] = useState<WordColorMode>("score");
   const [showPathwayValues, setShowPathwayValues] = useState(false);
   const [wordScaleScope, setWordScaleScope] = useState<WordScaleScope>("per-pathway");
+  const [viewMode, setViewMode] = useState<ViewMode>("explore");
 
   // --- Search state ---
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -99,6 +103,9 @@ export const App = () => {
         setSelectedFitName(fitName);
         if (hashParams.q) {
           setSearchQuery(hashParams.q);
+        }
+        if (hashParams.view === "correlations") {
+          setViewMode("correlations");
         }
         if (data.reviews.length > 0) {
           const reviewId = hashParams.review && data.reviews.some(r => r.id === hashParams.review)
@@ -152,9 +159,9 @@ export const App = () => {
   // --- Sync hash (write on state change, read on hashchange) ---
   useEffect(() => {
     if (selectedFitName) {
-      updateHash(effectiveSelectedReviewId, selectedFitName, searchQuery || undefined);
+      updateHash(effectiveSelectedReviewId, selectedFitName, searchQuery || undefined, viewMode);
     }
-  }, [effectiveSelectedReviewId, selectedFitName, searchQuery]);
+  }, [effectiveSelectedReviewId, selectedFitName, searchQuery, viewMode]);
 
   useEffect(() => {
     if (!indexData) return;
@@ -170,6 +177,7 @@ export const App = () => {
       if (hashParams.q !== undefined) {
         setSearchQuery(hashParams.q);
       }
+      setViewMode(hashParams.view === "correlations" ? "correlations" : "explore");
     };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
@@ -177,6 +185,11 @@ export const App = () => {
 
   // --- Derived fit data ---
   const selectedFit = indexData?.metadata.fa_fits[selectedFitName] ?? null;
+
+  const correlationSeries = useMemo(() => {
+    if (viewMode !== "correlations" || !selectedFit) return [];
+    return buildSeries(filteredReviews, yelpDataset, selectedFitName, selectedFit.n_pathways);
+  }, [viewMode, filteredReviews, selectedFitName, selectedFit]);
 
   const pathwayScores = useMemo(
     () => selectedReview?.pathway_scores[selectedFitName] ?? [],
@@ -263,6 +276,20 @@ export const App = () => {
           numPathways={selectedFit?.n_pathways}
           attributes={yelpDataset.attributes}
         />
+        <div className="explorer-view-toggle" role="group" aria-label="View mode">
+          <button
+            className={`explorer-view-button${viewMode === "explore" ? " active" : ""}`}
+            onClick={() => setViewMode("explore")}
+          >
+            Explore
+          </button>
+          <button
+            className={`explorer-view-button${viewMode === "correlations" ? " active" : ""}`}
+            onClick={() => setViewMode("correlations")}
+          >
+            Correlations
+          </button>
+        </div>
         <SettingsMenu
           scaleMode={scaleMode}
           onScaleModeChange={setScaleMode}
@@ -289,7 +316,13 @@ export const App = () => {
           resultCount={filteredReviews.length}
           totalCount={indexData.reviews.length}
         />
-        {selectedReview ? (
+        {viewMode === "correlations" ? (
+          <CorrelationsView
+            series={correlationSeries}
+            resultCount={filteredReviews.length}
+            totalCount={indexData.reviews.length}
+          />
+        ) : selectedReview ? (
           <div className="explorer-main">
             <div className="explorer-left-column">
               <ReviewPanel
