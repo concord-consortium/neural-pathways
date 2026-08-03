@@ -15,7 +15,7 @@ export function formatSummary(run: GeneratorRun, checks: CheckResult[]): string 
   const { config, corpus, solvedAttributes, outcomes, dataset } = run;
   const lines: string[] = [];
 
-  lines.push(`alien dataset — seed ${config.seed}, ${config.conversationCount} conversations`);
+  lines.push(`alien dataset — seed ${config.seed}, ${dataset.index.reviews.length} conversations`);
   lines.push(`output ${config.outputDir}, fit "${config.fitName}"`);
   lines.push("");
 
