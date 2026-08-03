@@ -74,7 +74,7 @@ phases below.
 |---|---|---|
 | Data fidelity | **Fully authored.** No model is trained; no Factor Analysis is run. | See [Honesty constraint](#honesty-constraint). |
 | App architecture | **One app, dataset-driven.** No new webpack entry. | The "alien app" is a dataset id plus a feature config in the existing explorer. |
-| Generator home | **TypeScript script in this repo, published to S3.** | Fast tuning locally; uniform loading in production. |
+| Generator home | **TypeScript script in this repo, run at build time into `dist/`.** | Deterministic from a seed, so no generated data is committed and no credentials are needed. Supersedes an earlier "publish to S3" decision — see the [phase 4 design](2026-08-03-alien-dataset-generator-design.md). |
 | Correlation computation | **On the fly, in the client.** Nothing precomputed. | No correlation fields in the data format. |
 | Yelp attributes | **Reinterpret existing metadata.** | Phases 1–3 need no data regeneration. |
 | Text ↔ score coupling | **Words carry pathway weights; score = sum.** | SHAP values are exact by construction, not fabricated. |
@@ -104,11 +104,22 @@ interface AttributeDefinition {
   type: "binary" | "integer" | "float";
   min?: number;         // required for integer and float
   max?: number;         // required for integer and float
+  valueLabels?: Record<number, string>;   // { 0: "negative", 1: "positive" }
+  hidden?: boolean;     // present in the data, not shown until commissioned
 }
 ```
 
-Attributes are `0`/`1` initially. The `type` field exists so the model does not need
-changing when non-binary attributes arrive.
+`valueLabels` lets each attribute read in its own terms rather than a generic yes/no.
+Consumers must fall back to the raw value for anything not listed, so a partial map degrades
+to showing the number rather than lying.
+
+`hidden` is written by the generator and carried in the data from phase 4 onward. **The app
+ignores it until phase 6** — the data always contains every attribute, and hiding is purely a
+display concern. See [Attribute visibility](#attribute-visibility-and-commissioned-coding).
+
+Most attributes are `0`/`1`. The `type` field exists so the model does not need changing when
+non-binary attributes arrive, and the alien set's `group_size` (integer 1–6) exercises that
+path from the start.
 
 `key` must not collide with a reserved search field name (`text`, `target_label`,
 `reconstruction_r2`, `classification_label`, `classification_probability`,
@@ -313,11 +324,15 @@ decision carries no weight. Deferred to the phase 6 spec.
 
 ## The Alien Dataset
 
+The [phase 4 design](2026-08-03-alien-dataset-generator-design.md) is the authority on the
+generator. This section is the summary; where the two disagree, that document wins.
+
 ### Generative model
 
-Everything falls out of three independent latent factors per conversation.
+Everything falls out of four independent latent factors per conversation.
 
-1. **Factors** — `f0, f1, f2 ~ N(0, 1)`, independent. Ground truth; never exposed in the app.
+1. **Factors** — `f0…f3 ~ N(0, 1)`, independent. They exist only to tilt word selection;
+   nothing downstream reads them.
 
 2. **Vocabulary** — ~40 words, each with an authored weight per pathway. Word selection
    during generation is tilted by the factor values, so a high-`f0` conversation draws more
@@ -336,33 +351,51 @@ Everything falls out of three independent latent factors per conversation.
    pathway. No noise term is added to the score, because noise would break additivity;
    the randomness comes from word selection, which is ample.
 
-4. **Attributes** — thresholded `f_i + noise`. The generator numerically solves for the
-   noise level that hits each target correlation, since point-biserial r depends on both the
-   noise level and the threshold (base rate). This solver is what makes the detectability
+4. **Attributes** — thresholded `a · z_p + √(1−a²) · ε`, generated from the *realized*
+   standardized pathway score rather than from the latent factor. The generator numerically
+   solves for `a` to hit each target correlation. This solver is what makes the detectability
    ladder tunable.
 
-5. **Classification** — logistic in `f0`, with roughly 5% error, so `model_correct` is a
-   live attribute for the alien set too.
+5. **Classification** — `target` is a function of `z₀` alone; `classification` is logistic in
+   `z₀` **plus the planted bias**, so `model_correct` is a live attribute and the model's
+   errors are patterned rather than scattered.
 
 6. **Observation notes** — templates keyed on attribute values, with slot variation for
    naturalness, covering hidden attributes as well as visible ones.
 
 ### The detectability ladder
 
-The central design requirement. Three pathways, deliberately differing in how much tooling
-it takes to find them:
+The central design requirement. Four pathways: three forming a ladder that differs in how much
+tooling it takes to find them, and a fourth carrying a planted bias.
 
-| Pathway | Attribute | Target r | Findable by |
-|---|---|---|---|
-| P0 | `voices_raised` | ~0.85 | eye, case by case; also correlates with classification |
-| P1 | `engaged_in_task` | ~0.35 | the correlation matrix; not by eye |
-| P2 | `group_of_three_or_more` | ~0.15 | the correlation matrix only |
+| Pathway | Attribute | Target r | Visible | Findable by |
+|---|---|---|---|---|
+| P0 | `voices_raised` | ~0.85 | yes | eye, case by case |
+| P1 | `engaged_in_task` | ~0.35 | yes | the correlation matrix; not by eye |
+| P2 | `group_size` (integer 1–6) | ~0.15 | yes | the correlation matrix only |
+| P3 | `resource_stressed` | ~0.78 | **no** | only after the coding is commissioned |
 
-Plus decoy attributes correlating with nothing: `near_water`, `food_present`,
-`late_in_cycle`.
+Plus decoys correlating with nothing: `near_water` and `food_present` (visible),
+`gestures_repeated`, `young_present` and `carrying_burden` (hidden).
 
 This ladder is what justifies building the correlation views at all. P1 and P2 are
 undiscoverable without them, so the tool earns its place instead of being decoration.
+
+**P3 is the planted bias.** `resource_stressed` records whether a group appears
+resource-secure or resource-stressed. `target` does not depend on it at all, while
+`classification` does — so in this dataset resource condition demonstrably fails to predict
+whether it is a good time to approach, and the model uses it anyway. Roughly 74% of the
+model's errors fall on resource-stressed groups, who are 30% of the data.
+
+It ships hidden, alongside three useless hidden decoys, so that phase 6's commissioned coding
+is a real choice rather than a single option. P3 correlates with nothing visible, so it sits
+on screen as an unanswered question from the first minute until the right coding is
+commissioned.
+
+The attribute was chosen because it is **arguable**. A student can reasonably object that
+resource-stressed groups might genuinely be more volatile — which is the same objection real
+biased systems are defended with. Having students settle it against the data is the lesson;
+bias is a normative claim, not a statistical property.
 
 All values above are **starting parameters, expected to change.** Tuning them against real
 classroom use is phase 7. This is why the generator must be parameterized and re-runnable
@@ -385,7 +418,7 @@ They are independent and can proceed in parallel.
 | 1 | Attribute infrastructure — definitions, dataset config, chips, search integration | Yelp (derived) | Attributes visible and searchable in the real explorer |
 | 2 | Correlation matrix + drill-down, incl. pathway × pathway and attribute × attribute | Yelp | The pairwise discovery workflow |
 | 3 | Regression panel — OLS per pathway, logistic for classification, interaction terms | Yelp | Variance coverage |
-| 4 | Alien dataset generator — TS script, publish to S3 | — | A tunable authored dataset |
+| 4 | [Alien dataset generator](2026-08-03-alien-dataset-generator-design.md) — TS script, run at build time | — | A tunable authored dataset |
 | 5 | Alien dataset in the app — dataset switching, item nouns, observation panel | Alien | The alien app exists |
 | 6 | Attribute visibility and commissioned coding | Both | The pedagogical sequence |
 | 7 | Tuning | Alien | Correlation strengths that actually teach |
