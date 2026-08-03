@@ -154,9 +154,9 @@ export function buildDataset(input: BuildDatasetInput): Dataset {
           explained_variance_per_pathway: explainedVariance(corpus),
           pathway_importance: importance.terms.map(term => term.coefficient),
           pathway_score_min: corpus.scores[0].map((_, p) =>
-            Math.min(...corpus.scores.map(row => row[p]))),
+            corpus.scores.reduce((min, row) => Math.min(min, row[p]), Infinity)),
           pathway_score_max: corpus.scores[0].map((_, p) =>
-            Math.max(...corpus.scores.map(row => row[p]))),
+            corpus.scores.reduce((max, row) => Math.max(max, row[p]), -Infinity)),
         },
       },
       review_sets: {
