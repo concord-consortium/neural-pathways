@@ -61,24 +61,41 @@ export async function fetchShap(
   };
 }
 
+/**
+ * These three functions feed the heatmap, which visualizes the 780-neuron
+ * activation model. A fit without that model cannot answer them, and returning
+ * empty arrays would draw an empty heatmap that looks like real data.
+ */
+function requireActivationModel<T>(value: T | undefined, field: string): T {
+  if (value === undefined) {
+    throw new Error(`Fit has no activation model: "${field}" is absent`);
+  }
+  return value;
+}
+
 export function fitToPathways(fit: S3FaFit): Pathways {
-  const nNeurons = fit.loadings[0].length;
+  const loadings = requireActivationModel(fit.loadings, "loadings");
+  const nNeurons = loadings[0].length;
   return {
-    components: fit.loadings,
+    components: loadings,
     mean: new Array(nNeurons).fill(0),
-    noise_variance: fit.noise_variance,
+    noise_variance: requireActivationModel(fit.noise_variance, "noise_variance"),
   };
 }
 
 export function fitToScaler(fit: S3FaFit): Scaler {
-  return { mean: fit.scaler_mean, scale: fit.scaler_scale };
+  return {
+    mean: requireActivationModel(fit.scaler_mean, "scaler_mean"),
+    scale: requireActivationModel(fit.scaler_scale, "scaler_scale"),
+  };
 }
 
 export function fitToMetadata(fit: S3FaFit): Metadata {
+  const loadings = requireActivationModel(fit.loadings, "loadings");
   return {
-    n_neurons: fit.loadings[0].length,
+    n_neurons: loadings[0].length,
     n_pathways: fit.n_pathways,
-    explained_variance_total: fit.explained_variance_total,
+    explained_variance_total: requireActivationModel(fit.explained_variance_total, "explained_variance_total"),
     explained_variance_per_pathway: fit.explained_variance_per_pathway,
   };
 }

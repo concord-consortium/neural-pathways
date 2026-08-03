@@ -202,6 +202,12 @@ describe("fitToPathways", () => {
     expect(pathways.noise_variance).toEqual(mockFit.noise_variance);
     expect(pathways.mean).toEqual([0, 0, 0]);
   });
+
+  it("throws a named error when a fit has no activation model", () => {
+    const fit: S3FaFit = { ...mockFit };
+    delete fit.loadings;
+    expect(() => fitToPathways(fit)).toThrow(/no activation model/);
+  });
 });
 
 describe("fitToScaler", () => {

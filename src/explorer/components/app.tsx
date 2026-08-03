@@ -201,7 +201,7 @@ export const App = () => {
     [selectedReview, selectedFitName],
   );
 
-  const reconstructionR2 = selectedReview?.reconstruction_r2[selectedFitName] ?? null;
+  const reconstructionR2 = selectedReview?.reconstruction_r2?.[selectedFitName] ?? null;
 
   const scaleExtents = useMemo<ScaleExtents>(() => {
     if (!selectedFit) return { shared: [0, 0], perPathway: [] };
