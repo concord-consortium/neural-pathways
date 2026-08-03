@@ -246,9 +246,10 @@ bias is real but too weak to find** — a downstream analysis correlating model
 correctness against attributes wouldn't turn it up. `modelCorrect` comes from
 `classification`, and `solveOutcomes` (`scripts/alien/outcomes.ts`) solves
 `classification` by bisecting `beta` until the error rate among
-`resource_stressed = 1` conversations matches `errorRateWhenBiasOn`, while
-the error rate among `resource_stressed = 0` conversations is separately
-bisected to match `errorRateWhenBiasOff`. The gap between those two requested
+`resource_stressed = 1` conversations matches `errorRateWhenBiasOn`; separately,
+it bisects `sigma` — which shapes `target`, the ground truth, not
+`classification` — until the error rate among `resource_stressed = 0`
+conversations matches `errorRateWhenBiasOff`. The gap between those two requested
 error rates is what drives `model_correct` to differ by group, which is what
 creates the correlation with `resource_stressed` in the first place —
 `config-validation.ts`'s `checkBias` even rejects a config where
@@ -300,14 +301,13 @@ achieved 0.652` to:
 
 — the achieved column tracks the new request, the ceiling is unchanged (it only
 depends on the value shares, not `targetR`), and all eight self-checks still
-print `PASS`. Now put it back:
+print `PASS`. Now put it back: change `targetR` back to `0.65` and rerun
+`npm run generate:alien` to confirm the table returns to the section 2 numbers,
+then confirm the file is clean:
 
 ```bash
 git diff scripts/alien-config.ts    # should be empty
 ```
-
-Change `targetR` back to `0.65` and rerun `npm run generate:alien` to confirm
-the table returns to the section 2 numbers before moving on.
 
 ## 6. Changing the seed
 
@@ -353,14 +353,13 @@ orthogonality limit), the rarest word count changed from 291 to 302 — and yet
 all eight checks still pass. That's the evidence that the checks constrain the
 *construction*, not one lucky draw at the shipped seed.
 
-Put the seed back:
+Put the seed back: change `seed` back to `20260803` and rerun
+`npm run generate:alien` to confirm you're back to the section 2 numbers, then
+confirm the file is clean:
 
 ```bash
 git diff scripts/alien-config.ts    # should be empty
 ```
-
-Change `seed` back to `20260803` and rerun `npm run generate:alien` to confirm
-you're back to the section 2 numbers.
 
 ## 7. Deliberately breaking it
 
