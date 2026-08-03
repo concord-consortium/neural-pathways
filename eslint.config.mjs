@@ -223,5 +223,34 @@ export default defineConfig(
       "@typescript-eslint/no-var-requires": "off",
       "quotes": ["error", "single"],
     }
-  }
+  },
+  {
+    name: "generator scripts",
+    files: ["scripts/**/*.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      },
+    },
+    rules: {
+      // The generator's whole user interface is its printed run summary.
+      "no-console": "off",
+    },
+  },
+  {
+    name: "rules specific to generator tests",
+    files: ["scripts/**/*.test.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.jest
+      }
+    },
+    extends: [
+      jest.configs["flat/recommended"]
+    ],
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "off"
+    }
+  },
 );
