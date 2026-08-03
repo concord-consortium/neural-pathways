@@ -53,6 +53,30 @@ describe("validateConfig", () => {
     expect(() => validateConfig(config)).toThrow(/substring/i);
   });
 
+  it("rejects an empty outputDir", () => {
+    const config = clone();
+    config.outputDir = "";
+    expect(() => validateConfig(config)).toThrow(/outputDir/i);
+  });
+
+  it("rejects an outputDir of \".\"", () => {
+    const config = clone();
+    config.outputDir = ".";
+    expect(() => validateConfig(config)).toThrow(/outputDir/i);
+  });
+
+  it("rejects an absolute outputDir", () => {
+    const config = clone();
+    config.outputDir = "/tmp/alien-data";
+    expect(() => validateConfig(config)).toThrow(/outputDir/i);
+  });
+
+  it("rejects an outputDir that escapes via ..", () => {
+    const config = clone();
+    config.outputDir = "../alien-data";
+    expect(() => validateConfig(config)).toThrow(/outputDir/i);
+  });
+
   it("rejects an unknown bias attribute key", () => {
     const config = clone();
     config.biasAttributeKey = "nope";

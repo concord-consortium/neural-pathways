@@ -1,8 +1,27 @@
+import * as path from "path";
 import { validateAttributeKeys } from "../../src/shared/datasets/dataset-config";
 import { AlienConfig } from "./config-types";
 
 const SHARE_TOLERANCE = 1e-9;
 const WEIGHT_TOLERANCE = 1e-9;
+
+/**
+ * writeDataset (emit.ts) recursively deletes outputDir with force: true before
+ * writing. An empty, ".", "..", absolute, or escaping path would resolve outside
+ * the intended dist/ directory — at worst to the repo root — and be wiped
+ * silently. Keep it a plain relative path that stays inside the repo.
+ */
+function checkOutputDir(config: AlienConfig): void {
+  const dir = config.outputDir;
+  const unsafe = dir === "" || dir === "."
+    || path.isAbsolute(dir) || dir.split("/").some(segment => segment === "..");
+  if (unsafe) {
+    throw new Error(
+      `outputDir "${dir}" is unsafe: writeDataset deletes it recursively before writing. Use a `
+      + `non-empty relative path inside the repo, e.g. "dist/alien-data".`,
+    );
+  }
+}
 
 function checkVocabulary(config: AlienConfig): void {
   const seen = new Set<string>();
@@ -157,6 +176,7 @@ export function validateConfig(config: AlienConfig): void {
       + `so every turn can hold two words`,
     );
   }
+  checkOutputDir(config);
   checkVocabulary(config);
   checkAttributes(config);
   checkFragmentsAreDistinguishable(config);
