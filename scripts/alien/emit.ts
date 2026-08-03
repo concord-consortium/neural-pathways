@@ -134,6 +134,12 @@ export function buildDataset(input: BuildDatasetInput): Dataset {
   if (!importance) {
     throw new Error("pathway_importance: the logistic fit failed; check the classification split");
   }
+  if (!importance.converged) {
+    throw new Error(
+      "pathway_importance: the logistic fit did not converge within its iteration cap; check "
+      + "whether classification has become separable in the pathway scores",
+    );
+  }
 
   const weightOf = new Map(config.vocabulary.map(entry => [entry.word, entry.weights]));
   const shapBuckets = new Map<string, S3ShapBucket>();

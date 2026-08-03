@@ -47,6 +47,18 @@ describe("buildDataset", () => {
     expect(fit.explained_variance_total).toBeUndefined();
   });
 
+  it("sets pathway score bounds to the corpus column extremes", () => {
+    const fit = dataset.index.metadata.fa_fits[config.fitName];
+    for (let p = 0; p < config.pathwayCount; p++) {
+      const column = corpus.scores.map(row => row[p]);
+      expect(fit.pathway_score_min[p]).toBe(Math.min(...column));
+      expect(fit.pathway_score_max[p]).toBe(Math.max(...column));
+      // Standardized scores straddle zero.
+      expect(fit.pathway_score_min[p]).toBeLessThan(0);
+      expect(fit.pathway_score_max[p]).toBeGreaterThan(0);
+    }
+  });
+
   it("orders explained variance by the configured target split", () => {
     const shares = dataset.index.metadata.fa_fits[config.fitName].explained_variance_per_pathway;
     expect(shares.reduce((s, v) => s + v, 0)).toBeCloseTo(1, 10);
