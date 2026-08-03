@@ -46,6 +46,10 @@ to persist across builds that don't touch it.
 there is no cache to invalidate. **To force a regenerate**, just run
 `npm run generate:alien` again (or `npm run build`, which includes it).
 
+A bug at this stage is a non-zero exit, a summary that reports fewer than 800
+conversations, or an `index.json` / `shap/` layout that doesn't match what's
+described above — with the config unmodified, none of those should happen.
+
 ## 2. Reading the run summary
 
 Run `npm run generate:alien` and read the printed summary top to bottom. A
@@ -143,13 +147,20 @@ three, since they aren't tuned to correlate with anything):
 - **ceiling** — the strongest correlation reachable at all, given the
   attribute's value shares. A binary (or few-valued) attribute is a cut of a
   continuous latent, and a hard cut can never track that latent perfectly, so
-  the ceiling sits below 1.0. It also depends on how the value shares are
-  split: on this run, `engaged_in_task`'s near-even 50/50 split gives it the
-  highest ceiling among the binary attributes, **0.724**; `voices_raised`
-  (65/35) and `resource_stressed` (70/30) sit a bit lower, at **0.717** and
-  **0.736**. `group_size` isn't binary — it's a six-way integer split — and
-  cutting a continuous latent into six ordered bins preserves much more
-  information than cutting it into two, so its ceiling is far higher: **0.937**.
+  the ceiling sits below 1.0. On this run the three binary attributes read
+  `resource_stressed` (70/30 split) **0.736**, `engaged_in_task` (50/50)
+  **0.724**, `voices_raised` (65/35) **0.717** — highest to lowest. That is
+  *not* simply "closer to an even split reaches higher": `engaged_in_task`'s
+  50/50 split isn't the top of the three, and `resource_stressed`'s 70/30
+  split, further from even than `voices_raised`'s 65/35, has the highest
+  ceiling of all. `solveAttribute` (`scripts/alien/attributes.ts`) computes
+  the ceiling from `column = scores.map(row => row[pathway])` — that
+  attribute's own pathway's score distribution — so the ceiling is a function
+  of the value split *and* the shape of that specific pathway's scores
+  together, not the split in isolation. `group_size` isn't binary — it's a
+  six-way integer split — and cutting a continuous latent into six ordered
+  bins preserves much more information than cutting it into two, so its
+  ceiling is far higher regardless: **0.937**.
 
 `achieved-correlations` (self-check 3) fails if any attribute's achieved value
 drifts too far from its requested one; `solveAttribute` (in
@@ -190,9 +201,23 @@ tightened past what the solver can reliably hit.
 ### word-coverage
 
 Measures the rarest vocabulary word's conversation count (a word counted once
-per conversation it appears in, not per occurrence). A failure means some word
-is too rare to be a reliable evidence source — widen `minWords`/`maxWords`, add
-more magnitude tiers, or lower `thresholds.minWordOccurrences`.
+per conversation it appears in, not per occurrence — `wordCoverage` in
+`scripts/alien/checks.ts`). A failure means some word is too rare to be a
+reliable evidence source. Every word is drawn from the same shared vocabulary
+against a fixed per-conversation word budget (`drawConversation` in
+`scripts/alien/conversations.ts`), so what actually raises a word's count is
+more draws relative to the vocabulary size: raise `conversationCount`, widen
+`minWords`/`maxWords` (more words drawn per conversation), or shrink the
+vocabulary (fewer words per pathway) so the same draws are spread over fewer
+words. Lowering `tiltLambda` also helps specifically the *rarest* word,
+because it flattens `tilt = exp(tiltLambda * dot)` toward uniform selection,
+so a word is no longer strongly suppressed in conversations whose latent
+factors happen to disfavor it. **Adding more magnitude tiers does the
+opposite of fixing this** — each tier adds one more word per pathway per sign
+(`group()` in `scripts/alien-config.ts`), so a bigger vocabulary shares the
+same word budget and the rarest word gets rarer. Lowering
+`thresholds.minWordOccurrences` only moves the bar the check is judged
+against; it doesn't make any word actually more common.
 
 ### truth-is-unbiased
 
@@ -201,16 +226,39 @@ ground-truth label and the hidden bias attribute. **A failure here means the
 truth has started tracking resource condition, and the model would then be
 correct rather than biased** — the whole point of this dataset is a model that
 is *wrong* in a way correlated with a hidden attribute, not one that has simply
-learned a real signal. Fix by lowering the bias attribute's pull on the truth
-pathway, or picking a different attribute for `biasAttributeKey`.
+learned a real signal. There is no config field that directly wires the bias
+attribute into the truth: `targetAt` in `scripts/alien/outcomes.ts` computes
+`target` from `truthScore` (the `truthPathway` column) plus independent noise
+only — `biasValues` never appears in it — and `config-validation.ts`'s
+`checkBias` already refuses a config where the bias attribute's `pathway`
+equals `truthPathway`. So a real failure here almost always traces back to
+`pathways-are-orthogonal` (self-check 8) breaking first: if the bias
+attribute's own pathway becomes correlated with `truthPathway` through the
+vocabulary weights, that correlation leaks into `corr(target, bias)` even
+though nothing in `solveOutcomes` intended it to. Look at the
+`pathways-are-orthogonal` subsection below before assuming this check has its
+own separate fix.
 
 ### bias-is-detectable
 
 Measures `corr(model_correct, resource_stressed)`. **A failure here means the
 bias is real but too weak to find** — a downstream analysis correlating model
-correctness against attributes wouldn't turn it up. Fix by widening the gap
-between `errorRateWhenBiasOn` and `errorRateWhenBiasOff`, or increasing
-`logitScale`.
+correctness against attributes wouldn't turn it up. `modelCorrect` comes from
+`classification`, and `solveOutcomes` (`scripts/alien/outcomes.ts`) solves
+`classification` by bisecting `beta` until the error rate among
+`resource_stressed = 1` conversations matches `errorRateWhenBiasOn`, while
+the error rate among `resource_stressed = 0` conversations is separately
+bisected to match `errorRateWhenBiasOff`. The gap between those two requested
+error rates is what drives `model_correct` to differ by group, which is what
+creates the correlation with `resource_stressed` in the first place —
+`config-validation.ts`'s `checkBias` even rejects a config where
+`errorRateWhenBiasOn` doesn't exceed `errorRateWhenBiasOff`, "or there is no
+bias." So the fix is to widen that gap (raise `errorRateWhenBiasOn`, lower
+`errorRateWhenBiasOff`, or both). **`logitScale` is not a fix**: it only
+rescales `classificationProbability`'s logit in `solveOutcomes` — its own doc
+comment in `scripts/alien/config-types.ts` says it is "Purely cosmetic ... 
+cannot move the 0.5 decision boundary or any error rate," and `classification`
+itself never reads it at all.
 
 ### decoys-are-decoys
 
