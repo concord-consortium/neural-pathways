@@ -146,7 +146,7 @@ function decoysAreDecoys(run: GeneratorRun): CheckResult {
       const r = pearson(values, corpus.scores.map(row => row[p])).r ?? 0;
       largest = Math.max(largest, Math.abs(r));
       if (Math.abs(r) > limit) {
-        offenders.push(`${attribute.key} vs pathway ${p}: ${r.toFixed(3)}`);
+        offenders.push(`${attribute.key} vs pathway ${p}: ${r.toFixed(3)} (limit ${limit})`);
       }
     }
   }
@@ -168,7 +168,7 @@ function pathwaysAreOrthogonal(run: GeneratorRun): CheckResult {
     for (let b = a + 1; b < config.pathwayCount; b++) {
       const r = pearson(corpus.scores.map(row => row[a]), corpus.scores.map(row => row[b])).r ?? 0;
       offDiagonal.push(r);
-      if (Math.abs(r) > limit) offenders.push(`P${a} vs P${b}: ${r.toFixed(3)}`);
+      if (Math.abs(r) > limit) offenders.push(`P${a} vs P${b}: ${r.toFixed(3)} (limit ${limit})`);
     }
   }
   return {
