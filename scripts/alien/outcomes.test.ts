@@ -56,4 +56,31 @@ describe("solveOutcomes", () => {
     expect(again.classification).toEqual(outcomes.classification);
     expect(again.beta).toBe(outcomes.beta);
   });
+
+  it("throws when errorRateWhenBiasOn is unreachable", () => {
+    const config = { ...alienConfig, errorRateWhenBiasOn: 0.6 };
+    expect(() => solveOutcomes(corpus.scores, solvedAttributes, config, createRng(3)))
+      .toThrow(/errorRateWhenBiasOn: requested 0\.6.*reachable limit/s);
+  });
+
+  it("throws when errorRateWhenBiasOff is unreachable", () => {
+    const config = { ...alienConfig, errorRateWhenBiasOff: 0.6, errorRateWhenBiasOn: 0.9 };
+    expect(() => solveOutcomes(corpus.scores, solvedAttributes, config, createRng(3)))
+      .toThrow(/errorRateWhenBiasOff: requested 0\.6.*reachable limit/s);
+  });
+
+  it("throws when the bias attribute was not solved", () => {
+    const withoutBias = solvedAttributes.filter(attribute => attribute.key !== alienConfig.biasAttributeKey);
+    expect(() => solveOutcomes(corpus.scores, withoutBias, alienConfig, createRng(3)))
+      .toThrow(`Bias attribute "${alienConfig.biasAttributeKey}" was not solved`);
+  });
+
+  it("throws when the bias attribute takes only one value", () => {
+    const constantBias = solvedAttributes.map(attribute =>
+      (attribute.key === alienConfig.biasAttributeKey
+        ? { ...attribute, values: attribute.values.map(() => 0) }
+        : attribute));
+    expect(() => solveOutcomes(corpus.scores, constantBias, alienConfig, createRng(3)))
+      .toThrow(`Bias attribute "${alienConfig.biasAttributeKey}" takes only one value; nothing to bias`);
+  });
 });

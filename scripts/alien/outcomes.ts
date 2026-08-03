@@ -32,6 +32,8 @@ export interface Outcomes {
 const BISECTION_ROUNDS = 60;
 const MAX_SIGMA = 5;
 const MIN_BETA = -5;
+/** Largest gap between a requested error rate and the achieved one before solveOutcomes throws. */
+const ERROR_RATE_TOLERANCE = 0.02;
 
 function errorRateOver(
   indices: number[], truth: number[], predicted: number[],
@@ -86,9 +88,24 @@ export function solveOutcomes(
   const sigmaTarget = (sigmaLow + sigmaHigh) / 2;
   const target = targetAt(sigmaTarget);
 
-  // Step 2: beta against the biased group. beta runs negative, and the further
-  // it goes the more items the model wrongly calls "wait", so the error rate
-  // rises as beta falls.
+  const achievedOffRate = errorRateOver(offIndices, target, classificationAt(0));
+  if (Math.abs(achievedOffRate - config.errorRateWhenBiasOff) > ERROR_RATE_TOLERANCE) {
+    const reachableOffRate = errorRateOver(offIndices, targetAt(MAX_SIGMA), classificationAt(0));
+    throw new Error(
+      `errorRateWhenBiasOff: requested ${config.errorRateWhenBiasOff} but sigma saturated at the `
+      + `MAX_SIGMA=${MAX_SIGMA} rail, achieving only ${achievedOffRate.toFixed(4)} (reachable limit `
+      + `${reachableOffRate.toFixed(4)}). Lower errorRateWhenBiasOff toward that limit; noise on the `
+      + `truth cannot push the off-group error rate any higher than this.`,
+    );
+  }
+
+  // Step 2: beta against the biased group. beta runs negative, and as it falls, an
+  // on-group item flips 1 -> 0 at beta = -z. When target = 1 that flip adds an
+  // error; when target = 0 it removes one instead, so a falling beta does not
+  // raise the error rate unconditionally. It does raise it here because target and
+  // classification agree on the large majority of on-group items at beta = 0, so
+  // most flips add an error rather than remove one — true at the shipped config,
+  // not a general guarantee.
   let betaLow = MIN_BETA;
   let betaHigh = 0;
   for (let round = 0; round < BISECTION_ROUNDS; round++) {
@@ -98,6 +115,17 @@ export function solveOutcomes(
     else betaLow = middle;
   }
   const beta = (betaLow + betaHigh) / 2;
+
+  const achievedOnRate = errorRateOver(onIndices, target, classificationAt(beta));
+  if (Math.abs(achievedOnRate - config.errorRateWhenBiasOn) > ERROR_RATE_TOLERANCE) {
+    const reachableOnRate = errorRateOver(onIndices, target, classificationAt(MIN_BETA));
+    throw new Error(
+      `errorRateWhenBiasOn: requested ${config.errorRateWhenBiasOn} but beta saturated at the `
+      + `MIN_BETA=${MIN_BETA} rail, achieving only ${achievedOnRate.toFixed(4)} (reachable limit `
+      + `${reachableOnRate.toFixed(4)}). Lower errorRateWhenBiasOn toward that limit; the bias `
+      + `coefficient cannot push the on-group error rate any higher than this.`,
+    );
+  }
 
   const classification = classificationAt(beta);
   const classificationProbability = truthScore.map((z, i) => {
