@@ -122,3 +122,14 @@ export function solveAttributes(
 ): SolvedAttribute[] {
   return config.attributes.map(attribute => solveAttribute(attribute, scores, config, rng));
 }
+
+/**
+ * Lookup that fails loudly. `no-non-null-assertion` is on outside tests, and
+ * silently treating a missing attribute as absent would turn a config mistake
+ * into a check that quietly passes.
+ */
+export function solvedFor(solvedAttributes: SolvedAttribute[], key: string): SolvedAttribute {
+  const solved = solvedAttributes.find(entry => entry.key === key);
+  if (!solved) throw new Error(`Attribute "${key}" was not solved`);
+  return solved;
+}
