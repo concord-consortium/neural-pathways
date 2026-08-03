@@ -47,4 +47,32 @@ describe("createRng", () => {
     expect(counts[1] / counts[0]).toBeGreaterThan(2.7);
     expect(counts[1] / counts[0]).toBeLessThan(3.3);
   });
+
+  it("can pick any element from the array", () => {
+    const rng = createRng(13);
+    const items = ["a", "b", "c", "d"];
+    const picked = new Set<string>();
+    for (let i = 0; i < 1000; i++) {
+      const result = rng.pick(items);
+      picked.add(result);
+      expect(items).toContain(result);
+    }
+    // With seed 13 over 1000 draws, we should see both first and last elements
+    expect(picked).toContain("a");
+    expect(picked).toContain("d");
+  });
+
+  it("throws when weightedIndex gets all-zero weights", () => {
+    const rng = createRng(4);
+    expect(() => rng.weightedIndex([0, 0])).toThrow(
+      "weightedIndex: weights must include at least one positive value"
+    );
+  });
+
+  it("throws when weightedIndex gets empty weights", () => {
+    const rng = createRng(6);
+    expect(() => rng.weightedIndex([])).toThrow(
+      "weightedIndex: weights must include at least one positive value"
+    );
+  });
 });
