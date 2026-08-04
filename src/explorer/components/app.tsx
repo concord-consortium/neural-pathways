@@ -5,8 +5,8 @@ import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope, ViewMode } from
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { flattenItem } from "../utils/flatten-item";
 import { buildSeries } from "../utils/build-series";
-import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 import { ActiveDataset, activateDataset } from "../../shared/datasets/dataset-config";
+import { DATASET_LIST, DEFAULT_DATASET_ID, datasetFromId } from "../../shared/datasets/registry";
 import { SearchInput } from "./search-input";
 import { ResultsPanel } from "./results-panel";
 import { ItemPanel } from "./item-panel";
@@ -14,6 +14,7 @@ import { PathwayPanel } from "./pathway-panel";
 import { WordEffectsPanel } from "./word-effects-panel";
 import { SettingsMenu } from "./settings-menu";
 import { CorrelationsView } from "./correlations-view";
+import { DatasetSelector } from "./dataset-selector";
 
 import "./app.scss";
 
@@ -27,8 +28,11 @@ function getHashParams(): Record<string, string> {
   return params;
 }
 
-function updateHash(itemId: string | null, fitName: string, query?: string, view?: ViewMode) {
+function updateHash(
+  datasetId: string, itemId: string | null, fitName: string, query?: string, view?: ViewMode,
+) {
   const parts: string[] = [];
+  if (datasetId !== DEFAULT_DATASET_ID) parts.push(`dataset=${encodeURIComponent(datasetId)}`);
   if (itemId) parts.push(`item=${encodeURIComponent(itemId)}`);
   if (fitName) parts.push(`fit=${encodeURIComponent(fitName)}`);
   if (query) parts.push(`q=${encodeURIComponent(query)}`);
@@ -41,6 +45,8 @@ function updateHash(itemId: string | null, fitName: string, query?: string, view
 
 export const App = () => {
   // --- Data loading state ---
+  const [datasetId, setDatasetId] = useState<string>(() => datasetFromId(getHashParams().dataset).id);
+  const datasetConfig = datasetFromId(datasetId);
   const [indexData, setIndexData] = useState<S3Index | null>(null);
   const [dataset, setDataset] = useState<ActiveDataset | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -64,6 +70,24 @@ export const App = () => {
   // --- Search state ---
   const [searchQuery, setSearchQuery] = useState<string>("");
   const deferredQuery = useDeferredValue(searchQuery);
+
+  // --- Dataset switching (selector or hash) ---
+  // View mode is deliberately not reset: Explore versus Correlations is a
+  // statement about how you are looking, not about what. The SHAP cache must be
+  // cleared — it is keyed by fit/bucket, and two datasets can share a bucket name.
+  const handleDatasetChange = useCallback((id: string) => {
+    if (id === datasetId) return;
+    setDatasetId(id);
+    setIndexData(null);
+    setLoadError(null);
+    setSelectedItemId(null);
+    setSelectedPathways(new Set());
+    setSearchQuery("");
+    setSelectedFitName("");
+    shapCacheRef.current = new Map();
+    setRawShapData(null);
+    setShapLoadedKey("");
+  }, [datasetId]);
 
   // --- Flatten items for search ---
   const flatItems = useMemo(() => {
@@ -93,36 +117,44 @@ export const App = () => {
   const effectiveSelectedItemId = selectedItemId && filteredItems.some(r => r.id === selectedItemId)
     ? selectedItemId : null;
 
-  // --- Fetch index on mount ---
+  // --- Fetch index on dataset change (including the initial mount) ---
   useEffect(() => {
-    fetchIndex(yelpDataset)
+    fetchIndex(datasetConfig)
       .then(data => {
         // resolveAttributes validates a list that, for a generated dataset,
         // arrived over the network — so it can throw. Doing this here routes a
         // bad index to the error state instead of throwing during render.
-        setDataset(activateDataset(yelpDataset, data));
+        setDataset(activateDataset(datasetConfig, data));
         setIndexData(data);
-        const hashParams = getHashParams();
         const names = Object.keys(data.metadata.fa_fits);
-        const fitName = hashParams.fit && names.includes(hashParams.fit)
-          ? hashParams.fit : names[0];
-        setSelectedFitName(fitName);
-        if (hashParams.q) {
-          setSearchQuery(hashParams.q);
-        }
-        if (hashParams.view === "correlations") {
-          setViewMode("correlations");
-        }
-        if (data.items.length > 0) {
-          const itemId = hashParams.item && data.items.some(r => r.id === hashParams.item)
-            ? hashParams.item : null;
-          if (itemId) {
-            setSelectedItemId(itemId);
+        const hashParams = getHashParams();
+        // A dropdown-driven switch leaves the previous dataset's item/fit/query
+        // sitting in the URL until the hash-sync effect below catches up with
+        // the reset state; only a hash that already names this dataset (a true
+        // navigation, including the initial load) is trustworthy here.
+        if (datasetFromId(hashParams.dataset).id === datasetId) {
+          const fitName = hashParams.fit && names.includes(hashParams.fit)
+            ? hashParams.fit : names[0];
+          setSelectedFitName(fitName);
+          if (hashParams.q) {
+            setSearchQuery(hashParams.q);
           }
+          if (hashParams.view === "correlations") {
+            setViewMode("correlations");
+          }
+          if (data.items.length > 0) {
+            const itemId = hashParams.item && data.items.some(r => r.id === hashParams.item)
+              ? hashParams.item : null;
+            if (itemId) {
+              setSelectedItemId(itemId);
+            }
+          }
+        } else {
+          setSelectedFitName(names[0]);
         }
       })
       .catch(err => setLoadError(err.message));
-  }, []);
+  }, [datasetId, datasetConfig]);
 
   // --- Selected item ---
   const selectedItem = useMemo(
@@ -140,7 +172,7 @@ export const App = () => {
     if (!effectiveSelectedItemId || !hasShapForCurrentFit) return;
     let cancelled = false;
     const key = `${effectiveSelectedItemId}:${selectedFitName}`;
-    fetchShap(yelpDataset, effectiveSelectedItemId, selectedFitName, shapCacheRef.current)
+    fetchShap(datasetConfig, effectiveSelectedItemId, selectedFitName, shapCacheRef.current)
       .then(data => {
         if (!cancelled) {
           setRawShapData(data);
@@ -155,7 +187,7 @@ export const App = () => {
         }
       });
     return () => { cancelled = true; };
-  }, [effectiveSelectedItemId, selectedFitName, hasShapForCurrentFit]);
+  }, [effectiveSelectedItemId, selectedFitName, hasShapForCurrentFit, datasetConfig]);
 
   // Treat SHAP data as null if it doesn't match the current item+fit
   const shapDataCurrent = shapLoadedKey === shapRequestKey;
@@ -165,14 +197,22 @@ export const App = () => {
   // --- Sync hash (write on state change, read on hashchange) ---
   useEffect(() => {
     if (selectedFitName) {
-      updateHash(effectiveSelectedItemId, selectedFitName, searchQuery || undefined, viewMode);
+      updateHash(datasetId, effectiveSelectedItemId, selectedFitName, searchQuery || undefined, viewMode);
     }
-  }, [effectiveSelectedItemId, selectedFitName, searchQuery, viewMode]);
+  }, [datasetId, effectiveSelectedItemId, selectedFitName, searchQuery, viewMode]);
 
   useEffect(() => {
     if (!indexData) return;
     const handleHashChange = () => {
       const hashParams = getHashParams();
+      const hashDatasetId = datasetFromId(hashParams.dataset).id;
+      if (hashDatasetId !== datasetId) {
+        // A new dataset name in the hash — load it the same way the selector
+        // does. The fetch effect applies this same hash's item/fit/q once the
+        // new dataset's data arrives.
+        handleDatasetChange(hashDatasetId);
+        return;
+      }
       const validFits = Object.keys(indexData.metadata.fa_fits);
       if (hashParams.fit && validFits.includes(hashParams.fit)) {
         setSelectedFitName(hashParams.fit);
@@ -187,7 +227,7 @@ export const App = () => {
     };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [indexData]);
+  }, [indexData, datasetId, handleDatasetChange]);
 
   // --- Derived fit data ---
   const selectedFit = indexData?.metadata.fa_fits[selectedFitName] ?? null;
@@ -265,16 +305,25 @@ export const App = () => {
       <h1 className="explorer-title">Pathway Explorer</h1>
 
       <div className="explorer-top-bar">
-        <label className="explorer-fit-label">FA Fit:</label>
-        <select
-          className="explorer-fit-selector"
-          value={selectedFitName}
-          onChange={e => handleFitChange(e.target.value)}
-        >
-          {fitNames.map(name => (
-            <option key={name} value={name}>{name}</option>
-          ))}
-        </select>
+        <DatasetSelector
+          datasets={DATASET_LIST}
+          selectedId={datasetId}
+          onChange={handleDatasetChange}
+        />
+        {fitNames.length > 1 && (
+          <>
+            <label className="explorer-fit-label">FA Fit:</label>
+            <select
+              className="explorer-fit-selector"
+              value={selectedFitName}
+              onChange={e => handleFitChange(e.target.value)}
+            >
+              {fitNames.map(name => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </>
+        )}
         <SearchInput
           query={searchQuery}
           onQueryChange={setSearchQuery}
