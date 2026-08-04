@@ -5,7 +5,9 @@ import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope, ViewMode } from
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { flattenItem } from "../utils/flatten-item";
 import { buildSeries } from "../utils/build-series";
-import { LoadedDataset, activateDataset, applyCommissions, NO_COMMISSIONS } from "../../shared/datasets/dataset-config";
+import {
+  LoadedDataset, activateDataset, applyCommissions, codeableAttributes, NO_COMMISSIONS,
+} from "../../shared/datasets/dataset-config";
 import { DATASET_LIST, DEFAULT_DATASET_ID, datasetFromId } from "../../shared/datasets/registry";
 import { SearchInput } from "./search-input";
 import { ResultsPanel } from "./results-panel";
@@ -15,6 +17,7 @@ import { WordEffectsPanel } from "./word-effects-panel";
 import { SettingsMenu } from "./settings-menu";
 import { CorrelationsView } from "./correlations-view";
 import { DatasetSelector } from "./dataset-selector";
+import { CodingsMenu } from "./codings-menu";
 
 import "./app.scss";
 
@@ -28,19 +31,41 @@ function getHashParams(): Record<string, string> {
   return params;
 }
 
-function updateHash(
-  datasetId: string, itemId: string | null, fitName: string, query?: string, view?: ViewMode,
-) {
+interface HashState {
+  datasetId: string;
+  itemId: string | null;
+  fitName: string;
+  query?: string;
+  view?: ViewMode;
+  commissioned: ReadonlySet<string>;
+}
+
+function updateHash(state: HashState) {
   const parts: string[] = [];
-  if (datasetId !== DEFAULT_DATASET_ID) parts.push(`dataset=${encodeURIComponent(datasetId)}`);
-  if (itemId) parts.push(`item=${encodeURIComponent(itemId)}`);
-  if (fitName) parts.push(`fit=${encodeURIComponent(fitName)}`);
-  if (query) parts.push(`q=${encodeURIComponent(query)}`);
-  if (view && view !== "explore") parts.push(`view=${encodeURIComponent(view)}`);
+  if (state.datasetId !== DEFAULT_DATASET_ID) parts.push(`dataset=${encodeURIComponent(state.datasetId)}`);
+  if (state.itemId) parts.push(`item=${encodeURIComponent(state.itemId)}`);
+  if (state.fitName) parts.push(`fit=${encodeURIComponent(state.fitName)}`);
+  if (state.query) parts.push(`q=${encodeURIComponent(state.query)}`);
+  if (state.view && state.view !== "explore") parts.push(`view=${encodeURIComponent(state.view)}`);
+  if (state.commissioned.size > 0) {
+    // Each key is encoded individually, joined by a literal comma, rather than
+    // encoding the whole joined string — the latter turns "," into "%2C" and
+    // still round-trips through getHashParams's decodeURIComponent, but the
+    // resulting hash would no longer read as "coded=a,b" to anyone eyeballing
+    // or diffing a shared link.
+    const keys = [...state.commissioned].sort().map(encodeURIComponent).join(",");
+    parts.push(`coded=${keys}`);
+  }
   const newHash = parts.length > 0 ? `#${parts.join("&")}` : "";
   if (window.location.hash !== newHash) {
     history.replaceState(null, "", newHash || window.location.pathname);
   }
+}
+
+/** Splits the coded param. Validation happens once the dataset's attributes arrive. */
+function parseCommissioned(value: string | undefined): ReadonlySet<string> {
+  if (!value) return NO_COMMISSIONS;
+  return new Set(value.split(",").filter(Boolean));
 }
 
 export const App = () => {
@@ -49,11 +74,13 @@ export const App = () => {
   const datasetConfig = datasetFromId(datasetId);
   const [indexData, setIndexData] = useState<S3Index | null>(null);
   const [loaded, setLoaded] = useState<LoadedDataset | null>(null);
+  const [commissioned, setCommissioned] = useState<ReadonlySet<string>>(
+    () => parseCommissioned(getHashParams().coded),
+  );
 
-  // Task 3 replaces NO_COMMISSIONS with the commissioned-set state.
   const dataset = useMemo(
-    () => (loaded ? applyCommissions(loaded, NO_COMMISSIONS) : null),
-    [loaded],
+    () => (loaded ? applyCommissions(loaded, commissioned) : null),
+    [loaded, commissioned],
   );
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedFitName, setSelectedFitName] = useState<string>("");
@@ -91,6 +118,7 @@ export const App = () => {
     setSelectedPathways(new Set());
     setSearchQuery("");
     setSelectedFitName("");
+    setCommissioned(NO_COMMISSIONS);
     shapCacheRef.current = new Map();
     setRawShapData(null);
     setShapLoadedKey("");
@@ -140,7 +168,8 @@ export const App = () => {
         // resolveAttributes validates a list that, for a generated dataset,
         // arrived over the network — so it can throw. Doing this here routes a
         // bad index to the error state instead of throwing during render.
-        setLoaded(activateDataset(datasetConfig, data));
+        const loadedDataset = activateDataset(datasetConfig, data);
+        setLoaded(loadedDataset);
         setIndexData(data);
         const names = Object.keys(data.metadata.fa_fits);
         const hashParams = getHashParams();
@@ -165,8 +194,15 @@ export const App = () => {
               setSelectedItemId(itemId);
             }
           }
+          const codeable = new Set(
+            codeableAttributes(loadedDataset.allAttributes).map(a => a.key),
+          );
+          setCommissioned(new Set(
+            [...parseCommissioned(hashParams.coded)].filter(key => codeable.has(key)),
+          ));
         } else {
           setSelectedFitName(names[0]);
+          setCommissioned(NO_COMMISSIONS);
         }
       })
       .catch(err => {
@@ -179,6 +215,15 @@ export const App = () => {
   const selectedItem = useMemo(
     () => indexData?.items.find(r => r.id === effectiveSelectedItemId),
     [indexData, effectiveSelectedItemId],
+  );
+
+  // Declared here, with the other memos, rather than after the loading
+  // early-returns below: keeping the hook order stable across the loading and
+  // loaded renders is what makes this safe. This is the one place in the app
+  // that legitimately reads allAttributes.
+  const codings = useMemo(
+    () => (dataset ? codeableAttributes(dataset.allAttributes) : []),
+    [dataset],
   );
 
   // --- SHAP availability ---
@@ -216,9 +261,16 @@ export const App = () => {
   // --- Sync hash (write on state change, read on hashchange) ---
   useEffect(() => {
     if (selectedFitName) {
-      updateHash(datasetId, effectiveSelectedItemId, selectedFitName, searchQuery || undefined, viewMode);
+      updateHash({
+        datasetId,
+        itemId: effectiveSelectedItemId,
+        fitName: selectedFitName,
+        query: searchQuery || undefined,
+        view: viewMode,
+        commissioned,
+      });
     }
-  }, [datasetId, effectiveSelectedItemId, selectedFitName, searchQuery, viewMode]);
+  }, [datasetId, effectiveSelectedItemId, selectedFitName, searchQuery, viewMode, commissioned]);
 
   useEffect(() => {
     if (!indexData) return;
@@ -241,6 +293,11 @@ export const App = () => {
       }
       if (hashParams.q !== undefined) {
         setSearchQuery(hashParams.q);
+      }
+      if (hashParams.coded !== undefined) {
+        setCommissioned(parseCommissioned(hashParams.coded));
+      } else {
+        setCommissioned(NO_COMMISSIONS);
       }
       setViewMode(hashParams.view === "correlations" ? "correlations" : "explore");
     };
@@ -307,6 +364,13 @@ export const App = () => {
     setSelectedFitName(fitName);
     setSelectedPathways(new Set());
   }, []);
+
+  // --- Commissioning (unlimited, one-way, with a single reset) ---
+  const handleCommission = useCallback((key: string) => {
+    setCommissioned(prev => (prev.has(key) ? prev : new Set([...prev, key])));
+  }, []);
+
+  const handleResetCommissions = useCallback(() => setCommissioned(NO_COMMISSIONS), []);
 
   // --- Loading / error states ---
   if (loadError) {
@@ -384,6 +448,16 @@ export const App = () => {
             Correlations
           </button>
         </div>
+        {codings.length > 0 && (
+          <CodingsMenu
+            codings={codings}
+            commissioned={commissioned}
+            itemCount={indexData.items.length}
+            itemNoun={dataset.config.itemNoun}
+            onCommission={handleCommission}
+            onReset={handleResetCommissions}
+          />
+        )}
         <SettingsMenu
           scaleMode={scaleMode}
           onScaleModeChange={setScaleMode}

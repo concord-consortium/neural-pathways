@@ -224,4 +224,69 @@ describe("App dataset switching", () => {
     // The visible one is still there, so this is not passing by rendering nothing.
     expect(document.body.textContent).toContain("Voices raised");
   });
+
+  describe("commissioning", () => {
+    async function renderAlien(hash = "#dataset=alien") {
+      window.location.hash = hash;
+      render(<App />);
+      await resolveNext("alien", makeIndex("alien-fa-4", alienItem, alienAttributes));
+    }
+
+    it("commissions an attribute and writes it to the hash", async () => {
+      await renderAlien();
+      fireEvent.click(screen.getByRole("button", { name: /codings/i }));
+      fireEvent.click(screen.getByTestId("commission-resource_stressed"));
+
+      expect(document.body.textContent).toContain("Resource stressed");
+      expect(window.location.hash).toContain("coded=resource_stressed");
+    });
+
+    it("applies a commissioned attribute named in the hash on load", async () => {
+      await renderAlien("#dataset=alien&coded=resource_stressed");
+      // The commissioned label only renders inside the Codings dialog (as a
+      // "Commissioned in this session" entry) or as an item chip; neither
+      // exists until something is opened or selected, so open the dialog to
+      // observe the hash-driven commission actually landed.
+      fireEvent.click(screen.getByRole("button", { name: /codings/i }));
+      expect(document.body.textContent).toContain("Resource stressed");
+    });
+
+    it("writes commissioned keys in sorted order", async () => {
+      // young_present first, so insertion order and sorted order differ and the
+      // test would fail if the keys were written in the order they were clicked.
+      await renderAlien();
+      fireEvent.click(screen.getByRole("button", { name: /codings/i }));
+      fireEvent.click(screen.getByTestId("commission-young_present"));
+      fireEvent.click(screen.getByTestId("commission-resource_stressed"));
+      expect(window.location.hash).toContain("coded=resource_stressed,young_present");
+    });
+
+    it("drops coded from the hash on reset", async () => {
+      await renderAlien("#dataset=alien&coded=resource_stressed");
+      fireEvent.click(screen.getByRole("button", { name: /codings/i }));
+      fireEvent.click(screen.getByRole("button", { name: /reset/i }));
+      expect(window.location.hash).not.toContain("coded=");
+    });
+
+    it("clears commissions when the dataset changes", async () => {
+      await renderAlien("#dataset=alien&coded=resource_stressed");
+      fireEvent.change(screen.getByLabelText("Dataset:"), { target: { value: "yelp" } });
+      await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+      expect(window.location.hash).not.toContain("coded=");
+    });
+
+    it("ignores a coded key that names no attribute of this dataset", async () => {
+      // A stale or hand-edited link should show something rather than erroring,
+      // and the junk key must not survive into the URL the app writes back.
+      await renderAlien("#dataset=alien&coded=not_a_real_key");
+      expect(screen.getByText("Pathway Explorer")).toBeInTheDocument();
+      expect(window.location.hash).not.toContain("not_a_real_key");
+    });
+
+    it("shows no codings button for a dataset that hides nothing", async () => {
+      render(<App />);
+      await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+      expect(screen.queryByRole("button", { name: /codings/i })).toBeNull();
+    });
+  });
 });

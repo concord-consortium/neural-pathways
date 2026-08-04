@@ -235,7 +235,35 @@ test("explorer loads the alien dataset and selects a conversation", async ({ pag
 
   await page.getByTestId("result-card").first().click();
   await expect(page.getByTestId("item-observation")).toBeVisible();
-  await expect(page.getByTestId("attribute-chip-resource_stressed")).toBeVisible();
+  // voices_raised, not resource_stressed: resource_stressed is one of the alien
+  // dataset's four hidden attributes (see the commissioning test below) and has
+  // no chip until commissioned.
+  await expect(page.getByTestId("attribute-chip-voices_raised")).toBeVisible();
+});
+
+test("explorer commissions a hidden coding", async ({ page }) => {
+  await page.goto("/explorer.html#dataset=alien");
+  await expect(page.getByText("Pathway Explorer")).toBeVisible();
+
+  // Hidden before commissioning: the search finds nothing and no chip exists.
+  // toHaveText (exact), not toContainText: the post-commission count turns out
+  // to be 240 of 800, and "240 of 800" contains "0 of 800" as a substring, so
+  // a toContainText check below would pass even if commissioning had done
+  // nothing.
+  const countText = page.locator(".results-panel-count");
+  await expect(countText).toHaveText("800 of 800");
+  await page.getByPlaceholder("voices_raised").fill("resource_stressed:1");
+  await expect(countText).toHaveText("0 of 800");
+
+  await page.getByRole("button", { name: /codings/i }).click();
+  await page.getByTestId("commission-resource_stressed").click();
+
+  await expect(countText).not.toHaveText("0 of 800");
+  // The app writes the hash from a useEffect that fires a render pass after the
+  // click commits, so a one-shot page.url() check can race ahead of
+  // history.replaceState — poll instead, matching the pattern used below for
+  // the dataset-switch hash check.
+  await expect.poll(() => page.url()).toContain("coded=resource_stressed");
 });
 
 test("explorer switches back to Yelp and drops the dataset param", async ({ page }) => {
