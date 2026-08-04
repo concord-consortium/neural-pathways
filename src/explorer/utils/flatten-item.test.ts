@@ -1,10 +1,13 @@
 import { flattenItem } from "./flatten-item";
 import { S3Item, S3Index } from "../../shared/types/s3-data";
+import { AttributeDefinition } from "../../shared/types/attributes";
 import { yelpDataset } from "../../shared/datasets/yelp-dataset";
-import { activateDataset } from "../../shared/datasets/dataset-config";
+import {
+  activateDataset, applyCommissions, NO_COMMISSIONS, LoadedDataset,
+} from "../../shared/datasets/dataset-config";
 
 const emptyIndex = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
-const activeYelp = activateDataset(yelpDataset, emptyIndex);
+const activeYelp = applyCommissions(activateDataset(yelpDataset, emptyIndex), NO_COMMISSIONS);
 
 const makeItem = (overrides: Partial<S3Item> = {}): S3Item => ({
   id: "r1",
@@ -156,5 +159,35 @@ describe("flattenItem attributes", () => {
     const flat = flattenItem(item, "fit_a", activeYelp);
     expect("observation" in flat).toBe(false);
     expect(JSON.stringify(flat)).not.toContain("hesitated");
+  });
+});
+
+// A hidden attribute that reaches the flat object is searchable, which hands a
+// student the answer they were supposed to decide whether to pay for. Pinned
+// here because a leak would be invisible: nothing renders this object.
+describe("flattenItem visibility", () => {
+  const hidden: AttributeDefinition = {
+    key: "resource_stressed", label: "Resource stressed", description: "d",
+    type: "binary", hidden: true,
+  };
+
+  function loadedWithHidden(): LoadedDataset {
+    return {
+      config: yelpDataset,
+      allAttributes: [hidden],
+      getAttributeValue: () => 1,
+    };
+  }
+
+  it("omits an uncommissioned attribute from the search object", () => {
+    const flat = flattenItem(makeItem(), "fit_a",
+      applyCommissions(loadedWithHidden(), NO_COMMISSIONS));
+    expect("resource_stressed" in flat).toBe(false);
+  });
+
+  it("includes it once commissioned", () => {
+    const flat = flattenItem(makeItem(), "fit_a",
+      applyCommissions(loadedWithHidden(), new Set(["resource_stressed"])));
+    expect(flat.resource_stressed).toBe(1);
   });
 });

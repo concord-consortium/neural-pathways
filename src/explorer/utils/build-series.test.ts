@@ -1,5 +1,9 @@
 import { S3Index, S3Item } from "../../shared/types/s3-data";
-import { ActiveDataset, DatasetConfig, activateDataset } from "../../shared/datasets/dataset-config";
+import { AttributeDefinition } from "../../shared/types/attributes";
+import {
+  ActiveDataset, DatasetConfig, LoadedDataset,
+  activateDataset, applyCommissions, NO_COMMISSIONS,
+} from "../../shared/datasets/dataset-config";
 import { buildSeries } from "./build-series";
 
 const emptyIndex = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
@@ -26,7 +30,7 @@ const testConfig: DatasetConfig = {
   },
 };
 
-const dataset: ActiveDataset = activateDataset(testConfig, emptyIndex);
+const dataset: ActiveDataset = applyCommissions(activateDataset(testConfig, emptyIndex), NO_COMMISSIONS);
 
 const makeItem = (overrides: Partial<S3Item> = {}): S3Item => ({
   id: "r1",
@@ -119,5 +123,35 @@ describe("buildSeries", () => {
     const series = buildSeries([], dataset, "fit_a", 2);
     expect(series).toHaveLength(4);
     expect(series[0].values).toEqual([]);
+  });
+});
+
+// A hidden attribute that reaches a series is plottable in the correlation
+// matrix and usable in a regression, which hands a student the answer they
+// were supposed to decide whether to pay for.
+describe("buildSeries visibility", () => {
+  const hidden: AttributeDefinition = {
+    key: "resource_stressed", label: "Resource stressed", description: "d",
+    type: "binary", hidden: true,
+  };
+
+  function loadedWithHidden(): LoadedDataset {
+    return {
+      config: testConfig,
+      allAttributes: [hidden],
+      getAttributeValue: () => 1,
+    };
+  }
+
+  it("omits an uncommissioned attribute from the series list", () => {
+    const series = buildSeries([makeItem()], applyCommissions(loadedWithHidden(), NO_COMMISSIONS), "fit_a", 0);
+    expect(series.map(s => s.key)).not.toContain("resource_stressed");
+  });
+
+  it("includes it once commissioned", () => {
+    const series = buildSeries(
+      [makeItem()], applyCommissions(loadedWithHidden(), new Set(["resource_stressed"])), "fit_a", 0,
+    );
+    expect(series.map(s => s.key)).toContain("resource_stressed");
   });
 });

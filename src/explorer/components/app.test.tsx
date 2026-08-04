@@ -3,6 +3,7 @@ import { act, render, screen, fireEvent } from "@testing-library/react";
 import { App } from "./app";
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { S3Index, S3FaFit, S3Item } from "../../shared/types/s3-data";
+import { AttributeDefinition } from "../../shared/types/attributes";
 import { DatasetConfig } from "../../shared/datasets/dataset-config";
 
 // The App under test always talks to the network through data-loader; mocking
@@ -40,15 +41,31 @@ function makeItem(id: string, text: string): S3Item {
   };
 }
 
-function makeIndex(fitName: string, item: S3Item): S3Index {
+function makeIndex(
+  fitName: string, item: S3Item, attributes?: AttributeDefinition[],
+): S3Index {
   return {
-    metadata: { fa_fits: { [fitName]: makeFit() }, review_sets: {} },
+    metadata: { fa_fits: { [fitName]: makeFit() }, review_sets: {}, ...(attributes && { attributes }) },
     items: [item],
   };
 }
 
 const yelpItem = makeItem("yelp-item-1", "This is a yelp review about pizza.");
 const alienItem = makeItem("alien-item-1", "This is an alien conversation about tarrak.");
+
+// Two hidden entries, because Task 3's sorted-order test needs a case where
+// insertion order and sorted order differ.
+const alienAttributes: AttributeDefinition[] = [
+  { key: "voices_raised", label: "Voices raised", description: "Volume rose.", type: "binary" },
+  {
+    key: "resource_stressed", label: "Resource stressed",
+    description: "Whether the surroundings showed scarcity.", type: "binary", hidden: true,
+  },
+  {
+    key: "young_present", label: "Young present",
+    description: "Whether any juvenile was present.", type: "binary", hidden: true,
+  },
+];
 
 interface Deferred<T> {
   promise: Promise<T>;
@@ -186,5 +203,25 @@ describe("App dataset switching", () => {
 
     expect(screen.getByText(/Error loading data/i)).toBeInTheDocument();
     expect(screen.getByText(/Duplicate attribute key "target"/i)).toBeInTheDocument();
+  });
+
+  it("renders no trace of an uncommissioned attribute anywhere in the app", async () => {
+    // Covers the chips and the search help dialog together, and will also catch
+    // a future surface that renders attributes without anyone remembering this
+    // constraint exists.
+    window.location.hash = "#dataset=alien";
+    render(<App />);
+    await resolveNext("alien", makeIndex("alien-fa-4", alienItem, alienAttributes));
+
+    // Neither surface that renders attribute labels is on screen by default:
+    // no item is selected (no chips) and the search help dialog starts closed.
+    // Open it so the attribute list actually renders into the document.
+    fireEvent.click(screen.getByLabelText("Search help"));
+
+    expect(document.body.textContent).not.toContain("resource_stressed");
+    expect(document.body.textContent).not.toContain("Resource stressed");
+    expect(document.body.textContent).not.toContain("showed scarcity");
+    // The visible one is still there, so this is not passing by rendering nothing.
+    expect(document.body.textContent).toContain("Voices raised");
   });
 });

@@ -5,7 +5,7 @@ import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope, ViewMode } from
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { flattenItem } from "../utils/flatten-item";
 import { buildSeries } from "../utils/build-series";
-import { ActiveDataset, activateDataset } from "../../shared/datasets/dataset-config";
+import { LoadedDataset, activateDataset, applyCommissions, NO_COMMISSIONS } from "../../shared/datasets/dataset-config";
 import { DATASET_LIST, DEFAULT_DATASET_ID, datasetFromId } from "../../shared/datasets/registry";
 import { SearchInput } from "./search-input";
 import { ResultsPanel } from "./results-panel";
@@ -48,7 +48,13 @@ export const App = () => {
   const [datasetId, setDatasetId] = useState<string>(() => datasetFromId(getHashParams().dataset).id);
   const datasetConfig = datasetFromId(datasetId);
   const [indexData, setIndexData] = useState<S3Index | null>(null);
-  const [dataset, setDataset] = useState<ActiveDataset | null>(null);
+  const [loaded, setLoaded] = useState<LoadedDataset | null>(null);
+
+  // Task 3 replaces NO_COMMISSIONS with the commissioned-set state.
+  const dataset = useMemo(
+    () => (loaded ? applyCommissions(loaded, NO_COMMISSIONS) : null),
+    [loaded],
+  );
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedFitName, setSelectedFitName] = useState<string>("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -79,7 +85,7 @@ export const App = () => {
     if (id === datasetId) return;
     setDatasetId(id);
     setIndexData(null);
-    setDataset(null);
+    setLoaded(null);
     setLoadError(null);
     setSelectedItemId(null);
     setSelectedPathways(new Set());
@@ -134,7 +140,7 @@ export const App = () => {
         // resolveAttributes validates a list that, for a generated dataset,
         // arrived over the network — so it can throw. Doing this here routes a
         // bad index to the error state instead of throwing during render.
-        setDataset(activateDataset(datasetConfig, data));
+        setLoaded(activateDataset(datasetConfig, data));
         setIndexData(data);
         const names = Object.keys(data.metadata.fa_fits);
         const hashParams = getHashParams();
