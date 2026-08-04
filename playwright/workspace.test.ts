@@ -5,7 +5,8 @@ test("renders the landing page with links to visualizations", async ({ page }) =
   await page.goto("/");
   await expect(page.getByText("Neural Pathways")).toBeVisible();
   await expect(page.getByRole("link", { name: "Heatmap" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Explorer" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Explorer", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Alien Explorer" })).toBeVisible();
 });
 
 test("heatmap renders the visualization", async ({ page }) => {
@@ -223,4 +224,29 @@ test("interaction terms appear only when switched on", async ({ page }) => {
   await expect(page.getByTestId("interactions-caution")).toHaveCount(0);
   await page.getByTestId("interactions-toggle").click();
   await expect(page.getByTestId("interactions-caution")).toBeVisible();
+});
+
+test("explorer loads the alien dataset and selects a conversation", async ({ page }) => {
+  await page.goto("/explorer.html#dataset=alien");
+  await expect(page.getByText("Pathway Explorer")).toBeVisible();
+
+  // 800 conversations, and the noun comes from the dataset.
+  await expect(page.locator(".results-panel-count")).toContainText("800");
+
+  await page.getByTestId("result-card").first().click();
+  await expect(page.getByTestId("item-observation")).toBeVisible();
+  await expect(page.getByTestId("attribute-chip-resource_stressed")).toBeVisible();
+});
+
+test("explorer switches back to Yelp and drops the dataset param", async ({ page }) => {
+  await page.goto("/explorer.html#dataset=alien");
+  await expect(page.getByTestId("result-card").first()).toBeVisible();
+
+  await page.getByLabel("Dataset:").selectOption("yelp");
+  await expect(page.getByPlaceholder("stars:5")).toBeVisible();
+
+  // The hash is written from a useEffect that only fires once the fetched Yelp index
+  // has committed to state, a render pass after the placeholder becomes visible, so a
+  // one-shot page.url() check can race ahead of history.replaceState. Poll instead.
+  await expect.poll(() => page.url()).not.toContain("dataset=");
 });
