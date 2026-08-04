@@ -9,6 +9,7 @@ interface ItemPanelProps {
   reconstructionR2: number | null;
   attributes: AttributeDefinition[];
   getAttributeValue: (item: S3Item, key: string) => number | null;
+  classificationLabels: Record<number, string>;
 }
 
 const Stars: React.FC<{ count: number; testId?: string }> = ({ count, testId }) => {
@@ -21,7 +22,7 @@ const Stars: React.FC<{ count: number; testId?: string }> = ({ count, testId }) 
 };
 
 export const ItemPanel: React.FC<ItemPanelProps> = ({
-  item, reconstructionR2, attributes, getAttributeValue,
+  item, reconstructionR2, attributes, getAttributeValue, classificationLabels,
 }) => {
   return (
     <div className="explorer-item-panel">
@@ -35,8 +36,8 @@ export const ItemPanel: React.FC<ItemPanelProps> = ({
           </span>
         )}
         {item.classification != null && (() => {
-          const label = item.classification === 1 ? "positive" : "negative";
-          const pct = (item.classification_probability! * 100).toFixed(1);
+          const label = classificationLabels[item.classification] ?? String(item.classification);
+          const pct = ((item.classification_probability ?? 0) * 100).toFixed(1);
           return (
             <span className={`explorer-item-badge badge-classification-${label}`}>
               predicted: {label} ({pct}%)
@@ -49,6 +50,13 @@ export const ItemPanel: React.FC<ItemPanelProps> = ({
       </div>
 
       <div className="explorer-item-text">{item.text}</div>
+
+      {item.observation && (
+        <div className="explorer-item-observation" data-testid="item-observation">
+          <div className="explorer-item-observation-label">Observer&apos;s note</div>
+          <div className="explorer-item-observation-text">{item.observation}</div>
+        </div>
+      )}
 
       {item.name && (
         <div className="explorer-item-business">

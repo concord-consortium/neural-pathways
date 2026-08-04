@@ -403,6 +403,7 @@ export const App = () => {
                 reconstructionR2={reconstructionR2}
                 attributes={dataset.attributes}
                 getAttributeValue={dataset.getAttributeValue}
+                classificationLabels={dataset.config.classificationLabels}
               />
               <WordEffectsPanel
                 shapData={currentShapData}

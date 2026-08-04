@@ -29,6 +29,11 @@ const testAttributes: AttributeDefinition[] = [
 const testGetValue = (_item: S3Item, key: string): number | null =>
   key === "target" ? 1 : null;
 
+const makeItem = (overrides: Partial<S3Item> = {}): S3Item => ({
+  ...mockItem,
+  ...overrides,
+});
+
 const renderPanel = (item: S3Item = mockItem, r2: number | null = 0.9662) =>
   render(
     <ItemPanel
@@ -36,6 +41,7 @@ const renderPanel = (item: S3Item = mockItem, r2: number | null = 0.9662) =>
       reconstructionR2={r2}
       attributes={testAttributes}
       getAttributeValue={testGetValue}
+      classificationLabels={{ 0: "negative", 1: "positive" }}
     />,
   );
 
@@ -127,8 +133,32 @@ describe("ItemPanel attributes", () => {
         reconstructionR2={0.9662}
         attributes={[]}
         getAttributeValue={testGetValue}
+        classificationLabels={{ 0: "negative", 1: "positive" }}
       />,
     );
     expect(screen.queryByTestId("attribute-chips")).toBeNull();
+  });
+});
+
+describe("ItemPanel observation note", () => {
+  it("shows the observer's note when the item has one", () => {
+    const item = makeItem({ observation: "Two individuals, facing each other." });
+    render(<ItemPanel item={item} reconstructionR2={null} attributes={[]}
+      getAttributeValue={() => null} classificationLabels={{ 0: "wait", 1: "approach" }} />);
+    expect(screen.getByTestId("item-observation").textContent)
+      .toContain("Two individuals, facing each other.");
+  });
+
+  it("renders no note block when the item has none", () => {
+    render(<ItemPanel item={makeItem()} reconstructionR2={null} attributes={[]}
+      getAttributeValue={() => null} classificationLabels={{ 0: "negative", 1: "positive" }} />);
+    expect(screen.queryByTestId("item-observation")).toBeNull();
+  });
+
+  it("labels the prediction from the dataset", () => {
+    const item = makeItem({ classification: 0, classification_probability: 0.152 });
+    render(<ItemPanel item={item} reconstructionR2={null} attributes={[]}
+      getAttributeValue={() => null} classificationLabels={{ 0: "wait", 1: "approach" }} />);
+    expect(screen.getByText(/predicted: wait \(15\.2%\)/)).toBeInTheDocument();
   });
 });
