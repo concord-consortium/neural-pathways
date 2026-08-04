@@ -1,7 +1,6 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { App } from "./app";
-import { S3Index } from "../../shared/types/s3-data";
 
 const mockFit = {
   source_split: "train",
@@ -20,7 +19,7 @@ const mockFit = {
   pathway_score_max: [1.0, 1.0],
 };
 
-const mockIndex: S3Index = {
+const mockIndexWire = {
   metadata: {
     fa_fits: { "train-fa-2": mockFit },
     review_sets: { train: { count: 1, description: "Train" } },
@@ -49,7 +48,7 @@ beforeEach(() => {
   jest.restoreAllMocks();
   global.fetch = jest.fn().mockImplementation((url: string) => {
     if (url.includes("index.json")) {
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockIndex) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockIndexWire) });
     }
     if (url.includes("activations/")) {
       return Promise.resolve({ ok: true, json: () => Promise.resolve(mockBucket) });

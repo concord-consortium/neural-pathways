@@ -8,7 +8,7 @@ import {
   standardizeActivations,
   BASE_URL,
 } from "./data-loader";
-import { S3FaFit, S3Index } from "./types/s3-data";
+import { S3FaFit } from "./types/s3-data";
 
 const mockFit: S3FaFit = {
   source_split: "train",
@@ -27,7 +27,7 @@ const mockFit: S3FaFit = {
   pathway_score_max: [3.0, 2.0],
 };
 
-const mockIndex: S3Index = {
+const mockIndexWire = {
   metadata: {
     fa_fits: { "train-fa-2": mockFit },
     review_sets: { train: { count: 1, description: "Train" } },
@@ -77,13 +77,25 @@ describe("fetchIndex", () => {
   it("fetches and returns the S3 index", async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockIndex),
+      json: () => Promise.resolve(mockIndexWire),
     });
 
     const result = await fetchIndex();
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}index.json`);
-    expect(result.reviews).toHaveLength(1);
-    expect(result.reviews[0].id).toBe("a3f7c2d81e09");
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].id).toBe("a3f7c2d81e09");
+  });
+
+  it("exposes the wire's reviews array as items", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockIndexWire,
+    }) as unknown as typeof fetch;
+
+    const index = await fetchIndex();
+    expect(index.items).toHaveLength(1);
+    expect(index.items[0].id).toBe("a3f7c2d81e09");
+    expect((index as unknown as { reviews?: unknown }).reviews).toBeUndefined();
   });
 
   it("throws on fetch failure", async () => {

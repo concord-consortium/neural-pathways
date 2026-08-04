@@ -2,6 +2,11 @@ import { AttributeDefinition } from "./attributes";
 
 // --- S3 Index & Fit Types ---
 
+/**
+ * The index as the application uses it. The JSON on the wire calls this array
+ * `reviews`; fetchIndex renames it once so nothing downstream has to know that
+ * the format predates the app carrying more than one kind of item.
+ */
 export interface S3Index {
   metadata: {
     fa_fits: Record<string, S3FaFit>;
@@ -9,7 +14,7 @@ export interface S3Index {
     /** Present on generated datasets that carry externally coded attributes. */
     attributes?: AttributeDefinition[];
   };
-  reviews: S3Review[];
+  items: S3Item[];
 }
 
 /**
@@ -32,7 +37,7 @@ export interface S3FaFit {
   pathway_score_max: number[]; // n_pathways
 }
 
-export interface S3Review {
+export interface S3Item {
   id: string;
   sources: Record<string, number[]>;
   text: string;
@@ -59,24 +64,35 @@ export interface S3Review {
 
 // --- Activation Types (heatmap) ---
 
+/**
+ * An activation bucket as the application uses it. The JSON on the wire calls
+ * this array `reviews`; fetchActivations renames it once so nothing downstream
+ * has to know that the format predates the app carrying more than one kind of
+ * item.
+ */
 export interface ActivationBucket {
-  reviews: { id: string; activations: number[] }[];
+  items: { id: string; activations: number[] }[];
 }
 
 // --- SHAP Types (explorer) ---
 
+/**
+ * A SHAP bucket as the application uses it. The JSON on the wire calls this
+ * array `reviews`; fetchShap renames it once so nothing downstream has to know
+ * that the format predates the app carrying more than one kind of item.
+ */
 export interface S3ShapBucket {
-  reviews: S3ShapReview[];
+  items: S3ShapItem[];
 }
 
-export interface S3ShapReview {
+export interface S3ShapItem {
   id: string;
   base_values: number[];
   unmasked_values: number[];
   words: { word: string; scores: number[] }[];
 }
 
-export interface ReviewShapData {
+export interface ItemShapData {
   words: { word: string; scores: number[] }[];
   base_values: number[];
   unmasked_values: number[];

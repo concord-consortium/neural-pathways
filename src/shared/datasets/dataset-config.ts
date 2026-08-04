@@ -1,12 +1,12 @@
-import { S3Review } from "../types/s3-data";
+import { S3Item } from "../types/s3-data";
 import { AttributeDefinition } from "../types/attributes";
 
 export interface DatasetConfig {
   id: string;
   label: string;
   attributes: AttributeDefinition[];
-  /** Returns null when the attribute does not apply to this review. */
-  getAttributeValue: (review: S3Review, key: string) => number | null;
+  /** Returns null when the attribute does not apply to this item. */
+  getAttributeValue: (item: S3Item, key: string) => number | null;
 }
 
 /**

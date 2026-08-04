@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { S3Review } from "../../shared/types/s3-data";
+import { S3Item } from "../../shared/types/s3-data";
 import "./results-panel.scss";
 
 const SNIPPET_LENGTH = 80;
 
 interface ResultsPanelProps {
-  reviews: S3Review[];
+  reviews: S3Item[];
   fitName: string;
   selectedReviewId: string | null;
-  onSelectReview: (review: S3Review) => void;
+  onSelectReview: (review: S3Item) => void;
   maxAbsScore: number;
   resultCount: number;
   totalCount: number;

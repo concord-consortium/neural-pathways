@@ -1,10 +1,10 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { AttributeChips } from "./attribute-chips";
-import { S3Review } from "../../shared/types/s3-data";
+import { S3Item } from "../../shared/types/s3-data";
 import { AttributeDefinition } from "../../shared/types/attributes";
 
-const review = { id: "r1" } as S3Review;
+const review = { id: "r1" } as S3Item;
 
 const attributes: AttributeDefinition[] = [
   { key: "flag_on", label: "Flag on", description: "A binary that is set.", type: "binary" },
@@ -18,7 +18,7 @@ const values: Record<string, number | null> = {
   flag_on: 1, flag_off: 0, count: 3, ratio: 0.4567, missing: null,
 };
 
-const getAttributeValue = (_review: S3Review, key: string) => values[key] ?? null;
+const getAttributeValue = (_review: S3Item, key: string) => values[key] ?? null;
 
 const renderChips = () => render(
   <AttributeChips review={review} attributes={attributes} getAttributeValue={getAttributeValue} />,

@@ -1,4 +1,4 @@
-import { S3Review } from "../../shared/types/s3-data";
+import { S3Item } from "../../shared/types/s3-data";
 import { DatasetConfig } from "../../shared/datasets/dataset-config";
 import { buildSeries } from "./build-series";
 
@@ -19,7 +19,7 @@ const dataset: DatasetConfig = {
   },
 };
 
-const makeReview = (overrides: Partial<S3Review> = {}): S3Review => ({
+const makeReview = (overrides: Partial<S3Item> = {}): S3Item => ({
   id: "r1",
   sources: { test: [0] },
   text: "text",

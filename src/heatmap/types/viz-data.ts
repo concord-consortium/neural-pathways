@@ -18,4 +18,4 @@ export interface Scaler {
 }
 
 // Re-export S3 types for backwards compatibility
-export { S3Index, S3FaFit, S3Review, ActivationBucket } from "../../shared/types/s3-data";
+export { S3Index, S3FaFit, S3Item, ActivationBucket } from "../../shared/types/s3-data";

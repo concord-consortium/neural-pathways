@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import { WordColorMode, WordScaleScope } from "../types/explorer-data";
-import { ReviewShapData } from "../../shared/types/s3-data";
+import { ItemShapData } from "../../shared/types/s3-data";
 import { WordEffectDisplay } from "./word-effect-display";
 import { ColorScale } from "./color-scale";
 import "./word-effects-panel.scss";
 
 interface WordEffectsPanelProps {
-  shapData: ReviewShapData | null;
+  shapData: ItemShapData | null;
   shapLoading: boolean;
   hasShapForCurrentFit: boolean;
   shapAvailableFits: string[];

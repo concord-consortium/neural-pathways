@@ -1,9 +1,9 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ResultsPanel } from "./results-panel";
-import { S3Review } from "../../shared/types/s3-data";
+import { S3Item } from "../../shared/types/s3-data";
 
-const makeReview = (id: string, text: string, scores: number[]): S3Review => ({
+const makeReview = (id: string, text: string, scores: number[]): S3Item => ({
   id,
   sources: { test: [0] },
   text,

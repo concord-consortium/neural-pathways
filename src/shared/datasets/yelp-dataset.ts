@@ -1,4 +1,4 @@
-import { S3Review } from "../types/s3-data";
+import { S3Item } from "../types/s3-data";
 import { AttributeDefinition } from "../types/attributes";
 import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
 
@@ -63,19 +63,19 @@ export const yelpDataset: DatasetConfig = {
   id: "yelp",
   label: "Yelp Reviews",
   attributes,
-  getAttributeValue(review: S3Review, key: string): number | null {
+  getAttributeValue(item: S3Item, key: string): number | null {
     switch (key) {
       case "review_stars":
-        return review.review_stars ?? null;
+        return item.review_stars ?? null;
       case "stars":
-        return review.stars ?? null;
+        return item.stars ?? null;
       case "target":
-        return review.target;
+        return item.target;
       case "model_correct":
-        if (review.classification == null || review.target == null) return null;
-        return review.classification === review.target ? 1 : 0;
+        if (item.classification == null || item.target == null) return null;
+        return item.classification === item.target ? 1 : 0;
       case "is_synthetic":
-        return "synthetic-gpt" in review.sources ? 1 : 0;
+        return "synthetic-gpt" in item.sources ? 1 : 0;
       default:
         return null;
     }

@@ -1,4 +1,4 @@
-import { S3Review } from "../../shared/types/s3-data";
+import { S3Item } from "../../shared/types/s3-data";
 import { DatasetConfig } from "../../shared/datasets/dataset-config";
 
 export interface FlatReview {
@@ -20,7 +20,7 @@ export interface FlatReview {
 }
 
 export function flattenReview(
-  review: S3Review,
+  review: S3Item,
   fitName: string,
   dataset: DatasetConfig,
 ): FlatReview {

@@ -1,4 +1,4 @@
-import { S3Review } from "../../shared/types/s3-data";
+import { S3Item } from "../../shared/types/s3-data";
 import { DatasetConfig } from "../../shared/datasets/dataset-config";
 import { Series } from "../types/explorer-data";
 
@@ -9,7 +9,7 @@ import { Series } from "../types/explorer-data";
  * so the ordering is part of the contract.
  */
 export function buildSeries(
-  reviews: S3Review[],
+  reviews: S3Item[],
   dataset: DatasetConfig,
   fitName: string,
   nPathways: number,

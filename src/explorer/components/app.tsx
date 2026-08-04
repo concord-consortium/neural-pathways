@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useDeferredValue, useCallback, useEffect, useRef } from "react";
 import { filter, parse } from "liqe";
-import { S3Index, S3Review, S3ShapBucket, ReviewShapData } from "../../shared/types/s3-data";
+import { S3Index, S3Item, S3ShapBucket, ItemShapData } from "../../shared/types/s3-data";
 import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope, ViewMode } from "../types/explorer-data";
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { flattenReview } from "../utils/flatten-review";
@@ -45,7 +45,7 @@ export const App = () => {
   const [selectedFitName, setSelectedFitName] = useState<string>("");
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const shapCacheRef = useRef<Map<string, S3ShapBucket>>(new Map());
-  const [rawShapData, setRawShapData] = useState<ReviewShapData | null>(null);
+  const [rawShapData, setRawShapData] = useState<ItemShapData | null>(null);
   const [shapLoadedKey, setShapLoadedKey] = useState<string>("");
   const [shapFetchFailed, setShapFetchFailed] = useState(false);
 
@@ -66,24 +66,24 @@ export const App = () => {
   // --- Flatten reviews for search ---
   const flatReviews = useMemo(() => {
     if (!indexData) return [];
-    return indexData.reviews.map(r => flattenReview(r, selectedFitName, yelpDataset));
+    return indexData.items.map(r => flattenReview(r, selectedFitName, yelpDataset));
   }, [indexData, selectedFitName]);
 
   // --- Filter reviews with liqe ---
   const { filteredReviews, searchError } = useMemo(() => {
-    if (!indexData) return { filteredReviews: [] as S3Review[], searchError: false };
+    if (!indexData) return { filteredReviews: [] as S3Item[], searchError: false };
     if (!deferredQuery.trim()) {
-      return { filteredReviews: indexData.reviews, searchError: false };
+      return { filteredReviews: indexData.items, searchError: false };
     }
     try {
       const ast = parse(deferredQuery);
       const matched = filter(ast, flatReviews);
-      // Map flat results back to S3Review objects by index
+      // Map flat results back to S3Item objects by index
       const matchedSet = new Set(matched.map(m => flatReviews.indexOf(m)));
-      return { filteredReviews: indexData.reviews.filter((_, i) => matchedSet.has(i)), searchError: false };
+      return { filteredReviews: indexData.items.filter((_, i) => matchedSet.has(i)), searchError: false };
     } catch {
       // On parse error, return all reviews as a safe fallback
-      return { filteredReviews: indexData.reviews, searchError: true };
+      return { filteredReviews: indexData.items, searchError: true };
     }
   }, [indexData, deferredQuery, flatReviews]);
 
@@ -107,8 +107,8 @@ export const App = () => {
         if (hashParams.view === "correlations") {
           setViewMode("correlations");
         }
-        if (data.reviews.length > 0) {
-          const reviewId = hashParams.review && data.reviews.some(r => r.id === hashParams.review)
+        if (data.items.length > 0) {
+          const reviewId = hashParams.review && data.items.some(r => r.id === hashParams.review)
             ? hashParams.review : null;
           if (reviewId) {
             setSelectedReviewId(reviewId);
@@ -120,7 +120,7 @@ export const App = () => {
 
   // --- Selected review ---
   const selectedReview = useMemo(
-    () => indexData?.reviews.find(r => r.id === effectiveSelectedReviewId),
+    () => indexData?.items.find(r => r.id === effectiveSelectedReviewId),
     [indexData, effectiveSelectedReviewId],
   );
 
@@ -171,7 +171,7 @@ export const App = () => {
       if (hashParams.fit && validFits.includes(hashParams.fit)) {
         setSelectedFitName(hashParams.fit);
       }
-      if (hashParams.review && indexData.reviews.some(r => r.id === hashParams.review)) {
+      if (hashParams.review && indexData.items.some(r => r.id === hashParams.review)) {
         setSelectedReviewId(hashParams.review);
       }
       if (hashParams.q !== undefined) {
@@ -232,7 +232,7 @@ export const App = () => {
   }, []);
 
   // --- Review selection (resets selected pathways) ---
-  const handleSelectReview = useCallback((review: S3Review) => {
+  const handleSelectReview = useCallback((review: S3Item) => {
     setSelectedReviewId(review.id);
     setSelectedPathways(new Set());
   }, []);
@@ -314,13 +314,13 @@ export const App = () => {
           onSelectReview={handleSelectReview}
           maxAbsScore={Math.max(Math.abs(scaleExtents.shared[0]), Math.abs(scaleExtents.shared[1]))}
           resultCount={filteredReviews.length}
-          totalCount={indexData.reviews.length}
+          totalCount={indexData.items.length}
         />
         {viewMode === "correlations" ? (
           <CorrelationsView
             series={correlationSeries}
             resultCount={filteredReviews.length}
-            totalCount={indexData.reviews.length}
+            totalCount={indexData.items.length}
           />
         ) : selectedReview ? (
           <div className="explorer-main">

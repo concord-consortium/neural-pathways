@@ -1,7 +1,7 @@
-import { S3Review } from "../types/s3-data";
+import { S3Item } from "../types/s3-data";
 import { yelpDataset } from "./yelp-dataset";
 
-const baseReview: S3Review = {
+const baseReview: S3Item = {
   id: "r719",
   sources: { test: [0] },
   text: "Delivery was FAST.",
@@ -14,7 +14,7 @@ const baseReview: S3Review = {
   pathway_variance_fractions: { "test-fa-7": [0.98, 0.01] },
 };
 
-const get = (review: S3Review, key: string) => yelpDataset.getAttributeValue(review, key);
+const get = (item: S3Item, key: string) => yelpDataset.getAttributeValue(item, key);
 
 describe("yelpDataset", () => {
   it("declares the five derived attributes in order", () => {

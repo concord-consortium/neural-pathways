@@ -1,14 +1,14 @@
 import React from "react";
-import { S3Review } from "../../shared/types/s3-data";
+import { S3Item } from "../../shared/types/s3-data";
 import { AttributeDefinition } from "../../shared/types/attributes";
 import { AttributeChips } from "./attribute-chips";
 import "./review-panel.scss";
 
 interface ReviewPanelProps {
-  review: S3Review;
+  review: S3Item;
   reconstructionR2: number | null;
   attributes: AttributeDefinition[];
-  getAttributeValue: (review: S3Review, key: string) => number | null;
+  getAttributeValue: (review: S3Item, key: string) => number | null;
 }
 
 const Stars: React.FC<{ count: number; testId?: string }> = ({ count, testId }) => {

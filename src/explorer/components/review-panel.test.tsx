@@ -1,10 +1,10 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { ReviewPanel } from "./review-panel";
-import { S3Review } from "../../shared/types/s3-data";
+import { S3Item } from "../../shared/types/s3-data";
 import { AttributeDefinition } from "../../shared/types/attributes";
 
-const mockReview: S3Review = {
+const mockReview: S3Item = {
   id: "r719",
   sources: { test: [0] },
   text: "Delivery was FAST. White pizza was delicious.",
@@ -26,10 +26,10 @@ const testAttributes: AttributeDefinition[] = [
   { key: "model_correct", label: "Model was correct", description: "Match.", type: "binary" },
 ];
 
-const testGetValue = (_review: S3Review, key: string): number | null =>
+const testGetValue = (_review: S3Item, key: string): number | null =>
   key === "target" ? 1 : null;
 
-const renderPanel = (review: S3Review = mockReview, r2: number | null = 0.9662) =>
+const renderPanel = (review: S3Item = mockReview, r2: number | null = 0.9662) =>
   render(
     <ReviewPanel
       review={review}
