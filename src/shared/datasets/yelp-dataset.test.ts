@@ -1,5 +1,8 @@
-import { S3Item } from "../types/s3-data";
+import { S3Item, S3Index } from "../types/s3-data";
 import { yelpDataset } from "./yelp-dataset";
+
+const emptyIndex = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
+const attributes = yelpDataset.resolveAttributes(emptyIndex);
 
 const baseReview: S3Item = {
   id: "r719",
@@ -18,24 +21,24 @@ const get = (item: S3Item, key: string) => yelpDataset.getAttributeValue(item, k
 
 describe("yelpDataset", () => {
   it("declares the five derived attributes in order", () => {
-    expect(yelpDataset.attributes.map(a => a.key))
+    expect(attributes.map(a => a.key))
       .toEqual(["review_stars", "stars", "target", "model_correct", "is_synthetic"]);
   });
 
   it("gives every attribute a non-empty label and description", () => {
-    for (const attr of yelpDataset.attributes) {
+    for (const attr of attributes) {
       expect(attr.label.length).toBeGreaterThan(0);
       expect(attr.description.length).toBeGreaterThan(0);
     }
   });
 
   it("labels the target's values as the sentiment they mean, not yes/no", () => {
-    const target = yelpDataset.attributes.find(a => a.key === "target");
+    const target = attributes.find(a => a.key === "target");
     expect(target?.valueLabels).toEqual({ 0: "negative", 1: "positive" });
   });
 
   it("gives every binary attribute a label for both of its values", () => {
-    for (const attr of yelpDataset.attributes) {
+    for (const attr of attributes) {
       if (attr.type !== "binary") continue;
       expect(attr.valueLabels?.[0]).toBeTruthy();
       expect(attr.valueLabels?.[1]).toBeTruthy();

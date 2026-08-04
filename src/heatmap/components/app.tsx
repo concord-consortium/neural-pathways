@@ -6,6 +6,7 @@ import {
   fetchIndex, fetchActivations, fitToPathways, fitToScaler, fitToMetadata,
   standardizeActivations,
 } from "../../shared/data-loader";
+import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPatterns, PathwayScoresRow } from "./pathway-grid";
 import { ScoredPathwaysView } from "./scored-pathways-view";
@@ -76,7 +77,7 @@ export const App = () => {
 
   // --- Fetch index on mount ---
   useEffect(() => {
-    fetchIndex()
+    fetchIndex(yelpDataset)
       .then(data => {
         setIndexData(data);
         const hashParams = getHashParams();
@@ -99,7 +100,7 @@ export const App = () => {
   useEffect(() => {
     if (!selectedReviewId) return;
     let cancelled = false;
-    fetchActivations(selectedReviewId, activationCacheRef.current)
+    fetchActivations(yelpDataset, selectedReviewId, activationCacheRef.current)
       .then(activations => {
         if (!cancelled) {
           setRawActivations(activations);

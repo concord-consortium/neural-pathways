@@ -6,6 +6,7 @@ import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { flattenItem } from "../utils/flatten-item";
 import { buildSeries } from "../utils/build-series";
 import { yelpDataset } from "../../shared/datasets/yelp-dataset";
+import { ActiveDataset, activateDataset } from "../../shared/datasets/dataset-config";
 import { SearchInput } from "./search-input";
 import { ResultsPanel } from "./results-panel";
 import { ItemPanel } from "./item-panel";
@@ -41,6 +42,7 @@ function updateHash(itemId: string | null, fitName: string, query?: string, view
 export const App = () => {
   // --- Data loading state ---
   const [indexData, setIndexData] = useState<S3Index | null>(null);
+  const [dataset, setDataset] = useState<ActiveDataset | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedFitName, setSelectedFitName] = useState<string>("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -65,9 +67,9 @@ export const App = () => {
 
   // --- Flatten items for search ---
   const flatItems = useMemo(() => {
-    if (!indexData) return [];
-    return indexData.items.map(r => flattenItem(r, selectedFitName, yelpDataset));
-  }, [indexData, selectedFitName]);
+    if (!indexData || !dataset) return [];
+    return indexData.items.map(r => flattenItem(r, selectedFitName, dataset));
+  }, [indexData, dataset, selectedFitName]);
 
   // --- Filter items with liqe ---
   const { filteredItems, searchError } = useMemo(() => {
@@ -93,8 +95,12 @@ export const App = () => {
 
   // --- Fetch index on mount ---
   useEffect(() => {
-    fetchIndex()
+    fetchIndex(yelpDataset)
       .then(data => {
+        // resolveAttributes validates a list that, for a generated dataset,
+        // arrived over the network — so it can throw. Doing this here routes a
+        // bad index to the error state instead of throwing during render.
+        setDataset(activateDataset(yelpDataset, data));
         setIndexData(data);
         const hashParams = getHashParams();
         const names = Object.keys(data.metadata.fa_fits);
@@ -134,7 +140,7 @@ export const App = () => {
     if (!effectiveSelectedItemId || !hasShapForCurrentFit) return;
     let cancelled = false;
     const key = `${effectiveSelectedItemId}:${selectedFitName}`;
-    fetchShap(effectiveSelectedItemId, selectedFitName, shapCacheRef.current)
+    fetchShap(yelpDataset, effectiveSelectedItemId, selectedFitName, shapCacheRef.current)
       .then(data => {
         if (!cancelled) {
           setRawShapData(data);
@@ -187,9 +193,9 @@ export const App = () => {
   const selectedFit = indexData?.metadata.fa_fits[selectedFitName] ?? null;
 
   const correlationSeries = useMemo(() => {
-    if (viewMode !== "correlations" || !selectedFit) return [];
-    return buildSeries(filteredItems, yelpDataset, selectedFitName, selectedFit.n_pathways);
-  }, [viewMode, filteredItems, selectedFitName, selectedFit]);
+    if (viewMode !== "correlations" || !selectedFit || !dataset) return [];
+    return buildSeries(filteredItems, dataset, selectedFitName, selectedFit.n_pathways);
+  }, [viewMode, filteredItems, dataset, selectedFitName, selectedFit]);
 
   const pathwayScores = useMemo(
     () => selectedItem?.pathway_scores[selectedFitName] ?? [],
@@ -248,7 +254,7 @@ export const App = () => {
     return <div className="explorer-loading">Error loading data: {loadError}</div>;
   }
 
-  if (!indexData) {
+  if (!indexData || !dataset) {
     return <div className="explorer-loading">Loading index data...</div>;
   }
 
@@ -274,7 +280,7 @@ export const App = () => {
           onQueryChange={setSearchQuery}
           hasError={searchError}
           numPathways={selectedFit?.n_pathways}
-          attributes={yelpDataset.attributes}
+          attributes={dataset.attributes}
         />
         <div className="explorer-view-toggle" role="group" aria-label="View mode">
           <button
@@ -328,8 +334,8 @@ export const App = () => {
               <ItemPanel
                 item={selectedItem}
                 reconstructionR2={reconstructionR2}
-                attributes={yelpDataset.attributes}
-                getAttributeValue={yelpDataset.getAttributeValue}
+                attributes={dataset.attributes}
+                getAttributeValue={dataset.getAttributeValue}
               />
               <WordEffectsPanel
                 shapData={currentShapData}

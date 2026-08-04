@@ -2,7 +2,10 @@ import React from "react";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { SearchInput } from "./search-input";
 import { AttributeDefinition } from "../../shared/types/attributes";
+import { S3Index } from "../../shared/types/s3-data";
 import { yelpDataset } from "../../shared/datasets/yelp-dataset";
+
+const emptyIndex = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
 
 describe("SearchInput", () => {
   it("renders an input with placeholder text", () => {
@@ -100,7 +103,11 @@ describe("SearchInput field/attribute key deduplication", () => {
   // an answer the student was not meant to see.
   it("renders each of stars and review_stars exactly once in the help dialog", () => {
     render(
-      <SearchInput query="" onQueryChange={() => undefined} attributes={yelpDataset.attributes} />,
+      <SearchInput
+        query=""
+        onQueryChange={() => undefined}
+        attributes={yelpDataset.resolveAttributes(emptyIndex)}
+      />,
     );
     fireEvent.click(screen.getByLabelText("Search help"));
     const dialog = (

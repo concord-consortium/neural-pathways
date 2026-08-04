@@ -2,8 +2,7 @@ import {
   S3Index, S3Item, S3FaFit, ActivationBucket, S3ShapBucket, S3ShapItem, ItemShapData,
 } from "./types/s3-data";
 import { Pathways, Scaler, Metadata } from "../heatmap/types/viz-data";
-
-export const BASE_URL = "https://models-resources.s3.amazonaws.com/neural-pathways/data/v1/";
+import { DatasetConfig } from "./datasets/dataset-config";
 
 /** The shape index.json actually has. Only this module names it. */
 interface S3IndexWire {
@@ -21,8 +20,8 @@ interface S3ShapBucketWire {
   reviews: S3ShapItem[];
 }
 
-export async function fetchIndex(): Promise<S3Index> {
-  const response = await fetch(`${BASE_URL}index.json`);
+export async function fetchIndex(dataset: DatasetConfig): Promise<S3Index> {
+  const response = await fetch(`${dataset.baseUrl}index.json`);
   if (!response.ok) {
     throw new Error(`Failed to fetch index: ${response.status} ${response.statusText}`);
   }
@@ -31,12 +30,13 @@ export async function fetchIndex(): Promise<S3Index> {
 }
 
 export async function fetchActivations(
+  dataset: DatasetConfig,
   itemId: string,
   cache: Map<string, ActivationBucket>,
 ): Promise<number[]> {
   const bucket = itemId.slice(0, 2);
   if (!cache.has(bucket)) {
-    const response = await fetch(`${BASE_URL}activations/${bucket}.json`);
+    const response = await fetch(`${dataset.baseUrl}activations/${bucket}.json`);
     if (!response.ok) {
       throw new Error(`Failed to fetch activations bucket ${bucket}: ${response.status} ${response.statusText}`);
     }
@@ -52,6 +52,7 @@ export async function fetchActivations(
 }
 
 export async function fetchShap(
+  dataset: DatasetConfig,
   itemId: string,
   fitName: string,
   cache: Map<string, S3ShapBucket>,
@@ -59,7 +60,7 @@ export async function fetchShap(
   const bucket = itemId.slice(0, 2);
   const cacheKey = `${fitName}/${bucket}`;
   if (!cache.has(cacheKey)) {
-    const response = await fetch(`${BASE_URL}shap/${fitName}/${bucket}.json`);
+    const response = await fetch(`${dataset.baseUrl}shap/${fitName}/${bucket}.json`);
     if (!response.ok) {
       throw new Error(`Failed to fetch SHAP bucket ${cacheKey}: ${response.status} ${response.statusText}`);
     }

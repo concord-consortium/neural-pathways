@@ -6,9 +6,11 @@ import {
   fitToScaler,
   fitToMetadata,
   standardizeActivations,
-  BASE_URL,
 } from "./data-loader";
 import { S3FaFit } from "./types/s3-data";
+import { yelpDataset } from "./datasets/yelp-dataset";
+
+const BASE_URL = yelpDataset.baseUrl;
 
 const mockFit: S3FaFit = {
   source_split: "train",
@@ -80,7 +82,7 @@ describe("fetchIndex", () => {
       json: () => Promise.resolve(mockIndexWire),
     });
 
-    const result = await fetchIndex();
+    const result = await fetchIndex(yelpDataset);
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}index.json`);
     expect(result.items).toHaveLength(1);
     expect(result.items[0].id).toBe("a3f7c2d81e09");
@@ -92,7 +94,7 @@ describe("fetchIndex", () => {
       json: async () => mockIndexWire,
     }) as unknown as typeof fetch;
 
-    const index = await fetchIndex();
+    const index = await fetchIndex(yelpDataset);
     expect(index.items).toHaveLength(1);
     expect(index.items[0].id).toBe("a3f7c2d81e09");
     expect((index as unknown as { reviews?: unknown }).reviews).toBeUndefined();
@@ -105,7 +107,14 @@ describe("fetchIndex", () => {
       statusText: "Not Found",
     });
 
-    await expect(fetchIndex()).rejects.toThrow("Failed to fetch index: 404 Not Found");
+    await expect(fetchIndex(yelpDataset)).rejects.toThrow("Failed to fetch index: 404 Not Found");
+  });
+
+  it("builds the index URL from the dataset's base", async () => {
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, json: async () => mockIndexWire });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await fetchIndex({ ...yelpDataset, baseUrl: "alien-data/" });
+    expect(fetchMock).toHaveBeenCalledWith("alien-data/index.json");
   });
 });
 
@@ -117,7 +126,7 @@ describe("fetchActivations", () => {
     });
     const cache = new Map();
 
-    const activations = await fetchActivations("a3f7c2d81e09", cache);
+    const activations = await fetchActivations(yelpDataset, "a3f7c2d81e09", cache);
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}activations/a3.json`);
     expect(activations).toEqual([12.0, 24.0, 35.0]);
     expect(cache.has("a3")).toBe(true);
@@ -130,11 +139,11 @@ describe("fetchActivations", () => {
     });
     const cache = new Map();
 
-    await fetchActivations("a3f7c2d81e09", cache);
-    await fetchActivations("bbbb00000000", cache);
+    await fetchActivations(yelpDataset, "a3f7c2d81e09", cache);
+    await fetchActivations(yelpDataset, "bbbb00000000", cache);
     expect(fetch).toHaveBeenCalledTimes(2);
 
-    const activations = await fetchActivations("a3f7c2d81e09", cache);
+    const activations = await fetchActivations(yelpDataset, "a3f7c2d81e09", cache);
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(activations).toEqual([12.0, 24.0, 35.0]);
   });
@@ -146,7 +155,7 @@ describe("fetchActivations", () => {
     });
     const cache = new Map();
 
-    await expect(fetchActivations("a3zzzzzzzzzz", cache)).rejects.toThrow(
+    await expect(fetchActivations(yelpDataset, "a3zzzzzzzzzz", cache)).rejects.toThrow(
       "Review a3zzzzzzzzzz not found in bucket a3"
     );
   });
@@ -160,7 +169,7 @@ describe("fetchShap", () => {
     });
     const cache = new Map();
 
-    const shap = await fetchShap("a3f7c2d81e09", "train-fa-2", cache);
+    const shap = await fetchShap(yelpDataset, "a3f7c2d81e09", "train-fa-2", cache);
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}shap/train-fa-2/a3.json`);
     expect(shap.words).toHaveLength(3);
     expect(shap.base_values).toEqual([0.1, -0.2]);
@@ -174,8 +183,8 @@ describe("fetchShap", () => {
     });
     const cache = new Map();
 
-    await fetchShap("a3f7c2d81e09", "train-fa-2", cache);
-    const shap = await fetchShap("a3f7c2d81e09", "train-fa-2", cache);
+    await fetchShap(yelpDataset, "a3f7c2d81e09", "train-fa-2", cache);
+    const shap = await fetchShap(yelpDataset, "a3f7c2d81e09", "train-fa-2", cache);
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(shap.words).toHaveLength(3);
   });
@@ -187,8 +196,8 @@ describe("fetchShap", () => {
     });
     const cache = new Map();
 
-    await fetchShap("a3f7c2d81e09", "train-fa-2", cache);
-    await fetchShap("a3f7c2d81e09", "test-fa-7", cache);
+    await fetchShap(yelpDataset, "a3f7c2d81e09", "train-fa-2", cache);
+    await fetchShap(yelpDataset, "a3f7c2d81e09", "test-fa-7", cache);
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}shap/train-fa-2/a3.json`);
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}shap/test-fa-7/a3.json`);
@@ -201,7 +210,7 @@ describe("fetchShap", () => {
     });
     const cache = new Map();
 
-    await expect(fetchShap("a3zzzzzzzzzz", "train-fa-2", cache)).rejects.toThrow(
+    await expect(fetchShap(yelpDataset, "a3zzzzzzzzzz", "train-fa-2", cache)).rejects.toThrow(
       "Review a3zzzzzzzzzz not found in SHAP bucket train-fa-2/a3"
     );
   });

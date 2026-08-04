@@ -1,11 +1,18 @@
-import { S3Item } from "../../shared/types/s3-data";
-import { DatasetConfig } from "../../shared/datasets/dataset-config";
+import { S3Index, S3Item } from "../../shared/types/s3-data";
+import { ActiveDataset, DatasetConfig, activateDataset } from "../../shared/datasets/dataset-config";
 import { buildSeries } from "./build-series";
 
-const dataset: DatasetConfig = {
+const emptyIndex = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
+
+const testConfig: DatasetConfig = {
   id: "test",
   label: "Test",
-  attributes: [
+  baseUrl: "test-data/",
+  itemNoun: { singular: "item", plural: "items" },
+  classificationLabels: { 0: "negative", 1: "positive" },
+  searchPlaceholder: "",
+  searchFields: [],
+  resolveAttributes: () => [
     {
       key: "flag", label: "Flag", description: "A flag.", type: "binary",
       valueLabels: { 0: "negative", 1: "positive" },
@@ -18,6 +25,8 @@ const dataset: DatasetConfig = {
     return null;
   },
 };
+
+const dataset: ActiveDataset = activateDataset(testConfig, emptyIndex);
 
 const makeItem = (overrides: Partial<S3Item> = {}): S3Item => ({
   id: "r1",

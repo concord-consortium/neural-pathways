@@ -1,5 +1,5 @@
 import { S3Item } from "../../shared/types/s3-data";
-import { DatasetConfig } from "../../shared/datasets/dataset-config";
+import { ActiveDataset } from "../../shared/datasets/dataset-config";
 import { Series } from "../types/explorer-data";
 
 /**
@@ -10,7 +10,7 @@ import { Series } from "../types/explorer-data";
  */
 export function buildSeries(
   items: S3Item[],
-  dataset: DatasetConfig,
+  dataset: ActiveDataset,
   fitName: string,
   nPathways: number,
 ): Series[] {

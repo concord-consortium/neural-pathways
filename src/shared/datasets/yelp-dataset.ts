@@ -62,7 +62,20 @@ validateAttributeKeys(attributes);
 export const yelpDataset: DatasetConfig = {
   id: "yelp",
   label: "Yelp Reviews",
-  attributes,
+  baseUrl: "https://models-resources.s3.amazonaws.com/neural-pathways/data/v1/",
+  itemNoun: { singular: "review", plural: "reviews" },
+  classificationLabels: { 0: "negative", 1: "positive" },
+  searchPlaceholder: "stars:5 AND pathway_0:>0.8",
+  searchFields: [
+    { name: "name", description: "Business name" },
+    { name: "city", description: "City" },
+    { name: "state", description: "State" },
+    { name: "categories", description: "Business categories" },
+    { name: "reconstruction_r2", description: "Reconstruction R²" },
+  ],
+  resolveAttributes() {
+    return attributes;
+  },
   getAttributeValue(item: S3Item, key: string): number | null {
     switch (key) {
       case "review_stars":

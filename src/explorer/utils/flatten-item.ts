@@ -1,5 +1,5 @@
 import { S3Item } from "../../shared/types/s3-data";
-import { DatasetConfig } from "../../shared/datasets/dataset-config";
+import { ActiveDataset } from "../../shared/datasets/dataset-config";
 
 export interface FlatItem {
   text: string;
@@ -10,7 +10,7 @@ export interface FlatItem {
   stars?: number;
   review_stars?: number;
   categories?: string;
-  reconstruction_r2: number;
+  reconstruction_r2?: number;
   has_word_scores: boolean;
   classification_label?: string;
   classification_probability?: number;
@@ -22,7 +22,7 @@ export interface FlatItem {
 export function flattenItem(
   item: S3Item,
   fitName: string,
-  dataset: DatasetConfig,
+  dataset: ActiveDataset,
 ): FlatItem {
   const scores = item.pathway_scores[fitName] ?? [];
   const flat: FlatItem = {
@@ -34,11 +34,13 @@ export function flattenItem(
     stars: item.stars,
     review_stars: item.review_stars,
     categories: item.categories,
-    reconstruction_r2: item.reconstruction_r2?.[fitName] ?? 0,
     has_word_scores: item.has_shap?.includes(fitName) ?? false,
   };
+  const r2 = item.reconstruction_r2?.[fitName];
+  if (r2 != null) flat.reconstruction_r2 = r2;
   if (item.classification != null) {
-    flat.classification_label = item.classification === 1 ? "positive" : "negative";
+    flat.classification_label = dataset.config.classificationLabels[item.classification]
+      ?? String(item.classification);
     flat.classification_probability = item.classification_probability;
   }
   for (let i = 0; i < scores.length; i++) {
