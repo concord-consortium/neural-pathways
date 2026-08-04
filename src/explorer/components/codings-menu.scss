@@ -1,0 +1,117 @@
+.explorer-codings-menu {
+  position: relative;
+}
+
+.explorer-codings-button {
+  padding: 5px 12px;
+  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+}
+
+.explorer-codings-count {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: #1a73e8;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.explorer-codings-dialog {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 380px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  z-index: 100;
+  font-size: 13px;
+  color: #333;
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+  }
+
+  h4 {
+    margin: 14px 0 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #999;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.explorer-codings-framing {
+  margin: 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.explorer-codings-available li + li {
+  margin-top: 12px;
+}
+
+.explorer-codings-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.explorer-codings-label {
+  font-weight: 600;
+}
+
+.explorer-codings-commission {
+  padding: 3px 10px;
+  font-size: 12px;
+  border: 1px solid #1a73e8;
+  border-radius: 4px;
+  background: #fff;
+  color: #1a73e8;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.explorer-codings-description {
+  margin-top: 3px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.explorer-codings-done li {
+  color: #555;
+}
+
+.explorer-codings-empty {
+  color: #666;
+}
+
+.explorer-codings-reset {
+  margin-top: 14px;
+  padding: 3px 10px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  color: #777;
+  cursor: pointer;
+}
