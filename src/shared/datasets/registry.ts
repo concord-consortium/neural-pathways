@@ -13,7 +13,11 @@ export const DATASETS: Record<string, DatasetConfig> = {
  */
 export const DEFAULT_DATASET_ID = yelpDataset.id;
 
-export const DATASET_LIST: DatasetConfig[] = [yelpDataset, alienDataset];
+// Derived from DATASETS (rather than a second hand-maintained array) so a
+// dataset added to one list cannot be forgotten in the other: declaration
+// order in the object literal above gives Yelp-then-alien, matching the
+// dropdown's existing order.
+export const DATASET_LIST: DatasetConfig[] = Object.values(DATASETS);
 
 /** An unknown id falls back to the default: a mistyped link should show something. */
 export function datasetFromId(id: string | undefined): DatasetConfig {
