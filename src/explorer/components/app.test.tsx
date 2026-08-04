@@ -51,7 +51,14 @@ function makeIndex(
 }
 
 const yelpItem = makeItem("yelp-item-1", "This is a yelp review about pizza.");
-const alienItem = makeItem("alien-item-1", "This is an alien conversation about tarrak.");
+// attributes carries real coded values so AttributeChips (fed by
+// dataset.getAttributeValue) actually renders a chip for each one — without
+// this, chips-visibility assertions below would trivially pass by rendering
+// nothing at all.
+const alienItem: S3Item = {
+  ...makeItem("alien-item-1", "This is an alien conversation about tarrak."),
+  attributes: { voices_raised: 1, resource_stressed: 0, young_present: 1 },
+};
 
 // Two hidden entries, because Task 3's sorted-order test needs a case where
 // insertion order and sorted order differ.
@@ -209,14 +216,24 @@ describe("App dataset switching", () => {
     // Covers the chips and the search help dialog together, and will also catch
     // a future surface that renders attributes without anyone remembering this
     // constraint exists.
-    window.location.hash = "#dataset=alien";
+    //
+    // Both surfaces have to actually be on screen for that coverage to be real.
+    // The search help dialog starts closed, so it is opened below. The chips
+    // surface (AttributeChips, mounted inside ItemPanel) only renders once an
+    // item is selected — app.tsx renders ItemPanel via `selectedItem ? … :` —
+    // so the item is named in the initial hash here rather than left unselected.
+    window.location.hash = `#dataset=alien&item=${alienItem.id}`;
     render(<App />);
     await resolveNext("alien", makeIndex("alien-fa-4", alienItem, alienAttributes));
 
-    // Neither surface that renders attribute labels is on screen by default:
-    // no item is selected (no chips) and the search help dialog starts closed.
-    // Open it so the attribute list actually renders into the document.
     fireEvent.click(screen.getByLabelText("Search help"));
+
+    // Positive control that the chips surface specifically is mounted and
+    // rendering, not just present in the tree by coincidence: this test id is
+    // emitted only by AttributeChips, one span per attribute it draws a chip
+    // for.
+    expect(screen.getByTestId("attribute-chip-voices_raised")).toBeInTheDocument();
+    expect(screen.queryByTestId("attribute-chip-resource_stressed")).not.toBeInTheDocument();
 
     expect(document.body.textContent).not.toContain("resource_stressed");
     expect(document.body.textContent).not.toContain("Resource stressed");
@@ -332,6 +349,10 @@ describe("App dataset switching", () => {
     it("shows no codings button for a dataset that hides nothing", async () => {
       render(<App />);
       await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+      // Positive control, matching the pattern used above: confirms the app
+      // actually rendered, so the absence below is not passing because
+      // nothing rendered at all.
+      expect(screen.getByText("Pathway Explorer")).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /codings/i })).toBeNull();
     });
   });

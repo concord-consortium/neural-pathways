@@ -63,11 +63,16 @@ nembu arvek h...`. Click the first one.
 - An **OBSERVER'S NOTE** block follows, in English, e.g.: *"They were standing at
   the edge of open water. Ground was uneven where they stood. Five of them, no
   clear arrangement. ... No gesture was repeated."*
-- Below the note, **eleven attribute chips** in a fixed order: `Actual answer`,
-  `Model was correct` (the two derived attributes), then the nine generated
-  attributes — `Voices raised`, `Engaged in a task`, `Group size`, `Near water`,
-  `Food present`, `Resource stressed`, `Gestures repeated`, `Young present`,
-  `Carrying a burden`.
+- Below the note, **seven attribute chips** in a fixed order: `Actual answer`,
+  `Model was correct` (the two derived attributes), then five of the nine
+  generated attributes — `Voices raised`, `Engaged in a task`, `Group size`,
+  `Near water`, `Food present`. The other four generated attributes —
+  `Resource stressed`, `Gestures repeated`, `Young present`, `Carrying a
+  burden` — start **hidden** as of this phase: no chip, no search field, no
+  matrix row or regression term, until a student commissions one from the
+  Codings dialog. See `docs/testing-attribute-commissioning.md` for that
+  mechanism; §4 below picks `resource_stressed` back up once it's
+  commissioned.
 - What is **absent**, correctly: there is no `FA Fit:` dropdown next to `Dataset:`
   (the alien dataset declares only one fit, `alien-fa-4`, so there is nothing to
   choose between); no star icons, no business name/location, and no `Reconstruction
@@ -78,7 +83,8 @@ nembu arvek h...`. Click the first one.
 **Bug to report:** a star rating, business name, `Reconstruction R²` line, or a
 second FA-fit selector showing up anywhere in the alien view; or the attribute chips
 appearing in a different order than `Actual answer`, `Model was correct`, then the
-nine generated attributes.
+five visible generated attributes; or a hidden attribute's chip appearing before
+it has been commissioned.
 
 ## 3. Searching
 
@@ -90,8 +96,11 @@ Click the **`?`** (Search help) button next to the search box.
   `city`, `state`, `categories`, `reconstruction_r2`), **no business fields appear
   at all** — the alien dataset has none.
 - **Attributes**: `target`, `model_correct`, `voices_raised`, `engaged_in_task`,
-  `group_size`, `near_water`, `food_present`, `resource_stressed`,
-  `gestures_repeated`, `young_present`, `carrying_burden`.
+  `group_size`, `near_water`, `food_present`. Four more attributes —
+  `resource_stressed`, `gestures_repeated`, `young_present`, `carrying_burden` —
+  exist in the data but start hidden: they don't appear in this list, and
+  searching one of their keys matches nothing, until commissioned. See
+  `docs/testing-attribute-commissioning.md`.
 
 Try these searches (results header shown from the run used for this document):
 
@@ -119,16 +128,27 @@ This is the point of the alien dataset: the classifier was deliberately made wor
 on conversations where `resource_stressed` is true. Here is how to find that by
 exploring, without being told the number in advance.
 
+**`resource_stressed` starts hidden as of this phase** (§2, and
+`docs/testing-attribute-commissioning.md`), so this section can't be followed from
+a bare `#dataset=alien` link. Open
+`explorer.html#dataset=alien&coded=resource_stressed` instead — that pre-commissions
+just this one attribute, which restores it as a chip, a search field, and a
+matrix row/regression term, while leaving the other three hidden attributes
+(`gestures_repeated`, `young_present`, `carrying_burden`) hidden.
+
 Clear the search box and click **Correlations**.
 
 - The header reads **`Correlations over 800 of 800 conversations`**.
-- Look along the **Model was correct** row. Against most attributes it's weak:
-  `Voices raised` 0.04, `Engaged in a task` 0.02, `Group size` 0.03, `Near water`
-  -0.04, `Food present` -0.02, `Gestures repeated` -0.02, `Young present` -0.01,
-  `Carrying a burden` -0.03. Two values stand out from that noise floor: `Actual
-  answer` at **-0.25**, and — the largest of any attribute — **`Resource stressed`
-  at -0.28**. Against the pathways, `P3` also stands out at **-0.18** while `P0`,
-  `P1`, `P2` sit near zero (-0.03, -0.05, 0.00).
+- Look along the **Model was correct** row. Against the other visible attributes
+  it's weak: `Voices raised` 0.04, `Engaged in a task` 0.02, `Group size` 0.03,
+  `Near water` -0.04, `Food present` -0.02. (The three still-hidden decoys —
+  `Gestures repeated`, `Young present`, `Carrying a burden` — aren't in the
+  matrix at all right now; §7 of `docs/testing-attribute-commissioning.md` shows
+  them once commissioned, and they read the same kind of near-zero.) Two values
+  stand out from that noise floor: `Actual answer` at **-0.25**, and — the
+  largest of any attribute — **`Resource stressed` at -0.28**. Against the
+  pathways, `P3` also stands out at **-0.18** while `P0`, `P1`, `P2` sit near
+  zero (-0.03, -0.05, 0.00).
 
 Click the **Model was correct × Resource stressed** cell.
 
@@ -154,19 +174,27 @@ Now filter the scope. Type `model_correct:0` into the search box.
   n = 63, mean 0.75) — consistent with the unfiltered chart above.
 - Scroll to the regression panel below (target `P0`): it now reads **`Dropped
   before fitting: Model was correct (constant)`** and **`Fitted on 63 of 63
-  rows`**. The term table's top row is **`Resource stressed`** with **β = 0.589,
-  partial r = 0.490** — by a wide margin the strongest predictor of `P0` among the
-  model's errors.
+  rows`**. The term table's top row is **`Resource stressed`** with **β = 0.613,
+  partial r = 0.512** — by a wide margin the strongest predictor of `P0` among the
+  model's errors. (This regression fits on the eight attributes currently
+  visible — the seven default ones plus the just-commissioned
+  `resource_stressed` — rather than all eleven. Commissioning the remaining
+  three decoys too adds them as three more terms, each modest (magnitudes
+  0.02–0.09), and settles `Resource stressed` at **β = 0.589, partial r =
+  0.490** — the number this section quoted before hiding existed — without
+  changing which term is on top.)
 
 As a cross-check with plain counts rather than the matrix: `model_correct:0 AND
 resource_stressed:1` returns **`47 of 800`**. Since `model_correct:0` alone is `63
 of 800`, that's **47 / 63 ≈ 74.6%** of the model's errors landing on
 resource-stressed conversations — matching the 0.75 mean read off the histogram.
 
-`resource_stressed` is **visible on purpose in this phase** — it's just another
-attribute chip and search field like the rest. A later phase hides it (and the
-model that used it), so a student has to work back to this same discovery through
-the observer's notes and their own coding rather than reading it off a chip.
+Everything above was walked through with `resource_stressed` **commissioned via
+the URL**, as an open shortcut to confirm the bias is really there. The intended
+route — finding this same bias starting from nothing visible, by reading the
+observer's notes and choosing to commission `resource_stressed` rather than being
+handed it in the address bar — is the whole subject of
+`docs/testing-attribute-commissioning.md` §7.
 
 **Bug to report:** if `Model was correct × Resource stressed` were near zero, or
 some other attribute (not `Resource stressed`) showed the strongest relationship to
@@ -208,11 +236,15 @@ datasets rather than cleanly resetting it.
 
 ## 6. What is not here yet
 
-- **Attribute hiding and commissioned coding.** Every attribute, including
-  `resource_stressed`, is fully visible right now. A later phase hides some of them
-  and asks a student to code them from the observer's notes themselves, which is
-  also why the notes are not searchable (§3) — that shortcut is reserved for that
-  exercise.
+- **Attribute hiding and commissioned coding are covered in
+  `docs/testing-attribute-commissioning.md`, not here.** Four attributes,
+  including `resource_stressed`, start hidden as of this phase and must be
+  commissioned from the Codings dialog before they appear on any surface (§2,
+  §4 above); that document walks the full mechanism (all five surfaces, the
+  `#coded=` URL state, Reset) and the intended discovery route that reaches
+  `resource_stressed` from the observer's notes rather than a hand-typed URL —
+  the same notes this document's §3 already establishes are not searchable, on
+  purpose, so that route isn't shortcut-able.
 - **Tuning.** The generator's own self-check only guarantees a floor, not a final
   value: *"PASS bias-is-detectable corr(model_correct, resource_stressed) =
   -0.2846 (minimum magnitude 0.2). Below it the bias is there but too weak to
