@@ -18,6 +18,7 @@ describe("SettingsMenu", () => {
     onShowPathwayValuesChange: jest.fn(),
     wordScaleScope: "per-pathway" as const,
     onWordScaleScopeChange: jest.fn(),
+    itemNoun: { singular: "review", plural: "reviews" },
   };
 
   it("opens the popover when gear icon is clicked", () => {
@@ -45,5 +46,16 @@ describe("SettingsMenu", () => {
     fireEvent.click(screen.getByRole("button"));
     fireEvent.click(screen.getByLabelText("Show variance fractions"));
     expect(onShowVarianceFractionsChange).toHaveBeenCalledWith(true);
+  });
+
+  it("names the full-item scale option using the dataset's noun", () => {
+    render(
+      <SettingsMenu
+        {...defaultProps}
+        itemNoun={{ singular: "conversation", plural: "conversations" }}
+      />
+    );
+    fireEvent.click(screen.getByRole("button"));
+    expect(screen.getByText("Full conversation")).toBeDefined();
   });
 });

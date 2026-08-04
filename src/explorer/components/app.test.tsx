@@ -107,8 +107,12 @@ describe("App dataset switching", () => {
     expect(screen.getByRole("combobox")).toHaveValue("alien");
     // The restored item is selected rather than showing the empty state: its
     // text now appears twice — once in the results-list snippet, and again in
-    // the item panel that only renders once something is selected.
-    expect(screen.queryByText(/Select a review/i)).not.toBeInTheDocument();
+    // the item panel that only renders once something is selected. The empty
+    // state's noun is dataset-driven, so match on the sentence shape rather
+    // than a hard-coded "review" — otherwise this assertion would trivially
+    // pass for the alien dataset (whose empty state says "conversation")
+    // regardless of whether an item was actually selected.
+    expect(screen.queryByText(/Select a \S+ from the results/i)).not.toBeInTheDocument();
     expect(screen.getAllByText(alienItem.text)).toHaveLength(2);
   });
 

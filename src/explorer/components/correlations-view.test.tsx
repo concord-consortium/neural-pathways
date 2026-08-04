@@ -23,8 +23,10 @@ const series: Series[] = [
   },
 ];
 
+const yelpNoun = { singular: "review", plural: "reviews" };
+
 const renderView = () =>
-  render(<CorrelationsView series={series} resultCount={12} totalCount={100} />);
+  render(<CorrelationsView series={series} resultCount={12} totalCount={100} itemNoun={yelpNoun} />);
 
 /** Renders a two-series view whose row is exactly the given values. */
 const renderWithRow = (values: number[]) => {
@@ -39,7 +41,9 @@ const renderWithRow = (values: number[]) => {
     },
   ];
   return render(
-    <CorrelationsView series={custom} resultCount={values.length} totalCount={values.length} />,
+    <CorrelationsView
+      series={custom} resultCount={values.length} totalCount={values.length} itemNoun={yelpNoun}
+    />,
   );
 };
 
@@ -55,6 +59,12 @@ describe("CorrelationsView", () => {
     // and getByText only joins an element's direct text-node children, so a
     // regex spanning the <strong> would never match.
     expect(screen.getByTestId("correlations-scope").textContent).toContain("12 of 100 reviews");
+  });
+
+  it("names the items using the dataset's noun", () => {
+    render(<CorrelationsView series={[]} resultCount={6} totalCount={800}
+      itemNoun={{ singular: "conversation", plural: "conversations" }} />);
+    expect(screen.getByTestId("correlations-scope").textContent).toContain("of 800 conversations");
   });
 
   it("renders the matrix", () => {
@@ -134,7 +144,7 @@ describe("CorrelationsView", () => {
         description: "", values: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2],
       },
     ];
-    render(<CorrelationsView series={withMissing} resultCount={12} totalCount={12} />);
+    render(<CorrelationsView series={withMissing} resultCount={12} totalCount={12} itemNoun={yelpNoun} />);
     fireEvent.click(screen.getByTestId("cell-row-pathway_0"));
     expect(screen.getByTestId("distribution-comparison")).toBeDefined();
   });
@@ -157,25 +167,25 @@ describe("CorrelationsView", () => {
   });
 
   it("tells the user when there is nothing to correlate", () => {
-    render(<CorrelationsView series={[]} resultCount={0} totalCount={100} />);
+    render(<CorrelationsView series={[]} resultCount={0} totalCount={100} itemNoun={yelpNoun} />);
     expect(screen.getByTestId("correlations-empty")).toBeDefined();
   });
 });
 
 describe("CorrelationsView regression panel", () => {
   it("renders the regression panel", () => {
-    render(<CorrelationsView series={series} resultCount={6} totalCount={100} />);
+    render(<CorrelationsView series={series} resultCount={6} totalCount={100} itemNoun={yelpNoun} />);
     expect(screen.getByTestId("regression-panel")).toBeDefined();
   });
 
   it("renders the panel even before a matrix cell is selected", () => {
-    render(<CorrelationsView series={series} resultCount={6} totalCount={100} />);
+    render(<CorrelationsView series={series} resultCount={6} totalCount={100} itemNoun={yelpNoun} />);
     expect(screen.getByTestId("drilldown-prompt")).toBeDefined();
     expect(screen.getByTestId("regression-panel")).toBeDefined();
   });
 
   it("does not render the panel when there are no series", () => {
-    render(<CorrelationsView series={[]} resultCount={0} totalCount={100} />);
+    render(<CorrelationsView series={[]} resultCount={0} totalCount={100} itemNoun={yelpNoun} />);
     expect(screen.queryByTestId("regression-panel")).toBeNull();
   });
 });

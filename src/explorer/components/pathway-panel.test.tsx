@@ -9,6 +9,7 @@ const perPathwayExtents: [number, number][] = [
   [-1.03, 1.03], [-1.71, 8.75], [-4.64, 6.16],
   [-7.38, 5.09], [-4.62, 5.46], [-4.91, 6.68], [-3.20, 4.50],
 ];
+const yelpNoun = { singular: "review", plural: "reviews" };
 
 describe("PathwayPanel", () => {
   it("renders all 7 pathway bars", () => {
@@ -18,8 +19,8 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
-
         showExtents={false}
+        itemNoun={yelpNoun}
       />
     );
     for (let i = 0; i < 7; i++) {
@@ -35,8 +36,8 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={true}
-
         showExtents={false}
+        itemNoun={yelpNoun}
       />
     );
     expect(screen.getByText("98.3%")).toBeDefined();
@@ -50,8 +51,8 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
-
         showExtents={false}
+        itemNoun={yelpNoun}
       />
     );
     expect(screen.queryByText("98.3%")).toBeNull();
@@ -65,8 +66,8 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
-
         showExtents={false}
+        itemNoun={yelpNoun}
         onPathwayClick={onPathwayClick}
         selectedPathways={new Set()}
       />
@@ -82,13 +83,27 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
-
         showExtents={false}
+        itemNoun={yelpNoun}
       />
     );
     expect(screen.getByTestId("pathway-panel-legend")).toBeDefined();
     expect(screen.getByText("This Review")).toBeDefined();
     expect(screen.getByText("Fit Properties")).toBeDefined();
+  });
+
+  it("names the legend using the dataset's noun", () => {
+    render(
+      <PathwayPanel
+        scores={mockScores}
+        scaleMode="shared"
+        scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
+        showVarianceFractions={false}
+        showExtents={false}
+        itemNoun={{ singular: "conversation", plural: "conversations" }}
+      />
+    );
+    expect(screen.getByText("This Conversation")).toBeDefined();
   });
 
   it("passes explained variance and importance to pathway bars", () => {
@@ -100,8 +115,8 @@ describe("PathwayPanel", () => {
         scaleMode="shared"
         scaleExtents={{ shared: sharedExtent, perPathway: perPathwayExtents }}
         showVarianceFractions={false}
-
         showExtents={false}
+        itemNoun={yelpNoun}
         explainedVariancePerPathway={ev}
         pathwayImportance={imp}
       />

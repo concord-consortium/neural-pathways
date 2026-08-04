@@ -7,42 +7,83 @@ import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 
 const emptyIndex = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
 
+const yelpNoun = { singular: "review", plural: "reviews" };
+const yelpProps = {
+  itemNoun: yelpNoun,
+  searchPlaceholder: "stars:5 AND pathway_0:>0.8",
+  searchFields: yelpDataset.searchFields,
+};
+
 describe("SearchInput", () => {
   it("renders an input with placeholder text", () => {
-    render(<SearchInput query="" onQueryChange={jest.fn()} />);
+    render(<SearchInput query="" onQueryChange={jest.fn()} {...yelpProps} />);
     expect(screen.getByPlaceholderText(/stars:5/)).toBeDefined();
+  });
+
+  it("takes the placeholder from the dataset rather than hard-coding it", () => {
+    render(
+      <SearchInput
+        query="" onQueryChange={jest.fn()}
+        itemNoun={{ singular: "conversation", plural: "conversations" }}
+        searchPlaceholder="voices_raised:1 AND pathway_0:>1" searchFields={[]}
+      />,
+    );
+    expect(screen.getByPlaceholderText("voices_raised:1 AND pathway_0:>1")).toBeDefined();
   });
 
   it("calls onQueryChange when the user types", () => {
     const onChange = jest.fn();
-    render(<SearchInput query="" onQueryChange={onChange} />);
+    render(<SearchInput query="" onQueryChange={onChange} {...yelpProps} />);
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "stars:5" } });
     expect(onChange).toHaveBeenCalledWith("stars:5");
   });
 
   it("shows error styling when hasError is true", () => {
-    render(<SearchInput query="bad[" onQueryChange={jest.fn()} hasError />);
+    render(<SearchInput query="bad[" onQueryChange={jest.fn()} hasError {...yelpProps} />);
     // eslint-disable-next-line testing-library/no-node-access -- checking CSS class on parent element
     const container = screen.getByRole("textbox").closest(".search-input-container");
     expect(container?.classList.contains("search-input-error")).toBe(true);
   });
 
   it("shows help dialog when help button is clicked", () => {
-    render(<SearchInput query="" onQueryChange={jest.fn()} numPathways={5} />);
+    render(<SearchInput query="" onQueryChange={jest.fn()} numPathways={5} {...yelpProps} />);
     fireEvent.click(screen.getByRole("button", { name: /search help/i }));
     expect(screen.getByText("Search Syntax")).toBeDefined();
     expect(screen.getByText("pathway_0 through pathway_4")).toBeDefined();
   });
 
   it("shows classification fields in help dialog", () => {
-    render(<SearchInput query="" onQueryChange={jest.fn()} />);
+    render(<SearchInput query="" onQueryChange={jest.fn()} {...yelpProps} />);
     fireEvent.click(screen.getByRole("button", { name: /search help/i }));
     expect(screen.getByText("classification_label")).toBeDefined();
     expect(screen.getByText("classification_probability")).toBeDefined();
   });
 
+  it("describes the classification_label field as a predicted label, not a sentiment", () => {
+    render(<SearchInput query="" onQueryChange={jest.fn()} {...yelpProps} />);
+    fireEvent.click(screen.getByRole("button", { name: /search help/i }));
+    expect(screen.getByText("Model's predicted label")).toBeDefined();
+    expect(screen.queryByText("Model's predicted sentiment")).toBeNull();
+  });
+
+  it("names the text field using the dataset's noun", () => {
+    render(<SearchInput query="" onQueryChange={jest.fn()} {...yelpProps} />);
+    fireEvent.click(screen.getByRole("button", { name: /search help/i }));
+    expect(screen.getByText("Review text")).toBeDefined();
+  });
+
+  it("lists only the search fields the dataset declares", () => {
+    render(<SearchInput query="" onQueryChange={jest.fn()}
+      itemNoun={{ singular: "conversation", plural: "conversations" }}
+      searchPlaceholder="voices_raised:1" searchFields={[]} />);
+    fireEvent.click(screen.getByLabelText("Search help"));
+    expect(screen.getByText("Conversation text")).toBeInTheDocument();
+    expect(screen.queryByText("Business name")).toBeNull();
+    expect(screen.queryByText("Reconstruction R²")).toBeNull();
+  });
+
   it("hides help dialog when help button is clicked again", () => {
-    render(<SearchInput query="" onQueryChange={jest.fn()} />);
+    render(<SearchInput query="" onQueryChange={jest.fn()} {...yelpProps} />);
     const helpButton = screen.getByRole("button", { name: /search help/i });
     fireEvent.click(helpButton);
     expect(screen.getByText("Search Syntax")).toBeDefined();
@@ -70,7 +111,7 @@ describe("SearchInput attribute fields", () => {
   ];
 
   const openHelp = (attrs: AttributeDefinition[] = attributes) => {
-    render(<SearchInput query="" onQueryChange={() => undefined} attributes={attrs} />);
+    render(<SearchInput query="" onQueryChange={() => undefined} attributes={attrs} {...yelpProps} />);
     fireEvent.click(screen.getByLabelText("Search help"));
   };
 
@@ -107,6 +148,7 @@ describe("SearchInput field/attribute key deduplication", () => {
         query=""
         onQueryChange={() => undefined}
         attributes={yelpDataset.resolveAttributes(emptyIndex)}
+        {...yelpProps}
       />,
     );
     fireEvent.click(screen.getByLabelText("Search help"));

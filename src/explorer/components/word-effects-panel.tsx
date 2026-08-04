@@ -16,13 +16,14 @@ interface WordEffectsPanelProps {
   wordScaleScope: WordScaleScope;
   showPathwayValues: boolean;
   onSwitchFit?: (fitName: string) => void;
+  itemNoun: { singular: string; plural: string };
 }
 
 const FILTERED_TOKENS = new Set(["[CLS]", "[SEP]"]);
 
 export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
   shapData, shapLoading, hasShapForCurrentFit, shapAvailableFits, currentFitName,
-  selectedPathways, wordColorMode, wordScaleScope, showPathwayValues, onSwitchFit
+  selectedPathways, wordColorMode, wordScaleScope, showPathwayValues, onSwitchFit, itemNoun
 }) => {
   const sortedIndices = useMemo(
     () => Array.from(selectedPathways).sort((a, b) => a - b),
@@ -75,7 +76,7 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
     return (
       <div className="word-effects-panel">
         <div className="word-effects-unavailable">
-          No word effects available for this review.
+          No word effects available for this {itemNoun.singular}.
         </div>
       </div>
     );
@@ -95,7 +96,7 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
     return (
       <div className="word-effects-panel">
         <div className="word-effects-hint">
-          Click a pathway to see its word-level effects on this review.
+          Click a pathway to see its word-level effects on this {itemNoun.singular}.
         </div>
       </div>
     );

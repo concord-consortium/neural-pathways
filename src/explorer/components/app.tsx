@@ -343,6 +343,9 @@ export const App = () => {
           hasError={searchError}
           numPathways={selectedFit?.n_pathways}
           attributes={dataset.attributes}
+          itemNoun={dataset.config.itemNoun}
+          searchPlaceholder={dataset.config.searchPlaceholder}
+          searchFields={dataset.config.searchFields}
         />
         <div className="explorer-view-toggle" role="group" aria-label="View mode">
           <button
@@ -371,6 +374,7 @@ export const App = () => {
           onShowPathwayValuesChange={setShowPathwayValues}
           wordScaleScope={wordScaleScope}
           onWordScaleScopeChange={setWordScaleScope}
+          itemNoun={dataset.config.itemNoun}
         />
       </div>
 
@@ -389,6 +393,7 @@ export const App = () => {
             series={correlationSeries}
             resultCount={filteredItems.length}
             totalCount={indexData.items.length}
+            itemNoun={dataset.config.itemNoun}
           />
         ) : selectedItem ? (
           <div className="explorer-main">
@@ -410,6 +415,7 @@ export const App = () => {
                 wordScaleScope={wordScaleScope}
                 showPathwayValues={showPathwayValues}
                 onSwitchFit={handleFitChange}
+                itemNoun={dataset.config.itemNoun}
               />
             </div>
             <PathwayPanel
@@ -423,11 +429,12 @@ export const App = () => {
               pathwayImportance={selectedFit?.pathway_importance}
               onPathwayClick={handlePathwayClick}
               selectedPathways={selectedPathways}
+              itemNoun={dataset.config.itemNoun}
             />
           </div>
         ) : (
           <div className="explorer-empty">
-            Select a review from the results to see its pathway scores.
+            Select a {dataset.config.itemNoun.singular} from the results to see its pathway scores.
           </div>
         )}
       </div>
