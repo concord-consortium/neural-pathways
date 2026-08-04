@@ -36,6 +36,18 @@
     color: #2c3e80;
   }
 
+  // Alien dataset ground-truth labels: approach reads like Yelp's positive,
+  // wait like its negative.
+  &.badge-approach {
+    background: #fde8e8;
+    color: #c0392b;
+  }
+
+  &.badge-wait {
+    background: #e8ecfd;
+    color: #2c3e80;
+  }
+
   &.badge-source {
     background: #e8f4fd;
     color: #2980b9;
@@ -47,6 +59,16 @@
   }
 
   &.badge-classification-negative {
+    background: #f0f1fd;
+    color: #5a6ab0;
+  }
+
+  &.badge-classification-approach {
+    background: #fdf2f2;
+    color: #d4605a;
+  }
+
+  &.badge-classification-wait {
     background: #f0f1fd;
     color: #5a6ab0;
   }
