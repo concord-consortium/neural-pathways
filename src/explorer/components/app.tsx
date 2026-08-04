@@ -304,7 +304,24 @@ export const App = () => {
 
   // --- Loading / error states ---
   if (loadError) {
-    return <div className="explorer-loading">Error loading data: {loadError}</div>;
+    // The dropdown is rendered here (rather than just showing the loading
+    // message) so a dataset load failure is not a dead end: switching to a
+    // working dataset — Yelp is always available — is the recovery path. The
+    // "!indexData || !dataset" branch below still returns early during a
+    // load, so this does not make a mid-load dataset switch reachable.
+    return (
+      <div className="explorer-app">
+        <h1 className="explorer-title">Pathway Explorer</h1>
+        <div className="explorer-top-bar">
+          <DatasetSelector
+            datasets={DATASET_LIST}
+            selectedId={datasetId}
+            onChange={handleDatasetChange}
+          />
+        </div>
+        <div className="explorer-loading">Error loading data: {loadError}</div>
+      </div>
+    );
   }
 
   if (!indexData || !dataset) {

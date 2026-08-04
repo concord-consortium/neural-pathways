@@ -53,12 +53,18 @@ const alienItem = makeItem("alien-item-1", "This is an alien conversation about 
 interface Deferred<T> {
   promise: Promise<T>;
   resolve: (value: T) => void;
+  reject: (err: Error) => void;
 }
 
 function deferred<T>(): Deferred<T> {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>(res => { resolve = res; });
-  return { promise, resolve };
+  let reject!: (err: Error) => void;
+  // No defensive .catch() here: mockedFetchIndex hands this promise straight
+  // to the App's fetch-index effect, which attaches its own .then().catch()
+  // synchronously during the same render that calls fetchIndex — so the
+  // promise never has a tick without a rejection handler attached.
+  const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; });
+  return { promise, resolve, reject };
 }
 
 describe("App dataset switching", () => {
@@ -89,6 +95,16 @@ describe("App dataset switching", () => {
       next.resolve(index);
       // Flush the microtask queue so the effect's .then body runs and its
       // resulting state updates commit before the next assertion.
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+  }
+
+  async function rejectNext(id: string, message: string) {
+    const next = pending[id]?.shift();
+    if (!next) throw new Error(`No pending fetchIndex call for "${id}"`);
+    await act(async () => {
+      next.reject(new Error(message));
       await Promise.resolve();
       await Promise.resolve();
     });
@@ -134,4 +150,41 @@ describe("App dataset switching", () => {
   // `let cancelled = false` / `return () => { cancelled = true; }` pair in
   // the fetch-index effect in app.tsx) — see the fix report for why a
   // non-contrived one could not be built in this codebase, and what was tried.
+
+  it("keeps the dataset dropdown available after a load error, so switching datasets recovers", async () => {
+    render(<App />);
+    await rejectNext("yelp", "index fetch failed");
+    expect(screen.getByText(/Error loading data: index fetch failed/i)).toBeInTheDocument();
+
+    // The dropdown must still be reachable: it is the user's only recovery
+    // path out of the error state (see finding 1 of the final-fixes review).
+    expect(screen.getByRole("combobox")).toHaveValue("yelp");
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "alien" } });
+    await resolveNext("alien", makeIndex("alien-fa-4", alienItem));
+
+    expect(screen.queryByText(/Error loading data/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox")).toHaveValue("alien");
+    expect(screen.getAllByText(alienItem.text)).toHaveLength(1);
+  });
+
+  it("routes a generated index whose attributes collide with a derived attribute to the error state", async () => {
+    render(<App />);
+    await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+
+    const badIndex = makeIndex("alien-fa-4", alienItem);
+    badIndex.metadata.attributes = [
+      {
+        key: "target", label: "Duplicate of a derived attribute", description: "collides on purpose",
+        type: "binary", valueLabels: { 0: "no", 1: "yes" },
+      },
+    ];
+    await act(async () => {
+      window.location.hash = "#dataset=alien";
+      window.dispatchEvent(new Event("hashchange"));
+    });
+    await resolveNext("alien", badIndex);
+
+    expect(screen.getByText(/Error loading data/i)).toBeInTheDocument();
+    expect(screen.getByText(/Duplicate attribute key "target"/i)).toBeInTheDocument();
+  });
 });
