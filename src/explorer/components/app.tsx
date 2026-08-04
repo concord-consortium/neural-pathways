@@ -295,7 +295,18 @@ export const App = () => {
         setSearchQuery(hashParams.q);
       }
       if (hashParams.coded !== undefined) {
-        setCommissioned(parseCommissioned(hashParams.coded));
+        // Sanitized the same way as the initial-load path (the fetch effect,
+        // above): without this, a pasted or hand-edited link with a junk key
+        // (or Back to one) would set commissioned = {"bogus"} here, and the
+        // hash-sync effect would then write that junk straight back into the
+        // URL, where it persists and rides along on every subsequent link the
+        // student copies — even though nothing renders visibly wrong, since
+        // applyCommissions and codings-menu.tsx both already filter by key.
+        // Do not "simplify" this back to the unfiltered brief snippet.
+        const codeable = new Set(codings.map(c => c.key));
+        setCommissioned(new Set(
+          [...parseCommissioned(hashParams.coded)].filter(key => codeable.has(key)),
+        ));
       } else {
         setCommissioned(NO_COMMISSIONS);
       }
@@ -303,7 +314,7 @@ export const App = () => {
     };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [indexData, datasetId, handleDatasetChange]);
+  }, [indexData, datasetId, handleDatasetChange, codings]);
 
   // --- Derived fit data ---
   const selectedFit = indexData?.metadata.fa_fits[selectedFitName] ?? null;

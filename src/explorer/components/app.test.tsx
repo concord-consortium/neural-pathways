@@ -298,6 +298,37 @@ describe("App dataset switching", () => {
       expect(window.location.hash).not.toContain("not_a_real_key");
     });
 
+    it("does not let a junk coded key arriving via hashchange survive into the url", async () => {
+      // Same guarantee as the load-time version above, but for the hashchange
+      // path (Back/Forward, or a link clicked from within the app) rather than
+      // the initial mount — the two paths sanitize independently.
+      await renderAlien();
+      act(() => {
+        window.location.hash = "#dataset=alien&coded=not_a_real_key";
+        window.dispatchEvent(new Event("hashchange"));
+      });
+      expect(window.location.hash).not.toContain("not_a_real_key");
+    });
+
+    it("clears commissions when a hashchange drops coded", async () => {
+      // The brief calls this out by name: Back to a URL without coded= must
+      // clear the set, or the URL and the app disagree about what is
+      // commissioned. Asserted through the search help dialog (dataset.attributes)
+      // for the same reason the commissioning tests above are: the Codings
+      // dialog's own list would not distinguish "really cleared" from
+      // "state.commissioned is stale but nothing re-rendered."
+      await renderAlien("#dataset=alien&coded=resource_stressed");
+      act(() => {
+        window.location.hash = "#dataset=alien";
+        window.dispatchEvent(new Event("hashchange"));
+      });
+      fireEvent.click(screen.getByLabelText("Search help"));
+      expect(document.body.textContent).not.toContain("Resource stressed");
+      // Positive control: still-visible attributes are still there, so the
+      // assertion above is not passing because the help dialog failed to open.
+      expect(document.body.textContent).toContain("Voices raised");
+    });
+
     it("shows no codings button for a dataset that hides nothing", async () => {
       render(<App />);
       await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
