@@ -66,6 +66,18 @@ describe("ResultsPanel", () => {
     expect(onSelect).toHaveBeenCalledWith(items[1]);
   });
 
+  // The results list is a snippet view over item.text only; the observer's
+  // note must never leak into it. See flatten-item.test.ts for the matching
+  // constraint on the search object.
+  it("never renders the observation note, even when the item carries one", () => {
+    const itemWithObservation: S3Item = {
+      ...makeItem("r2", "A conversation about the ship's hull temperature", [0.4, 0.2]),
+      observation: "The observer noted an unusually flat tone throughout this exchange.",
+    };
+    render(<ResultsPanel {...defaultProps} items={[itemWithObservation]} resultCount={1} />);
+    expect(screen.queryByText(/unusually flat tone/i)).not.toBeInTheDocument();
+  });
+
   it("can be collapsed and expanded", () => {
     render(<ResultsPanel {...defaultProps} />);
     const collapseButton = screen.getByRole("button", { name: /collapse/i });

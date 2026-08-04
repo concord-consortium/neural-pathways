@@ -146,4 +146,15 @@ describe("flattenItem attributes", () => {
     expect(flat.pathway_0).toBe(0.8);
     expect(flat.has_word_scores).toBe(false);
   });
+
+  // A searchable observation would hand a student every deliberately-hidden
+  // attribute in one search (`observation:"waited too long"` etc). This pins
+  // the constraint so a future edit that helpfully spreads more of S3Item
+  // into the flat object cannot silently reintroduce it.
+  it("never adds the observation field to the flattened search object", () => {
+    const item = makeItem({ observation: "This one hesitated for an unusually long time before approaching." });
+    const flat = flattenItem(item, "fit_a", activeYelp);
+    expect("observation" in flat).toBe(false);
+    expect(JSON.stringify(flat)).not.toContain("hesitated");
+  });
 });
