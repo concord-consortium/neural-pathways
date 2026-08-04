@@ -133,8 +133,8 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
               <input
                 type="radio"
                 name="wordScaleScope"
-                checked={wordScaleScope === "full-review"}
-                onChange={() => onWordScaleScopeChange("full-review")}
+                checked={wordScaleScope === "full-item"}
+                onChange={() => onWordScaleScopeChange("full-item")}
               />
               Full review
             </label>

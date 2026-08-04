@@ -4,12 +4,12 @@ import { Series } from "../types/explorer-data";
 
 /**
  * Builds one Series per attribute and per pathway, all aligned to the given
- * review order. Attributes come first, in dataset-config order, then pathways
+ * item order. Attributes come first, in dataset-config order, then pathways
  * P0..Pn-1 — the matrix draws its attribute/pathway separator at that boundary,
  * so the ordering is part of the contract.
  */
 export function buildSeries(
-  reviews: S3Item[],
+  items: S3Item[],
   dataset: DatasetConfig,
   fitName: string,
   nPathways: number,
@@ -24,7 +24,7 @@ export function buildSeries(
       attributeType: definition.type,
       valueLabels: definition.valueLabels,
       description: definition.description,
-      values: reviews.map(review => dataset.getAttributeValue(review, definition.key)),
+      values: items.map(item => dataset.getAttributeValue(item, definition.key)),
     });
   }
 
@@ -34,8 +34,8 @@ export function buildSeries(
       label: `P${p}`,
       kind: "pathway",
       description: "",
-      values: reviews.map(review => {
-        const scores = review.pathway_scores[fitName];
+      values: items.map(item => {
+        const scores = item.pathway_scores[fitName];
         return scores?.[p] ?? null;
       }),
     });

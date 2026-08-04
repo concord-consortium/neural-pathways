@@ -1,11 +1,11 @@
-.explorer-review-panel {
+.explorer-item-panel {
   background: #fff;
   border-radius: 8px;
   padding: 20px;
   border: 1px solid #ddd;
 }
 
-.explorer-review-meta {
+.explorer-item-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -19,7 +19,7 @@
   letter-spacing: 1px;
 }
 
-.explorer-review-badge {
+.explorer-item-badge {
   display: inline-block;
   padding: 3px 10px;
   border-radius: 12px;
@@ -52,32 +52,32 @@
   }
 }
 
-.explorer-review-text {
+.explorer-item-text {
   font-size: 14px;
   line-height: 1.6;
   color: #444;
   margin-bottom: 14px;
 }
 
-.explorer-review-business {
+.explorer-item-business {
   font-size: 13px;
   color: #666;
   margin-bottom: 6px;
 }
 
-.explorer-review-categories {
+.explorer-item-categories {
   font-size: 12px;
   color: #999;
   margin-bottom: 8px;
 }
 
-.explorer-review-stats {
+.explorer-item-stats {
   font-size: 13px;
   color: #777;
   margin-bottom: 8px;
 }
 
-.explorer-review-r2 {
+.explorer-item-r2 {
   font-size: 12px;
   color: #888;
   margin-top: 10px;

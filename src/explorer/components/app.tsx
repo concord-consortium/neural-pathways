@@ -3,12 +3,12 @@ import { filter, parse } from "liqe";
 import { S3Index, S3Item, S3ShapBucket, ItemShapData } from "../../shared/types/s3-data";
 import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope, ViewMode } from "../types/explorer-data";
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
-import { flattenReview } from "../utils/flatten-review";
+import { flattenItem } from "../utils/flatten-item";
 import { buildSeries } from "../utils/build-series";
 import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 import { SearchInput } from "./search-input";
 import { ResultsPanel } from "./results-panel";
-import { ReviewPanel } from "./review-panel";
+import { ItemPanel } from "./item-panel";
 import { PathwayPanel } from "./pathway-panel";
 import { WordEffectsPanel } from "./word-effects-panel";
 import { SettingsMenu } from "./settings-menu";
@@ -26,9 +26,9 @@ function getHashParams(): Record<string, string> {
   return params;
 }
 
-function updateHash(reviewId: string | null, fitName: string, query?: string, view?: ViewMode) {
+function updateHash(itemId: string | null, fitName: string, query?: string, view?: ViewMode) {
   const parts: string[] = [];
-  if (reviewId) parts.push(`review=${encodeURIComponent(reviewId)}`);
+  if (itemId) parts.push(`item=${encodeURIComponent(itemId)}`);
   if (fitName) parts.push(`fit=${encodeURIComponent(fitName)}`);
   if (query) parts.push(`q=${encodeURIComponent(query)}`);
   if (view && view !== "explore") parts.push(`view=${encodeURIComponent(view)}`);
@@ -43,7 +43,7 @@ export const App = () => {
   const [indexData, setIndexData] = useState<S3Index | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedFitName, setSelectedFitName] = useState<string>("");
-  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const shapCacheRef = useRef<Map<string, S3ShapBucket>>(new Map());
   const [rawShapData, setRawShapData] = useState<ItemShapData | null>(null);
   const [shapLoadedKey, setShapLoadedKey] = useState<string>("");
@@ -63,33 +63,33 @@ export const App = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const deferredQuery = useDeferredValue(searchQuery);
 
-  // --- Flatten reviews for search ---
-  const flatReviews = useMemo(() => {
+  // --- Flatten items for search ---
+  const flatItems = useMemo(() => {
     if (!indexData) return [];
-    return indexData.items.map(r => flattenReview(r, selectedFitName, yelpDataset));
+    return indexData.items.map(r => flattenItem(r, selectedFitName, yelpDataset));
   }, [indexData, selectedFitName]);
 
-  // --- Filter reviews with liqe ---
-  const { filteredReviews, searchError } = useMemo(() => {
-    if (!indexData) return { filteredReviews: [] as S3Item[], searchError: false };
+  // --- Filter items with liqe ---
+  const { filteredItems, searchError } = useMemo(() => {
+    if (!indexData) return { filteredItems: [] as S3Item[], searchError: false };
     if (!deferredQuery.trim()) {
-      return { filteredReviews: indexData.items, searchError: false };
+      return { filteredItems: indexData.items, searchError: false };
     }
     try {
       const ast = parse(deferredQuery);
-      const matched = filter(ast, flatReviews);
+      const matched = filter(ast, flatItems);
       // Map flat results back to S3Item objects by index
-      const matchedSet = new Set(matched.map(m => flatReviews.indexOf(m)));
-      return { filteredReviews: indexData.items.filter((_, i) => matchedSet.has(i)), searchError: false };
+      const matchedSet = new Set(matched.map(m => flatItems.indexOf(m)));
+      return { filteredItems: indexData.items.filter((_, i) => matchedSet.has(i)), searchError: false };
     } catch {
-      // On parse error, return all reviews as a safe fallback
-      return { filteredReviews: indexData.items, searchError: true };
+      // On parse error, return all items as a safe fallback
+      return { filteredItems: indexData.items, searchError: true };
     }
-  }, [indexData, deferredQuery, flatReviews]);
+  }, [indexData, deferredQuery, flatItems]);
 
   // --- Clear selection when it's not in filtered results ---
-  const effectiveSelectedReviewId = selectedReviewId && filteredReviews.some(r => r.id === selectedReviewId)
-    ? selectedReviewId : null;
+  const effectiveSelectedItemId = selectedItemId && filteredItems.some(r => r.id === selectedItemId)
+    ? selectedItemId : null;
 
   // --- Fetch index on mount ---
   useEffect(() => {
@@ -108,33 +108,33 @@ export const App = () => {
           setViewMode("correlations");
         }
         if (data.items.length > 0) {
-          const reviewId = hashParams.review && data.items.some(r => r.id === hashParams.review)
-            ? hashParams.review : null;
-          if (reviewId) {
-            setSelectedReviewId(reviewId);
+          const itemId = hashParams.item && data.items.some(r => r.id === hashParams.item)
+            ? hashParams.item : null;
+          if (itemId) {
+            setSelectedItemId(itemId);
           }
         }
       })
       .catch(err => setLoadError(err.message));
   }, []);
 
-  // --- Selected review ---
-  const selectedReview = useMemo(
-    () => indexData?.items.find(r => r.id === effectiveSelectedReviewId),
-    [indexData, effectiveSelectedReviewId],
+  // --- Selected item ---
+  const selectedItem = useMemo(
+    () => indexData?.items.find(r => r.id === effectiveSelectedItemId),
+    [indexData, effectiveSelectedItemId],
   );
 
   // --- SHAP availability ---
-  const hasShapForCurrentFit = selectedReview?.has_shap?.includes(selectedFitName) ?? false;
-  const shapAvailableFits = selectedReview?.has_shap ?? [];
+  const hasShapForCurrentFit = selectedItem?.has_shap?.includes(selectedFitName) ?? false;
+  const shapAvailableFits = selectedItem?.has_shap ?? [];
 
-  // --- Fetch SHAP when review or fit changes ---
-  const shapRequestKey = hasShapForCurrentFit ? `${effectiveSelectedReviewId}:${selectedFitName}` : "";
+  // --- Fetch SHAP when item or fit changes ---
+  const shapRequestKey = hasShapForCurrentFit ? `${effectiveSelectedItemId}:${selectedFitName}` : "";
   useEffect(() => {
-    if (!effectiveSelectedReviewId || !hasShapForCurrentFit) return;
+    if (!effectiveSelectedItemId || !hasShapForCurrentFit) return;
     let cancelled = false;
-    const key = `${effectiveSelectedReviewId}:${selectedFitName}`;
-    fetchShap(effectiveSelectedReviewId, selectedFitName, shapCacheRef.current)
+    const key = `${effectiveSelectedItemId}:${selectedFitName}`;
+    fetchShap(effectiveSelectedItemId, selectedFitName, shapCacheRef.current)
       .then(data => {
         if (!cancelled) {
           setRawShapData(data);
@@ -149,9 +149,9 @@ export const App = () => {
         }
       });
     return () => { cancelled = true; };
-  }, [effectiveSelectedReviewId, selectedFitName, hasShapForCurrentFit]);
+  }, [effectiveSelectedItemId, selectedFitName, hasShapForCurrentFit]);
 
-  // Treat SHAP data as null if it doesn't match the current review+fit
+  // Treat SHAP data as null if it doesn't match the current item+fit
   const shapDataCurrent = shapLoadedKey === shapRequestKey;
   const currentShapData = shapDataCurrent ? rawShapData : null;
   const shapLoading = shapRequestKey !== "" && !shapDataCurrent && !shapFetchFailed;
@@ -159,9 +159,9 @@ export const App = () => {
   // --- Sync hash (write on state change, read on hashchange) ---
   useEffect(() => {
     if (selectedFitName) {
-      updateHash(effectiveSelectedReviewId, selectedFitName, searchQuery || undefined, viewMode);
+      updateHash(effectiveSelectedItemId, selectedFitName, searchQuery || undefined, viewMode);
     }
-  }, [effectiveSelectedReviewId, selectedFitName, searchQuery, viewMode]);
+  }, [effectiveSelectedItemId, selectedFitName, searchQuery, viewMode]);
 
   useEffect(() => {
     if (!indexData) return;
@@ -171,8 +171,8 @@ export const App = () => {
       if (hashParams.fit && validFits.includes(hashParams.fit)) {
         setSelectedFitName(hashParams.fit);
       }
-      if (hashParams.review && indexData.items.some(r => r.id === hashParams.review)) {
-        setSelectedReviewId(hashParams.review);
+      if (hashParams.item && indexData.items.some(r => r.id === hashParams.item)) {
+        setSelectedItemId(hashParams.item);
       }
       if (hashParams.q !== undefined) {
         setSearchQuery(hashParams.q);
@@ -188,20 +188,20 @@ export const App = () => {
 
   const correlationSeries = useMemo(() => {
     if (viewMode !== "correlations" || !selectedFit) return [];
-    return buildSeries(filteredReviews, yelpDataset, selectedFitName, selectedFit.n_pathways);
-  }, [viewMode, filteredReviews, selectedFitName, selectedFit]);
+    return buildSeries(filteredItems, yelpDataset, selectedFitName, selectedFit.n_pathways);
+  }, [viewMode, filteredItems, selectedFitName, selectedFit]);
 
   const pathwayScores = useMemo(
-    () => selectedReview?.pathway_scores[selectedFitName] ?? [],
-    [selectedReview, selectedFitName],
+    () => selectedItem?.pathway_scores[selectedFitName] ?? [],
+    [selectedItem, selectedFitName],
   );
 
   const varianceFractions = useMemo(
-    () => selectedReview?.pathway_variance_fractions[selectedFitName] ?? [],
-    [selectedReview, selectedFitName],
+    () => selectedItem?.pathway_variance_fractions[selectedFitName] ?? [],
+    [selectedItem, selectedFitName],
   );
 
-  const reconstructionR2 = selectedReview?.reconstruction_r2?.[selectedFitName] ?? null;
+  const reconstructionR2 = selectedItem?.reconstruction_r2?.[selectedFitName] ?? null;
 
   const scaleExtents = useMemo<ScaleExtents>(() => {
     if (!selectedFit) return { shared: [0, 0], perPathway: [] };
@@ -231,9 +231,9 @@ export const App = () => {
     });
   }, []);
 
-  // --- Review selection (resets selected pathways) ---
-  const handleSelectReview = useCallback((review: S3Item) => {
-    setSelectedReviewId(review.id);
+  // --- Item selection (resets selected pathways) ---
+  const handleSelectItem = useCallback((item: S3Item) => {
+    setSelectedItemId(item.id);
     setSelectedPathways(new Set());
   }, []);
 
@@ -308,25 +308,25 @@ export const App = () => {
 
       <div className="explorer-body">
         <ResultsPanel
-          reviews={filteredReviews}
+          items={filteredItems}
           fitName={selectedFitName}
-          selectedReviewId={effectiveSelectedReviewId}
-          onSelectReview={handleSelectReview}
+          selectedItemId={effectiveSelectedItemId}
+          onSelectItem={handleSelectItem}
           maxAbsScore={Math.max(Math.abs(scaleExtents.shared[0]), Math.abs(scaleExtents.shared[1]))}
-          resultCount={filteredReviews.length}
+          resultCount={filteredItems.length}
           totalCount={indexData.items.length}
         />
         {viewMode === "correlations" ? (
           <CorrelationsView
             series={correlationSeries}
-            resultCount={filteredReviews.length}
+            resultCount={filteredItems.length}
             totalCount={indexData.items.length}
           />
-        ) : selectedReview ? (
+        ) : selectedItem ? (
           <div className="explorer-main">
             <div className="explorer-left-column">
-              <ReviewPanel
-                review={selectedReview}
+              <ItemPanel
+                item={selectedItem}
                 reconstructionR2={reconstructionR2}
                 attributes={yelpDataset.attributes}
                 getAttributeValue={yelpDataset.getAttributeValue}

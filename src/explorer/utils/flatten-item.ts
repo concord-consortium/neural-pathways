@@ -1,7 +1,7 @@
 import { S3Item } from "../../shared/types/s3-data";
 import { DatasetConfig } from "../../shared/datasets/dataset-config";
 
-export interface FlatReview {
+export interface FlatItem {
   text: string;
   target_label: string | null;
   name?: string;
@@ -19,27 +19,27 @@ export interface FlatReview {
   [key: string]: string | number | boolean | null | undefined;
 }
 
-export function flattenReview(
-  review: S3Item,
+export function flattenItem(
+  item: S3Item,
   fitName: string,
   dataset: DatasetConfig,
-): FlatReview {
-  const scores = review.pathway_scores[fitName] ?? [];
-  const flat: FlatReview = {
-    text: review.text,
-    target_label: review.target_label,
-    name: review.name,
-    city: review.city,
-    state: review.state,
-    stars: review.stars,
-    review_stars: review.review_stars,
-    categories: review.categories,
-    reconstruction_r2: review.reconstruction_r2?.[fitName] ?? 0,
-    has_word_scores: review.has_shap?.includes(fitName) ?? false,
+): FlatItem {
+  const scores = item.pathway_scores[fitName] ?? [];
+  const flat: FlatItem = {
+    text: item.text,
+    target_label: item.target_label,
+    name: item.name,
+    city: item.city,
+    state: item.state,
+    stars: item.stars,
+    review_stars: item.review_stars,
+    categories: item.categories,
+    reconstruction_r2: item.reconstruction_r2?.[fitName] ?? 0,
+    has_word_scores: item.has_shap?.includes(fitName) ?? false,
   };
-  if (review.classification != null) {
-    flat.classification_label = review.classification === 1 ? "positive" : "negative";
-    flat.classification_probability = review.classification_probability;
+  if (item.classification != null) {
+    flat.classification_label = item.classification === 1 ? "positive" : "negative";
+    flat.classification_probability = item.classification_probability;
   }
   for (let i = 0; i < scores.length; i++) {
     flat[`pathway_${i}`] = scores[i];
@@ -47,7 +47,7 @@ export function flattenReview(
   // Attributes are written last. An attribute may deliberately alias an existing
   // numeric field (stars, review_stars); the value is identical, so this is a no-op.
   for (const attr of dataset.attributes) {
-    const value = dataset.getAttributeValue(review, attr.key);
+    const value = dataset.getAttributeValue(item, attr.key);
     if (value != null) {
       flat[attr.key] = value;
     }

@@ -4,7 +4,7 @@ import { AttributeChips } from "./attribute-chips";
 import { S3Item } from "../../shared/types/s3-data";
 import { AttributeDefinition } from "../../shared/types/attributes";
 
-const review = { id: "r1" } as S3Item;
+const item = { id: "r1" } as S3Item;
 
 const attributes: AttributeDefinition[] = [
   { key: "flag_on", label: "Flag on", description: "A binary that is set.", type: "binary" },
@@ -18,10 +18,10 @@ const values: Record<string, number | null> = {
   flag_on: 1, flag_off: 0, count: 3, ratio: 0.4567, missing: null,
 };
 
-const getAttributeValue = (_review: S3Item, key: string) => values[key] ?? null;
+const getAttributeValue = (_item: S3Item, key: string) => values[key] ?? null;
 
 const renderChips = () => render(
-  <AttributeChips review={review} attributes={attributes} getAttributeValue={getAttributeValue} />,
+  <AttributeChips item={item} attributes={attributes} getAttributeValue={getAttributeValue} />,
 );
 
 describe("AttributeChips", () => {
@@ -68,7 +68,7 @@ describe("AttributeChips", () => {
 
   it("renders nothing when no attribute has a value", () => {
     const { container } = render(
-      <AttributeChips review={review} attributes={attributes} getAttributeValue={() => null} />,
+      <AttributeChips item={item} attributes={attributes} getAttributeValue={() => null} />,
     );
     // eslint-disable-next-line testing-library/no-node-access -- verifying component renders nothing
     expect(container.firstChild).toBeNull();
@@ -76,7 +76,7 @@ describe("AttributeChips", () => {
 
   it("renders nothing when the attribute list is empty", () => {
     const { container } = render(
-      <AttributeChips review={review} attributes={[]} getAttributeValue={getAttributeValue} />,
+      <AttributeChips item={item} attributes={[]} getAttributeValue={getAttributeValue} />,
     );
     // eslint-disable-next-line testing-library/no-node-access -- verifying component renders nothing
     expect(container.firstChild).toBeNull();

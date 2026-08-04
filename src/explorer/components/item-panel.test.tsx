@@ -1,10 +1,10 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { ReviewPanel } from "./review-panel";
+import { ItemPanel } from "./item-panel";
 import { S3Item } from "../../shared/types/s3-data";
 import { AttributeDefinition } from "../../shared/types/attributes";
 
-const mockReview: S3Item = {
+const mockItem: S3Item = {
   id: "r719",
   sources: { test: [0] },
   text: "Delivery was FAST. White pizza was delicious.",
@@ -26,21 +26,21 @@ const testAttributes: AttributeDefinition[] = [
   { key: "model_correct", label: "Model was correct", description: "Match.", type: "binary" },
 ];
 
-const testGetValue = (_review: S3Item, key: string): number | null =>
+const testGetValue = (_item: S3Item, key: string): number | null =>
   key === "target" ? 1 : null;
 
-const renderPanel = (review: S3Item = mockReview, r2: number | null = 0.9662) =>
+const renderPanel = (item: S3Item = mockItem, r2: number | null = 0.9662) =>
   render(
-    <ReviewPanel
-      review={review}
+    <ItemPanel
+      item={item}
       reconstructionR2={r2}
       attributes={testAttributes}
       getAttributeValue={testGetValue}
     />,
   );
 
-describe("ReviewPanel", () => {
-  it("renders the review text", () => {
+describe("ItemPanel", () => {
+  it("renders the item text", () => {
     renderPanel();
     expect(screen.getByText("Delivery was FAST. White pizza was delicious.")).toBeDefined();
   });
@@ -74,32 +74,32 @@ describe("ReviewPanel", () => {
   it("renders star rating", () => {
     renderPanel();
     // review_stars = 5, so 5 filled stars
-    const starContainer = screen.getByTestId("review-stars");
+    const starContainer = screen.getByTestId("item-stars");
     expect(starContainer.textContent).toContain("★★★★★");
   });
 
   it("hides R² when reconstructionR2 is null", () => {
-    renderPanel(mockReview, null);
+    renderPanel(mockItem, null);
     expect(screen.queryByText("0.9662")).toBeNull();
   });
 
   it("renders classification badge with probability when classification is present", () => {
-    const reviewWithClassification = {
-      ...mockReview,
+    const itemWithClassification = {
+      ...mockItem,
       classification: 1,
       classification_probability: 0.987654,
     };
-    renderPanel(reviewWithClassification);
+    renderPanel(itemWithClassification);
     expect(screen.getByText("predicted: positive (98.8%)")).toBeDefined();
   });
 
   it("renders negative classification badge", () => {
-    const reviewWithClassification = {
-      ...mockReview,
+    const itemWithClassification = {
+      ...mockItem,
       classification: 0,
       classification_probability: 0.234,
     };
-    renderPanel(reviewWithClassification);
+    renderPanel(itemWithClassification);
     expect(screen.getByText("predicted: negative (23.4%)")).toBeDefined();
   });
 
@@ -109,7 +109,7 @@ describe("ReviewPanel", () => {
   });
 });
 
-describe("ReviewPanel attributes", () => {
+describe("ItemPanel attributes", () => {
   it("renders chips for attributes that have values", () => {
     renderPanel();
     expect(screen.getByTestId("attribute-chip-target")).toBeDefined();
@@ -122,8 +122,8 @@ describe("ReviewPanel attributes", () => {
 
   it("renders no chip container when the attribute list is empty", () => {
     render(
-      <ReviewPanel
-        review={mockReview}
+      <ItemPanel
+        item={mockItem}
         reconstructionR2={0.9662}
         attributes={[]}
         getAttributeValue={testGetValue}

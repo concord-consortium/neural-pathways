@@ -47,8 +47,8 @@ export const PathwayBar: React.FC<PathwayBarProps> = ({
       onClick={() => onClick?.(index)}
     >
       <div className="pathway-bar-columns">
-        {/* Left column: per-review data */}
-        <div className="pathway-bar-col pathway-bar-col-review">
+        {/* Left column: per-item data */}
+        <div className="pathway-bar-col pathway-bar-col-item">
           <div className="pathway-bar-header">
             <span>Pathway {index}</span>
           </div>
@@ -79,7 +79,7 @@ export const PathwayBar: React.FC<PathwayBarProps> = ({
               value={varianceFraction}
               maxValue={1}
               label={`${(varianceFraction * 100).toFixed(1)}%`}
-              className="fill-bar-review"
+              className="fill-bar-item"
               testId={`variance-fill-${index}`}
             />
           )}

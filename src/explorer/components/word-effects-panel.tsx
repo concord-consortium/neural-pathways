@@ -35,7 +35,7 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
   );
 
   const sharedMaxAbsValue = useMemo(() => {
-    if (wordScaleScope !== "full-review" || sortedIndices.length === 0 || !shapData) return undefined;
+    if (wordScaleScope !== "full-item" || sortedIndices.length === 0 || !shapData) return undefined;
     let max = 0;
     for (const w of filteredWords) {
       for (const idx of sortedIndices) {
@@ -103,7 +103,7 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
 
   return (
     <div className="word-effects-panel">
-      {wordScaleScope === "full-review" && sharedMaxAbsValue != null && (
+      {wordScaleScope === "full-item" && sharedMaxAbsValue != null && (
         <ColorScale maxAbsValue={sharedMaxAbsValue} wordColorMode={wordColorMode} />
       )}
       {sortedIndices.map(i => (
