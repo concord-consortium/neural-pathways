@@ -79,6 +79,7 @@ export const App = () => {
     if (id === datasetId) return;
     setDatasetId(id);
     setIndexData(null);
+    setDataset(null);
     setLoadError(null);
     setSelectedItemId(null);
     setSelectedPathways(new Set());
@@ -87,6 +88,7 @@ export const App = () => {
     shapCacheRef.current = new Map();
     setRawShapData(null);
     setShapLoadedKey("");
+    setShapFetchFailed(false);
   }, [datasetId]);
 
   // --- Flatten items for search ---
@@ -119,8 +121,16 @@ export const App = () => {
 
   // --- Fetch index on dataset change (including the initial mount) ---
   useEffect(() => {
+    // Switching datasets twice in quick succession (dropdown fumble, or two
+    // hashchange events from browser back/forward) leaves two fetches in
+    // flight. Without this guard, whichever response lands last wins — even
+    // if it belongs to a dataset the user has already switched away from —
+    // and silently overwrites the UI with a mismatched index and attribute
+    // set. The SHAP effect below protects itself the same way.
+    let cancelled = false;
     fetchIndex(datasetConfig)
       .then(data => {
+        if (cancelled) return;
         // resolveAttributes validates a list that, for a generated dataset,
         // arrived over the network — so it can throw. Doing this here routes a
         // bad index to the error state instead of throwing during render.
@@ -153,7 +163,10 @@ export const App = () => {
           setSelectedFitName(names[0]);
         }
       })
-      .catch(err => setLoadError(err.message));
+      .catch(err => {
+        if (!cancelled) setLoadError(err.message);
+      });
+    return () => { cancelled = true; };
   }, [datasetId, datasetConfig]);
 
   // --- Selected item ---
