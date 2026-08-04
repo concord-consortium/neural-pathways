@@ -236,18 +236,33 @@ describe("App dataset switching", () => {
       await renderAlien();
       fireEvent.click(screen.getByRole("button", { name: /codings/i }));
       fireEvent.click(screen.getByTestId("commission-resource_stressed"));
+      // Close the Codings dialog before checking visibility elsewhere: its own
+      // "Commissioned in this session" list would otherwise satisfy the
+      // assertion below regardless of whether applyCommissions actually made
+      // the attribute visible to the rest of the app. The search help dialog
+      // (opened next) renders dataset.attributes — the real surface — the
+      // same way the pinning test above proves an uncommissioned attribute is
+      // absent from it.
+      // "expanded: true" (rather than another name match on /codings/i) is
+      // what picks the trigger and not the "Reset codings" button that now
+      // also exists inside the open dialog.
+      fireEvent.click(screen.getByRole("button", { name: /codings/i, expanded: true }));
 
+      fireEvent.click(screen.getByLabelText("Search help"));
       expect(document.body.textContent).toContain("Resource stressed");
       expect(window.location.hash).toContain("coded=resource_stressed");
     });
 
     it("applies a commissioned attribute named in the hash on load", async () => {
       await renderAlien("#dataset=alien&coded=resource_stressed");
-      // The commissioned label only renders inside the Codings dialog (as a
-      // "Commissioned in this session" entry) or as an item chip; neither
-      // exists until something is opened or selected, so open the dialog to
-      // observe the hash-driven commission actually landed.
-      fireEvent.click(screen.getByRole("button", { name: /codings/i }));
+      // Assert via the search help dialog (dataset.attributes) rather than the
+      // Codings dialog: the Codings dialog would show "Resource stressed" in
+      // its "Commissioned in this session" list purely because the key was
+      // parsed out of the hash into commissioned state, regardless of whether
+      // applyCommissions ever made the attribute visible to the explorer. The
+      // search help dialog is never opened by the Codings dialog, so this
+      // cannot be satisfied by the wrong surface.
+      fireEvent.click(screen.getByLabelText("Search help"));
       expect(document.body.textContent).toContain("Resource stressed");
     });
 
