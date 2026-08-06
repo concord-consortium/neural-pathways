@@ -91,6 +91,16 @@ the view, and every keystroke after that only has to recount, not rebin 6,427 re
 you scanned when you opened the field is the shape you clicked; narrowing the search moves bars
 inside it, never the ruler they're measured against.
 
+One thing the axis does change is what it calls a value. Open **Actual sentiment** (`target`) and
+its two ticks read `negative` and `positive` rather than `0` and `1`, and hovering the right-hand
+bar reads `Actual sentiment positive — 2998 reviews`. Those names come from the dataset's own
+value labels — the same ones behind the row's `positive 50%` headline — so the axis, the hover
+text, and the headline all say the same word for the same thing. Two fallbacks are deliberate and
+worth confirming rather than reporting: a field whose dataset declares no labels keeps its
+numbers (`Review rating`'s ticks stay `1`–`5`), and so does any individual value the dataset
+left unnamed, since showing a number is honest where inventing a name would not be. The
+Correlations drill-down labels its shared axis the same way, from whichever field runs along it.
+
 ## 5. Why the two histograms are scaled independently
 
 Look again at the **Review rating** detail pane from §3. The `these` histogram (145 reviews) and
@@ -119,7 +129,10 @@ scroll, independent of any particular search.
 - `target` (**Actual sentiment**): `positive 50%`.
 - `model_correct` (**Model was correct**): `yes 95%`.
 - `is_synthetic` (**Synthetic review**): `yes 7%`.
-- Six pathway rows, `P0`–`P5`, each a mean near zero (`pathway_0` reads `mean -0.002`).
+- Six pathway rows, `P0`–`P5`, whose means are all small but not all alike: they run from
+  `mean -0.187` (`pathway_3`) up to `mean 0.302` (`pathway_1`), with `pathway_0` nearest zero at
+  `mean -0.002`. Pathway scores are centred by construction, so expect small numbers here —
+  a pathway reading a mean of 5, or 50, is worth reporting.
 
 A field the dataset declares but has **no values for anywhere** still appears as a row — greyed
 out and unclickable, a `<div>` rather than a button, because there is no distribution behind it
@@ -141,11 +154,15 @@ Clear the search box, then type `model_correct:0`. The header reads
 correlations walkthrough uses.
 
 Scan down the attribute block for a row where `these` and `all` visibly diverge. `Model was
-correct` itself reads `yes 0%` against `all 6427`'s `yes 95%` — the biggest swing on the screen,
-but not an interesting one: every review left in the selection has `model_correct = 0` by
-construction, since that's the clause that produced the selection. (This is the same "the
-filtered field goes constant" case `docs/testing-correlations-view.md` §3 calls out for the
-correlation matrix.) Skip past it and the next clear divergence is **Review rating**:
+correct` itself reads `yes 0%` in **these** against `yes 95%` in **all (2,998 with a value)** —
+the biggest swing on the screen, but not an interesting one: every review left in the selection
+has `model_correct = 0` by construction, since that's the clause that produced the selection.
+(This is the same "the filtered field goes constant" case `docs/testing-correlations-view.md` §3
+calls out for the correlation matrix.) Note that 2,998, not 6,427: `model_correct` is only
+defined for reviews having both a prediction and a ground-truth label, so its own `n` — printed
+in the detail pane as `n = 2998` under the `all 6427` label — falls well short of the scope
+header's count, exactly as §3 describes. Skip past it and the next clear divergence is
+**Review rating**:
 
 | | these (145) | all (5,995 with a value) |
 |---|---|---|
@@ -194,12 +211,9 @@ commissioned behaves exactly like the seven that were visible from the start.
 
 ## Known rough edges — already known, no need to report
 
-- **A binary field's histogram axis and bar-hover text use raw `0`/`1`, not the dataset's value
-  labels.** The list row's headline correctly reads `positive 50%`, but open `Actual sentiment`'s
-  detail pane and the axis ticks read `0` and `1`, and hovering a bar reads
-  `Actual sentiment 1 — 2998 reviews` rather than naming `positive`. The correlations view's
-  grouped-histogram drill-down does show the real labels for the same field — this is a real gap
-  between the two views, but a known one, not something to file.
+- **A value the dataset never named still shows as a number** on the axis and in the hover text
+  (§4). That is the intended fallback, not a gap: a partial label map degrades to the number
+  rather than guessing at a name.
 - **No count axis on either histogram**, matching Correlations: bar heights are only comparable
   within one histogram, never between the two (§5). The `n = …` text is the only place the true
   magnitude lives.
