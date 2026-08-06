@@ -19,9 +19,10 @@ Click **Correlations** in the top bar.
 
 - The header reads `Correlations over 6427 of 6427 reviews`.
 - A square grid appears. Rows and columns are the same series in the same order:
-  five attributes — **Review rating**, **Business rating**, **Actual sentiment**,
-  **Model was correct**, **Synthetic review** — followed by one column per pathway in
-  the selected fit, labelled `P0`…`P5` or `P0`…`P6` depending on the fit.
+  six attributes — **Review rating**, **Business rating**, **Actual sentiment**,
+  **Predicted sentiment**, **Model was correct**, **Synthetic review** — followed by
+  one column per pathway in the selected fit, labelled `P0`…`P5` or `P0`…`P6`
+  depending on the fit.
 - A **heavier border** separates the attribute block from the pathway block, on both
   axes.
 - The **diagonal is grey and unclickable**. Clicking a cell against itself does
@@ -35,9 +36,15 @@ Hover any cell for the full-precision `r` and that cell's `n`.
 
 Look at the **Model was correct** row and column.
 
-- Its cells carry a **small corner dot** that other cells do not.
-- Hover one: `n` reads around **3,000**, not 6,427. Only reviews with both a
-  prediction and a ground-truth label have a value for this attribute.
+- Its cells carry a **small corner dot** that other cells do not — except for
+  **Predicted sentiment**'s row and column, which carry the same dot for a related
+  reason: `Predicted sentiment` only needs a prediction, `Model was correct` needs
+  both a prediction and a ground-truth label, but in this dataset every scored
+  review also has a ground-truth label, so the two attributes cover exactly the
+  same reviews.
+- Hover one: `n` reads around **3,000**, not 6,427 — `n = 2998` on both rows,
+  exactly. Only reviews with both a prediction and a ground-truth label have a
+  value for `Model was correct`.
 - A cell in the **Review rating** row has **no dot** and `n = 6427`.
 
 The dot appears when a cell's `n` falls below 95% of the reviews in scope. Without it
@@ -379,6 +386,19 @@ pasted to a colleague.
 - **A count of 1 reads as "1 reviews".**
 - **Attribute chips in the Explore view still label Actual sentiment as yes/no**
   rather than negative/positive, unlike the drill-down.
+- **The item panel shows the prediction twice**: the existing confidence badge
+  (e.g. `predicted: positive (96.7%)`) plus a plainer `Predicted sentiment` chip
+  lower in the panel. Deliberate, not a duplicate bug — the badge is the model's own
+  voice, the chip is the same value read the way every other attribute is read.
+- **`Predicted sentiment` is a target you can pick but never a predictor.** It shows
+  up in the target dropdown and, once picked, is excluded from its own checkbox
+  list like any other target — normal so far. What's different: it *never* appears
+  as a checkbox, even when some other attribute is the target. `target`, `prediction`,
+  and `model_correct` mutually determine one another (for binary values,
+  `correct = 1 − target − prediction + 2·target·prediction`), so `prediction` adds
+  no explanatory power as a predictor and, with pairwise interactions on, made the
+  design matrix exactly singular. It stays a full attribute everywhere else — chips,
+  search, this matrix, the Fields view — just not here.
 - **Histograms have no count axis.** Each row is scaled to its own tallest bar, so bar
   heights are *not* comparable between rows — a full-height bar might be 3 reviews in
   one row and 900 in another. The `n = …` text on each row carries the real magnitude.
