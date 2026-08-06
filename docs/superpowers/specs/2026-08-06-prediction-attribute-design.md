@@ -28,7 +28,58 @@ surface it reaches.
 | Position | **Immediately after `target`** | The array order is the matrix's row/column order and the Fields list's order. *Actual, predicted, correct* is the sequence the three variables explain each other in. |
 | Labels | **Mirror each dataset's `target`** | `target` is already dataset-specific ("Actual sentiment" / "Actual answer"). A generic wording for `prediction` would break the pairing that makes the two rows read as a matched set. |
 | Value labels | **One `const` per dataset**, shared with `classificationLabels` | Both describe the same binary outcome space: the classifier predicts the space the target is drawn from. Written twice they can drift, and the drift is visible — the Fields view's axis would disagree with the item panel's badge. |
-| Regression collinearity | **Left alone** | Selecting `target` + `prediction` with interactions is exactly singular. The panel already degrades safely. Detecting and explaining collinearity is a different feature. |
+| Regression collinearity | **`prediction` is excluded from the regression panel's predictor candidates** | Superseded during implementation; see the Amendment below. The original ruling was "left alone", on the assumption that going singular required a deliberate selection. It does not: every candidate starts checked, so ticking the interactions box alone breaks the panel's default state. |
+
+## Amendment: `prediction` is not a regression predictor
+
+Three passages in this document — the Decisions table's "Regression collinearity" row, the
+"What It Reaches" table's regression line, and the closing paragraph of "The regression panel
+can go singular" — originally said the collinearity would be left alone and that `prediction`
+would become an ordinary predictor candidate. They read, in full:
+
+> | Regression collinearity | **Left alone** | Selecting `target` + `prediction` with
+> interactions is exactly singular. The panel already degrades safely. Detecting and explaining
+> collinearity is a different feature. |
+
+> | Regression panel | A new predictor candidate |
+
+> That message misdescribes this particular cause — the data is ample; the predictors are
+> dependent — but distinguishing a singular design matrix from a sparse one is its own feature.
+> **Out of scope here; recorded in the walkthrough's rough edges instead.**
+
+**All three are superseded.** `prediction` is withheld from the regression panel's predictor
+candidates on both datasets. It remains a full attribute on every other surface.
+
+**Why the original reasoning was wrong.** It assumed reaching the singular case took a
+deliberate act: a user selecting `target` *and* `prediction` *and* interactions. It does not.
+`regression-panel.tsx` initialises `excludedKeys` to an empty set, so **every candidate starts
+checked**. Adding `prediction` therefore meant that a user who ticked "include pairwise
+interactions" and did nothing else got "Not enough usable data to fit a model" where they
+previously got a fit — `model_correct` is an exact affine function of
+`{1, target, prediction, target × prediction}`, and `buildDesignMatrix`'s duplicate-column check
+is pairwise only, so nothing catches a three-column dependency. The defect was in the panel's
+default state, not in an exotic corner of it, and "the panel already degrades safely" is not
+true of a message that misdescribes its own cause on first use.
+
+**Why exclusion rather than a better error.** The three are mutually determining, so
+`prediction` carries no explanatory power a regression on the other two does not already have.
+There is nothing to lose by withholding it and a working default state to gain. Detecting and
+explaining collinearity properly remains out of scope (it is still listed there below).
+
+**How it is enforced.** By data, not by a key literal: `AttributeDefinition` gains an
+`excludeFromRegression?: boolean` flag (`src/shared/types/attributes.ts`, beside `hidden`),
+both `prediction` declarations set it, and the panel's candidate filter tests the flag. The
+flag's docblock carries the full rationale, so a reader who finds the missing checkbox
+suspicious meets the explanation at the point of definition. Each dataset's test asserts its
+`prediction` sets the flag; the panel's test opts out via the flag rather than by name; and a
+`buildSeries` test pins that the flag survives onto the `Series` the panel reads.
+
+**What it cost the walkthroughs.** `prediction` appearing everywhere *except* the regression
+panel looks like a bug, so it is documented as a known rough edge in
+[testing-fields-view.md](../../testing-fields-view.md) (the canonical copy) with pointers from
+[testing-correlations-view.md](../../testing-correlations-view.md),
+[testing-alien-explorer.md](../../testing-alien-explorer.md) §4, and
+[testing-attribute-commissioning.md](../../testing-attribute-commissioning.md) §2.5.
 
 ## The Attribute
 
@@ -97,7 +148,8 @@ attributes; the duplicate check already covers this case.
 
 ## What It Reaches
 
-All six surfaces the attribute list feeds, with no per-surface work:
+Five of the six surfaces the attribute list feeds, with no per-surface work — the regression
+panel is the single exception, per the Amendment above:
 
 | Surface | Result |
 |---|---|
@@ -105,7 +157,7 @@ All six surfaces the attribute list feeds, with no per-surface work:
 | Search fields | `prediction:1` |
 | Search help dialog | A row with the description |
 | Correlation matrix | A new row and column |
-| Regression panel | A new predictor candidate |
+| Regression panel | **Nothing** — a target you can pick, but never a predictor candidate. The one exception, ruled during implementation; see the Amendment. |
 | Fields view | A new row, with its own distribution |
 
 ### The matrix gains nothing degenerate
@@ -114,19 +166,23 @@ All six surfaces the attribute list feeds, with no per-surface work:
 class the model errs toward. Both are real findings, and neither is a constant or a perfect
 correlation.
 
-### The regression panel can go singular
+### The regression panel would go singular — so `prediction` is kept out of it
 
 For binary values, `correct = 1 − target − prediction + 2·target·prediction`. With main effects
 only there is no exact collinearity, but the panel offers interaction terms, and with them selected
 the three are exactly dependent.
 
-The failure is already safe: `invertSymmetric` returns null below its pivot tolerance,
+The failure is safe in the narrow sense: `invertSymmetric` returns null below its pivot tolerance,
 `solveSymmetric` propagates it, and the panel renders "Not enough usable data to fit a model.
 Include more attributes, widen the search, or pick a different target."
 
-That message misdescribes this particular cause — the data is ample; the predictors are dependent —
-but distinguishing a singular design matrix from a sparse one is its own feature. **Out of scope
-here; recorded in the walkthrough's rough edges instead.**
+That message misdescribes this particular cause — the data is ample; the predictors are dependent.
+Distinguishing a singular design matrix from a sparse one is its own feature and stays out of
+scope. **What is not acceptable is meeting that message in the panel's default state**, which is
+what happens when `prediction` is a candidate, because every candidate starts checked. So
+`prediction` is excluded from the candidate list, via `excludeFromRegression` on the attribute
+definition. See the Amendment above for the full ruling, and the flag's docblock in
+`src/shared/types/attributes.ts` for the version a future reader will find first.
 
 ### Two ways to search the same thing
 
@@ -151,14 +207,36 @@ One test pins the label constant: a dataset's `prediction.valueLabels` and its
 `config.classificationLabels` are the same object. That is what stops the Fields view's axis from
 drifting away from the item panel's badge.
 
+Per the Amendment, three more tests bind the regression exclusion to the data rather than to a
+key literal: each dataset asserts its `prediction` sets `excludeFromRegression` (and that `target`
+and `model_correct` do not), `regression-panel.test.tsx` builds its excluded fixture by setting
+the flag instead of by naming it, and `build-series.test.ts` pins that the flag reaches the
+`Series` the panel actually reads.
+
 ## Walkthroughs
 
-Both [testing-correlations-view.md](../../testing-correlations-view.md) and
-[testing-fields-view.md](../../testing-fields-view.md) quote matrix dimensions and field lists that
-this change alters. Both need a pass, with real numbers taken from the running app.
+**Amended — this section originally named only two documents, and that was a spec defect.** Four
+walkthroughs quote attribute counts, matrix dimensions, ordinals, or field lists that this change
+alters, and two of them state those counts as literal bug-report criteria, so a stale count makes
+a tester file a false report:
 
-The Fields view walkthrough also gains a rough-edges note about the regression panel's message when
-`target`, `prediction`, and interactions are selected together.
+- [testing-correlations-view.md](../../testing-correlations-view.md) — matrix dimensions, the
+  partial-coverage dot, rough edges.
+- [testing-fields-view.md](../../testing-fields-view.md) — the field directory, rough edges.
+- [testing-attribute-commissioning.md](../../testing-attribute-commissioning.md) — chip counts,
+  search-help entry counts, matrix row counts, the ordinal each commissioned attribute lands on,
+  Yelp's attribute list, and `P3`'s matrix row in the §7 discovery path.
+- [testing-alien-explorer.md](../../testing-alien-explorer.md) — chip count and order, the
+  search-help attribute list, the `Model was correct` row, the regression's predictor count,
+  and Yelp's attribute list.
+
+All numbers taken from the running app, not from arithmetic. Every one of the 800 alien
+conversations carries a `classification`, so all 800 gain a `Predicted answer` chip; the first
+Yelp review has none, so it gains no chip — that asymmetry is what makes copying counts between
+the two datasets unsafe.
+
+The Fields view walkthrough carries the canonical rough-edges note explaining why `prediction`
+has no regression checkbox, with pointers to it from the other three.
 
 ## Out of Scope
 
