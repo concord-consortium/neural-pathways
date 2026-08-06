@@ -2,6 +2,7 @@ import React from "react";
 import { Series } from "../types/explorer-data";
 import { FieldStats } from "../utils/statistics";
 import { headlineStat } from "../utils/field-stat-format";
+import { HistogramBars } from "./histogram-bars";
 import "./field-list-row.scss";
 
 interface FieldListRowProps {
@@ -30,7 +31,17 @@ export const FieldListRow: React.FC<FieldListRowProps> = ({
         {headlineStat(series, baseline)}
       </span>
       <span className="field-row-spark">
-        {subset && <Sparkline counts={subset.counts} />}
+        {/* The subset's shape alone, scaled to its own peak — there is nothing
+            in the list for it to share one with. No hover targets and no axis:
+            this is a shape to scan, and the detail pane is where it is read. */}
+        {subset && (
+          <HistogramBars
+            counts={subset.counts}
+            height={SPARK_HEIGHT}
+            className="field-row-sparkline"
+            barTestId="field-row-spark-bar"
+          />
+        )}
       </span>
     </>
   );
@@ -56,35 +67,5 @@ export const FieldListRow: React.FC<FieldListRowProps> = ({
     >
       {content}
     </button>
-  );
-};
-
-/** The subset's shape alone. Scaled to its own peak — there is nothing to share one with. */
-const Sparkline: React.FC<{ counts: number[] }> = ({ counts }) => {
-  // reduce rather than Math.max(...counts): this codebase has hit the spread
-  // argument ceiling before, and a bin count is not worth the risk.
-  const peak = counts.reduce((max, count) => (count > max ? count : max), 0);
-  const barWidth = counts.length > 0 ? 100 / counts.length : 100;
-  return (
-    <svg
-      className="field-row-sparkline"
-      viewBox={`0 0 100 ${SPARK_HEIGHT}`}
-      preserveAspectRatio="none"
-      role="presentation"
-    >
-      {counts.map((count, i) => {
-        const height = peak === 0 ? 0 : (count / peak) * SPARK_HEIGHT;
-        return (
-          <rect
-            key={i}
-            data-testid="field-row-spark-bar"
-            x={i * barWidth}
-            y={SPARK_HEIGHT - height}
-            width={barWidth}
-            height={height}
-          />
-        );
-      })}
-    </svg>
   );
 };

@@ -4,6 +4,7 @@ import { FieldStats, Bins } from "../utils/statistics";
 import { headlineStat } from "../utils/field-stat-format";
 import { formatAxisValue, barTitle } from "../utils/axis";
 import { HistogramAxis } from "./histogram-axis";
+import { HistogramBars } from "./histogram-bars";
 import "./field-detail.scss";
 
 interface FieldDetailProps {
@@ -22,9 +23,6 @@ const BAR_AREA_HEIGHT = 48;
 export const FieldDetail: React.FC<FieldDetailProps> = ({
   series, bins, subset, baseline, resultCount, totalCount, itemNoun,
 }) => {
-  const binCount = bins.mode === "categorical" ? bins.values.length : bins.edges.length - 1;
-  const barWidth = binCount > 0 ? 100 / binCount : 100;
-
   const sets: { label: string; stats: FieldStats | null }[] = [
     { label: `these ${resultCount}`, stats: subset },
     { label: `all ${totalCount}`, stats: baseline },
@@ -49,9 +47,19 @@ export const FieldDetail: React.FC<FieldDetailProps> = ({
               none in this selection
             </div>
           ) : (
-            <Histogram
-              stats={stats} bins={bins} barWidth={barWidth}
-              fieldLabel={series.label} plural={itemNoun.plural}
+            <HistogramBars
+              counts={stats.counts}
+              height={BAR_AREA_HEIGHT}
+              className="explorer-field-detail-histogram"
+              testId="field-detail-histogram"
+              barClassName="explorer-field-detail-bar"
+              barTestId="field-detail-bar"
+              hit={{
+                className: "explorer-field-detail-hit",
+                testId: "field-detail-hit",
+                title: (i, count) => barTitle(bins, i, count, series.label, itemNoun.plural),
+              }}
+              ariaLabel={`Distribution of ${series.label}`}
             />
           )}
           <div className="explorer-field-detail-numbers" data-testid="field-detail-numbers">
@@ -71,63 +79,5 @@ export const FieldDetail: React.FC<FieldDetailProps> = ({
         <div />
       </div>
     </div>
-  );
-};
-
-interface HistogramProps {
-  stats: FieldStats;
-  bins: Bins;
-  barWidth: number;
-  fieldLabel: string;
-  plural: string;
-}
-
-/**
- * Scaled against its own peak, never a peak shared with the other set. A
- * 145-item selection against a 3,000-item baseline on a shared peak flattens
- * the selection into an unreadable line — and the selection is the interesting
- * one. Each row prints its own n, so the size difference stays on screen.
- */
-const Histogram: React.FC<HistogramProps> = ({ stats, bins, barWidth, fieldLabel, plural }) => {
-  const peak = stats.counts.reduce((max, count) => (count > max ? count : max), 0);
-  return (
-    <svg
-      className="explorer-field-detail-histogram"
-      data-testid="field-detail-histogram"
-      viewBox={`0 0 100 ${BAR_AREA_HEIGHT}`}
-      preserveAspectRatio="none"
-      role="img"
-      aria-label={`Distribution of ${fieldLabel}`}
-    >
-      {stats.counts.map((count, i) => {
-        const height = peak === 0 ? 0 : (count / peak) * BAR_AREA_HEIGHT;
-        return (
-          <rect
-            key={`bar-${i}`}
-            className="explorer-field-detail-bar"
-            data-testid="field-detail-bar"
-            x={i * barWidth}
-            y={BAR_AREA_HEIGHT - height}
-            width={barWidth}
-            height={height}
-          />
-        );
-      })}
-      {/* Painted after the bars so they sit on top, full height so an empty bin
-          is still hoverable. */}
-      {stats.counts.map((count, i) => (
-        <rect
-          key={`hit-${i}`}
-          className="explorer-field-detail-hit"
-          data-testid="field-detail-hit"
-          x={i * barWidth}
-          y={0}
-          width={barWidth}
-          height={BAR_AREA_HEIGHT}
-        >
-          <title>{barTitle(bins, i, count, fieldLabel, plural)}</title>
-        </rect>
-      ))}
-    </svg>
   );
 };

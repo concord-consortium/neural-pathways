@@ -18,22 +18,14 @@
   text-align: right;
 }
 
+// The chart's frame. The bars and their hit targets are painted by
+// histogram-bars.scss, which every histogram body in the app shares;
+// .explorer-group-bar and .explorer-group-hit stay on those rects as this
+// view's own hooks, for when its chart wants to diverge from the others.
 .explorer-group-histogram {
-  width: 100%;
   height: 48px;
   background: #fafafa;
   border: 1px solid #eee;
-
-  .explorer-group-bar {
-    fill: #2c3e80;
-  }
-
-  .explorer-group-hit {
-    fill: transparent;
-    // A transparent fill is not reliably treated as painted, so the default
-    // visiblePainted would drop the hover in some engines. Be explicit.
-    pointer-events: all;
-  }
 }
 
 .explorer-group-stats {

@@ -1,0 +1,17 @@
+// Only what every histogram body shares. Height, background and border stay
+// with each view's own chart class, because a framed 48px panel and a bare 20px
+// sparkline genuinely differ there.
+.explorer-histogram-bars {
+  width: 100%;
+}
+
+.explorer-histogram-bar {
+  fill: #2c3e80;
+}
+
+.explorer-histogram-hit {
+  fill: transparent;
+  // A transparent fill is not reliably treated as painted, so the default
+  // visiblePainted would drop the hover in some engines. Be explicit.
+  pointer-events: all;
+}

@@ -50,11 +50,8 @@
   display: flex;
 }
 
+// No frame, unlike the detail pane's chart: at 20px a border and a background
+// would be most of what the reader sees. histogram-bars.scss paints the bars.
 .field-row-sparkline {
-  width: 100%;
   height: 20px;
-
-  rect {
-    fill: #2c3e80;
-  }
 }
