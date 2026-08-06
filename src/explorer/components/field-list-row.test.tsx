@@ -72,6 +72,9 @@ describe("FieldListRow", () => {
     renderRow({ subset: null });
     expect(screen.getByTestId("field-row-subset").textContent).toBe("—");
     expect(screen.queryAllByTestId("field-row-spark-bar")).toHaveLength(0);
+    // Still a button: the field has values in the dataset, so there is a
+    // baseline distribution to open even though the selection contributes none.
+    expect(screen.getByTestId("field-row-target").tagName).toBe("BUTTON");
   });
 
   it("calls onSelect when clicked", () => {

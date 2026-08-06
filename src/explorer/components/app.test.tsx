@@ -378,6 +378,22 @@ describe("App dataset switching", () => {
     expect(screen.getByTestId("fields-scope").textContent).toContain("1 of 1 reviews");
   });
 
+  it("leaves the results panel alone when switching to Fields", async () => {
+    render(<App />);
+    await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+
+    // The panel is the reader's place in the data; a view switch changes what
+    // sits beside it, never what it lists.
+    const before = screen.getAllByTestId("result-card").length;
+    expect(before).toBe(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Fields" }));
+
+    expect(screen.getByTestId("fields-view")).toBeDefined();
+    expect(screen.getAllByTestId("result-card")).toHaveLength(before);
+    expect(screen.getByText("This is a yelp review about pizza.")).toBeDefined();
+  });
+
   it("restores the fields view from the hash on load", async () => {
     window.location.hash = "#view=fields";
     render(<App />);
