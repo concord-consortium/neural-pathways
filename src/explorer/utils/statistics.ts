@@ -137,6 +137,79 @@ function binIndex(value: number, min: number, max: number, binCount: number): nu
 }
 
 /**
+ * How a set of values was divided into bars, and how to place a value in one.
+ *
+ * Separated from counting so a plan can be built from one set of values and
+ * applied to another. That is what lets the fields view bin the whole dataset
+ * once and then count a changing search result into those same bars — bins
+ * derived from the result itself would rescale on every keystroke, and the two
+ * histograms would no longer be comparable.
+ */
+export interface BinPlan {
+  bins: Bins;
+  barCount: number;
+  /**
+   * Bar index for a value. Clamps rather than returning out of range, so a value
+   * the plan was not built from still lands somewhere real instead of writing
+   * past the end of a counts array.
+   */
+  indexOf: (value: number) => number;
+}
+
+/** Returns null when nothing in values is usable — there is no plan to make. */
+export function chooseBins(
+  values: (number | null)[],
+  binCount: number = DEFAULT_BIN_COUNT,
+): BinPlan | null {
+  const usable: number[] = [];
+  for (const value of values) {
+    if (isUsable(value)) usable.push(value);
+  }
+  if (usable.length === 0) return null;
+
+  const distinct = [...new Set(usable)].sort((a, b) => a - b);
+  // Few distinct values is not by itself evidence that a column is discrete — a
+  // continuous column looks discrete when the filter is narrow enough. Fifteen
+  // reviews of a continuous pathway score have fifteen distinct values, and
+  // charting those as evenly spaced bars misrepresents them as categories.
+  // Genuine discreteness shows up as REPETITION, so also require each distinct
+  // value to appear at least twice on average. A single distinct value is always
+  // categorical, because there is no spread to bin.
+  const categorical = distinct.length === 1
+    || (distinct.length <= MAX_DISTINCT_FOR_BARS && distinct.length * 2 <= usable.length);
+
+  if (categorical) {
+    const position = new Map<number, number>();
+    distinct.forEach((value, i) => position.set(value, i));
+    return {
+      bins: { mode: "categorical", values: distinct },
+      barCount: distinct.length,
+      indexOf: value => {
+        const exact = position.get(value);
+        if (exact !== undefined) return exact;
+        // A value this plan was not built from. Land it on the first bar at or
+        // above it, and on the last bar when it exceeds every known value.
+        let i = 0;
+        while (i < distinct.length - 1 && distinct[i] < value) i++;
+        return i;
+      },
+    };
+  }
+
+  const min = distinct[0];
+  const max = distinct[distinct.length - 1];
+  const edges: number[] = [];
+  for (let i = 0; i <= binCount; i++) {
+    edges.push(min + ((max - min) * i) / binCount);
+  }
+  return {
+    bins: { mode: "numeric", edges },
+    barCount: binCount,
+    indexOf: value => binIndex(value, min, max, binCount),
+  };
+}
+
+/**
  * Splits scores by the distinct values of groupValues and summarises each group.
  * Bins are derived once from the pooled scores so the histograms are directly
  * comparable — bar i means the same thing in every group. A column whose few
@@ -166,42 +239,11 @@ export function compareGroups(
     pooled.push(s);
   }
 
-  if (pooled.length === 0) {
+  const plan = chooseBins(pooled, binCount);
+  if (plan === null) {
     return { groups: [], bins: { mode: "numeric", edges: [] }, separationSd: null };
   }
-
-  const distinct = [...new Set(pooled)].sort((a, b) => a - b);
-  // Few distinct values is not by itself evidence that a column is discrete — a
-  // continuous column looks discrete when the filter is narrow enough. Fifteen
-  // reviews of a continuous pathway score have fifteen distinct values, and
-  // charting those as evenly spaced bars misrepresents them as categories.
-  // Genuine discreteness shows up as REPETITION, so also require each distinct
-  // value to appear at least twice on average. A single distinct value is always
-  // categorical, because there is no spread to bin.
-  const categorical = distinct.length === 1
-    || (distinct.length <= MAX_DISTINCT_FOR_BARS && distinct.length * 2 <= pooled.length);
-
-  let bins: Bins;
-  let barCount: number;
-  let indexOf: (value: number) => number;
-
-  if (categorical) {
-    const position = new Map<number, number>();
-    distinct.forEach((value, i) => position.set(value, i));
-    bins = { mode: "categorical", values: distinct };
-    barCount = distinct.length;
-    indexOf = value => position.get(value) as number;
-  } else {
-    const min = distinct[0];
-    const max = distinct[distinct.length - 1];
-    const edges: number[] = [];
-    for (let i = 0; i <= binCount; i++) {
-      edges.push(min + ((max - min) * i) / binCount);
-    }
-    bins = { mode: "numeric", edges };
-    barCount = binCount;
-    indexOf = value => binIndex(value, min, max, binCount);
-  }
+  const { bins, barCount, indexOf } = plan;
 
   const groups: GroupSummary[] = [...buckets.keys()].sort((a, b) => a - b).map(value => {
     const values = buckets.get(value) as number[];
