@@ -1,3 +1,5 @@
+@use "./field-columns" as *;
+
 .explorer-fields-view {
   // Sized like the sibling .explorer-correlations-view: flex: 1 fills the space
   // beside the results panel, min-width: 0 lets it shrink below its content
@@ -37,7 +39,7 @@
 
 .explorer-fields-list-head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px 96px 92px;
+  grid-template-columns: $field-list-columns;
   gap: 10px;
   padding: 4px 8px;
   position: sticky;
