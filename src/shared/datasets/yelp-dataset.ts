@@ -11,6 +11,21 @@ import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
  * object is a no-op. What the attribute layer adds is the definition and the
  * ability to participate in correlation views.
  */
+
+/**
+ * The label space this dataset's binary outcome lives in, shared by the three
+ * declarations that must agree: the ground truth (`target`), what the model said
+ * (`prediction`), and the confidence badge in the item panel
+ * (`classificationLabels`, below). The classifier predicts the same space the
+ * target is drawn from, so one constant is the honest way to say it — written
+ * out three times they can drift, and the drift would be visible: the fields
+ * view's axis would disagree with the badge sitting above it.
+ *
+ * These are also the labels carried as `target_label` alongside `target` in the
+ * S3 data.
+ */
+const CLASSIFICATION_LABELS = { 0: "negative", 1: "positive" };
+
 const attributes: AttributeDefinition[] = [
   {
     key: "review_stars",
@@ -35,8 +50,15 @@ const attributes: AttributeDefinition[] = [
     description: "The true sentiment label for this review: 1 for positive, 0 for negative. "
       + "This is the ground truth the model was trained to predict.",
     type: "binary",
-    // Matches the target_label carried alongside target in the S3 data.
-    valueLabels: { 0: "negative", 1: "positive" },
+    valueLabels: CLASSIFICATION_LABELS,
+  },
+  {
+    key: "prediction",
+    label: "Predicted sentiment",
+    description: "The sentiment the model predicted for this review: 1 for positive, 0 for "
+      + "negative. Only defined for reviews the model has scored.",
+    type: "binary",
+    valueLabels: CLASSIFICATION_LABELS,
   },
   {
     key: "model_correct",
@@ -64,7 +86,7 @@ export const yelpDataset: DatasetConfig = {
   label: "Yelp Reviews",
   baseUrl: "https://models-resources.s3.amazonaws.com/neural-pathways/data/v1/",
   itemNoun: { singular: "review", plural: "reviews" },
-  classificationLabels: { 0: "negative", 1: "positive" },
+  classificationLabels: CLASSIFICATION_LABELS,
   searchPlaceholder: "stars:5 AND pathway_0:>0.8",
   searchFields: [
     { name: "name", description: "Business name" },
@@ -84,6 +106,8 @@ export const yelpDataset: DatasetConfig = {
         return item.stars ?? null;
       case "target":
         return item.target;
+      case "prediction":
+        return item.classification ?? null;
       case "model_correct":
         if (item.classification == null || item.target == null) return null;
         return item.classification === item.target ? 1 : 0;
