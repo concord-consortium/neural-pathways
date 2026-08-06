@@ -232,10 +232,14 @@ commissioned behaves exactly like the eight that were visible from the start.
 - **`Predicted sentiment`/`Predicted answer` is a row here and in the correlation matrix, but
   never a checkbox in the regression panel** (`docs/testing-correlations-view.md`, Known rough
   edges) — that panel is the one surface where this attribute doesn't show up. `target`,
-  `prediction`, and `model_correct` mutually determine one another for binary values, so
-  `prediction` has nothing to add as a predictor, and letting it in made the design matrix
-  singular once interactions were switched on. It stays a full field everywhere else, this view
-  included.
+  `prediction`, and `model_correct` mutually determine one another for binary values, so on their
+  own they'd just make `prediction` an uninformative predictor, not a reason to remove its
+  checkbox outright. The actual reason is historical: during development, checking `prediction`
+  alongside `target` and `model_correct` with pairwise interactions on used to drive the design
+  matrix exactly singular, and the panel's "not enough usable data" message misdescribed why. That
+  failure mode is not something you can reproduce today — there is no `prediction` checkbox left
+  to check, so there's nothing to switch on to go looking for it. It's written down here only so
+  the missing checkbox doesn't get mistaken for an oversight and "restored."
 - **Two search fields can point at the same fact.** `classification_label:positive` (string) and
   `prediction:1` (numeric) both narrow to the same reviews — the string reads better in a query,
   the number is what Correlations and the regression panel need. `review_stars`/`stars` already

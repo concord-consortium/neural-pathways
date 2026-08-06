@@ -391,14 +391,11 @@ pasted to a colleague.
   lower in the panel. Deliberate, not a duplicate bug — the badge is the model's own
   voice, the chip is the same value read the way every other attribute is read.
 - **`Predicted sentiment` is a target you can pick but never a predictor.** It shows
-  up in the target dropdown and, once picked, is excluded from its own checkbox
-  list like any other target — normal so far. What's different: it *never* appears
-  as a checkbox, even when some other attribute is the target. `target`, `prediction`,
-  and `model_correct` mutually determine one another (for binary values,
-  `correct = 1 − target − prediction + 2·target·prediction`), so `prediction` adds
-  no explanatory power as a predictor and, with pairwise interactions on, made the
-  design matrix exactly singular. It stays a full attribute everywhere else — chips,
-  search, this matrix, the Fields view — just not here.
+  up in the target dropdown, yet its checkbox never appears in the predictor list,
+  even when some other attribute is the target — unlike the Explore chips, search,
+  or this matrix, which all treat it as a full attribute. See `docs/testing-fields-
+  view.md`'s Known rough edges for why it was excluded and why that reason is now
+  historical rather than something you can trigger from the UI.
 - **Histograms have no count axis.** Each row is scaled to its own tallest bar, so bar
   heights are *not* comparable between rows — a full-height bar might be 3 reviews in
   one row and 900 in another. The `n = …` text on each row carries the real magnitude.
