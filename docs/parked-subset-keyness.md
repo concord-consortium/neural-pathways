@@ -343,3 +343,5 @@ To reproduce the human-only rerun, filter `reviews` with
   misclassified reviews.
 - [testing-correlations-view.md](testing-correlations-view.md) — what phases 2 and 3 built,
   which this would sit alongside.
+- [testing-fields-view.md](testing-fields-view.md) — the per-field selection-versus-baseline
+  view a later phase built; this idea would have been the word-level analogue.
