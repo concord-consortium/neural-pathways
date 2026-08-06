@@ -24,6 +24,7 @@ export function buildSeries(
       attributeType: definition.type,
       valueLabels: definition.valueLabels,
       description: definition.description,
+      excludeFromRegression: definition.excludeFromRegression,
       values: items.map(item => dataset.getAttributeValue(item, definition.key)),
     });
   }

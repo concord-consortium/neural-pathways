@@ -3,16 +3,6 @@ import { AttributeDefinition } from "../types/attributes";
 import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
 
 /**
- * Yelp attributes are derived from fields already present in index.json, so
- * enabling attributes for this dataset requires no data regeneration.
- *
- * `review_stars` and `stars` intentionally alias existing search fields of the
- * same name — the values are identical, so writing them to the flattened search
- * object is a no-op. What the attribute layer adds is the definition and the
- * ability to participate in correlation views.
- */
-
-/**
  * The label space this dataset's binary outcome lives in, shared by the three
  * declarations that must agree: the ground truth (`target`), what the model said
  * (`prediction`), and the confidence badge in the item panel
@@ -26,6 +16,15 @@ import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
  */
 const CLASSIFICATION_LABELS = { 0: "negative", 1: "positive" };
 
+/**
+ * Yelp attributes are derived from fields already present in index.json, so
+ * enabling attributes for this dataset requires no data regeneration.
+ *
+ * `review_stars` and `stars` intentionally alias existing search fields of the
+ * same name — the values are identical, so writing them to the flattened search
+ * object is a no-op. What the attribute layer adds is the definition and the
+ * ability to participate in correlation views.
+ */
 const attributes: AttributeDefinition[] = [
   {
     key: "review_stars",
@@ -59,6 +58,7 @@ const attributes: AttributeDefinition[] = [
       + "negative. Only defined for reviews the model has scored.",
     type: "binary",
     valueLabels: CLASSIFICATION_LABELS,
+    excludeFromRegression: true,
   },
   {
     key: "model_correct",

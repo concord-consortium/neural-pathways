@@ -35,6 +35,7 @@ const derivedAttributes: AttributeDefinition[] = [
       + "Only defined for conversations the model has scored.",
     type: "binary",
     valueLabels: CLASSIFICATION_LABELS,
+    excludeFromRegression: true,
   },
   {
     key: "model_correct",

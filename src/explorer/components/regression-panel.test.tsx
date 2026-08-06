@@ -40,18 +40,18 @@ describe("RegressionPanel", () => {
     expect(screen.getByTestId("predictor-toggle-sparse")).toBeDefined();
   });
 
-  it("excludes prediction from the predictor list, without dropping the others", () => {
-    // prediction is derivable from target and model_correct (any two of the
-    // three fix the third), so it is withheld from the regression candidates
-    // even though it is a full attribute elsewhere. The other attributes must
-    // still render — a test that only checked the absence would also pass if
-    // the whole predictor list failed to render.
-    const withPrediction: Series[] = [
-      ...series,
-      attribute("prediction", "Prediction", [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]),
-    ];
-    render(<RegressionPanel series={withPrediction} />);
-    expect(screen.queryByTestId("predictor-toggle-prediction")).toBeNull();
+  it("excludes an opted-out attribute from the predictor list, without dropping the others", () => {
+    // The exclusion is driven by the attribute definition's excludeFromRegression
+    // flag, not by any particular key, so the fixture opts out by setting the flag
+    // (the dataset tests are what pin the real "prediction" attribute to it). The
+    // other attributes must still render — a test that only checked the absence
+    // would also pass if the whole predictor list failed to render.
+    const optedOut: Series = {
+      ...attribute("opted_out", "Opted out", [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]),
+      excludeFromRegression: true,
+    };
+    render(<RegressionPanel series={[...series, optedOut]} />);
+    expect(screen.queryByTestId("predictor-toggle-opted_out")).toBeNull();
     expect(screen.getByTestId("predictor-toggle-rating")).toBeDefined();
     expect(screen.getByTestId("predictor-toggle-flag")).toBeDefined();
     expect(screen.getByTestId("predictor-toggle-sparse")).toBeDefined();

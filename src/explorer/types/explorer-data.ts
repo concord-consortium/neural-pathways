@@ -37,6 +37,11 @@ export interface Series {
    */
   valueLabels?: Record<number, string>;
   description: string;
+  /**
+   * Carried from the attribute definition; see `excludeFromRegression` in
+   * shared/types/attributes.ts for why an attribute would set it.
+   */
+  excludeFromRegression?: boolean;
   /** One entry per item, aligned by index. null means missing. */
   values: (number | null)[];
 }

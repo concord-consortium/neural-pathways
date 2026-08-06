@@ -91,6 +91,16 @@ describe("yelpDataset", () => {
     expect(target?.valueLabels).toBe(yelpDataset.classificationLabels);
   });
 
+  it("keeps prediction out of the regression panel's predictors", () => {
+    // The regression panel filters on this flag, not on the key, so this is the
+    // assertion that binds the two: renaming the key would no longer silently
+    // restore a predictor that makes the design matrix singular. See
+    // excludeFromRegression in shared/types/attributes.ts.
+    expect(attributes.find(a => a.key === "prediction")?.excludeFromRegression).toBe(true);
+    expect(attributes.find(a => a.key === "target")?.excludeFromRegression).toBeUndefined();
+    expect(attributes.find(a => a.key === "model_correct")?.excludeFromRegression).toBeUndefined();
+  });
+
   it("detects synthetic reviews from their sources", () => {
     const synthetic = { ...baseReview, sources: { "synthetic-gpt": [3] } };
     expect(get(synthetic, "is_synthetic")).toBe(1);

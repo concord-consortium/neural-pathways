@@ -86,6 +86,17 @@ describe("alienDataset", () => {
     expect(alienDataset.getAttributeValue(noPrediction, "prediction")).toBeNull();
   });
 
+  it("keeps prediction out of the regression panel's predictors", () => {
+    // The regression panel filters on this flag, not on the key, so this is the
+    // assertion that binds the two: renaming the key would no longer silently
+    // restore a predictor that makes the design matrix singular. See
+    // excludeFromRegression in shared/types/attributes.ts.
+    const attrs = alienDataset.resolveAttributes(index);
+    expect(attrs.find(a => a.key === "prediction")?.excludeFromRegression).toBe(true);
+    expect(attrs.find(a => a.key === "target")?.excludeFromRegression).toBeUndefined();
+    expect(attrs.find(a => a.key === "model_correct")?.excludeFromRegression).toBeUndefined();
+  });
+
   it("labels target and prediction from the same object as the classification badge", () => {
     // toBe, not toEqual: identity is what stops the fields view's axis drifting
     // away from the item panel's badge.
