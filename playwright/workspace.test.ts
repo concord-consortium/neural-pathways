@@ -302,6 +302,12 @@ test("a field's selection and baseline distributions differ", async ({ page }) =
   await expect(page.getByTestId("field-detail-title")).toContainText("Review rating");
   await expect(page.getByTestId("field-detail-histogram")).toHaveCount(2);
 
+  // The numbers settle a render after the query does, because the view reads a
+  // useDeferredValue — and allTextContents() below is a one-shot read that does
+  // not retry. Wait on a retrying assertion first, the same way the hash checks
+  // above use expect.poll for their own version of this race.
+  await expect(page.getByTestId("fields-scope")).toContainText("145 of ");
+
   // The reviews the model got wrong are rated differently from the dataset as a
   // whole — the kind of finding the view exists to surface. Asserted as "these
   // two numbers differ" rather than a direction: which way the misclassified
