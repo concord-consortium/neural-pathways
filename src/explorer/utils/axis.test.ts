@@ -1,4 +1,5 @@
-import { formatAxisValue, selectTickIndices } from "./axis";
+import { formatAxisValue, selectTickIndices, barTitle } from "./axis";
+import { Bins } from "./statistics";
 
 describe("formatAxisValue", () => {
   it("keeps a meaningful decimal", () => {
@@ -70,5 +71,19 @@ describe("selectTickIndices", () => {
 
   it("returns nothing for an empty axis", () => {
     expect(selectTickIndices(0, 10)).toEqual([]);
+  });
+});
+
+describe("barTitle", () => {
+  it("names a categorical bar by its value", () => {
+    const bins: Bins = { mode: "categorical", values: [1, 2, 3] };
+    expect(barTitle(bins, 1, 40, "Review rating", "reviews"))
+      .toBe("Review rating 2 — 40 reviews");
+  });
+
+  it("names a numeric bar by the range it spans", () => {
+    const bins: Bins = { mode: "numeric", edges: [0, 0.5, 1] };
+    expect(barTitle(bins, 0, 7, "P0", "conversations"))
+      .toBe("P0 0 to 0.5 — 7 conversations");
   });
 });

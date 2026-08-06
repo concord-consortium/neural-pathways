@@ -1,6 +1,7 @@
 import React from "react";
-import { Bins, GroupComparison } from "../utils/statistics";
-import { formatAxisValue, selectTickIndices } from "../utils/axis";
+import { GroupComparison } from "../utils/statistics";
+import { barTitle } from "../utils/axis";
+import { HistogramAxis } from "./histogram-axis";
 import "./distribution-comparison.scss";
 
 interface DistributionComparisonProps {
@@ -13,17 +14,6 @@ interface DistributionComparisonProps {
 }
 
 const BAR_AREA_HEIGHT = 48;
-const MAX_AXIS_LABELS = 10;
-
-/** Text for a bar's native tooltip: which slice of the column, and how many fell in it. */
-function barTitle(
-  bins: Bins, index: number, count: number, scoreLabel: string, itemNoun: { singular: string; plural: string },
-): string {
-  const where = bins.mode === "categorical"
-    ? formatAxisValue(bins.values[index])
-    : `${formatAxisValue(bins.edges[index])} to ${formatAxisValue(bins.edges[index + 1])}`;
-  return `${scoreLabel} ${where} — ${count} ${itemNoun.plural}`;
-}
 
 export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
   comparison, groupLabels, scoreLabel, itemNoun,
@@ -33,9 +23,6 @@ export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
 
   const binCount = bins.mode === "categorical" ? bins.values.length : bins.edges.length - 1;
   const barWidth = binCount > 0 ? 100 / binCount : 100;
-  const tickIndices = bins.mode === "categorical"
-    ? new Set(selectTickIndices(bins.values.length, MAX_AXIS_LABELS))
-    : new Set<number>();
 
   return (
     <div className="explorer-distribution-comparison" data-testid="distribution-comparison">
@@ -84,7 +71,7 @@ export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
                   height={BAR_AREA_HEIGHT}
                   data-testid="group-bar-hit"
                 >
-                  <title>{barTitle(bins, i, count, scoreLabel, itemNoun)}</title>
+                  <title>{barTitle(bins, i, count, scoreLabel, itemNoun.plural)}</title>
                 </rect>
               ))}
             </svg>
@@ -97,24 +84,7 @@ export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
 
       <div className="explorer-group-row">
         <div />
-        <div className="explorer-histogram-axis" data-testid="histogram-axis">
-          {bins.mode === "categorical" ? (
-            bins.values.map((value, i) => (
-              <div className="explorer-axis-tick" key={i} data-testid="axis-tick">
-                {tickIndices.has(i) ? formatAxisValue(value) : ""}
-              </div>
-            ))
-          ) : (
-            <>
-              <div className="explorer-axis-end" data-testid="axis-end">
-                {formatAxisValue(bins.edges[0])}
-              </div>
-              <div className="explorer-axis-end" data-testid="axis-end">
-                {formatAxisValue(bins.edges[bins.edges.length - 1])}
-              </div>
-            </>
-          )}
-        </div>
+        <HistogramAxis bins={bins} />
         <div />
       </div>
 

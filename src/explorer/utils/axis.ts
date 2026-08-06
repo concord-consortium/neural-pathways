@@ -1,3 +1,5 @@
+import { Bins } from "./statistics";
+
 /**
  * Formats a number for an axis tick: at most three decimal places, with trailing
  * zeros removed so a whole number reads as "3" rather than "3.000".
@@ -39,4 +41,21 @@ export function selectTickIndices(count: number, maxLabels: number): number[] {
   const last = count - 1;
   if (indices[indices.length - 1] !== last) indices.push(last);
   return indices;
+}
+
+/**
+ * Text for a bar's native tooltip: which slice of the column it covers, and how
+ * many items fell in it.
+ *
+ * Lives here beside formatAxisValue rather than in a component, because two
+ * charts now ask the same question of the same Bins union and their answers
+ * must not drift apart.
+ */
+export function barTitle(
+  bins: Bins, index: number, count: number, label: string, plural: string,
+): string {
+  const where = bins.mode === "categorical"
+    ? formatAxisValue(bins.values[index])
+    : `${formatAxisValue(bins.edges[index])} to ${formatAxisValue(bins.edges[index + 1])}`;
+  return `${label} ${where} — ${count} ${plural}`;
 }

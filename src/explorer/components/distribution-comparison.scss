@@ -42,35 +42,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.explorer-histogram-axis {
-  display: flex;
-  font-size: 11px;
-  color: #666;
-  font-variant-numeric: tabular-nums;
-}
-
-.explorer-axis-tick {
-  flex: 1;
-  text-align: center;
-  // overflow: hidden is load-bearing: it forces min-width: auto to resolve to 0,
-  // so every tick stays exactly 1/n of the axis and lines up with its bar.
-  overflow: hidden;
-  white-space: nowrap;
-  // Without this, a label wider than its cell is clipped on BOTH sides, because
-  // the text is centered — "0.475" can render as ".47" or "4.7", a different
-  // number, which misleads worse than no label at all. Ellipsis clips one end
-  // and marks it, so a truncated label reads as truncated.
-  text-overflow: ellipsis;
-}
-
-.explorer-axis-end {
-  flex: 1;
-
-  &:last-child {
-    text-align: right;
-  }
-}
-
 .explorer-group-separation {
   font-size: 12px;
   color: #333;
