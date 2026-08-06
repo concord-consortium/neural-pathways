@@ -92,6 +92,41 @@ describe("FieldDetail", () => {
     expect(screen.getAllByTestId("field-detail-histogram")).toHaveLength(1);
   });
 
+  it("names a binary field's ticks and bars with the dataset's value labels", () => {
+    const target: Series = {
+      key: "target", label: "Actual sentiment", kind: "attribute", attributeType: "binary",
+      valueLabels: { 0: "negative", 1: "positive" },
+      description: "The true sentiment label.", values: [],
+    };
+    renderDetail({
+      series: target,
+      bins: { mode: "categorical", values: [0, 1] },
+      subset: { n: 145, mean: 0.38, min: 0, max: 1, counts: [90, 55] },
+      baseline: { n: 3000, mean: 0.5, min: 0, max: 1, counts: [1500, 1500] },
+    });
+    expect(screen.getAllByTestId("axis-tick").map(t => t.textContent))
+      .toEqual(["negative", "positive"]);
+    expect(screen.getAllByTestId("field-detail-hit")[0].textContent)
+      .toBe("Actual sentiment negative — 90 reviews");
+  });
+
+  it("shows the raw number for a field with no value labels", () => {
+    // review_stars declares none, so the ticks stay 1-5 rather than going blank.
+    renderDetail();
+    expect(screen.getAllByTestId("axis-tick").map(t => t.textContent))
+      .toEqual(["1", "2", "3", "4", "5"]);
+    expect(screen.getAllByTestId("field-detail-hit")[0].textContent)
+      .toBe("Review rating 1 — 60 reviews");
+  });
+
+  it("falls back to the number for a value the label map does not list", () => {
+    renderDetail({ series: { ...series, valueLabels: { 1: "one star" } } });
+    expect(screen.getAllByTestId("axis-tick").map(t => t.textContent))
+      .toEqual(["one star", "2", "3", "4", "5"]);
+    expect(screen.getAllByTestId("field-detail-hit")[1].textContent)
+      .toBe("Review rating 2 — 40 reviews");
+  });
+
   it("passes numeric bins through to the axis", () => {
     // Six edges describe five bins, matching the five-entry counts arrays above.
     // bins and counts always come from the same plan in real use, so a fixture

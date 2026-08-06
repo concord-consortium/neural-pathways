@@ -21,10 +21,33 @@ describe("HistogramAxis", () => {
     expect(ticks.filter(t => t.textContent !== "").length).toBeLessThan(20);
   });
 
+  it("labels a categorical tick with the dataset's value label", () => {
+    const bins: Bins = { mode: "categorical", values: [0, 1] };
+    render(<HistogramAxis bins={bins} valueLabels={{ 0: "negative", 1: "positive" }} />);
+    expect(screen.getAllByTestId("axis-tick").map(t => t.textContent))
+      .toEqual(["negative", "positive"]);
+  });
+
+  it("falls back to the number for a value the map does not list", () => {
+    // A partial map must degrade to the number rather than mislabel a tick.
+    const bins: Bins = { mode: "categorical", values: [0, 1, 2] };
+    render(<HistogramAxis bins={bins} valueLabels={{ 0: "low", 1: "high" }} />);
+    expect(screen.getAllByTestId("axis-tick").map(t => t.textContent))
+      .toEqual(["low", "high", "2"]);
+  });
+
   it("labels a numeric axis with its two endpoints and no ticks", () => {
     const bins: Bins = { mode: "numeric", edges: [0, 0.5, 1, 1.5, 2] };
     render(<HistogramAxis bins={bins} />);
     expect(screen.getAllByTestId("axis-end").map(e => e.textContent)).toEqual(["0", "2"]);
     expect(screen.queryAllByTestId("axis-tick")).toHaveLength(0);
+  });
+
+  it("leaves the numeric endpoints as numbers even when value labels are supplied", () => {
+    // The endpoints are bin edges — positions along a range, not values of the
+    // column — so a value label would be naming something else entirely.
+    const bins: Bins = { mode: "numeric", edges: [0, 0.5, 1] };
+    render(<HistogramAxis bins={bins} valueLabels={{ 0: "negative", 1: "positive" }} />);
+    expect(screen.getAllByTestId("axis-end").map(e => e.textContent)).toEqual(["0", "1"]);
   });
 });

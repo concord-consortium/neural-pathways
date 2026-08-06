@@ -57,7 +57,8 @@ export const FieldDetail: React.FC<FieldDetailProps> = ({
               hit={{
                 className: "explorer-field-detail-hit",
                 testId: "field-detail-hit",
-                title: (i, count) => barTitle(bins, i, count, series.label, itemNoun.plural),
+                title: (i, count) =>
+                  barTitle(bins, i, count, series.label, itemNoun.plural, series.valueLabels),
               }}
               ariaLabel={`Distribution of ${series.label}`}
             />
@@ -75,7 +76,7 @@ export const FieldDetail: React.FC<FieldDetailProps> = ({
           the same way the group rows above are laid out. */}
       <div className="explorer-field-detail-row">
         <div />
-        <HistogramAxis bins={bins} />
+        <HistogramAxis bins={bins} valueLabels={series.valueLabels} />
         <div />
       </div>
     </div>

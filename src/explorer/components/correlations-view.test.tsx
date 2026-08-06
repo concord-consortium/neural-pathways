@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { CorrelationsView } from "./correlations-view";
 import { Series } from "../types/explorer-data";
 
@@ -90,6 +90,34 @@ describe("CorrelationsView", () => {
     expect(screen.getByTestId("group-row-0").textContent).toContain("negative");
     expect(screen.getByTestId("group-row-1").textContent).toContain("positive");
     expect(screen.getByTestId("group-row-1").textContent).not.toContain("yes");
+  });
+
+  it("labels the drill-down axis from the column series, not the row's", () => {
+    renderView();
+    // Rating (5 values, no labels) down the rows, Flag (0/1, labelled) along the
+    // axis. The two label sets belong to different variables, and this is the
+    // cell where using the row's map for the axis would be visible.
+    fireEvent.click(screen.getByTestId("cell-rating-flag"));
+    expect(screen.getAllByTestId("axis-tick").map(t => t.textContent))
+      .toEqual(["negative", "positive"]);
+    // The rows keep naming themselves from the row series, which has no labels.
+    expect(screen.getByTestId("group-row-1").textContent).toContain("1");
+  });
+
+  it("names a drill-down bar by the column's value label on hover", () => {
+    renderView();
+    fireEvent.click(screen.getByTestId("cell-rating-flag"));
+    const hits = within(screen.getByTestId("group-row-1")).getAllByTestId("group-bar-hit");
+    expect(hits[0].textContent).toContain("Flag negative");
+  });
+
+  it("leaves the axis as numbers when the column declares no value labels", () => {
+    renderView();
+    // Flag down the rows, Rating along the axis: Rating declares no labels, so
+    // the ticks must degrade to the numbers rather than going blank.
+    fireEvent.click(screen.getByTestId("cell-flag-rating"));
+    expect(screen.getAllByTestId("axis-tick").map(t => t.textContent))
+      .toEqual(["1", "2", "3", "4", "5"]);
   });
 
   it("shows the group comparison when a low-cardinality non-binary row is selected", () => {

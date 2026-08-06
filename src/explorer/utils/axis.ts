@@ -21,6 +21,19 @@ export function formatAxisValue(value: number): string {
 }
 
 /**
+ * A categorical value as a reader should see it: the dataset's label for that
+ * value when there is one, and the number itself when there is not.
+ *
+ * The fallback is the contract AttributeDefinition.valueLabels documents — a
+ * partial map, or none at all, must degrade to the number rather than lie — and
+ * it lives here so the axis under a histogram and the hover text on its bars
+ * cannot come to disagree about what a bar is called.
+ */
+export function axisValueLabel(value: number, valueLabels?: Record<number, string>): string {
+  return valueLabels?.[value] ?? formatAxisValue(value);
+}
+
+/**
  * Chooses which tick indices to label so the labels do not collide.
  *
  * Every index is returned when they all fit. Above that the indices are thinned
@@ -50,12 +63,17 @@ export function selectTickIndices(count: number, maxLabels: number): number[] {
  * Lives here beside formatAxisValue rather than in a component, because two
  * charts now ask the same question of the same Bins union and their answers
  * must not drift apart.
+ *
+ * valueLabels names the column's own values, so a binary field reads
+ * "positive" rather than "1". It applies in categorical mode only: a numeric
+ * bar covers a range of values, which no single label describes.
  */
 export function barTitle(
   bins: Bins, index: number, count: number, label: string, plural: string,
+  valueLabels?: Record<number, string>,
 ): string {
   const where = bins.mode === "categorical"
-    ? formatAxisValue(bins.values[index])
+    ? axisValueLabel(bins.values[index], valueLabels)
     : `${formatAxisValue(bins.edges[index])} to ${formatAxisValue(bins.edges[index + 1])}`;
   return `${label} ${where} — ${count} ${plural}`;
 }

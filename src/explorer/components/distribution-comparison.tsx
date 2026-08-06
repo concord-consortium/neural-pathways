@@ -11,13 +11,21 @@ interface DistributionComparisonProps {
   groupLabels: Record<number, string>;
   /** Name of the column variable being distributed, used in the hover text. */
   scoreLabel: string;
+  /**
+   * Display labels for the SCORE column's own values — the axis under the
+   * histograms and the bar hover text. Not to be confused with groupLabels
+   * above, which names the rows: those are two different variables, and a
+   * binary score column labelled with the row variable's names would lie.
+   * Optional, and a value it does not list falls back to the number.
+   */
+  scoreValueLabels?: Record<number, string>;
   itemNoun: { singular: string; plural: string };
 }
 
 const BAR_AREA_HEIGHT = 48;
 
 export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
-  comparison, groupLabels, scoreLabel, itemNoun,
+  comparison, groupLabels, scoreLabel, scoreValueLabels, itemNoun,
 }) => {
   const { groups, bins, separationSd } = comparison;
   if (groups.length === 0) return null;
@@ -40,7 +48,7 @@ export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
             hit={{
               className: "explorer-group-hit",
               testId: "group-bar-hit",
-              title: (i, count) => barTitle(bins, i, count, scoreLabel, itemNoun.plural),
+              title: (i, count) => barTitle(bins, i, count, scoreLabel, itemNoun.plural, scoreValueLabels),
             }}
             ariaLabel={`Distribution for group ${groupLabels[group.value] ?? group.value}`}
           />
@@ -52,7 +60,7 @@ export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
 
       <div className="explorer-group-row">
         <div />
-        <HistogramAxis bins={bins} />
+        <HistogramAxis bins={bins} valueLabels={scoreValueLabels} />
         <div />
       </div>
 
