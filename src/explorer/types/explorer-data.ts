@@ -16,7 +16,7 @@ export interface ScaleExtents {
   perPathway: [number, number][];
 }
 
-export type ViewMode = "explore" | "correlations";
+export type ViewMode = "explore" | "correlations" | "fields";
 
 /**
  * One column of numbers aligned across an item list — either an external
