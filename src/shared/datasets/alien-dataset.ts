@@ -14,10 +14,10 @@ import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
 const CLASSIFICATION_LABELS = { 0: "wait", 1: "approach" };
 
 /**
- * The generator emits nine coded attributes but not these two, and
+ * The generator emits nine coded attributes but not these three, and
  * model_correct is what makes the planted bias findable at all — filtering to
  * the model's errors and seeing which group they land on is the whole activity.
- * Both are derived here exactly as the Yelp config derives its own.
+ * All three are derived here exactly as the Yelp config derives its own.
  */
 const derivedAttributes: AttributeDefinition[] = [
   {
