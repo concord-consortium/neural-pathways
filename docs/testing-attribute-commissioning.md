@@ -27,10 +27,11 @@ top bar shows a button reading **`Codings 4`** between **Correlations** and
 commission.
 
 Click the first result to select a conversation (in this run, item
-`c04b9a49822c`). Only **seven** attribute chips appear — `Actual answer`, `Model
-was correct`, `Voices raised`, `Engaged in a task`, `Group size`, `Near water`,
-`Food present` — stopping right where `docs/testing-alien-explorer.md` §2 says
-eleven chips should continue. The four missing are the hidden codings.
+`c04b9a49822c`). Only **eight** attribute chips appear — `Actual answer`,
+`Predicted answer`, `Model was correct`, `Voices raised`, `Engaged in a task`,
+`Group size`, `Near water`, `Food present` — four short of the twelve
+`docs/testing-alien-explorer.md` §2 accounts for. The four missing are the
+hidden codings.
 
 Click **`Codings 4`**. The dialog reads:
 
@@ -54,7 +55,7 @@ this dialog; they're confirmed in §2.3 and §3 below via the search-help field
 list and the URL.)
 
 **Bug to report:** a fifth or sixth entry in the Codings dialog, fewer than
-eleven total attributes when everything is commissioned, or chips/dialog text
+twelve total attributes when everything is commissioned, or chips/dialog text
 disagreeing with the table above.
 
 ## 2. Confirming hiding is total
@@ -69,7 +70,7 @@ checked independently. Do this before commissioning anything.
 ### 2.1 No chip on a selected conversation
 
 With any alien conversation selected, count the chips. There should be exactly
-seven, ending at `Food present`. **Bug:** a chip labeled `Resource stressed`,
+eight, ending at `Food present`. **Bug:** a chip labeled `Resource stressed`,
 `Gestures repeated`, `Young present`, or `Carrying a burden` appears anywhere.
 
 ### 2.2 The flattened search object doesn't match hidden fields
@@ -81,8 +82,8 @@ non-matching behavior `docs/testing-alien-explorer.md` §3 documents for
 
 ### 2.3 No row in the search help dialog
 
-Click the **`?`** (Search help) button. Under **Attributes**, exactly seven
-entries are listed: `target`, `model_correct`, `voices_raised`,
+Click the **`?`** (Search help) button. Under **Attributes**, exactly eight
+entries are listed: `target`, `prediction`, `model_correct`, `voices_raised`,
 `engaged_in_task`, `group_size`, `near_water`, `food_present`. **Bug:**
 `resource_stressed`, `gestures_repeated`, `young_present`, or `carrying_burden`
 appears in this list.
@@ -91,20 +92,24 @@ appears in this list.
 
 Clear the search box, click **Correlations**. The header reads **`Correlations
 over 800 of 800 conversations`**, and the matrix's rows/columns are exactly:
-`Actual answer`, `Model was correct`, `Voices raised`, `Engaged in a task`,
-`Group size`, `Near water`, `Food present`, `P0`, `P1`, `P2`, `P3` — eleven in
-total. **Bug:** an extra row or column for any of the four hidden attributes.
+`Actual answer`, `Predicted answer`, `Model was correct`, `Voices raised`,
+`Engaged in a task`, `Group size`, `Near water`, `Food present`, `P0`, `P1`,
+`P2`, `P3` — twelve in total. **Bug:** an extra row or column for any of the
+four hidden attributes.
 
 ### 2.5 No term in the regression panel
 
 Still on Correlations, look at the **"Explained by attributes, for:"** panel
 below the matrix (default target `P0`). Its checkbox list and its term table
-(`Term` / `β` / `partial r`) only ever list the same seven attributes named
-above (plus whichever pathway is the target). In this run, target `P0` gave
-`R² = 0.585`, and the term table's rows were `Actual answer`, `Voices raised`,
-`Model was correct`, `Group size`, `Engaged in a task`, `Near water`, `Food
-present` — nothing else. **Bug:** a hidden attribute's name appears as a
-checkbox or a term-table row for any target.
+(`Term` / `β` / `partial r`) only ever list **seven** attributes — the eight
+visible ones minus `Predicted answer`, which is deliberately never offered as a
+regression predictor on either dataset (see `docs/testing-fields-view.md`'s
+Known rough edges for why) — plus whichever pathway is the target. In this run,
+target `P0` gave `R² = 0.585`, and the term table's rows were `Actual answer`,
+`Voices raised`, `Model was correct`, `Group size`, `Engaged in a task`, `Near
+water`, `Food present` — nothing else. **Bug:** a hidden attribute's name
+appears as a checkbox or a term-table row for any target. (`Predicted answer`'s
+absence here is *not* a bug — it is the one surface that attribute skips.)
 
 ## 3. Commissioning
 
@@ -115,14 +120,14 @@ and all five surfaces update at once:
 - **Dialog:** `Resource stressed` moves under a new **COMMISSIONED IN THIS
   SESSION** heading; the button now reads **`Codings 3`**; a **Reset codings**
   button appears below the remaining three.
-- **Chip:** selecting the same conversation (`c04b9a49822c`) now shows an eighth
+- **Chip:** selecting the same conversation (`c04b9a49822c`) now shows a ninth
   chip, `Resource stressed: yes`, appended right after `Food present` — its
   declared position.
 - **Search:** `resource_stressed:1` now returns **`240 of 800`** (was `0 of 800`
   in §2.2).
-- **Search help:** the Attributes list now has an eighth entry, `resource_stressed
+- **Search help:** the Attributes list now has a ninth entry, `resource_stressed
   — Resource stressed (0 or 1)`, appended after `food_present`.
-- **Correlation matrix:** an eighth row/column, `Resource stressed`, appears in
+- **Correlation matrix:** a ninth row/column, `Resource stressed`, appears in
   the same declared position (right after `Food present`, before `P0`).
   `Model was correct × Resource stressed` reads **-0.28** in the grid; clicking
   the cell shows the full-precision drill-down **`r = -0.285`**.
@@ -203,24 +208,28 @@ With Yelp Reviews loaded, there is **no Codings button** at all — the top bar
 goes straight from Search help to Explore/Correlations to Settings, nothing in
 between.
 
-Open Search help: the **Attributes** list has all five of Yelp's attributes,
+Open Search help: the **Attributes** list has all six of Yelp's attributes,
 unchanged — `review_stars` (Review rating), `stars` (Business rating), `target`
-(Actual sentiment), `model_correct` (Model was correct), `is_synthetic`
-(Synthetic review). None of Yelp's attributes are declared hidden, so there's
-nothing to commission and nothing missing.
+(Actual sentiment), `prediction` (Predicted sentiment), `model_correct` (Model
+was correct), `is_synthetic` (Synthetic review). None of Yelp's attributes are
+declared hidden, so there's nothing to commission and nothing missing.
 
 Click the first review ("Awesome New York style pizza..."). Its chips read
 `Review rating 5`, `Business rating 4.00`, `Actual sentiment yes`, `Synthetic
 review no`, alongside the business identity (`Benny Pennello's · Charlotte, NC`,
 `Fast Food, Pizza, Italian, Restaurants`) and `Reconstruction R²: 0.8916` — all
-exactly as `docs/testing-alien-explorer.md` §5 describes.
+exactly as `docs/testing-alien-explorer.md` §5 describes. Four chips, not six:
+this review was never scored by the model, so `Predicted sentiment` and `Model
+was correct` have no value for it and a chip is not drawn. Pick a review
+matching `model_correct:1` to see all six.
 
 An existing search still works unmodified: `stars:5 AND pathway_0:>0.8` returns
 **`1731 of 6427`**.
 
 **Bug to report:** a Codings button appearing anywhere in the Yelp view, any of
-Yelp's five attributes missing from Search help or the chips, or the existing
-search returning something other than `1731 of 6427`.
+Yelp's six attributes missing from Search help — or missing as a chip on a
+review that actually has a value for it — or the existing search returning
+something other than `1731 of 6427`.
 
 ## 7. The intended discovery path
 
@@ -233,11 +242,17 @@ told the numbers in advance:
 **Find a pathway with nothing visible attached to it.** Before commissioning
 anything, clear search and open Correlations. Scan the `P0`–`P3` columns against
 `Model was correct`: `P0` is -0.03, `P1` is -0.05, `P2` is 0.00, and `P3` stands
-out at **-0.18**. Now read `P3`'s own row against the seven *visible* attributes:
-`Actual answer` 0.04, `Voices raised` 0.02, `Engaged in a task` -0.00, `Group
-size` 0.05, `Near water` -0.02, `Food present` 0.01 — every one of them is
-essentially zero. `P3` has a real (if modest) relationship to whether the model
-got the answer right, and no visible explanation for what drives it.
+out at **-0.18**. Now read `P3`'s own row against the other *visible*
+attributes: `Actual answer` 0.04, `Voices raised` 0.02, `Engaged in a task`
+-0.00, `Group size` 0.05, `Near water` -0.02, `Food present` 0.01 — all noise —
+and `Predicted answer` at **-0.09**, the largest of them but still weak,
+and only half of `P3`'s -0.18 against `Model was correct`. That one is not a
+separate lead either: `Model was correct` is by definition whether `Predicted
+answer` and `Actual answer` agree (the two correlate 0.19), so a `P3` signal
+against the prediction is the same signal read a second way, and it points back
+at the model rather than at anything about the conversations. `P3` has a real
+(if modest) relationship to whether the model got the answer right, and no
+visible explanation for what drives it.
 
 **Read the notes of its highest-scoring conversations.** Search
 `pathway_3:>2.5` — 8 of 800 conversations. Their observer's notes, read
@@ -260,7 +275,9 @@ group size — the attributes already visible.
 1.86σ** — `P3` is essentially the resource-stressed pathway. Click `Model was
 correct × Resource stressed`: **`r = -0.285`** — the largest-magnitude
 correlation of any attribute against `Model was correct` in the full,
-eleven-attribute matrix (bigger than `Actual answer`'s -0.25). As a plain-count
+twelve-attribute matrix (bigger than `Actual answer`'s -0.25 and `Predicted
+answer`'s 0.19, both of which `Model was correct` is defined in terms of
+anyway). As a plain-count
 cross-check: `model_correct:0` alone is **`63 of 800`**; `model_correct:0 AND
 resource_stressed:1` is **`47 of 800`** — **47/63 ≈ 74.6%** of the model's
 errors land on resource-stressed conversations.
