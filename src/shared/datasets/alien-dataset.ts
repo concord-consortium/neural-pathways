@@ -3,6 +3,17 @@ import { AttributeDefinition } from "../types/attributes";
 import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
 
 /**
+ * The label space this dataset's binary outcome lives in, shared by the three
+ * declarations that must agree: the ground truth (`target`), what the model said
+ * (`prediction`), and the confidence badge in the item panel
+ * (`classificationLabels`, below). The classifier predicts the same space the
+ * target is drawn from, so one constant is the honest way to say it — written
+ * out three times they can drift, and the drift would be visible: the fields
+ * view's axis would disagree with the badge sitting above it.
+ */
+const CLASSIFICATION_LABELS = { 0: "wait", 1: "approach" };
+
+/**
  * The generator emits nine coded attributes but not these two, and
  * model_correct is what makes the planted bias findable at all — filtering to
  * the model's errors and seeing which group they land on is the whole activity.
@@ -15,7 +26,15 @@ const derivedAttributes: AttributeDefinition[] = [
     description: "Whether this really was a good time to approach: 1 for approach, 0 for wait. "
       + "This is the ground truth the model was trying to predict.",
     type: "binary",
-    valueLabels: { 0: "wait", 1: "approach" },
+    valueLabels: CLASSIFICATION_LABELS,
+  },
+  {
+    key: "prediction",
+    label: "Predicted answer",
+    description: "What the model predicted for this conversation: 1 for approach, 0 for wait. "
+      + "Only defined for conversations the model has scored.",
+    type: "binary",
+    valueLabels: CLASSIFICATION_LABELS,
   },
   {
     key: "model_correct",
@@ -34,7 +53,7 @@ export const alienDataset: DatasetConfig = {
   // the generated data is published alongside them.
   baseUrl: "alien-data/",
   itemNoun: { singular: "conversation", plural: "conversations" },
-  classificationLabels: { 0: "wait", 1: "approach" },
+  classificationLabels: CLASSIFICATION_LABELS,
   searchPlaceholder: "voices_raised:1 AND pathway_0:>1",
   // Every field this dataset has beyond the shared ones is an attribute, and the
   // help dialog lists those separately.
@@ -54,6 +73,8 @@ export const alienDataset: DatasetConfig = {
     switch (key) {
       case "target":
         return item.target;
+      case "prediction":
+        return item.classification ?? null;
       case "model_correct":
         if (item.classification == null || item.target == null) return null;
         return item.classification === item.target ? 1 : 0;
