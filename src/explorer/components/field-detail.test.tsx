@@ -93,7 +93,10 @@ describe("FieldDetail", () => {
   });
 
   it("passes numeric bins through to the axis", () => {
-    renderDetail({ bins: { mode: "numeric", edges: [0, 0.5, 1, 1.5, 2] } });
+    // Six edges describe five bins, matching the five-entry counts arrays above.
+    // bins and counts always come from the same plan in real use, so a fixture
+    // that pairs them inconsistently tests a state the app cannot produce.
+    renderDetail({ bins: { mode: "numeric", edges: [0, 0.4, 0.8, 1.2, 1.6, 2] } });
     expect(screen.getAllByTestId("axis-end").map(e => e.textContent)).toEqual(["0", "2"]);
   });
 });

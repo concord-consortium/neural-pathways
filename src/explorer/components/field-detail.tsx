@@ -89,12 +89,7 @@ interface HistogramProps {
  * one. Each row prints its own n, so the size difference stays on screen.
  */
 const Histogram: React.FC<HistogramProps> = ({ stats, bins, barWidth, fieldLabel, plural }) => {
-  // Rendered per bin, not per raw counts entry: bins and counts are always
-  // paired by chooseBins/summarize in real usage, but guarding the length
-  // here means an out-of-range edge lookup in barTitle can't crash the pane.
-  const binCount = bins.mode === "categorical" ? bins.values.length : bins.edges.length - 1;
-  const counts = Array.from({ length: binCount }, (_, i) => stats.counts[i] ?? 0);
-  const peak = counts.reduce((max, count) => (count > max ? count : max), 0);
+  const peak = stats.counts.reduce((max, count) => (count > max ? count : max), 0);
   return (
     <svg
       className="explorer-field-detail-histogram"
@@ -104,7 +99,7 @@ const Histogram: React.FC<HistogramProps> = ({ stats, bins, barWidth, fieldLabel
       role="img"
       aria-label={`Distribution of ${fieldLabel}`}
     >
-      {counts.map((count, i) => {
+      {stats.counts.map((count, i) => {
         const height = peak === 0 ? 0 : (count / peak) * BAR_AREA_HEIGHT;
         return (
           <rect
@@ -120,7 +115,7 @@ const Histogram: React.FC<HistogramProps> = ({ stats, bins, barWidth, fieldLabel
       })}
       {/* Painted after the bars so they sit on top, full height so an empty bin
           is still hoverable. */}
-      {counts.map((count, i) => (
+      {stats.counts.map((count, i) => (
         <rect
           key={`hit-${i}`}
           className="explorer-field-detail-hit"
