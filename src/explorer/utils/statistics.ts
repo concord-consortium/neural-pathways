@@ -209,6 +209,44 @@ export function chooseBins(
   };
 }
 
+/** One field's shape over one set of items, counted into a plan built elsewhere. */
+export interface FieldStats {
+  /** Items with a usable value. */
+  n: number;
+  mean: number;
+  min: number;
+  max: number;
+  /** Counts per bar, aligned with the plan's bins. */
+  counts: number[];
+}
+
+/**
+ * Counts values into a plan and summarises them. Returns null when nothing is
+ * usable — a field with no values in this selection has no mean to report, and
+ * an all-zero counts array would render as a real but empty distribution.
+ *
+ * Reports no standard deviation on purpose: nothing displays one, and a spread
+ * statistic contrasting a selection with the superset that contains it invites
+ * misreading. GroupSummary.sd, which compareGroups needs, is unaffected.
+ */
+export function summarize(values: (number | null)[], plan: BinPlan): FieldStats | null {
+  const counts = new Array<number>(plan.barCount).fill(0);
+  let n = 0;
+  let sum = 0;
+  let min = Infinity;
+  let max = -Infinity;
+  for (const value of values) {
+    if (!isUsable(value)) continue;
+    n++;
+    sum += value;
+    if (value < min) min = value;
+    if (value > max) max = value;
+    counts[plan.indexOf(value)]++;
+  }
+  if (n === 0) return null;
+  return { n, mean: sum / n, min, max, counts };
+}
+
 /**
  * Splits scores by the distinct values of groupValues and summarises each group.
  * Bins are derived once from the pooled scores so the histograms are directly

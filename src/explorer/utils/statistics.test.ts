@@ -1,5 +1,5 @@
 import {
-  mean, standardDeviation, pearson, compareGroups, linearFit, chooseBins,
+  mean, standardDeviation, pearson, compareGroups, linearFit, chooseBins, summarize, BinPlan,
 } from "./statistics";
 
 describe("mean", () => {
@@ -330,5 +330,53 @@ describe("chooseBins", () => {
     // Without the filtering, the two nulls would inflate the usable count and
     // flip this from numeric to categorical.
     expect(chooseBins([0, 1, 2, null, null])?.bins.mode).toBe("numeric");
+  });
+});
+
+describe("summarize", () => {
+  // chooseBins returns BinPlan | null; these fixtures are known non-empty.
+  const plan = chooseBins([0, 0, 1, 1, 2, 2]) as BinPlan;
+
+  it("returns null when nothing is usable", () => {
+    expect(summarize([null, NaN], plan)).toBeNull();
+  });
+
+  it("reports n, mean, min and max over the usable values", () => {
+    const stats = summarize([0, 1, 2, null], plan);
+    expect(stats?.n).toBe(3);
+    expect(stats?.mean).toBeCloseTo(1, 10);
+    expect(stats?.min).toBe(0);
+    expect(stats?.max).toBe(2);
+  });
+
+  it("counts into the plan's bars, one entry per bar", () => {
+    const stats = summarize([0, 0, 0, 2], plan);
+    expect(stats?.counts).toEqual([3, 0, 1]);
+  });
+
+  it("counts a value the plan was not built from into a clamped bar", () => {
+    expect(summarize([99], plan)?.counts).toEqual([0, 0, 1]);
+  });
+
+  it("treats NaN and Infinity as missing, like every other statistic here", () => {
+    expect(summarize([0, NaN, Infinity, 2], plan)?.n).toBe(2);
+  });
+
+  it("gives two different subsets the same bins when they share a plan", () => {
+    // The baseline spans 0..10; each subset spans only part of it. Planning from
+    // the baseline is what keeps their bars aligned — planning from each subset
+    // would give them different edges and make the two histograms incomparable.
+    const baseline = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const shared = chooseBins(baseline, 5) as BinPlan;
+    expect(shared.bins).toEqual({ mode: "numeric", edges: [0, 2, 4, 6, 8, 10] });
+
+    const low = summarize([0, 1, 2], shared);
+    const high = summarize([8, 9, 10], shared);
+
+    // Same length is not enough — the bars must mean the same thing. The low
+    // subset fills the leading bars, the high subset the trailing one, and
+    // 10 lands in the last bar rather than a sixth that does not exist.
+    expect(low?.counts).toEqual([2, 1, 0, 0, 0]);
+    expect(high?.counts).toEqual([0, 0, 0, 0, 3]);
   });
 });
