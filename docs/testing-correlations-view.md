@@ -384,18 +384,28 @@ pasted to a colleague.
 - **The hover is mouse-only.** Per-bar values cannot be reached by keyboard, and screen
   readers get one description of each chart rather than per-bar detail.
 - **A count of 1 reads as "1 reviews".**
-- **Attribute chips in the Explore view still label Actual sentiment as yes/no**
-  rather than negative/positive, unlike the drill-down.
+- **Attribute chips in the Explore view label every binary as yes/no**, rather than
+  by the attribute's own value labels, unlike the drill-down. `Actual sentiment`,
+  `Predicted sentiment` and (on the alien dataset) `Predicted answer` all read
+  `yes`/`no` on a chip where the drill-down and the fields view say
+  `negative`/`positive` and `wait`/`approach`.
 - **The item panel shows the prediction twice**: the existing confidence badge
   (e.g. `predicted: positive (96.7%)`) plus a plainer `Predicted sentiment` chip
   lower in the panel. Deliberate, not a duplicate bug — the badge is the model's own
   voice, the chip is the same value read the way every other attribute is read.
+  Which, per the bullet above, means the two disagree in wording: the badge says
+  `positive`, and four lines below it the chip says `Predicted sentiment yes`.
 - **`Predicted sentiment` is a target you can pick but never a predictor.** It shows
   up in the target dropdown, yet its checkbox never appears in the predictor list,
   even when some other attribute is the target — unlike the Explore chips, search,
   or this matrix, which all treat it as a full attribute. See `docs/testing-fields-
   view.md`'s Known rough edges for why it was excluded and why that reason is now
-  historical rather than something you can trigger from the UI.
+  historical rather than something you can trigger from the UI. Picking it as the
+  target is also the one place the redundancy is still visible: with interactions
+  on it fits **`accuracy 100.0% · baseline 52.0% · did not converge`**, because
+  `Actual sentiment × Model was correct` plus those two main effects reproduce
+  `Predicted sentiment` exactly — a tautology, not a finding. (With interactions
+  off it reads `accuracy 97.5% · baseline 52.0%` and converges normally.)
 - **Histograms have no count axis.** Each row is scaled to its own tallest bar, so bar
   heights are *not* comparable between rows — a full-height bar might be 3 reviews in
   one row and 900 in another. The `n = …` text on each row carries the real magnitude.
