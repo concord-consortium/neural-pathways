@@ -49,8 +49,21 @@ export const RegressionPanel: React.FC<RegressionPanelProps> = ({ series }) => {
 
   const target = series.find(s => s.key === targetKey) ?? series.find(s => s.key === defaultTargetKey);
 
+  // Excludes "prediction" alongside the target itself: on the Yelp dataset,
+  // target, prediction, and model_correct are a mutually determining triple —
+  // correct = 1 − target − prediction + 2·target·prediction — so any two of
+  // them fix the third and "prediction" contributes no explanatory power of
+  // its own. Worse, once pairwise interactions are switched on, the
+  // target × prediction column plus target and prediction span model_correct
+  // exactly, making the design matrix singular. buildDesignMatrix's duplicate
+  // check only compares columns pairwise, so it cannot see this three-column
+  // dependency — the fit itself would have to fail to catch it, which is what
+  // was happening before this exclusion. Keep "prediction" out of the
+  // candidate list rather than "restoring" it: it remains a full attribute
+  // everywhere else (chips, search, the correlation matrix, the Fields view),
+  // which is where it's actually useful.
   const candidates = useMemo(
-    () => series.filter(s => s.kind === "attribute" && s.key !== target?.key),
+    () => series.filter(s => s.kind === "attribute" && s.key !== target?.key && s.key !== "prediction"),
     [series, target],
   );
 

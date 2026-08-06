@@ -190,33 +190,21 @@ test("regression panel fits a model for a pathway", async ({ page }) => {
   await expect(page.getByTestId("regression-rows")).toContainText("of 6427 rows");
 });
 
-test("unchecking both sparse predictors recovers most of the row count", async ({ page }) => {
+test("unchecking a sparse predictor recovers most of the row count", async ({ page }) => {
   await page.goto("/explorer.html#view=correlations");
 
   const rows = page.getByTestId("regression-rows");
   await expect(rows).toContainText("2998");
 
-  // Two predictors share one gap: model_correct and prediction are each null for
-  // exactly the reviews the model never scored. Unchecking one leaves the other
-  // deleting the same rows, which is why the count does not move here — that
-  // intermediate assertion is the point of this step, not a formality.
-  //
-  // The toggle is asserted unchecked first because "the count did not change" is
-  // otherwise indistinguishable from "the click never landed": a bare count
-  // assertion here would pass against the untouched starting state.
-  const modelCorrect = page.getByTestId("predictor-toggle-model_correct");
-  await modelCorrect.click();
-  await expect(modelCorrect).not.toBeChecked();
-  await expect(rows).toContainText("2998 of 6427");
-
-  // Even with both gone the count does not reach 6427: 432 of the reviews are
+  // Unchecking model_correct does not fully restore to 6427: 432 of the reviews are
   // synthetic-GPT rows that also lack review_stars/stars/target (the ground-truth
-  // fields those reviews were never given), and those 432 are a subset of the
-  // 3429 the model never scored. So the remaining predictors still listwise-delete
-  // those 432, landing on 5995. Confirmed against the live index.json: 6427 total
-  // reviews, 3429 missing classification, and — among those — 432 synthetic
-  // reviews additionally missing target/review_stars/stars, leaving 6427 - 432.
-  await page.getByTestId("predictor-toggle-prediction").click();
+  // fields those reviews were never given), and those 432 are a subset of the 3429
+  // rows model_correct itself drops. So the remaining predictors still listwise-delete
+  // those 432 rows, landing on 5995 rather than the full 6427. Confirmed against the
+  // live index.json: 6427 total reviews, 3429 missing classification/model_correct,
+  // and — among those — 432 synthetic reviews additionally missing target/review_stars/
+  // stars, leaving 6427 - 432 = 5995 once model_correct is excluded.
+  await page.getByTestId("predictor-toggle-model_correct").click();
   await expect(rows).toContainText("5995 of 6427");
 });
 
@@ -232,15 +220,6 @@ test("regression switches to logistic for a binary target", async ({ page }) => 
 
 test("interaction terms appear only when switched on", async ({ page }) => {
   await page.goto("/explorer.html#view=correlations");
-
-  // With every predictor included, turning on interactions makes the fit
-  // undefined rather than merely cautioned: target, prediction, and their
-  // interaction term span model_correct exactly (model_correct is 1 iff
-  // target and prediction agree, an affine function of those two columns and
-  // their product), so the predictor correlation matrix is exactly singular
-  // once that interaction column is added. Unchecking prediction removes one
-  // leg of that dependency, leaving a fit the caution message can attach to.
-  await page.getByTestId("predictor-toggle-prediction").click();
 
   await expect(page.getByTestId("interactions-caution")).toHaveCount(0);
   await page.getByTestId("interactions-toggle").click();
