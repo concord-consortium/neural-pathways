@@ -179,3 +179,48 @@ test("a continuous drill-down labels both scatter axes", async ({ page }) => {
   await expect(page.getByTestId("scatter-y-min")).not.toBeEmpty();
   await expect(page.getByTestId("scatter-y-max")).not.toBeEmpty();
 });
+
+test("regression panel fits a model for a pathway", async ({ page }) => {
+  await page.goto("/explorer.html#view=correlations");
+  await expect(page.getByTestId("regression-panel")).toBeVisible();
+
+  await expect(page.getByTestId("regression-method")).toContainText("Least squares");
+  await expect(page.getByTestId("regression-fit")).toContainText("R²");
+  await expect(page.getByTestId("regression-rows")).toContainText("of 6427 rows");
+});
+
+test("unchecking a sparse predictor recovers most of the row count", async ({ page }) => {
+  await page.goto("/explorer.html#view=correlations");
+
+  const rows = page.getByTestId("regression-rows");
+  await expect(rows).toContainText("2998");
+
+  // Unchecking model_correct does not fully restore to 6427: 432 of the reviews are
+  // synthetic-GPT rows that also lack review_stars/stars/target (the ground-truth
+  // fields those reviews were never given), and those 432 are a subset of the 3429
+  // rows model_correct itself drops. So the remaining predictors still listwise-delete
+  // those 432 rows, landing on 5995 rather than the full 6427. Confirmed against the
+  // live index.json: 6427 total reviews, 3429 missing classification/model_correct,
+  // and — among those — 432 synthetic reviews additionally missing target/review_stars/
+  // stars, leaving 6427 - 432 = 5995 once model_correct is excluded.
+  await page.getByTestId("predictor-toggle-model_correct").click();
+  await expect(rows).toContainText("5995 of 6427");
+});
+
+test("regression switches to logistic for a binary target", async ({ page }) => {
+  await page.goto("/explorer.html#view=correlations");
+
+  await page.getByTestId("regression-target").selectOption("target");
+  await expect(page.getByTestId("regression-method")).toContainText("Logistic");
+  await expect(page.getByTestId("regression-fit")).toContainText("baseline");
+  // The target must not be offered as a predictor of itself.
+  await expect(page.getByTestId("predictor-toggle-target")).toHaveCount(0);
+});
+
+test("interaction terms appear only when switched on", async ({ page }) => {
+  await page.goto("/explorer.html#view=correlations");
+
+  await expect(page.getByTestId("interactions-caution")).toHaveCount(0);
+  await page.getByTestId("interactions-toggle").click();
+  await expect(page.getByTestId("interactions-caution")).toBeVisible();
+});

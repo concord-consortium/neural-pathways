@@ -186,7 +186,167 @@ different business ratings and you will get bins rather than 6 bars. This is the
 direction to err in: bins waste some space, but evenly-spaced bars would imply a
 spacing the data does not have.
 
-## 8. Layout
+## 8. Finding the regression panel
+
+Scroll down past the drill-down area, on the correlations view.
+
+- The regression panel sits below the drill-down, and it is **already showing a
+  fitted model** — you do not need to click a matrix cell first. With the search box
+  empty and nothing selected, load the correlations view and the panel is there.
+- At the top: a target dropdown labelled `Explained by attributes, for:`, a checkbox
+  per attribute, and a separate `include pairwise interactions` checkbox.
+- Below that: a line naming the method, a `Fitted on N of M rows` line, and — when a
+  fit exists — the fit summary and a term table.
+
+If the panel only appears after selecting a cell, or is missing entirely, that is a
+bug worth reporting.
+
+## 9. What the default model says
+
+With the correlations view freshly opened and nothing else touched:
+
+- The target dropdown defaults to **`P0`**, the first pathway.
+- The method line reads **`Least squares — the target is continuous.`**
+- The fit line reads **`R² = 0.873 · 13% unexplained`**.
+
+R² is the share of `P0` that the checked attributes account for together — 87% of
+the pathway score's variation lines up with some combination of Review rating,
+Business rating, Actual sentiment, and Model was correct. The unexplained slice
+(13%) is not noise you can blame on a specific cause; it is simply whatever the
+coded attributes do not capture — this panel has no name for it, and that gap is
+the whole reason the panel exists: it tells you how far "the attributes we bothered
+to code" get you toward "the pathway's behavior," and by how much they fall short.
+
+One more thing is visible without touching anything: a line reading `Dropped before
+fitting: Synthetic review (constant)`. Every synthetic (GPT-generated) review is
+also missing Review rating, Business rating, and Actual sentiment — so once those
+three attributes are required to have a value, no synthetic review survives into
+the fit, and every review that remains has `Synthetic review = no`. A column with
+only one value has nothing to correlate against, so it is dropped and named rather
+than silently ignored. (Section 14 below shows a second, different way a column
+ends up here.)
+
+## 10. The cost of a sparse attribute
+
+With every attribute checked, the fit reports **`Fitted on 2998 of 6427 rows`**.
+`Model was correct` is the reason: its own checkbox reads `Model was correct
+(missing 3429)`, because it is only defined for reviews that have both a model
+prediction and a ground-truth label. A row missing any included attribute is
+dropped entirely — the fit does not partially use a row — so requiring `Model was
+correct` costs the fit every row that lacks it.
+
+Uncheck `Model was correct`. The count moves to **`5995 of 6427 rows`** — not the
+full 6427.
+
+**Why not the full 6427.** 432 of the reviews are synthetic-GPT rows that are
+*also* missing Review rating, Business rating, and Actual sentiment — not just
+`Model was correct`. Those 432 are a subset of the ~3,429 rows `Model was correct`
+alone drops, so unchecking it recovers most of the missing rows but not those 432,
+because the remaining checked attributes still require values those rows don't
+have. Seeing `5995` instead of a full `6427` here is not a bug — it is listwise
+deletion doing exactly what it is supposed to: a row needs every remaining checked
+attribute to have a value, and 432 rows still fail that test for reasons unrelated
+to `Model was correct`.
+
+Re-check `Model was correct` before continuing.
+
+## 11. β versus partial r
+
+Term rows are ordered by descending |β|, largest magnitude first, regardless of
+sign — so the strongest standardized effect always leads the table.
+
+The term table's two number columns answer different questions. **β** is the
+standardized coefficient: how many standard deviations the target moves per one
+standard deviation of that predictor, holding every other included term fixed.
+**Partial r** is the correlation between that predictor and the target after every
+other term has been held constant — the relationship that predictor still has once
+the others have taken their share.
+
+**The concrete case to look for:** a predictor with a real correlation in the
+matrix but a partial r near zero in the table is a proxy for another attribute
+already in the model, not an independent signal of its own. `Business rating` is
+that case here. In the matrix, `Business rating × P0` reads **`r = 0.26`** — a
+real, moderate correlation. But in the default term table, `Business rating`'s row
+reads **`β = 0.025`**, **`partial r = 0.062`** — both close to zero. `Business
+rating` also correlates `0.48` with `Review rating` and `0.45` with `Actual
+sentiment`, both of which are already in the model: once those two are accounted
+for, `Business rating`'s apparent relationship with the pathway score turns out to
+be almost entirely borrowed from them, and it has little left to say on its own.
+
+## 12. Switching to a binary target
+
+Select `Actual sentiment` in the target dropdown.
+
+- The method line flips to **`Logistic regression — the target has two values.`**
+- `R²` is replaced by accuracy against a baseline. With every attribute checked you
+  should see **`accuracy 100.0% · baseline 50.0% · did not converge`**.
+- `Actual sentiment` itself disappears from the predictor checkbox list — it can no
+  longer be one of its own predictors.
+
+The baseline is the majority-class rate: the accuracy you'd get by always guessing
+the more common label. Accuracy at or below baseline would mean the checked
+attributes carry no useful signal at all. What you actually see here is the
+opposite extreme: `Review rating` correlates `0.96` with `Actual sentiment` in this
+dataset — almost one-to-one — so the fit finds a near-perfect separator between the
+two classes. That is also why the line adds **`did not converge`**: the solver
+keeps pushing the coefficients larger, chasing a boundary that never quite settles,
+so it stops at the iteration limit rather than reaching a stable answer. Accuracy
+is still computed from wherever the fit landed, which is why it can read 100% even
+though the method flagged the fit as unstable. If a target this lopsided against
+its own predictors *doesn't* carry the `did not converge` note, that is worth
+reporting — the flag exists precisely for this situation, so the reader knows to
+trust the coefficients less even when the accuracy number looks great.
+
+Switch the target back to `P0` before continuing.
+
+## 13. Interactions
+
+`include pairwise interactions` is unchecked by default: no caution line, and the
+term table has one row per attribute.
+
+Switch it on. With the default set of checked attributes you should see:
+
+```
+6 interaction terms were tested. With that many, expect roughly 1 to look notable
+by chance alone.
+```
+
+Five attributes would ordinarily combine into 10 pairwise interaction terms, but
+`Synthetic review` is already dropped as constant (see section 9), and a product
+built from a constant column is itself constant — so all four interactions
+involving `Synthetic review` are dropped right alongside it, leaving only the 6
+pairs among the four attributes that actually vary. The `Dropped before fitting`
+line grows to name all five: `Synthetic review (constant), Review rating ×
+Synthetic review (constant), Business rating × Synthetic review (constant), Actual
+sentiment × Synthetic review (constant), Model was correct × Synthetic review
+(constant)`.
+
+The caution exists because testing that many pairwise combinations makes at least
+one look notable by chance alone, even when nothing real is going on — so a single
+strong interaction term is a hypothesis worth checking further, not a finding on
+its own.
+
+Turn interactions back off before continuing.
+
+## 14. Dropped columns
+
+Type `model_correct:0` into the search box.
+
+- The header changes to `Correlations over 145 of 6427 reviews`.
+- Look at the regression panel: `Fitted on 145 of 145 rows`, and `Dropped before
+  fitting: Model was correct (constant), Synthetic review (constant)`.
+
+Within this filtered scope, every remaining review has `Model was correct = no`, so
+the column has zero variance and gets dropped **by name**, the same way `Synthetic
+review` already was for an unrelated reason (section 9) and still is here.
+
+Seeing a column silently vanish from the term table — present among the checked
+attributes but absent from both the table and the `Dropped before fitting` line —
+would be a bug worth reporting.
+
+Clear the search before continuing.
+
+## 15. Layout
 
 - The correlations panel fills the width to the right of the results list, with no
   dead gap at the right edge.
@@ -194,7 +354,7 @@ spacing the data does not have.
   scroll horizontally inside its own box; the **page itself must not** grow a
   horizontal scrollbar.
 
-## 9. Sharing and reloading a view
+## 16. Sharing and reloading a view
 
 The web address updates as you work, so a correlations view can be bookmarked or
 pasted to a colleague.
@@ -224,3 +384,13 @@ pasted to a colleague.
   one row and 900 in another. The `n = …` text on each row carries the real magnitude.
 - **Scatter points render as slight ellipses** rather than circles, because the plot
   area is stretched to fit.
+- **No p-values or confidence intervals anywhere, deliberately.** At these sample
+  sizes almost everything reaches conventional significance, so effect size — β,
+  partial r, accuracy against baseline — is the honest display.
+- **Interactions are pairwise only.** A three-way combination is not modelled.
+- **Term rows are not clickable.** There is no drill-down from a regression term
+  back to the reviews behind it.
+- **The panel refits on every keystroke in the search box**, so a very broad query
+  can feel briefly sluggish.
+- **Predictor checkboxes are not carried in the URL**, so a shared link reopens
+  with every attribute checked.

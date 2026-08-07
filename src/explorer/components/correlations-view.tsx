@@ -4,6 +4,7 @@ import { pearson, compareGroups, isUsable } from "../utils/statistics";
 import { CorrelationMatrix, MatrixCell } from "./correlation-matrix";
 import { DistributionComparison } from "./distribution-comparison";
 import { ScatterPlot } from "./scatter-plot";
+import { RegressionPanel } from "./regression-panel";
 import "./correlations-view.scss";
 
 interface CorrelationsViewProps {
@@ -101,6 +102,8 @@ export const CorrelationsView: React.FC<CorrelationsViewProps> = ({
               </>
             )}
           </div>
+
+          <RegressionPanel series={series} />
         </>
       )}
     </div>

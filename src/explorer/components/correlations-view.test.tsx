@@ -161,3 +161,21 @@ describe("CorrelationsView", () => {
     expect(screen.getByTestId("correlations-empty")).toBeDefined();
   });
 });
+
+describe("CorrelationsView regression panel", () => {
+  it("renders the regression panel", () => {
+    render(<CorrelationsView series={series} resultCount={6} totalCount={100} />);
+    expect(screen.getByTestId("regression-panel")).toBeDefined();
+  });
+
+  it("renders the panel even before a matrix cell is selected", () => {
+    render(<CorrelationsView series={series} resultCount={6} totalCount={100} />);
+    expect(screen.getByTestId("drilldown-prompt")).toBeDefined();
+    expect(screen.getByTestId("regression-panel")).toBeDefined();
+  });
+
+  it("does not render the panel when there are no series", () => {
+    render(<CorrelationsView series={[]} resultCount={0} totalCount={100} />);
+    expect(screen.queryByTestId("regression-panel")).toBeNull();
+  });
+});

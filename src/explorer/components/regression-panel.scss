@@ -1,0 +1,84 @@
+.explorer-regression-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+.explorer-regression-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: #333;
+}
+
+.explorer-regression-target-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.explorer-regression-target {
+  font-size: 12px;
+}
+
+.explorer-regression-predictors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.explorer-regression-predictor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.explorer-regression-missing {
+  color: #999;
+}
+
+.explorer-regression-method,
+.explorer-regression-rows,
+.explorer-regression-dropped,
+.explorer-regression-fit,
+.explorer-regression-caution,
+.explorer-regression-unavailable {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.explorer-regression-method {
+  color: #666;
+}
+
+.explorer-regression-dropped,
+.explorer-regression-caution {
+  color: #8a6d1f;
+}
+
+.explorer-regression-unavailable {
+  color: #888;
+}
+
+.explorer-regression-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td {
+    padding: 3px 12px 3px 0;
+    text-align: left;
+  }
+
+  th {
+    font-weight: normal;
+    color: #777;
+    border-bottom: 1px solid #eee;
+  }
+}

@@ -80,6 +80,7 @@ phases below.
 | Text ↔ score coupling | **Words carry pathway weights; score = sum.** | SHAP values are exact by construction, not fabricated. |
 | Observation display | **Attribute chips always visible; prose note on demand.** | |
 | Student coding | **Fictional.** Attributes are pre-authored and unlocked, not entered. | No data-entry UI, no persistence backend. |
+| Phase deliverables | **Every phase ships a walkthrough document.** | See [Every Phase Ships a Walkthrough](#every-phase-ships-a-walkthrough). Each implementation plan carries it as a task. |
 
 ### Honesty constraint
 
@@ -393,6 +394,36 @@ Phases 1–3 running against Yelp are worth emphasizing. They exercise all the s
 machinery against real data before any authored data exists to flatter it. If the
 correlation views cannot find anything real in the Yelp set, that is worth discovering
 before tuning an alien set to be findable.
+
+## Every Phase Ships a Walkthrough
+
+**A phase is not done until someone who did not build it can exercise its features.** Every
+phase adds to or updates a walkthrough document describing how to use and check what it
+added. This is a deliverable on the same footing as the code and the tests, and it belongs in
+the phase's implementation plan as its own task.
+
+Walkthroughs live in `docs/`, one per feature area rather than one per phase, named
+`testing-<area>.md`. Phase 2 established the first,
+[testing-correlations-view.md](../../testing-correlations-view.md). A phase extends the
+existing document when it adds to an area that already has one — the regression panel lives
+inside the correlations view, so it extends that file rather than starting a new one — and
+creates a new document only when it opens a genuinely new area.
+
+What makes these documents worth writing, drawn from what worked in phase 2:
+
+- **Say what the reader should see**, concretely and with real numbers, not what the feature
+  is for in the abstract. "The header reads `Correlations over 6427 of 6427 reviews`" beats
+  "the header shows the scope".
+- **Say what would count as a bug worth reporting.** This is the part that turns a feature
+  tour into something a person can actually check. It also forces the author to state which
+  behaviours are load-bearing and which are incidental.
+- **Explain the reasoning where a design choice looks wrong at first glance.** Phase 2's
+  binning rules and its per-row histogram scaling both look like mistakes until the rationale
+  is given.
+- **Keep a "known rough edges" list** of accepted limitations, so a reader does not spend
+  time reporting what is already understood. Each phase adds its own.
+- **Verify every quoted number against the running app** before committing. The document
+  describes the app, not the plan — where they disagree, the document is wrong.
 
 ## Internal Consistency Requirements
 
