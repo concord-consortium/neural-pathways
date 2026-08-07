@@ -19,23 +19,33 @@ npm start
 ```
 
 `start` has a `prestart` hook that runs `npm run generate:alien` first, so the alien
-data is regenerated every time. On the run used for this document, the generator
-printed:
+data is regenerated every time — now **two** datasets, one after the other. On the
+run used for this document, the generator printed:
 
 ```
 alien dataset — seed 20260803, 800 conversations
 output dist/alien-data, fit "alien-fa-4"
 ```
 
-followed by `wrote 800 conversations to .../dist/alien-data`, and then webpack
+followed eventually by `wrote 800 conversations to .../dist/alien-data`, then a
+second summary opening
+
+```
+alien dataset — seed 20260803, 800 conversations
+output dist/alien-data-3, fit "alien-fa-3"
+```
+
+followed by `wrote 800 conversations to .../dist/alien-data-3`, and then webpack
 compiled and served the app at `http://localhost:8080`.
 
 - Open `http://localhost:8080/`. The landing page heading reads **Neural
-  Pathways**, with three links: **Heatmap**, **Explorer**, and **Alien Explorer**.
-  The **Alien Explorer** link points at `explorer.html#dataset=alien`.
-- Click it. The `Dataset:` dropdown reads **Alien Conversations**, the results
-  header reads **`800 of 800`**, and the address bar settles on
-  `explorer.html#dataset=alien&fit=alien-fa-4`.
+  Pathways**, with four links: **Heatmap**, **Explorer**, **Alien Explorer (4
+  pathways)**, and **Alien Explorer (3 pathways)**. The **Alien Explorer (4
+  pathways)** link points at `explorer.html#dataset=alien`; **Alien Explorer (3
+  pathways)** points at `explorer.html#dataset=alien3`.
+- Click **Alien Explorer (4 pathways)**. The `Dataset:` dropdown reads **Alien
+  Conversations (4 pathways)**, the results header reads **`800 of 800`**, and
+  the address bar settles on `explorer.html#dataset=alien&fit=alien-fa-4`.
 - Load a bare `http://localhost:8080/explorer.html` (no hash) instead. This is
   still Yelp: the dropdown reads **Yelp Reviews** and the results header reads
   **`6427 of 6427`**.
@@ -244,7 +254,62 @@ Click a review (e.g. the first one, "Awesome New York style pizza...").
 from the alien dataset — that would mean dataset switching is leaking state between
 datasets rather than cleanly resetting it.
 
-## 6. What is not here yet
+## 6. The three-pathway dataset
+
+Open `explorer.html#dataset=alien3&coded=resource_stressed` (as in §4,
+`resource_stressed` starts hidden, so this pre-commissions it via the URL). The
+`Dataset:` dropdown reads **Alien Conversations (3 pathways)**, and the address
+bar settles on `explorer.html#dataset=alien3&fit=alien-fa-3&coded=resource_stressed`.
+The results header reads **`800 of 800`**. Open Search help: the **Fields**
+section offers `pathway_0 through pathway_2` — one fewer than the four-pathway
+dataset's `pathway_0 through pathway_3`.
+
+This dataset's pathway assignments differ from the four-pathway one: `group_size`
+is a decoy here (no pathway) instead of P2, and the bias attribute
+`resource_stressed` sits on **P2** instead of P3.
+
+Click **Correlations**.
+
+- The header reads **`Correlations over 800 of 800 conversations`**.
+- Along the **Model was correct** row, the visible attributes read weak, as in
+  §4: `Voices raised` 0.06, `Engaged in a task` 0.06, `Group size` 0.03, `Near
+  water` -0.01, `Food present` 0.02. `Predicted answer` (0.22) and `Actual
+  answer` (-0.24) are arithmetic, same reasoning as §4. **`Resource stressed`**
+  is again the standout at **-0.29** — the largest of any attribute. Against
+  the pathways, **`P2`** stands out at **-0.21**, while `P0` (-0.04) and `P1`
+  (-0.00) sit near zero — the bias lands on P2 here, not P3.
+
+Click the **Model was correct × Resource stressed** cell.
+
+- Hovering it shows the full-precision tooltip: **`Model was correct x
+  Resource stressed: r = -0.2896, n = 800`**.
+- The drill-down reads **`Model was correct × Resource stressed · r = -0.290 ·
+  n = 800`**, with two histogram rows: `no` (**n = 64, mean 0.75**) and `yes`
+  (**n = 736, mean 0.26**), and **`Means differ by 1.11σ`** below.
+
+As a cross-check: `model_correct:0` alone returns **`64 of 800`**, and
+`model_correct:0 AND resource_stressed:1` returns **`48 of 800`** — **48 / 64 =
+75.0%** of the model's errors landing on resource-stressed conversations,
+matching the 0.75 mean read off the histogram (and the captured run's own
+self-check line, `share of errors on the group    75.0%`).
+
+With `model_correct:0` still in the search box, scroll to the regression panel
+(target `P0`, same default as §4): it reads **`Dropped before fitting: Model
+was correct (constant)`**, **`Fitted on 64 of 64 rows`**, and **`R² = 0.515 ·
+48% unexplained`**. The term table's top row is **`Resource stressed`** with
+**β = 0.720, partial r = 0.644** — again by a wide margin the strongest
+predictor, and numerically stronger here than the four-pathway dataset's β =
+0.613 / partial r = 0.512 (§4).
+
+**Bug to report:** the same failure modes as §4, on this dataset — a near-zero
+`Model was correct × Resource stressed` correlation, some attribute other than
+`Resource stressed` showing the strongest relationship to `Model was correct`,
+the bias landing on a pathway other than P2, or the dropdown/address/search-help
+not reflecting the three-pathway shape described above. What was actually
+observed — r = -0.2896, the bias on P2 rather than P3, and 75.0% of errors on
+resource-stressed conversations — matches the intended plant.
+
+## 7. What is not here yet
 
 - **Attribute hiding and commissioned coding are covered in
   `docs/testing-attribute-commissioning.md`, not here.** Four attributes,
@@ -277,11 +342,12 @@ datasets rather than cleanly resetting it.
 
 - **The notes are visibly templated and repetitive across the 800 items.** The same
   handful of sentence patterns recur; this is a side effect of the fixed-phrase
-  template approach described in §3 and §6, not a bug.
+  template approach described in §3 and §7, not a bug.
 - **Results-list snippets are alien words**, and therefore much harder to scan than
   Yelp's English review snippets — this is deliberate; the language is invented and
   isn't meant to be skimmed for meaning.
 - **The correlation strengths are the generator's untuned starting values**, not
-  values chosen for a particular pedagogical strength — see §6. The -0.2846 bias
+  values chosen for a particular pedagogical strength — see §7. The -0.2846 bias
   correlation and the other matrix values will likely change once phase 7 tunes
-  them.
+  them (both datasets' bias correlations, -0.2846 and -0.2896, are untuned
+  starting values in this sense).

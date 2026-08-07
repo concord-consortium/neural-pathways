@@ -20,11 +20,11 @@ on your own run, the rest of the URLs below will differ only in the port).
 
 ## 1. What is hidden on first load
 
-Open `http://localhost:8082/explorer.html#dataset=alien`. The `Dataset:` dropdown
-reads **Alien Conversations**, the results header reads **`800 of 800`**, and the
-top bar shows a button reading **`Codings 4`** between **Correlations** and
-**Settings** — that count is the number of attributes still available to
-commission.
+Open `http://localhost:8082/explorer.html#dataset=alien`. The `Dataset:`
+dropdown reads **Alien Conversations (4 pathways)**, the results header reads
+**`800 of 800`**, and the top bar shows a button reading **`Codings 4`**
+between **Correlations** and **Settings** — that count is the number of
+attributes still available to commission.
 
 Click the first result to select a conversation (in this run, item
 `c04b9a49822c`). Only **eight** attribute chips appear — `Actual answer`,
@@ -192,12 +192,12 @@ back to showing all four under **AVAILABLE TO COMMISSION** with no
 **COMMISSIONED IN THIS SESSION** heading and no Reset button.
 
 Separately: commission `Resource stressed` again, then switch the `Dataset:`
-dropdown from **Alien Conversations** to **Yelp Reviews**. The whole hash is
-rewritten — `coded=resource_stressed`, `dataset=alien`, the selected `item=`,
-and the search `q=` are all dropped in the same step, landing on
-`explorer.html#fit=train-fa-6`. Switching back to Alien Conversations does not
-restore the commission — it comes back with `Codings 4` and nothing
-commissioned.
+dropdown from **Alien Conversations (4 pathways)** to **Yelp Reviews**. The
+whole hash is rewritten — `coded=resource_stressed`, `dataset=alien`, the
+selected `item=`, and the search `q=` are all dropped in the same step,
+landing on `explorer.html#fit=train-fa-6`. Switching back to
+**Alien Conversations (4 pathways)** does not restore the commission — it
+comes back with `Codings 4` and nothing commissioned.
 
 **Bug to report:** `coded=` surviving a Reset, or a commissioned attribute still
 active (or still in the address bar) after switching datasets away and back.

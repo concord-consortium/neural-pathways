@@ -1,11 +1,19 @@
 # Manually Testing the Alien Dataset Generator
 
-The alien dataset generator (`scripts/generate-alien-data.ts`, configured by
-`scripts/alien-config.ts`) is a seeded TypeScript script that synthesizes ~800
-"alien language" conversations into the project's existing S3 data format: four
-pathway scores, exact SHAP word attributions, nine coded attributes, and a
-deliberately biased model prediction. It has no UI of its own — everything below
-is exercised from the command line and by reading the JSON it writes.
+The alien dataset generator (`scripts/generate-alien-data.ts`) is a seeded
+TypeScript script that emits **two** "alien language" conversation datasets, one
+after the other, from the two configs exported by `scripts/alien-config.ts`: a
+four-pathway dataset (fit `alien-fa-4`) and a three-pathway dataset (fit
+`alien-fa-3`), ~800 conversations each. Both configs share their attribute
+definitions, note fragments, and thresholds via `scripts/alien/config-common.ts`,
+and differ in pathway count, vocabulary size, and where `group_size` and
+`resource_stressed` sit: in the four-pathway set `group_size` is a real pathway
+(P2) and `resource_stressed` sits on P3; in the three-pathway set `group_size`
+becomes a decoy (no pathway) and `resource_stressed` moves to P2. Each dataset
+is written into the project's existing S3 data format: pathway scores, exact
+SHAP word attributions, nine coded attributes, and a deliberately biased model
+prediction. The generator has no UI of its own — everything below is exercised
+from the command line and by reading the JSON it writes.
 
 Run it with:
 
@@ -25,22 +33,27 @@ npm run generate:alien
 ```
 
 On this machine this finishes in about a second — `ts-node`'s startup dominates,
-the generation itself is fast. Two consecutive runs produce a byte-identical
-`dist/alien-data/index.json`, because the seed and every other input are fixed in
-`scripts/alien-config.ts`.
+the generation itself is fast. Two consecutive runs produce byte-identical
+`index.json` files for both datasets, because the seed and every other input are
+fixed in `scripts/alien-config.ts`.
 
 It writes:
 
-- `dist/alien-data/index.json` — the review index (metadata, attributes, text,
-  target, pathway scores, classification, for all 800 conversations).
+- `dist/alien-data/index.json` — the four-pathway review index (metadata,
+  attributes, text, target, pathway scores, classification, for all 800
+  conversations).
 - `dist/alien-data/shap/alien-fa-4/*.json` — SHAP word-attribution buckets, one
   file per two-hex-character prefix of the conversation id.
+- `dist/alien-data-3/index.json` — the three-pathway dataset's review index,
+  same shape as above.
+- `dist/alien-data-3/shap/alien-fa-3/*.json` — its SHAP word-attribution
+  buckets, same layout as above.
 
 `npm run build` runs this generator too, as one step of
-`npm-run-all lint:build generate:alien build:webpack`. `dist/alien-data/` is
-excluded from `CleanWebpackPlugin`'s clean patterns
-(`webpack.config.js`), so a webpack build does not delete it — the data is meant
-to persist across builds that don't touch it.
+`npm-run-all lint:build generate:alien build:webpack`. `dist/alien-data/` and
+`dist/alien-data-3/` are both excluded from `CleanWebpackPlugin`'s clean patterns
+(`webpack.config.js`), so a webpack build does not delete either — the data is
+meant to persist across builds that don't touch it.
 
 `writeDataset` deletes and rewrites the whole output directory on every run, so
 there is no cache to invalidate. **To force a regenerate**, just run
@@ -52,8 +65,11 @@ described above — with the config unmodified, none of those should happen.
 
 ## 2. Reading the run summary
 
-Run `npm run generate:alien` and read the printed summary top to bottom. A
-representative real run looks like this:
+Run `npm run generate:alien` and read the printed summary top to bottom. The
+command prints **two** of these summaries in sequence, separated by a blank
+line, one per dataset — each opens with its own `output <dir>, fit "<name>"`
+line so you can tell which is which. A representative real run of the
+four-pathway summary looks like this:
 
 ```
 alien dataset — seed 20260803, 800 conversations
@@ -133,6 +149,26 @@ Block by block:
 A bug is any block whose numbers don't match the description above — e.g. a
 variance split that's badly off, a pathway correlation far from 0, or a
 self-check failing on a config nobody touched.
+
+### The three-pathway summary
+
+Same structure, one dataset later in the same run, and only three pathways —
+this config's `targetVarianceShares` is 55/35/10, not the four-pathway
+config's 55/20/15/10, so the shares themselves differ, not just the pathway
+count. From the captured output:
+
+```
+alien dataset — seed 20260803, 800 conversations
+output dist/alien-data-3, fit "alien-fa-3"
+
+variance split (target -> realized)
+  P0  55.0% -> 54.9%
+  P1  35.0% -> 35.1%
+  P2  10.0% -> 10.0%
+```
+
+Healthy, same as the four-pathway block: each line's two percentages sit close
+together.
 
 ## 3. Requested versus achieved
 
