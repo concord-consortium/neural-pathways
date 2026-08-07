@@ -138,21 +138,30 @@ interface DatasetConfig {
   label: string;
   baseUrl: string;
   itemNoun: { singular: string; plural: string };   // "review" | "conversation"
-  attributes: AttributeDefinition[];
-  getAttributeValue(review: S3Review, key: string): number | null;
-  hasObservations: boolean;
+  classificationLabels: Record<number, string>;     // {0:"negative",1:"positive"} / {0:"wait",1:"approach"}
+  searchPlaceholder: string;
+  searchFields: { name: string; description: string }[];   // help rows only this dataset has
+  resolveAttributes(index: S3Index): AttributeDefinition[];
+  getAttributeValue(item: S3Item, key: string): number | null;
 }
 ```
 
-The indirection through `getAttributeValue` is what lets attributes come from two different
-places:
+`resolveAttributes` takes the index rather than being a static array because the two datasets
+learn their attributes from different places, and one of them cannot know until its data
+arrives:
 
-- **Yelp** derives them from fields already present in `index.json`. No data regeneration.
-- **Alien** reads a stored `review.attributes` map, with definitions from
-  `metadata.attributes` in the data file.
+- **Yelp** derives every attribute from fields already present in `index.json`. No data
+  regeneration, and the index argument is unused.
+- **Alien** merges the definitions the generator wrote into `metadata.attributes` with `target`
+  and `model_correct`, which it derives. The list arrives over the network, so it is validated
+  at resolve time rather than at module load.
 
 Both paths produce the same `AttributeDefinition[]` and the same value lookup, so every
 consumer downstream is dataset-agnostic.
+
+The resolved list is paired with its config as an `ActiveDataset`, which is what consumers
+actually hold. From phase 6 that pairing also carries visibility — see the
+[phase 6 design](2026-08-04-attribute-commissioning-design.md).
 
 `itemNoun` is not cosmetic. The explorer says "review" throughout its UI; the alien dataset
 needs "conversation". Every user-facing string that names the item must draw from the config.
@@ -318,9 +327,20 @@ Two requirements follow:
    reveals something the notes never supported, and the fiction that a coder derived it from
    the notes collapses.
 
-**Open question for that phase:** whether commissioning has a cost (unlock 3 of 8) or is
-teacher-controlled. Without some constraint, students unlock everything immediately and the
-decision carries no weight. Deferred to the phase 6 spec.
+**Settled in the [phase 6 design](2026-08-04-attribute-commissioning-design.md)**, which is the
+authority here; where the two disagree, that document wins.
+
+Commissioning is **unlimited** — any hidden attribute can be commissioned at any time. An
+earlier draft of this section proposed a budget, on the grounds that without a constraint
+students unlock everything immediately and the decision carries no weight. That objection is
+real, but the constraint belongs to the curriculum rather than the app: a teacher requiring a
+written prediction before the click enforces it, and the app cannot see whether that happened.
+Building a budget would make the app enforce a pedagogy it has no view of.
+
+What the app does instead is make commissioning deliberate and visible: a dialog listing each
+available coding with its full description, so the choice is reasoned rather than a toggle
+buried in settings. The commissioned set lives in the URL, which also lets a teacher hand out
+a link with codings already unlocked.
 
 ## The Alien Dataset
 
@@ -419,8 +439,8 @@ They are independent and can proceed in parallel.
 | 2 | Correlation matrix + drill-down, incl. pathway × pathway and attribute × attribute | Yelp | The pairwise discovery workflow |
 | 3 | Regression panel — OLS per pathway, logistic for classification, interaction terms | Yelp | Variance coverage |
 | 4 | [Alien dataset generator](2026-08-03-alien-dataset-generator-design.md) — TS script, run at build time | — | A tunable authored dataset |
-| 5 | Alien dataset in the app — dataset switching, item nouns, observation panel | Alien | The alien app exists |
-| 6 | Attribute visibility and commissioned coding | Both | The pedagogical sequence |
+| 5 | [Alien dataset in the app](2026-08-03-alien-dataset-in-the-app-design.md) — dataset switching, item nouns, observation panel | Alien | The alien app exists |
+| 6 | [Attribute visibility and commissioned coding](2026-08-04-attribute-commissioning-design.md) | Alien (mechanism is dataset-agnostic) | The pedagogical sequence |
 | 7 | Tuning | Alien | Correlation strengths that actually teach |
 
 Phases 1–3 running against Yelp are worth emphasizing. They exercise all the shared

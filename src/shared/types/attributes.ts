@@ -22,8 +22,13 @@ export interface AttributeDefinition {
    */
   valueLabels?: Record<number, string>;
   /**
-   * Present in the data but not shown in the explorer. Written by the dataset
-   * generator; nothing reads it until the commissioned-coding phase.
+   * Present in the data but not shown in the explorer until a student
+   * commissions it. Written by the dataset generator. `applyCommissions`
+   * (shared/datasets/dataset-config.ts) filters a hidden attribute out of
+   * `ActiveDataset.attributes` — the list every explorer surface reads —
+   * unless its key is in the commissioned set; `codeableAttributes` in the
+   * same file uses it to build the Codings dialog's list of attributes a
+   * student can commission.
    */
   hidden?: boolean;
 }
