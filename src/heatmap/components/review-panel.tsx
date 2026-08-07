@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import Select, { SingleValue, StylesConfig } from "react-select";
-import { S3Review } from "../types/viz-data";
+import { S3Item } from "../types/viz-data";
 import "./review-panel.scss";
 
 const TRUNCATE_LENGTH = 60;
@@ -8,7 +8,7 @@ const TRUNCATE_LENGTH = 60;
 interface ReviewOption {
   value: string; // review id
   label: string;
-  review: S3Review;
+  review: S3Item;
 }
 
 const selectStyles: StylesConfig<ReviewOption, false> = {
@@ -21,9 +21,9 @@ const selectStyles: StylesConfig<ReviewOption, false> = {
 };
 
 interface ReviewPanelProps {
-  reviews: S3Review[];
-  selectedReview: S3Review | undefined;
-  onSelectReview: (review: S3Review) => void;
+  reviews: S3Item[];
+  selectedReview: S3Item | undefined;
+  onSelectReview: (review: S3Item) => void;
   activationsLoading: boolean;
   children?: React.ReactNode;
 }

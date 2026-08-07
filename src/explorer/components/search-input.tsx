@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { AttributeDefinition } from "../../shared/types/attributes";
+import { capitalize } from "../../shared/datasets/dataset-config";
 import "./search-input.scss";
 
 interface SearchInputProps {
@@ -8,6 +9,9 @@ interface SearchInputProps {
   hasError?: boolean;
   numPathways?: number;
   attributes?: AttributeDefinition[];
+  itemNoun: { singular: string; plural: string };
+  searchPlaceholder: string;
+  searchFields: { name: string; description: string }[];
 }
 
 function describeAttribute(definition: AttributeDefinition): string {
@@ -22,6 +26,7 @@ function describeAttribute(definition: AttributeDefinition): string {
 
 export const SearchInput: React.FC<SearchInputProps> = ({
   query, onQueryChange, hasError, numPathways, attributes = [],
+  itemNoun, searchPlaceholder, searchFields,
 }) => {
   const [showHelp, setShowHelp] = useState(false);
   const helpRef = useRef<HTMLDivElement>(null);
@@ -48,7 +53,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         type="text"
         value={query}
         onChange={e => onQueryChange(e.target.value)}
-        placeholder="stars:5 AND pathway_0:>0.8"
+        placeholder={searchPlaceholder}
       />
       <div className="search-input-help-wrapper" ref={helpRef}>
         <button
@@ -69,16 +74,17 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             <h4>Fields</h4>
             <table>
               <tbody>
-                <tr><td><code>text</code></td><td>Review text</td></tr>
-                <tr><td><code>name</code></td><td>Business name</td></tr>
-                <tr><td><code>city</code></td><td>City</td></tr>
-                <tr><td><code>state</code></td><td>State</td></tr>
-                <tr><td><code>categories</code></td><td>Business categories</td></tr>
+                <tr><td><code>text</code></td><td>{`${capitalize(itemNoun.singular)} text`}</td></tr>
                 <tr><td><code>target_label</code></td><td>Classification label</td></tr>
+                {searchFields.map(field => (
+                  <tr key={field.name}>
+                    <td><code>{field.name}</code></td>
+                    <td>{field.description}</td>
+                  </tr>
+                ))}
                 <tr><td><code>{pathwayRange}</code></td><td>Pathway scores (current fit)</td></tr>
-                <tr><td><code>reconstruction_r2</code></td><td>Reconstruction R²</td></tr>
                 <tr><td><code>has_word_scores</code></td><td>Has word scores for current fit (true/false)</td></tr>
-                <tr><td><code>classification_label</code></td><td>Model&apos;s predicted sentiment</td></tr>
+                <tr><td><code>classification_label</code></td><td>Model&apos;s predicted label</td></tr>
                 <tr><td><code>classification_probability</code></td><td>Prediction confidence (0–1)</td></tr>
               </tbody>
             </table>

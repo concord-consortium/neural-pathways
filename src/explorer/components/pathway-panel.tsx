@@ -1,5 +1,6 @@
 import React from "react";
 import { ScaleMode, ScaleExtents } from "../types/explorer-data";
+import { capitalize } from "../../shared/datasets/dataset-config";
 import { PathwayBar } from "./pathway-bar";
 import "./pathway-panel.scss";
 
@@ -14,6 +15,7 @@ interface PathwayPanelProps {
   pathwayImportance?: number[];
   onPathwayClick?: (index: number) => void;
   selectedPathways?: Set<number>;
+  itemNoun: { singular: string; plural: string };
 }
 
 function computeImportancePercents(importance: number[]): number[] {
@@ -25,7 +27,7 @@ function computeImportancePercents(importance: number[]): number[] {
 export const PathwayPanel: React.FC<PathwayPanelProps> = ({
   scores, varianceFractions, scaleMode, scaleExtents, showVarianceFractions,
   showExtents, explainedVariancePerPathway, pathwayImportance,
-  onPathwayClick, selectedPathways
+  onPathwayClick, selectedPathways, itemNoun
 }) => {
   const importancePercents = pathwayImportance ? computeImportancePercents(pathwayImportance) : undefined;
   const maxImportance = pathwayImportance
@@ -38,7 +40,7 @@ export const PathwayPanel: React.FC<PathwayPanelProps> = ({
         <div className="pathway-panel-legend-header">Pathways</div>
         <div className="pathway-panel-legend-columns">
           <div className="pathway-panel-legend-col">
-            <span className="legend-title">This Review</span>
+            <span className="legend-title">This {capitalize(itemNoun.singular)}</span>
             <span className="legend-item">Pathway activation</span>
             {showVarianceFractions && <span className="legend-item">Var. Fraction</span>}
           </div>

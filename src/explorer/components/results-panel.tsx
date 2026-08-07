@@ -1,21 +1,21 @@
 import React, { useState } from "react";
-import { S3Review } from "../../shared/types/s3-data";
+import { S3Item } from "../../shared/types/s3-data";
 import "./results-panel.scss";
 
 const SNIPPET_LENGTH = 80;
 
 interface ResultsPanelProps {
-  reviews: S3Review[];
+  items: S3Item[];
   fitName: string;
-  selectedReviewId: string | null;
-  onSelectReview: (review: S3Review) => void;
+  selectedItemId: string | null;
+  onSelectItem: (item: S3Item) => void;
   maxAbsScore: number;
   resultCount: number;
   totalCount: number;
 }
 
 export const ResultsPanel: React.FC<ResultsPanelProps> = ({
-  reviews, fitName, selectedReviewId, onSelectReview, maxAbsScore, resultCount, totalCount,
+  items, fitName, selectedItemId, onSelectItem, maxAbsScore, resultCount, totalCount,
 }) => {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -47,19 +47,19 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
         </button>
       </div>
       <div className="results-panel-list">
-        {reviews.map(review => {
-          const scores = review.pathway_scores[fitName] ?? [];
-          const isSelected = review.id === selectedReviewId;
+        {items.map(item => {
+          const scores = item.pathway_scores[fitName] ?? [];
+          const isSelected = item.id === selectedItemId;
           return (
             <div
-              key={review.id}
+              key={item.id}
               className={`results-panel-card${isSelected ? " selected" : ""}`}
-              onClick={() => onSelectReview(review)}
+              onClick={() => onSelectItem(item)}
               data-testid="result-card"
             >
               <div className="results-panel-card-text">
-                {review.text.slice(0, SNIPPET_LENGTH)}
-                {review.text.length > SNIPPET_LENGTH ? "..." : ""}
+                {item.text.slice(0, SNIPPET_LENGTH)}
+                {item.text.length > SNIPPET_LENGTH ? "..." : ""}
               </div>
               <div className="results-panel-card-bars">
                 {scores.map((score, i) => {

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { logisticRegression } from "../../src/explorer/utils/regression";
 import { AttributeDefinition } from "../../src/shared/types/attributes";
-import { S3Index, S3Review, S3ShapBucket, S3ShapReview } from "../../src/shared/types/s3-data";
+import { S3Index, S3Item, S3ShapItem } from "../../src/shared/types/s3-data";
 import { SolvedAttribute } from "./attributes";
 import { AlienConfig } from "./config-types";
 import { Corpus } from "./conversations";
@@ -13,10 +13,21 @@ const CLS = "[CLS]";
 const SEP = "[SEP]";
 const ID_LENGTH = 12;
 
+/** The shape index.json actually has on disk. Mirrors S3Index but keeps the wire's `reviews` key. */
+export interface IndexWire {
+  metadata: S3Index["metadata"];
+  reviews: S3Item[];
+}
+
+/** The shape a SHAP bucket file actually has on disk. Mirrors S3ShapBucket's items as `reviews`. */
+export interface ShapBucketWire {
+  reviews: S3ShapItem[];
+}
+
 export interface Dataset {
-  index: S3Index;
+  index: IndexWire;
   /** Keyed by the two-hex bucket, matching id.slice(0, 2). */
-  shapBuckets: Map<string, S3ShapBucket>;
+  shapBuckets: Map<string, ShapBucketWire>;
   texts: string[];
   ids: string[];
 }
@@ -69,7 +80,7 @@ function shapForConversation(
   corpus: Corpus,
   config: AlienConfig,
   weightOf: Map<string, number[]>,
-): S3ShapReview {
+): S3ShapItem {
   const zero = new Array<number>(config.pathwayCount).fill(0);
 
   const words: { word: string; scores: number[] }[] = [{ word: CLS, scores: [...zero] }];
@@ -104,7 +115,7 @@ export function buildDataset(input: BuildDatasetInput): Dataset {
     );
   }
 
-  const reviews: S3Review[] = texts.map((text, i) => {
+  const reviews: S3Item[] = texts.map((text, i) => {
     const scores = corpus.scores[i];
     const sumOfSquares = scores.reduce((sum, value) => sum + value * value, 0);
     const attributes: Record<string, number> = {};
@@ -142,16 +153,16 @@ export function buildDataset(input: BuildDatasetInput): Dataset {
   }
 
   const weightOf = new Map(config.vocabulary.map(entry => [entry.word, entry.weights]));
-  const shapBuckets = new Map<string, S3ShapBucket>();
+  const shapBuckets = new Map<string, ShapBucketWire>();
   ids.forEach((id, i) => {
     const bucket = id.slice(0, 2);
     if (!shapBuckets.has(bucket)) shapBuckets.set(bucket, { reviews: [] });
-    (shapBuckets.get(bucket) as S3ShapBucket).reviews.push(shapForConversation(
+    (shapBuckets.get(bucket) as ShapBucketWire).reviews.push(shapForConversation(
       id, corpus.conversations[i].turns, corpus.scores[i], corpus, config, weightOf,
     ));
   });
 
-  const index: S3Index = {
+  const index: IndexWire = {
     metadata: {
       fa_fits: {
         [fitName]: {

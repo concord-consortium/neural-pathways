@@ -1,8 +1,12 @@
-import { flattenReview } from "./flatten-review";
-import { S3Review } from "../../shared/types/s3-data";
+import { flattenItem } from "./flatten-item";
+import { S3Item, S3Index } from "../../shared/types/s3-data";
 import { yelpDataset } from "../../shared/datasets/yelp-dataset";
+import { activateDataset } from "../../shared/datasets/dataset-config";
 
-const makeReview = (overrides: Partial<S3Review> = {}): S3Review => ({
+const emptyIndex = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
+const activeYelp = activateDataset(yelpDataset, emptyIndex);
+
+const makeItem = (overrides: Partial<S3Item> = {}): S3Item => ({
   id: "r1",
   sources: { test: [0] },
   text: "Great pizza and wonderful service",
@@ -20,10 +24,10 @@ const makeReview = (overrides: Partial<S3Review> = {}): S3Review => ({
   ...overrides,
 });
 
-describe("flattenReview", () => {
-  it("flattens a review with pathway scores for the selected fit", () => {
-    const review = makeReview();
-    const result = flattenReview(review, "fit_a", yelpDataset);
+describe("flattenItem", () => {
+  it("flattens an item with pathway scores for the selected fit", () => {
+    const item = makeItem();
+    const result = flattenItem(item, "fit_a", activeYelp);
 
     expect(result.text).toBe("Great pizza and wonderful service");
     expect(result.stars).toBe(4);
@@ -41,17 +45,17 @@ describe("flattenReview", () => {
   });
 
   it("sets has_word_scores true when fit is in has_shap", () => {
-    const review = makeReview({ has_shap: ["fit_a"] });
-    const result = flattenReview(review, "fit_a", yelpDataset);
+    const item = makeItem({ has_shap: ["fit_a"] });
+    const result = flattenItem(item, "fit_a", activeYelp);
     expect(result.has_word_scores).toBe(true);
 
-    const resultB = flattenReview(review, "fit_b", yelpDataset);
+    const resultB = flattenItem(item, "fit_b", activeYelp);
     expect(resultB.has_word_scores).toBe(false);
   });
 
   it("uses pathway scores from the specified fit", () => {
-    const review = makeReview();
-    const result = flattenReview(review, "fit_b", yelpDataset);
+    const item = makeItem();
+    const result = flattenItem(item, "fit_b", activeYelp);
 
     expect(result.pathway_0).toBe(0.1);
     expect(result.pathway_1).toBe(0.9);
@@ -60,35 +64,39 @@ describe("flattenReview", () => {
   });
 
   it("derives classification_label from classification field", () => {
-    const review = makeReview({ classification: 1, classification_probability: 0.987 });
-    const result = flattenReview(review, "fit_a", yelpDataset);
+    const item = makeItem({ classification: 1, classification_probability: 0.987 });
+    const result = flattenItem(item, "fit_a", activeYelp);
     expect(result.classification_label).toBe("positive");
     expect(result.classification_probability).toBe(0.987);
   });
 
   it("derives negative classification_label when classification is 0", () => {
-    const review = makeReview({ classification: 0, classification_probability: 0.123 });
-    const result = flattenReview(review, "fit_a", yelpDataset);
+    const item = makeItem({ classification: 0, classification_probability: 0.123 });
+    const result = flattenItem(item, "fit_a", activeYelp);
     expect(result.classification_label).toBe("negative");
     expect(result.classification_probability).toBe(0.123);
   });
 
+  it("labels the classification from the dataset", () => {
+    const item = makeItem({ classification: 0, classification_probability: 0.2 });
+    expect(flattenItem(item, "fit_a", activeYelp).classification_label).toBe("negative");
+  });
+
   it("omits classification fields when classification is absent", () => {
-    const review = makeReview();
-    const result = flattenReview(review, "fit_a", yelpDataset);
+    const item = makeItem();
+    const result = flattenItem(item, "fit_a", activeYelp);
     expect(result.classification_label).toBeUndefined();
     expect(result.classification_probability).toBeUndefined();
   });
 
-  it("defaults reconstruction_r2 to 0 when the review has no reconstruction data", () => {
-    const review = makeReview();
-    delete review.reconstruction_r2;
-    const result = flattenReview(review, "fit_a", yelpDataset);
-    expect(result.reconstruction_r2).toBe(0);
+  it("omits reconstruction_r2 when the item has none", () => {
+    const item = makeItem();
+    delete item.reconstruction_r2;
+    expect("reconstruction_r2" in flattenItem(item, "fit_a", activeYelp)).toBe(false);
   });
 
-  it("handles reviews with missing optional fields", () => {
-    const review = makeReview({
+  it("handles items with missing optional fields", () => {
+    const item = makeItem({
       name: undefined,
       city: undefined,
       state: undefined,
@@ -96,7 +104,7 @@ describe("flattenReview", () => {
       review_stars: undefined,
       categories: undefined,
     });
-    const result = flattenReview(review, "fit_a", yelpDataset);
+    const result = flattenItem(item, "fit_a", activeYelp);
 
     expect(result.text).toBe("Great pizza and wonderful service");
     expect(result.name).toBeUndefined();
@@ -105,37 +113,48 @@ describe("flattenReview", () => {
   });
 });
 
-describe("flattenReview attributes", () => {
+describe("flattenItem attributes", () => {
   it("writes attribute values as searchable fields", () => {
-    const review = makeReview({ classification: 0, classification_probability: 0.4 });
-    const flat = flattenReview(review, "fit_a", yelpDataset);
+    const item = makeItem({ classification: 0, classification_probability: 0.4 });
+    const flat = flattenItem(item, "fit_a", activeYelp);
     expect(flat.target).toBe(1);
     expect(flat.model_correct).toBe(0);
     expect(flat.is_synthetic).toBe(0);
   });
 
   it("sets model_correct to 1 when the prediction matches the target", () => {
-    const review = makeReview({ classification: 1, classification_probability: 0.9 });
-    const flat = flattenReview(review, "fit_a", yelpDataset);
+    const item = makeItem({ classification: 1, classification_probability: 0.9 });
+    const flat = flattenItem(item, "fit_a", activeYelp);
     expect(flat.model_correct).toBe(1);
   });
 
-  it("leaves aliased fields equal to the underlying review values", () => {
-    const flat = flattenReview(makeReview(), "fit_a", yelpDataset);
+  it("leaves aliased fields equal to the underlying item values", () => {
+    const flat = flattenItem(makeItem(), "fit_a", activeYelp);
     expect(flat.review_stars).toBe(5);
     expect(flat.stars).toBe(4);
   });
 
   it("omits attributes whose value is null rather than writing null", () => {
-    // No classification, so model_correct is undefined for this review.
-    const flat = flattenReview(makeReview(), "fit_a", yelpDataset);
+    // No classification, so model_correct is undefined for this item.
+    const flat = flattenItem(makeItem(), "fit_a", activeYelp);
     expect("model_correct" in flat).toBe(false);
   });
 
   it("still populates the existing non-attribute fields", () => {
-    const flat = flattenReview(makeReview(), "fit_a", yelpDataset);
+    const flat = flattenItem(makeItem(), "fit_a", activeYelp);
     expect(flat.text).toBe("Great pizza and wonderful service");
     expect(flat.pathway_0).toBe(0.8);
     expect(flat.has_word_scores).toBe(false);
+  });
+
+  // A searchable observation would hand a student every deliberately-hidden
+  // attribute in one search (`observation:"waited too long"` etc). This pins
+  // the constraint so a future edit that helpfully spreads more of S3Item
+  // into the flat object cannot silently reintroduce it.
+  it("never adds the observation field to the flattened search object", () => {
+    const item = makeItem({ observation: "This one hesitated for an unusually long time before approaching." });
+    const flat = flattenItem(item, "fit_a", activeYelp);
+    expect("observation" in flat).toBe(false);
+    expect(JSON.stringify(flat)).not.toContain("hesitated");
   });
 });

@@ -1,12 +1,42 @@
-import { S3Review } from "../types/s3-data";
+import { S3Index, S3Item } from "../types/s3-data";
 import { AttributeDefinition } from "../types/attributes";
 
 export interface DatasetConfig {
   id: string;
   label: string;
+  baseUrl: string;
+  itemNoun: { singular: string; plural: string };
+  classificationLabels: Record<number, string>;
+  searchPlaceholder: string;
+  /** Help rows for fields only this dataset has. */
+  searchFields: { name: string; description: string }[];
+  resolveAttributes(index: S3Index): AttributeDefinition[];
+  /** Returns null when the attribute does not apply to this item. */
+  getAttributeValue: (item: S3Item, key: string) => number | null;
+}
+
+/**
+ * A DatasetConfig paired with the attribute list resolved for a loaded index.
+ * Consumers want one object, but the alien dataset's attributes are not known
+ * until its data arrives, so the two cannot be the same thing.
+ */
+export interface ActiveDataset {
+  config: DatasetConfig;
   attributes: AttributeDefinition[];
-  /** Returns null when the attribute does not apply to this review. */
-  getAttributeValue: (review: S3Review, key: string) => number | null;
+  getAttributeValue: (item: S3Item, key: string) => number | null;
+}
+
+export function activateDataset(config: DatasetConfig, index: S3Index): ActiveDataset {
+  return {
+    config,
+    attributes: config.resolveAttributes(index),
+    getAttributeValue: (item, key) => config.getAttributeValue(item, key),
+  };
+}
+
+/** Sentence-initial and heading use of a lowercase item noun. */
+export function capitalize(text: string): string {
+  return text.length === 0 ? text : text[0].toUpperCase() + text.slice(1);
 }
 
 /**

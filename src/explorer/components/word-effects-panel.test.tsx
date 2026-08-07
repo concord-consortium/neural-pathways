@@ -1,9 +1,9 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { WordEffectsPanel } from "./word-effects-panel";
-import { ReviewShapData } from "../../shared/types/s3-data";
+import { ItemShapData } from "../../shared/types/s3-data";
 
-const mockShapData: ReviewShapData = {
+const mockShapData: ItemShapData = {
   words: [
     { word: "great", scores: [0.5, -0.3, 0.1] },
     { word: "food", scores: [-0.2, 0.4, -0.5] },
@@ -21,6 +21,7 @@ const defaultProps = {
   wordColorMode: "score" as const,
   wordScaleScope: "per-pathway" as const,
   showPathwayValues: false,
+  itemNoun: { singular: "review", plural: "reviews" },
 };
 
 describe("WordEffectsPanel", () => {
@@ -70,6 +71,31 @@ describe("WordEffectsPanel", () => {
       />
     );
     expect(screen.getByText("No word effects available for this review.")).toBeDefined();
+  });
+
+  it("names the item using the dataset's noun when no word effects exist", () => {
+    render(
+      <WordEffectsPanel
+        {...defaultProps}
+        hasShapForCurrentFit={false}
+        shapAvailableFits={[]}
+        selectedPathways={new Set([0])}
+        itemNoun={{ singular: "conversation", plural: "conversations" }}
+      />
+    );
+    expect(screen.getByText("No word effects available for this conversation.")).toBeDefined();
+  });
+
+  it("names the item using the dataset's noun in the pathway hint", () => {
+    render(
+      <WordEffectsPanel
+        {...defaultProps}
+        selectedPathways={new Set()}
+        itemNoun={{ singular: "conversation", plural: "conversations" }}
+      />
+    );
+    expect(screen.getByText("Click a pathway to see its word-level effects on this conversation."))
+      .toBeDefined();
   });
 
   it("shows switch-fit links when SHAP available for other fits", () => {

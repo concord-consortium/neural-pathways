@@ -1,63 +1,81 @@
 import {
-  S3Index, S3FaFit, ActivationBucket, S3ShapBucket, ReviewShapData,
+  S3Index, S3Item, S3FaFit, ActivationBucket, S3ShapBucket, S3ShapItem, ItemShapData,
 } from "./types/s3-data";
 import { Pathways, Scaler, Metadata } from "../heatmap/types/viz-data";
+import { DatasetConfig } from "./datasets/dataset-config";
 
-export const BASE_URL = "https://models-resources.s3.amazonaws.com/neural-pathways/data/v1/";
+/** The shape index.json actually has. Only this module names it. */
+interface S3IndexWire {
+  metadata: S3Index["metadata"];
+  reviews: S3Item[];
+}
 
-export async function fetchIndex(): Promise<S3Index> {
-  const response = await fetch(`${BASE_URL}index.json`);
+/** The shape an activations bucket JSON file actually has. Only this module names it. */
+interface ActivationBucketWire {
+  reviews: { id: string; activations: number[] }[];
+}
+
+/** The shape a SHAP bucket JSON file actually has. Only this module names it. */
+interface S3ShapBucketWire {
+  reviews: S3ShapItem[];
+}
+
+export async function fetchIndex(dataset: DatasetConfig): Promise<S3Index> {
+  const response = await fetch(`${dataset.baseUrl}index.json`);
   if (!response.ok) {
     throw new Error(`Failed to fetch index: ${response.status} ${response.statusText}`);
   }
-  return response.json();
+  const wire: S3IndexWire = await response.json();
+  return { metadata: wire.metadata, items: wire.reviews };
 }
 
 export async function fetchActivations(
-  reviewId: string,
+  dataset: DatasetConfig,
+  itemId: string,
   cache: Map<string, ActivationBucket>,
 ): Promise<number[]> {
-  const bucket = reviewId.slice(0, 2);
+  const bucket = itemId.slice(0, 2);
   if (!cache.has(bucket)) {
-    const response = await fetch(`${BASE_URL}activations/${bucket}.json`);
+    const response = await fetch(`${dataset.baseUrl}activations/${bucket}.json`);
     if (!response.ok) {
       throw new Error(`Failed to fetch activations bucket ${bucket}: ${response.status} ${response.statusText}`);
     }
-    const data: ActivationBucket = await response.json();
-    cache.set(bucket, data);
+    const wire: ActivationBucketWire = await response.json();
+    cache.set(bucket, { items: wire.reviews });
   }
   const bucketData = cache.get(bucket)!;
-  const review = bucketData.reviews.find(r => r.id === reviewId);
-  if (!review) {
-    throw new Error(`Review ${reviewId} not found in bucket ${bucket}`);
+  const item = bucketData.items.find(r => r.id === itemId);
+  if (!item) {
+    throw new Error(`Review ${itemId} not found in bucket ${bucket}`);
   }
-  return review.activations;
+  return item.activations;
 }
 
 export async function fetchShap(
-  reviewId: string,
+  dataset: DatasetConfig,
+  itemId: string,
   fitName: string,
   cache: Map<string, S3ShapBucket>,
-): Promise<ReviewShapData> {
-  const bucket = reviewId.slice(0, 2);
+): Promise<ItemShapData> {
+  const bucket = itemId.slice(0, 2);
   const cacheKey = `${fitName}/${bucket}`;
   if (!cache.has(cacheKey)) {
-    const response = await fetch(`${BASE_URL}shap/${fitName}/${bucket}.json`);
+    const response = await fetch(`${dataset.baseUrl}shap/${fitName}/${bucket}.json`);
     if (!response.ok) {
       throw new Error(`Failed to fetch SHAP bucket ${cacheKey}: ${response.status} ${response.statusText}`);
     }
-    const data: S3ShapBucket = await response.json();
-    cache.set(cacheKey, data);
+    const wire: S3ShapBucketWire = await response.json();
+    cache.set(cacheKey, { items: wire.reviews });
   }
   const bucketData = cache.get(cacheKey)!;
-  const review = bucketData.reviews.find(r => r.id === reviewId);
-  if (!review) {
-    throw new Error(`Review ${reviewId} not found in SHAP bucket ${cacheKey}`);
+  const item = bucketData.items.find(r => r.id === itemId);
+  if (!item) {
+    throw new Error(`Review ${itemId} not found in SHAP bucket ${cacheKey}`);
   }
   return {
-    words: review.words,
-    base_values: review.base_values,
-    unmasked_values: review.unmasked_values,
+    words: item.words,
+    base_values: item.base_values,
+    unmasked_values: item.unmasked_values,
   };
 }
 

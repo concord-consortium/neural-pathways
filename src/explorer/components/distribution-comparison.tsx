@@ -9,21 +9,24 @@ interface DistributionComparisonProps {
   groupLabels: Record<number, string>;
   /** Name of the column variable being distributed, used in the hover text. */
   scoreLabel: string;
+  itemNoun: { singular: string; plural: string };
 }
 
 const BAR_AREA_HEIGHT = 48;
 const MAX_AXIS_LABELS = 10;
 
 /** Text for a bar's native tooltip: which slice of the column, and how many fell in it. */
-function barTitle(bins: Bins, index: number, count: number, scoreLabel: string): string {
+function barTitle(
+  bins: Bins, index: number, count: number, scoreLabel: string, itemNoun: { singular: string; plural: string },
+): string {
   const where = bins.mode === "categorical"
     ? formatAxisValue(bins.values[index])
     : `${formatAxisValue(bins.edges[index])} to ${formatAxisValue(bins.edges[index + 1])}`;
-  return `${scoreLabel} ${where} — ${count} reviews`;
+  return `${scoreLabel} ${where} — ${count} ${itemNoun.plural}`;
 }
 
 export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
-  comparison, groupLabels, scoreLabel,
+  comparison, groupLabels, scoreLabel, itemNoun,
 }) => {
   const { groups, bins, separationSd } = comparison;
   if (groups.length === 0) return null;
@@ -81,7 +84,7 @@ export const DistributionComparison: React.FC<DistributionComparisonProps> = ({
                   height={BAR_AREA_HEIGHT}
                   data-testid="group-bar-hit"
                 >
-                  <title>{barTitle(bins, i, count, scoreLabel)}</title>
+                  <title>{barTitle(bins, i, count, scoreLabel, itemNoun)}</title>
                 </rect>
               ))}
             </svg>

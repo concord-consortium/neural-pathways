@@ -16,6 +16,7 @@ interface SettingsMenuProps {
   onShowPathwayValuesChange: (show: boolean) => void;
   wordScaleScope: WordScaleScope;
   onWordScaleScopeChange: (scope: WordScaleScope) => void;
+  itemNoun: { singular: string; plural: string };
 }
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({
@@ -23,7 +24,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
   showExtents, onShowExtentsChange,
   wordColorMode, onWordColorModeChange,
   showPathwayValues, onShowPathwayValuesChange,
-  wordScaleScope, onWordScaleScopeChange
+  wordScaleScope, onWordScaleScopeChange, itemNoun
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -133,10 +134,10 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
               <input
                 type="radio"
                 name="wordScaleScope"
-                checked={wordScaleScope === "full-review"}
-                onChange={() => onWordScaleScopeChange("full-review")}
+                checked={wordScaleScope === "full-item"}
+                onChange={() => onWordScaleScopeChange("full-item")}
               />
-              Full review
+              Full {itemNoun.singular}
             </label>
           </div>
         </div>

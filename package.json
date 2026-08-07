@@ -35,8 +35,11 @@
     ]
   },
   "scripts": {
+    "prestart": "npm run generate:alien",
     "start": "webpack serve --server-type http",
+    "prestart:secure": "npm run generate:alien",
     "start:secure": "webpack serve",
+    "prestart:secure:no-certs": "npm run generate:alien",
     "start:secure:no-certs": "webpack serve --server-options-cert-reset --server-options-key-reset",
     "build": "npm-run-all lint:build generate:alien build:webpack",
     "build:webpack": "webpack --mode production",

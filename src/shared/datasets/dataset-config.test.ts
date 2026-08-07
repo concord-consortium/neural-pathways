@@ -1,5 +1,7 @@
 import { AttributeDefinition } from "../types/attributes";
-import { validateAttributeKeys, RESERVED_FIELD_NAMES } from "./dataset-config";
+import { S3Index } from "../types/s3-data";
+import { validateAttributeKeys, RESERVED_FIELD_NAMES, activateDataset, capitalize } from "./dataset-config";
+import { yelpDataset } from "./yelp-dataset";
 
 const def = (key: string): AttributeDefinition => ({
   key,
@@ -34,5 +36,22 @@ describe("validateAttributeKeys", () => {
   it("does not list the aliasable star fields as reserved", () => {
     expect(RESERVED_FIELD_NAMES).not.toContain("stars");
     expect(RESERVED_FIELD_NAMES).not.toContain("review_stars");
+  });
+});
+
+describe("activateDataset", () => {
+  const index = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
+
+  it("resolves the config's attributes", () => {
+    const active = activateDataset(yelpDataset, index);
+    expect(active.attributes.map(a => a.key)).toEqual(yelpDataset.resolveAttributes(index).map(a => a.key));
+    expect(active.config).toBe(yelpDataset);
+  });
+});
+
+describe("capitalize", () => {
+  it("raises only the first letter", () => {
+    expect(capitalize("conversation")).toBe("Conversation");
+    expect(capitalize("")).toBe("");
   });
 });

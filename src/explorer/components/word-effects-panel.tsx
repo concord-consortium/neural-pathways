@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import { WordColorMode, WordScaleScope } from "../types/explorer-data";
-import { ReviewShapData } from "../../shared/types/s3-data";
+import { ItemShapData } from "../../shared/types/s3-data";
 import { WordEffectDisplay } from "./word-effect-display";
 import { ColorScale } from "./color-scale";
 import "./word-effects-panel.scss";
 
 interface WordEffectsPanelProps {
-  shapData: ReviewShapData | null;
+  shapData: ItemShapData | null;
   shapLoading: boolean;
   hasShapForCurrentFit: boolean;
   shapAvailableFits: string[];
@@ -16,13 +16,14 @@ interface WordEffectsPanelProps {
   wordScaleScope: WordScaleScope;
   showPathwayValues: boolean;
   onSwitchFit?: (fitName: string) => void;
+  itemNoun: { singular: string; plural: string };
 }
 
 const FILTERED_TOKENS = new Set(["[CLS]", "[SEP]"]);
 
 export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
   shapData, shapLoading, hasShapForCurrentFit, shapAvailableFits, currentFitName,
-  selectedPathways, wordColorMode, wordScaleScope, showPathwayValues, onSwitchFit
+  selectedPathways, wordColorMode, wordScaleScope, showPathwayValues, onSwitchFit, itemNoun
 }) => {
   const sortedIndices = useMemo(
     () => Array.from(selectedPathways).sort((a, b) => a - b),
@@ -35,7 +36,7 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
   );
 
   const sharedMaxAbsValue = useMemo(() => {
-    if (wordScaleScope !== "full-review" || sortedIndices.length === 0 || !shapData) return undefined;
+    if (wordScaleScope !== "full-item" || sortedIndices.length === 0 || !shapData) return undefined;
     let max = 0;
     for (const w of filteredWords) {
       for (const idx of sortedIndices) {
@@ -75,7 +76,7 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
     return (
       <div className="word-effects-panel">
         <div className="word-effects-unavailable">
-          No word effects available for this review.
+          No word effects available for this {itemNoun.singular}.
         </div>
       </div>
     );
@@ -95,7 +96,7 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
     return (
       <div className="word-effects-panel">
         <div className="word-effects-hint">
-          Click a pathway to see its word-level effects on this review.
+          Click a pathway to see its word-level effects on this {itemNoun.singular}.
         </div>
       </div>
     );
@@ -103,7 +104,7 @@ export const WordEffectsPanel: React.FC<WordEffectsPanelProps> = ({
 
   return (
     <div className="word-effects-panel">
-      {wordScaleScope === "full-review" && sharedMaxAbsValue != null && (
+      {wordScaleScope === "full-item" && sharedMaxAbsValue != null && (
         <ColorScale maxAbsValue={sharedMaxAbsValue} wordColorMode={wordColorMode} />
       )}
       {sortedIndices.map(i => (

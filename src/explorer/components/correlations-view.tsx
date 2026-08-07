@@ -11,6 +11,7 @@ interface CorrelationsViewProps {
   series: Series[];
   resultCount: number;
   totalCount: number;
+  itemNoun: { singular: string; plural: string };
 }
 
 /**
@@ -32,7 +33,7 @@ function distinctValueCount(values: (number | null)[]): number {
 }
 
 export const CorrelationsView: React.FC<CorrelationsViewProps> = ({
-  series, resultCount, totalCount,
+  series, resultCount, totalCount, itemNoun,
 }) => {
   const [selectedCell, setSelectedCell] = useState<MatrixCell | null>(null);
 
@@ -53,7 +54,7 @@ export const CorrelationsView: React.FC<CorrelationsViewProps> = ({
   return (
     <div className="explorer-correlations-view" data-testid="correlations-view">
       <div className="explorer-correlations-header" data-testid="correlations-scope">
-        Correlations over <strong>{resultCount}</strong> of {totalCount} reviews
+        Correlations over <strong>{resultCount}</strong> of {totalCount} {itemNoun.plural}
       </div>
 
       {series.length === 0 ? (
@@ -90,6 +91,7 @@ export const CorrelationsView: React.FC<CorrelationsViewProps> = ({
                     comparison={comparison}
                     groupLabels={selected.row.valueLabels ?? {}}
                     scoreLabel={selected.col.label}
+                    itemNoun={itemNoun}
                   />
                 ) : (
                   <ScatterPlot

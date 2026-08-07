@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { S3Index, S3Review, ActivationBucket } from "../types/viz-data";
+import { S3Index, S3Item, ActivationBucket } from "../types/viz-data";
 import { ScaleType, ValueScaling, computeAbsMax } from "../../shared/color-scale";
 import { computeScoredPathway, computeSum } from "../utils/reconstruction";
 import {
   fetchIndex, fetchActivations, fitToPathways, fitToScaler, fitToMetadata,
   standardizeActivations,
 } from "../../shared/data-loader";
+import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPatterns, PathwayScoresRow } from "./pathway-grid";
 import { ScoredPathwaysView } from "./scored-pathways-view";
@@ -76,7 +77,7 @@ export const App = () => {
 
   // --- Fetch index on mount ---
   useEffect(() => {
-    fetchIndex()
+    fetchIndex(yelpDataset)
       .then(data => {
         setIndexData(data);
         const hashParams = getHashParams();
@@ -84,9 +85,9 @@ export const App = () => {
         const fitName = hashParams.fit && names.includes(hashParams.fit)
           ? hashParams.fit : names[0];
         setSelectedFitName(fitName);
-        if (data.reviews.length > 0) {
-          const reviewId = hashParams.review && data.reviews.some(r => r.id === hashParams.review)
-            ? hashParams.review : data.reviews[0].id;
+        if (data.items.length > 0) {
+          const reviewId = hashParams.review && data.items.some(r => r.id === hashParams.review)
+            ? hashParams.review : data.items[0].id;
           setSelectedReviewId(reviewId);
           setActivationsLoading(true);
         }
@@ -99,7 +100,7 @@ export const App = () => {
   useEffect(() => {
     if (!selectedReviewId) return;
     let cancelled = false;
-    fetchActivations(selectedReviewId, activationCacheRef.current)
+    fetchActivations(yelpDataset, selectedReviewId, activationCacheRef.current)
       .then(activations => {
         if (!cancelled) {
           setRawActivations(activations);
@@ -139,7 +140,7 @@ export const App = () => {
 
   // --- Selected review ---
   const selectedReview = useMemo(
-    () => indexData?.reviews.find(r => r.id === selectedReviewId),
+    () => indexData?.items.find(r => r.id === selectedReviewId),
     [indexData, selectedReviewId],
   );
 
@@ -171,7 +172,7 @@ export const App = () => {
   }, [currentOverrideKey]);
 
   // --- Review selection handler ---
-  const handleSelectReview = useCallback((review: S3Review) => {
+  const handleSelectReview = useCallback((review: S3Item) => {
     setSelectedReviewId(review.id);
     setActivationsLoading(true);
   }, []);
@@ -196,7 +197,7 @@ export const App = () => {
       if (hashParams.fit && validFits.includes(hashParams.fit)) {
         setSelectedFitName(hashParams.fit);
       }
-      if (hashParams.review && indexData.reviews.some(r => r.id === hashParams.review)) {
+      if (hashParams.review && indexData.items.some(r => r.id === hashParams.review)) {
         setSelectedReviewId(hashParams.review);
         setActivationsLoading(true);
       }
@@ -412,7 +413,7 @@ export const App = () => {
 
       {/* Row 3, Col 1: Review info */}
       <ReviewPanel
-        reviews={indexData.reviews}
+        reviews={indexData.items}
         selectedReview={selectedReview}
         onSelectReview={handleSelectReview}
         activationsLoading={activationsLoading}
