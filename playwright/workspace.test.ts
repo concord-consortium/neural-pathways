@@ -278,3 +278,44 @@ test("explorer switches back to Yelp and drops the dataset param", async ({ page
   // one-shot page.url() check can race ahead of history.replaceState. Poll instead.
   await expect.poll(() => page.url()).not.toContain("dataset=");
 });
+
+test("fields view survives a reload via the url hash", async ({ page }) => {
+  await page.goto("/explorer.html#view=fields");
+  await expect(page.getByTestId("fields-view")).toBeVisible();
+});
+
+test("the fields view is scoped to the search results", async ({ page }) => {
+  await page.goto("/explorer.html");
+  await page.getByPlaceholder("stars:5").fill("model_correct:0");
+  await page.getByRole("button", { name: "Fields" }).click();
+
+  // The 145 misclassified test-split reviews. Anchored to the scope element's
+  // resultCount slot so this cannot be satisfied by the total count.
+  await expect(page.getByTestId("fields-scope")).toContainText("145 of ");
+});
+
+test("a field's selection and baseline distributions differ", async ({ page }) => {
+  await page.goto("/explorer.html#view=fields");
+  await page.getByPlaceholder("stars:5").fill("model_correct:0");
+
+  await page.getByTestId("field-row-review_stars").click();
+  await expect(page.getByTestId("field-detail-title")).toContainText("Review rating");
+  await expect(page.getByTestId("field-detail-histogram")).toHaveCount(2);
+
+  // The numbers settle a render after the query does, because the view reads a
+  // useDeferredValue — and allTextContents() below is a one-shot read that does
+  // not retry. Wait on a retrying assertion first, the same way the hash checks
+  // above use expect.poll for their own version of this race.
+  await expect(page.getByTestId("fields-scope")).toContainText("145 of ");
+
+  // The reviews the model got wrong are rated differently from the dataset as a
+  // whole — the kind of finding the view exists to surface. Asserted as "these
+  // two numbers differ" rather than a direction: which way the misclassified
+  // reviews skew is a property of the trained model, not of this feature, and
+  // pinning it here would make an unrelated retrain fail this test.
+  const numbers = await page.getByTestId("field-detail-numbers").allTextContents();
+  const subsetMean = Number(numbers[0].match(/mean ([-\d.]+)/)?.[1]);
+  const baselineMean = Number(numbers[1].match(/mean ([-\d.]+)/)?.[1]);
+  expect(Number.isFinite(subsetMean)).toBe(true);
+  expect(Math.abs(subsetMean - baselineMean)).toBeGreaterThan(0.1);
+});

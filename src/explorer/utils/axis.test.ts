@@ -1,4 +1,5 @@
-import { formatAxisValue, selectTickIndices } from "./axis";
+import { formatAxisValue, selectTickIndices, barTitle, axisValueLabel } from "./axis";
+import { Bins } from "./statistics";
 
 describe("formatAxisValue", () => {
   it("keeps a meaningful decimal", () => {
@@ -70,5 +71,53 @@ describe("selectTickIndices", () => {
 
   it("returns nothing for an empty axis", () => {
     expect(selectTickIndices(0, 10)).toEqual([]);
+  });
+});
+
+describe("barTitle", () => {
+  it("names a categorical bar by its value", () => {
+    const bins: Bins = { mode: "categorical", values: [1, 2, 3] };
+    expect(barTitle(bins, 1, 40, "Review rating", "reviews"))
+      .toBe("Review rating 2 — 40 reviews");
+  });
+
+  it("names a numeric bar by the range it spans", () => {
+    const bins: Bins = { mode: "numeric", edges: [0, 0.5, 1] };
+    expect(barTitle(bins, 0, 7, "P0", "conversations"))
+      .toBe("P0 0 to 0.5 — 7 conversations");
+  });
+
+  it("names a categorical bar by its value label when the dataset supplies one", () => {
+    const bins: Bins = { mode: "categorical", values: [0, 1] };
+    expect(barTitle(bins, 1, 2998, "Actual sentiment", "reviews", { 0: "negative", 1: "positive" }))
+      .toBe("Actual sentiment positive — 2998 reviews");
+  });
+
+  it("falls back to the number for a value the label map does not list", () => {
+    // A partial map must degrade to the number rather than mislabel the bar.
+    const bins: Bins = { mode: "categorical", values: [0, 1, 2] };
+    expect(barTitle(bins, 2, 5, "Rating", "reviews", { 0: "low", 1: "high" }))
+      .toBe("Rating 2 — 5 reviews");
+  });
+
+  it("names a numeric bar by its range even when value labels are supplied", () => {
+    // A numeric bar spans a range of values, which no single label describes.
+    const bins: Bins = { mode: "numeric", edges: [0, 0.5, 1] };
+    expect(barTitle(bins, 0, 7, "P0", "reviews", { 0: "negative", 1: "positive" }))
+      .toBe("P0 0 to 0.5 — 7 reviews");
+  });
+});
+
+describe("axisValueLabel", () => {
+  it("uses the dataset's label for a listed value", () => {
+    expect(axisValueLabel(1, { 0: "no", 1: "yes" })).toBe("yes");
+  });
+
+  it("falls back to the formatted number for an unlisted value", () => {
+    expect(axisValueLabel(2, { 0: "no", 1: "yes" })).toBe("2");
+  });
+
+  it("falls back to the formatted number when there is no map at all", () => {
+    expect(axisValueLabel(0.4271)).toBe("0.427");
   });
 });

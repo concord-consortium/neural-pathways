@@ -16,6 +16,7 @@ import { PathwayPanel } from "./pathway-panel";
 import { WordEffectsPanel } from "./word-effects-panel";
 import { SettingsMenu } from "./settings-menu";
 import { CorrelationsView } from "./correlations-view";
+import { FieldsView } from "./fields-view";
 import { DatasetSelector } from "./dataset-selector";
 import { CodingsMenu } from "./codings-menu";
 
@@ -66,6 +67,20 @@ function updateHash(state: HashState) {
 function parseCommissioned(value: string | undefined): ReadonlySet<string> {
   if (!value) return NO_COMMISSIONS;
   return new Set(value.split(",").filter(Boolean));
+}
+
+const VIEW_MODES: ViewMode[] = ["explore", "correlations", "fields"];
+
+/**
+ * Anything unrecognised degrades to explore, the same way an unknown coded key
+ * is dropped: a hand-edited or stale hash should show something rather than
+ * nothing. Centralised so a fourth view cannot be half-added — both the
+ * index-fetch effect and the hashchange handler read the view through here.
+ */
+function parseViewMode(value: string | undefined): ViewMode {
+  // find rather than includes + cast: casting `string | undefined` to ViewMode
+  // is a comparison TypeScript rejects, and the find narrows for free.
+  return VIEW_MODES.find(mode => mode === value) ?? "explore";
 }
 
 export const App = () => {
@@ -184,9 +199,7 @@ export const App = () => {
           if (hashParams.q) {
             setSearchQuery(hashParams.q);
           }
-          if (hashParams.view === "correlations") {
-            setViewMode("correlations");
-          }
+          setViewMode(parseViewMode(hashParams.view));
           if (data.items.length > 0) {
             const itemId = hashParams.item && data.items.some(r => r.id === hashParams.item)
               ? hashParams.item : null;
@@ -310,7 +323,7 @@ export const App = () => {
       } else {
         setCommissioned(NO_COMMISSIONS);
       }
-      setViewMode(hashParams.view === "correlations" ? "correlations" : "explore");
+      setViewMode(parseViewMode(hashParams.view));
     };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
@@ -319,10 +332,23 @@ export const App = () => {
   // --- Derived fit data ---
   const selectedFit = indexData?.metadata.fa_fits[selectedFitName] ?? null;
 
-  const correlationSeries = useMemo(() => {
-    if (viewMode !== "correlations" || !selectedFit || !dataset) return [];
+  const filteredSeries = useMemo(() => {
+    if (viewMode === "explore" || !selectedFit || !dataset) return [];
     return buildSeries(filteredItems, dataset, selectedFitName, selectedFit.n_pathways);
   }, [viewMode, filteredItems, dataset, selectedFitName, selectedFit]);
+
+  // The whole dataset, which is what supplies the bins every histogram shares.
+  // Gated on the fields view so Explore and Correlations pay nothing for it: the
+  // cost is one buildSeries over the full index, paid on entering the view
+  // rather than on every keystroke in a view that is not open.
+  //
+  // dataset is in the dependency list deliberately — commissioning a coding
+  // changes dataset.attributes, and the baseline must gain the same field the
+  // filtered series just gained.
+  const baselineSeries = useMemo(() => {
+    if (viewMode !== "fields" || !indexData || !selectedFit || !dataset) return [];
+    return buildSeries(indexData.items, dataset, selectedFitName, selectedFit.n_pathways);
+  }, [viewMode, indexData, dataset, selectedFitName, selectedFit]);
 
   const pathwayScores = useMemo(
     () => selectedItem?.pathway_scores[selectedFitName] ?? [],
@@ -458,6 +484,12 @@ export const App = () => {
           >
             Correlations
           </button>
+          <button
+            className={`explorer-view-button${viewMode === "fields" ? " active" : ""}`}
+            onClick={() => setViewMode("fields")}
+          >
+            Fields
+          </button>
         </div>
         {codings.length > 0 && (
           <CodingsMenu
@@ -498,7 +530,15 @@ export const App = () => {
         />
         {viewMode === "correlations" ? (
           <CorrelationsView
-            series={correlationSeries}
+            series={filteredSeries}
+            resultCount={filteredItems.length}
+            totalCount={indexData.items.length}
+            itemNoun={dataset.config.itemNoun}
+          />
+        ) : viewMode === "fields" ? (
+          <FieldsView
+            series={filteredSeries}
+            baselineSeries={baselineSeries}
             resultCount={filteredItems.length}
             totalCount={indexData.items.length}
             itemNoun={dataset.config.itemNoun}

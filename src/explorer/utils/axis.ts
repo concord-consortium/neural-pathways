@@ -1,3 +1,5 @@
+import { Bins } from "./statistics";
+
 /**
  * Formats a number for an axis tick: at most three decimal places, with trailing
  * zeros removed so a whole number reads as "3" rather than "3.000".
@@ -16,6 +18,19 @@ export function formatAxisValue(value: number): string {
   // because a tick reading "-0" looks like a bug to a reader.
   if (rounded === 0) return "0";
   return String(rounded);
+}
+
+/**
+ * A categorical value as a reader should see it: the dataset's label for that
+ * value when there is one, and the number itself when there is not.
+ *
+ * The fallback is the contract AttributeDefinition.valueLabels documents — a
+ * partial map, or none at all, must degrade to the number rather than lie — and
+ * it lives here so the axis under a histogram and the hover text on its bars
+ * cannot come to disagree about what a bar is called.
+ */
+export function axisValueLabel(value: number, valueLabels?: Record<number, string>): string {
+  return valueLabels?.[value] ?? formatAxisValue(value);
 }
 
 /**
@@ -39,4 +54,26 @@ export function selectTickIndices(count: number, maxLabels: number): number[] {
   const last = count - 1;
   if (indices[indices.length - 1] !== last) indices.push(last);
   return indices;
+}
+
+/**
+ * Text for a bar's native tooltip: which slice of the column it covers, and how
+ * many items fell in it.
+ *
+ * Lives here beside formatAxisValue rather than in a component, because two
+ * charts now ask the same question of the same Bins union and their answers
+ * must not drift apart.
+ *
+ * valueLabels names the column's own values, so a binary field reads
+ * "positive" rather than "1". It applies in categorical mode only: a numeric
+ * bar covers a range of values, which no single label describes.
+ */
+export function barTitle(
+  bins: Bins, index: number, count: number, label: string, plural: string,
+  valueLabels?: Record<number, string>,
+): string {
+  const where = bins.mode === "categorical"
+    ? axisValueLabel(bins.values[index], valueLabels)
+    : `${formatAxisValue(bins.edges[index])} to ${formatAxisValue(bins.edges[index + 1])}`;
+  return `${label} ${where} — ${count} ${plural}`;
 }

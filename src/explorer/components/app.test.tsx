@@ -356,4 +356,71 @@ describe("App dataset switching", () => {
       expect(screen.queryByRole("button", { name: /codings/i })).toBeNull();
     });
   });
+
+  it("offers a Fields view in the toggle and switches to it", async () => {
+    render(<App />);
+    await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+
+    fireEvent.click(screen.getByRole("button", { name: "Fields" }));
+
+    expect(screen.getByTestId("fields-view")).toBeDefined();
+    expect(window.location.hash).toContain("view=fields");
+  });
+
+  it("states the scope using the dataset's item noun", async () => {
+    render(<App />);
+    await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+
+    fireEvent.click(screen.getByRole("button", { name: "Fields" }));
+
+    // textContent, not getByText: resultCount sits inside a <strong>, and
+    // getByText only joins an element's direct text-node children.
+    expect(screen.getByTestId("fields-scope").textContent).toContain("1 of 1 reviews");
+  });
+
+  it("leaves the results panel alone when switching to Fields", async () => {
+    render(<App />);
+    await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+
+    // The panel is the reader's place in the data; a view switch changes what
+    // sits beside it, never what it lists.
+    const before = screen.getAllByTestId("result-card").length;
+    expect(before).toBe(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Fields" }));
+
+    expect(screen.getByTestId("fields-view")).toBeDefined();
+    expect(screen.getAllByTestId("result-card")).toHaveLength(before);
+    expect(screen.getByText("This is a yelp review about pizza.")).toBeDefined();
+  });
+
+  it("restores the fields view from the hash on load", async () => {
+    window.location.hash = "#view=fields";
+    render(<App />);
+    await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+
+    expect(screen.getByTestId("fields-view")).toBeDefined();
+  });
+
+  it("applies a fields view named by a hashchange", async () => {
+    render(<App />);
+    await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+
+    await act(async () => {
+      window.location.hash = "#view=fields";
+      window.dispatchEvent(new Event("hashchange"));
+    });
+
+    expect(screen.getByTestId("fields-view")).toBeDefined();
+  });
+
+  it("degrades an unknown view name to explore rather than showing nothing", async () => {
+    window.location.hash = "#view=not_a_real_view";
+    render(<App />);
+    await resolveNext("yelp", makeIndex("yelp-fit", yelpItem));
+
+    expect(screen.queryByTestId("fields-view")).toBeNull();
+    expect(screen.queryByTestId("correlations-view")).toBeNull();
+    expect(window.location.hash).not.toContain("not_a_real_view");
+  });
 });

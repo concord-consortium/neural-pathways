@@ -1,4 +1,6 @@
-import { mean, standardDeviation, pearson, compareGroups, linearFit } from "./statistics";
+import {
+  mean, standardDeviation, pearson, compareGroups, linearFit, chooseBins, summarize, BinPlan,
+} from "./statistics";
 
 describe("mean", () => {
   it("averages the values", () => {
@@ -272,5 +274,109 @@ describe("linearFit", () => {
 
   it("throws when the arrays have different lengths", () => {
     expect(() => linearFit([1, 2], [1, 2, 3])).toThrow(/length mismatch/);
+  });
+});
+
+describe("chooseBins", () => {
+  it("returns null when nothing is usable", () => {
+    expect(chooseBins([null, NaN, Infinity])).toBeNull();
+  });
+
+  it("uses one bar per distinct value when the values repeat", () => {
+    // 3 distinct values, 9 usable — 3 * 2 <= 9, so categorical.
+    const plan = chooseBins([1, 1, 1, 2, 2, 2, 3, 3, 3]);
+    expect(plan?.bins).toEqual({ mode: "categorical", values: [1, 2, 3] });
+    expect(plan?.barCount).toBe(3);
+  });
+
+  it("treats a single distinct value as categorical even without repetition", () => {
+    expect(chooseBins([7])?.bins).toEqual({ mode: "categorical", values: [7] });
+  });
+
+  it("uses equal-width bins when the values do not repeat", () => {
+    // 5 distinct, 5 usable — 5 * 2 > 5, so numeric despite being under the limit.
+    const plan = chooseBins([0, 1, 2, 3, 4], 4);
+    expect(plan?.bins).toEqual({ mode: "numeric", edges: [0, 1, 2, 3, 4] });
+    expect(plan?.barCount).toBe(4);
+  });
+
+  it("uses equal-width bins above the distinct-value limit", () => {
+    // 21 distinct values, each appearing twice: repeats, but over MAX_DISTINCT_FOR_BARS.
+    const values = [...Array(21).keys()].flatMap(i => [i, i]);
+    expect(chooseBins(values)?.bins.mode).toBe("numeric");
+  });
+
+  it("maps a categorical value to its own bar", () => {
+    const plan = chooseBins([1, 1, 5, 5, 9, 9]);
+    expect(plan?.indexOf(5)).toBe(1);
+    expect(plan?.indexOf(9)).toBe(2);
+  });
+
+  it("clamps a value the categorical plan was not built from", () => {
+    const plan = chooseBins([1, 1, 5, 5, 9, 9]);
+    expect(plan?.indexOf(-4)).toBe(0);
+    expect(plan?.indexOf(99)).toBe(2);
+    // Between two known values: lands on the first bar at or above it.
+    expect(plan?.indexOf(3)).toBe(1);
+  });
+
+  it("clamps a value outside a numeric plan's range into an end bar", () => {
+    const plan = chooseBins([0, 1, 2, 3, 4], 4);
+    expect(plan?.indexOf(-10)).toBe(0);
+    expect(plan?.indexOf(10)).toBe(3);
+  });
+
+  it("ignores nulls when deciding the mode", () => {
+    // Without the filtering, the two nulls would inflate the usable count and
+    // flip this from numeric to categorical.
+    expect(chooseBins([0, 1, 2, null, null])?.bins.mode).toBe("numeric");
+  });
+});
+
+describe("summarize", () => {
+  // chooseBins returns BinPlan | null; these fixtures are known non-empty.
+  const plan = chooseBins([0, 0, 1, 1, 2, 2]) as BinPlan;
+
+  it("returns null when nothing is usable", () => {
+    expect(summarize([null, NaN], plan)).toBeNull();
+  });
+
+  it("reports n, mean, min and max over the usable values", () => {
+    const stats = summarize([0, 1, 2, null], plan);
+    expect(stats?.n).toBe(3);
+    expect(stats?.mean).toBeCloseTo(1, 10);
+    expect(stats?.min).toBe(0);
+    expect(stats?.max).toBe(2);
+  });
+
+  it("counts into the plan's bars, one entry per bar", () => {
+    const stats = summarize([0, 0, 0, 2], plan);
+    expect(stats?.counts).toEqual([3, 0, 1]);
+  });
+
+  it("counts a value the plan was not built from into a clamped bar", () => {
+    expect(summarize([99], plan)?.counts).toEqual([0, 0, 1]);
+  });
+
+  it("treats NaN and Infinity as missing, like every other statistic here", () => {
+    expect(summarize([0, NaN, Infinity, 2], plan)?.n).toBe(2);
+  });
+
+  it("gives two different subsets the same bins when they share a plan", () => {
+    // The baseline spans 0..10; each subset spans only part of it. Planning from
+    // the baseline is what keeps their bars aligned — planning from each subset
+    // would give them different edges and make the two histograms incomparable.
+    const baseline = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const shared = chooseBins(baseline, 5) as BinPlan;
+    expect(shared.bins).toEqual({ mode: "numeric", edges: [0, 2, 4, 6, 8, 10] });
+
+    const low = summarize([0, 1, 2], shared);
+    const high = summarize([8, 9, 10], shared);
+
+    // Same length is not enough — the bars must mean the same thing. The low
+    // subset fills the leading bars, the high subset the trailing one, and
+    // 10 lands in the last bar rather than a sixth that does not exist.
+    expect(low?.counts).toEqual([2, 1, 0, 0, 0]);
+    expect(high?.counts).toEqual([0, 0, 0, 0, 3]);
   });
 });

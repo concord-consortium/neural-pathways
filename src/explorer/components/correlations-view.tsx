@@ -91,6 +91,10 @@ export const CorrelationsView: React.FC<CorrelationsViewProps> = ({
                     comparison={comparison}
                     groupLabels={selected.row.valueLabels ?? {}}
                     scoreLabel={selected.col.label}
+                    // The row's labels name the group rows above; the column's
+                    // name the values along the shared axis. Different
+                    // variables, so they come from different series.
+                    scoreValueLabels={selected.col.valueLabels}
                     itemNoun={itemNoun}
                   />
                 ) : (

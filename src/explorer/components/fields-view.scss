@@ -1,0 +1,72 @@
+@use "./field-columns" as *;
+
+.explorer-fields-view {
+  // Sized like the sibling .explorer-correlations-view: flex: 1 fills the space
+  // beside the results panel, min-width: 0 lets it shrink below its content
+  // width so inner scroll containers are what engage on a narrow viewport.
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.explorer-fields-header {
+  font-size: 13px;
+  color: #555;
+}
+
+.explorer-fields-empty {
+  font-size: 13px;
+  color: #888;
+  padding: 20px 0;
+}
+
+.explorer-fields-list {
+  // Bounded so the detail pane below is always on screen. The list scrolls
+  // inside itself rather than pushing the detail off the bottom, which is the
+  // whole reason this view is master-detail instead of one long column.
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.explorer-fields-list-head {
+  display: grid;
+  grid-template-columns: $field-list-columns;
+  gap: 10px;
+  padding: 4px 8px;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  font-size: 11px;
+  color: #888;
+}
+
+// Its own class rather than borrowing .field-row-stat from field-list-row.scss:
+// the column widths are shared through the matching grid-template-columns above,
+// and a header should not break when a row's type styling changes.
+.explorer-fields-head-stat {
+  text-align: right;
+}
+
+.explorer-fields-separator {
+  border-top: 1px solid #ccc;
+}
+
+.explorer-fields-detail-wrapper {
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+.explorer-fields-prompt {
+  font-size: 13px;
+  color: #888;
+}

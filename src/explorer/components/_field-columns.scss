@@ -1,0 +1,8 @@
+// The fields list's column widths. The sticky header in fields-view.scss and
+// the rows in field-list-row.scss are separate grids that have to agree
+// exactly: if one changes alone, the header stops sitting above the numbers it
+// names, and nothing fails except the reader's eye.
+//
+// First column is minmax(0, 1fr) rather than 1fr so a long field label is
+// clipped by its own overflow rule instead of widening the whole grid.
+$field-list-columns: minmax(0, 1fr) 96px 96px 92px;
