@@ -1,0 +1,76 @@
+.explorer-correlation-matrix {
+  border-collapse: collapse;
+  font-size: 12px;
+
+  .explorer-matrix-corner {
+    background: transparent;
+  }
+
+  .explorer-matrix-col-header,
+  .explorer-matrix-row-header {
+    font-weight: normal;
+    color: #555;
+    padding: 4px 6px;
+    white-space: nowrap;
+  }
+
+  .explorer-matrix-col-header {
+    text-align: center;
+    vertical-align: bottom;
+  }
+
+  .explorer-matrix-row-header {
+    text-align: right;
+  }
+
+  .explorer-matrix-cell {
+    position: relative;
+    width: 48px;
+    height: 30px;
+    text-align: center;
+    border: 1px solid #eee;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    color: #222;
+
+    // Corner dot marking a cell whose n is materially below the scope count.
+    // White fill with a dark ring so it stays visible against every background
+    // the r colour scale produces, from deep blue through white to red.
+    &.partial-n::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid #333;
+    }
+
+    &.diagonal {
+      background: #f7f7f7;
+      color: #bbb;
+      cursor: default;
+    }
+
+    &.undefined-r {
+      background: #fafafa;
+      color: #bbb;
+      cursor: default;
+    }
+
+    &.selected {
+      outline: 2px solid #2c3e80;
+      outline-offset: -2px;
+    }
+  }
+
+  .boundary-left {
+    border-left: 2px solid #999;
+  }
+
+  .boundary-top {
+    border-top: 2px solid #999;
+  }
+}

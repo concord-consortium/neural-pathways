@@ -29,6 +29,19 @@ describe("yelpDataset", () => {
     }
   });
 
+  it("labels the target's values as the sentiment they mean, not yes/no", () => {
+    const target = yelpDataset.attributes.find(a => a.key === "target");
+    expect(target?.valueLabels).toEqual({ 0: "negative", 1: "positive" });
+  });
+
+  it("gives every binary attribute a label for both of its values", () => {
+    for (const attr of yelpDataset.attributes) {
+      if (attr.type !== "binary") continue;
+      expect(attr.valueLabels?.[0]).toBeTruthy();
+      expect(attr.valueLabels?.[1]).toBeTruthy();
+    }
+  });
+
   it("aliases review_stars and stars to the underlying review fields", () => {
     expect(get(baseReview, "review_stars")).toBe(baseReview.review_stars);
     expect(get(baseReview, "stars")).toBe(baseReview.stars);

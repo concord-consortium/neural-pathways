@@ -1,0 +1,51 @@
+.explorer-correlations-view {
+  // Sized like the sibling .explorer-main in app.scss. flex: 1 makes this fill
+  // the space beside the results panel; without it the panel is sized to the
+  // matrix's content and stops short of the body's right edge. min-width: 0 lets
+  // it shrink below that content width, so the matrix wrapper's overflow-x is
+  // what engages on a narrow viewport. The overflow: auto below already implies a
+  // zero automatic minimum, but saying it outright keeps the shrink behaviour
+  // from silently depending on that.
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.explorer-correlations-header {
+  font-size: 13px;
+  color: #555;
+}
+
+.explorer-correlations-empty {
+  font-size: 13px;
+  color: #888;
+  padding: 20px 0;
+}
+
+.explorer-correlations-matrix-wrapper {
+  overflow-x: auto;
+}
+
+.explorer-correlations-drilldown {
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+.explorer-drilldown-prompt {
+  font-size: 13px;
+  color: #888;
+}
+
+.explorer-drilldown-summary {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
+}
