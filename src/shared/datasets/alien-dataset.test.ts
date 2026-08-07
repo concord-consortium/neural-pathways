@@ -1,5 +1,5 @@
 import { S3Index, S3Item } from "../types/s3-data";
-import { alienDataset } from "./alien-dataset";
+import { alien3Dataset, alienDataset } from "./alien-dataset";
 
 const generatedDefinition = {
   key: "voices_raised",
@@ -105,5 +105,31 @@ describe("alienDataset", () => {
       .toBe(alienDataset.classificationLabels);
     expect(attrs.find(a => a.key === "target")?.valueLabels)
       .toBe(alienDataset.classificationLabels);
+  });
+});
+
+describe("alien3Dataset", () => {
+  it("reads the three-pathway data from its own directory", () => {
+    expect(alien3Dataset.id).toBe("alien3");
+    expect(alien3Dataset.baseUrl).toBe("alien-data-3/");
+    expect(alien3Dataset.baseUrl.startsWith("/")).toBe(false);
+  });
+
+  it("names its pathway count, as the four-pathway dataset now does", () => {
+    // Both labels say how many pathways they have. One labelled and one not
+    // would leave a reader guessing which dataset they had selected.
+    expect(alienDataset.label).toBe("Alien Conversations (4 pathways)");
+    expect(alien3Dataset.label).toBe("Alien Conversations (3 pathways)");
+  });
+
+  it("differs from the four-pathway dataset only in id, label and base URL", () => {
+    // The pathway count lives in the generated metadata, not here, so the two
+    // configs share every behaviour. Anything that drifts between them is a bug.
+    expect(alien3Dataset.resolveAttributes(index).map(a => a.key))
+      .toEqual(alienDataset.resolveAttributes(index).map(a => a.key));
+    expect(alien3Dataset.getAttributeValue(item, "prediction")).toBe(0);
+    expect(alien3Dataset.getAttributeValue(item, "model_correct")).toBe(0);
+    expect(alien3Dataset.classificationLabels).toBe(alienDataset.classificationLabels);
+    expect(alien3Dataset.itemNoun).toEqual(alienDataset.itemNoun);
   });
 });

@@ -14,8 +14,8 @@ describe("datasetFromId", () => {
     expect(datasetFromId("yelpp").id).toBe(DEFAULT_DATASET_ID);
   });
 
-  it("lists both datasets", () => {
-    expect(Object.keys(DATASETS).sort()).toEqual(["alien", "yelp"]);
+  it("lists every dataset", () => {
+    expect(Object.keys(DATASETS).sort()).toEqual(["alien", "alien3", "yelp"]);
   });
 
   it("keeps DATASET_LIST (the dropdown) in agreement with DATASETS (the #dataset= lookup)", () => {
