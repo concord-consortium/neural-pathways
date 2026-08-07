@@ -20,6 +20,7 @@ const testConfig: DatasetConfig = {
     {
       key: "flag", label: "Flag", description: "A flag.", type: "binary",
       valueLabels: { 0: "negative", 1: "positive" },
+      excludeFromRegression: true,
     },
     { key: "rating", label: "Rating", description: "A rating.", type: "integer", min: 1, max: 5 },
   ],
@@ -74,6 +75,16 @@ describe("buildSeries", () => {
     // "rating" declares none, and pathways never have any.
     expect(series[1].valueLabels).toBeUndefined();
     expect(series[2].valueLabels).toBeUndefined();
+  });
+
+  it("carries the attribute's regression opt-out onto the series", () => {
+    // The regression panel reads this off the Series, so a definition that sets
+    // the flag has to survive the trip through buildSeries or the exclusion
+    // silently stops applying in the running app.
+    const series = buildSeries(items, dataset, "fit_a", 2);
+    expect(series[0].excludeFromRegression).toBe(true);
+    expect(series[1].excludeFromRegression).toBeUndefined();
+    expect(series[2].excludeFromRegression).toBeUndefined();
   });
 
   it("uses the attribute label and a P-prefixed label for pathways", () => {

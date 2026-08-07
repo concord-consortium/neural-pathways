@@ -63,9 +63,10 @@ nembu arvek h...`. Click the first one.
 - An **OBSERVER'S NOTE** block follows, in English, e.g.: *"They were standing at
   the edge of open water. Ground was uneven where they stood. Five of them, no
   clear arrangement. ... No gesture was repeated."*
-- Below the note, **seven attribute chips** in a fixed order: `Actual answer`,
-  `Model was correct` (the two derived attributes), then five of the nine
-  generated attributes — `Voices raised`, `Engaged in a task`, `Group size`,
+- Below the note, **eight attribute chips** in a fixed order: `Actual answer`,
+  `Predicted answer`, `Model was correct` (the three derived attributes — the
+  ground truth, what the model said, and whether they agreed), then five of the
+  nine generated attributes — `Voices raised`, `Engaged in a task`, `Group size`,
   `Near water`, `Food present`. The other four generated attributes —
   `Resource stressed`, `Gestures repeated`, `Young present`, `Carrying a
   burden` — start **hidden** as of this phase: no chip, no search field, no
@@ -82,9 +83,9 @@ nembu arvek h...`. Click the first one.
 
 **Bug to report:** a star rating, business name, `Reconstruction R²` line, or a
 second FA-fit selector showing up anywhere in the alien view; or the attribute chips
-appearing in a different order than `Actual answer`, `Model was correct`, then the
-five visible generated attributes; or a hidden attribute's chip appearing before
-it has been commissioned.
+appearing in a different order than `Actual answer`, `Predicted answer`, `Model was
+correct`, then the five visible generated attributes; or a hidden attribute's chip
+appearing before it has been commissioned.
 
 ## 3. Searching
 
@@ -95,8 +96,8 @@ Click the **`?`** (Search help) button next to the search box.
   `classification_probability`. Unlike Yelp's help dialog (which lists `name`,
   `city`, `state`, `categories`, `reconstruction_r2`), **no business fields appear
   at all** — the alien dataset has none.
-- **Attributes**: `target`, `model_correct`, `voices_raised`, `engaged_in_task`,
-  `group_size`, `near_water`, `food_present`. Four more attributes —
+- **Attributes**: `target`, `prediction`, `model_correct`, `voices_raised`,
+  `engaged_in_task`, `group_size`, `near_water`, `food_present`. Four more attributes —
   `resource_stressed`, `gestures_repeated`, `young_present`, `carrying_burden` —
   exist in the data but start hidden: they don't appear in this list, and
   searching one of their keys matches nothing, until commissioned. See
@@ -144,11 +145,15 @@ Clear the search box and click **Correlations**.
   `Near water` -0.04, `Food present` -0.02. (The three still-hidden decoys —
   `Gestures repeated`, `Young present`, `Carrying a burden` — aren't in the
   matrix at all right now; §7 of `docs/testing-attribute-commissioning.md` shows
-  them once commissioned, and they read the same kind of near-zero.) Two values
-  stand out from that noise floor: `Actual answer` at **-0.25**, and — the
-  largest of any attribute — **`Resource stressed` at -0.28**. Against the
-  pathways, `P3` also stands out at **-0.18** while `P0`, `P1`, `P2` sit near
-  zero (-0.03, -0.05, 0.00).
+  them once commissioned, and they read the same kind of near-zero.) Three values
+  stand out from that noise floor: `Predicted answer` at **0.19**, `Actual
+  answer` at **-0.25**, and — the largest of any attribute — **`Resource
+  stressed` at -0.28**. The first two are arithmetic rather than discovery:
+  `Model was correct` is *defined* as whether `Predicted answer` and `Actual
+  answer` agree, so it cannot be independent of either, and neither tells you
+  anything about the conversations themselves. `Resource stressed` is the one
+  that does. Against the pathways, `P3` also stands out at **-0.18** while `P0`,
+  `P1`, `P2` sit near zero (-0.03, -0.05, 0.00).
 
 Click the **Model was correct × Resource stressed** cell.
 
@@ -176,13 +181,16 @@ Now filter the scope. Type `model_correct:0` into the search box.
   before fitting: Model was correct (constant)`** and **`Fitted on 63 of 63
   rows`**. The term table's top row is **`Resource stressed`** with **β = 0.613,
   partial r = 0.512** — by a wide margin the strongest predictor of `P0` among the
-  model's errors. (This regression fits on the eight attributes currently
-  visible — the seven default ones plus the just-commissioned
-  `resource_stressed` — rather than all eleven. Commissioning the remaining
-  three decoys too adds them as three more terms, each modest (magnitudes
-  0.02–0.09), and settles `Resource stressed` at **β = 0.589, partial r =
-  0.490** — the number this section quoted before hiding existed — without
-  changing which term is on top.)
+  model's errors. (This regression fits on eight predictors: the nine attributes
+  currently visible — the eight default ones plus the just-commissioned
+  `resource_stressed` — minus `Predicted answer`, which is never offered as a
+  predictor on either dataset, so its missing checkbox is not a bug; see
+  `docs/testing-fields-view.md`'s Known rough edges. That is short of the twelve
+  attributes the dataset has in total. Commissioning the remaining three decoys
+  too adds them as three more terms, each modest (magnitudes 0.02–0.09), and
+  settles `Resource stressed` at **β = 0.589, partial r = 0.490** — the number
+  this section quoted before hiding existed — without changing which term is on
+  top.)
 
 As a cross-check with plain counts rather than the matrix: `model_correct:0 AND
 resource_stressed:1` returns **`47 of 800`**. Since `model_correct:0` alone is `63
@@ -222,10 +230,12 @@ Click a review (e.g. the first one, "Awesome New York style pizza...").
   stars).
 - **`Reconstruction R²: 0.8916`** is shown.
 - Chips read `Review rating 5`, `Business rating 4.00`, `Actual sentiment` (yes),
-  `Synthetic review no`.
+  `Synthetic review no` — four, not six, because this particular review was never
+  scored by the model, so `Predicted sentiment` and `Model was correct` have no
+  value for it and no chip is drawn.
 - Open Search help again: the business fields (`name`, `city`, `state`,
   `categories`, `reconstruction_r2`) are back, alongside `review_stars`, `stars`,
-  `target`, `model_correct`, `is_synthetic`.
+  `target`, `prediction`, `model_correct`, `is_synthetic`.
 - Switch to Correlations: the header reads **`Correlations over 6427 of 6427
   reviews`**, and the default `P0` fit still reports **`R² = 0.873 · 13%
   unexplained`**, matching `docs/testing-correlations-view.md`.

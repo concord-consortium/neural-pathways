@@ -49,8 +49,10 @@ export const RegressionPanel: React.FC<RegressionPanelProps> = ({ series }) => {
 
   const target = series.find(s => s.key === targetKey) ?? series.find(s => s.key === defaultTargetKey);
 
+  // Drops the target itself, plus any attribute whose definition opts out — see
+  // excludeFromRegression in shared/types/attributes.ts for why one would.
   const candidates = useMemo(
-    () => series.filter(s => s.kind === "attribute" && s.key !== target?.key),
+    () => series.filter(s => s.kind === "attribute" && s.key !== target?.key && !s.excludeFromRegression),
     [series, target],
   );
 

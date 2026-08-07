@@ -127,6 +127,10 @@ scroll, independent of any particular search.
 - `review_stars` (**Review rating**): `mean 3.027`, one to five stars.
 - `stars` (**Business rating**): `mean 3.668`.
 - `target` (**Actual sentiment**): `positive 50%`.
+- `prediction` (**Predicted sentiment**): `positive 52%`. Together with the rows on
+  either side of it, `Actual sentiment`, `Predicted sentiment`, and `Model was
+  correct` read as a set: what was true, what the model said, and whether those
+  agreed.
 - `model_correct` (**Model was correct**): `yes 95%`.
 - `is_synthetic` (**Synthetic review**): `yes 7%`.
 - Six pathway rows, `P0`–`P5`, whose means are all small but not all alike: they run from
@@ -183,16 +187,16 @@ Switch the `Dataset:` dropdown to **Alien Conversations**, or navigate directly 
 `#dataset=alien&view=fields`. The header reads `Fields over 800 of 800 conversations` — the noun
 comes from the dataset, same as everywhere else in the app.
 
-Scroll the list: only seven attribute rows appear — `Actual answer`, `Model was correct`,
-`Voices raised`, `Engaged in a task`, `Group size`, `Near water`, `Food present` — followed by
-the separator and four pathway rows, `P0`–`P3`. The four hidden codings
-(`docs/testing-attribute-commissioning.md`) are not rows here any more than they're chips or
-search fields: this view respects the same hiding as everywhere else.
+Scroll the list: only eight attribute rows appear — `Actual answer`, `Predicted answer`,
+`Model was correct`, `Voices raised`, `Engaged in a task`, `Group size`, `Near water`,
+`Food present` — followed by the separator and four pathway rows, `P0`–`P3`. The four hidden
+codings (`docs/testing-attribute-commissioning.md`) are not rows here any more than they're
+chips or search fields: this view respects the same hiding as everywhere else.
 
 Open **Codings** in the top bar and commission **Resource stressed**. Watch the fields list
 without touching anything else:
 
-- An eighth attribute row appears, **Resource stressed**, in its declared position — right after
+- A ninth attribute row appears, **Resource stressed**, in its declared position — right after
   `Food present` and before the `P0`–`P3` separator, the same slot it takes in the correlation
   matrix.
 - With nothing searched, its row reads `yes 30%` in *both* the `these` and `all` columns — 240 of
@@ -205,7 +209,7 @@ Clicking the row opens a detail pane titled **Resource stressed** with two histo
 `n = 800 · yes 30% · min 0 · max 1` on both sides — identical, because nothing is searched yet.
 Type `resource_stressed:1` and the `these` side narrows to the 240 conversations that have it,
 while `all` stays at 800; the two histograms are no longer identical, and the row you just
-commissioned behaves exactly like the seven that were visible from the start.
+commissioned behaves exactly like the eight that were visible from the start.
 
 ---
 
@@ -225,3 +229,19 @@ commissioned behaves exactly like the seven that were visible from the start.
 - **A count of 1 reads as "1 reviews"**, the same pre-existing wrinkle Correlations has.
 - **The hover on a histogram bar is mouse-only**, the same limitation the correlations view's bar
   hover has.
+- **`Predicted sentiment`/`Predicted answer` is a row here and in the correlation matrix, but
+  never a checkbox in the regression panel** (`docs/testing-correlations-view.md`, Known rough
+  edges) — that panel is the one surface where this attribute doesn't show up. `target`,
+  `prediction`, and `model_correct` mutually determine one another for binary values, so on their
+  own they'd just make `prediction` an uninformative predictor, not a reason to remove its
+  checkbox outright. The actual reason is historical: during development, checking `prediction`
+  alongside `target` and `model_correct` with pairwise interactions on used to drive the design
+  matrix exactly singular, and the panel's "not enough usable data" message misdescribed why. That
+  failure mode is not something you can reproduce today — there is no `prediction` checkbox left
+  to check, so there's nothing to switch on to go looking for it. It's written down here only so
+  the missing checkbox doesn't get mistaken for an oversight and "restored."
+- **Two search fields can point at the same fact.** `classification_label:positive` (string) and
+  `prediction:1` (numeric) both narrow to the same reviews — the string reads better in a query,
+  the number is what Correlations and the regression panel need. `review_stars`/`stars` already
+  set this precedent, so this isn't new, just easy to miss until you go looking for `prediction`
+  in the field directory above and wonder why `classification_label` also works.

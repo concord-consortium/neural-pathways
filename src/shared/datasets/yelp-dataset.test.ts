@@ -20,9 +20,9 @@ const baseReview: S3Item = {
 const get = (item: S3Item, key: string) => yelpDataset.getAttributeValue(item, key);
 
 describe("yelpDataset", () => {
-  it("declares the five derived attributes in order", () => {
+  it("declares the six derived attributes in order", () => {
     expect(attributes.map(a => a.key))
-      .toEqual(["review_stars", "stars", "target", "model_correct", "is_synthetic"]);
+      .toEqual(["review_stars", "stars", "target", "prediction", "model_correct", "is_synthetic"]);
   });
 
   it("gives every attribute a non-empty label and description", () => {
@@ -68,6 +68,37 @@ describe("yelpDataset", () => {
 
   it("returns null for model_correct when there is no target", () => {
     expect(get({ ...baseReview, target: null, classification: 1 }, "model_correct")).toBeNull();
+  });
+
+  it("returns the model's prediction as a number", () => {
+    expect(get({ ...baseReview, classification: 0 }, "prediction")).toBe(0);
+    expect(get({ ...baseReview, classification: 1 }, "prediction")).toBe(1);
+  });
+
+  it("returns null for prediction when the review was never scored", () => {
+    // baseReview carries no classification.
+    expect(get(baseReview, "prediction")).toBeNull();
+  });
+
+  it("labels target and prediction from the same object as the classification badge", () => {
+    // The item panel's badge reads config.classificationLabels; the fields view's
+    // axis and the matrix drill-down read the attribute's valueLabels. toBe, not
+    // toEqual: identity is the point. Equal-but-separate objects would satisfy
+    // toEqual today and still drift apart the moment someone edits one of them.
+    const prediction = attributes.find(a => a.key === "prediction");
+    const target = attributes.find(a => a.key === "target");
+    expect(prediction?.valueLabels).toBe(yelpDataset.classificationLabels);
+    expect(target?.valueLabels).toBe(yelpDataset.classificationLabels);
+  });
+
+  it("keeps prediction out of the regression panel's predictors", () => {
+    // The regression panel filters on this flag, not on the key, so this is the
+    // assertion that binds the two: renaming the key would no longer silently
+    // restore a predictor that makes the design matrix singular. See
+    // excludeFromRegression in shared/types/attributes.ts.
+    expect(attributes.find(a => a.key === "prediction")?.excludeFromRegression).toBe(true);
+    expect(attributes.find(a => a.key === "target")?.excludeFromRegression).toBeUndefined();
+    expect(attributes.find(a => a.key === "model_correct")?.excludeFromRegression).toBeUndefined();
   });
 
   it("detects synthetic reviews from their sources", () => {
