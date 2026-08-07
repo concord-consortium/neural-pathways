@@ -61,12 +61,12 @@ export const fourPathwayConfig: AlienConfig = {
 };
 
 /**
- * Untuned: these are the four-pathway scales for P0, P1 and the bias pathway,
- * carried over unchanged so this config runs before the split is solved. The
- * realized variance will not match targetVarianceShares until the scales are
- * re-solved.
+ * Pathway weight scales, solved numerically for the 55/35/10 variance split, the
+ * same way FOUR_SCALE was and for the same reason: the word-selection tilt is
+ * itself proportional to the weight, so variance rises faster than scale^2 and
+ * there is no closed form.
  */
-const THREE_SCALE = [1.0, 0.7912, 0.6546];
+const THREE_SCALE = [1.0, 0.8946, 0.6306];
 const threeGroup = groupBuilder(THREE_SCALE);
 
 export const threePathwayConfig: AlienConfig = {

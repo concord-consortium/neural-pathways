@@ -1,5 +1,7 @@
 import { alienConfigs, fourPathwayConfig, threePathwayConfig } from "./alien-config";
 import { validateConfig } from "./alien/config-validation";
+import { buildCorpus } from "./alien/conversations";
+import { createRng } from "./alien/rng";
 
 describe("alienConfigs", () => {
   it("emits both datasets", () => {
@@ -63,4 +65,19 @@ describe("threePathwayConfig", () => {
       .filter(entry => entry.weights[pathway] !== 0).map(entry => entry.word).sort();
     expect(wordsOn(threePathwayConfig, 2)).toEqual(wordsOn(fourPathwayConfig, 3));
   });
+});
+
+describe("realized variance split", () => {
+  // No generator self-check asserts this — targetVarianceShares is reported
+  // against, not enforced — so this is what keeps the solved scales honest.
+  for (const config of alienConfigs) {
+    it(`${config.fitName} lands within a point of its target split`, () => {
+      const corpus = buildCorpus(config, createRng(config.seed));
+      const variances = corpus.scoreSd.map(sd => sd * sd);
+      const total = variances.reduce((sum, value) => sum + value, 0);
+      variances.forEach((variance, p) => {
+        expect(Math.abs(variance / total - config.targetVarianceShares[p])).toBeLessThan(0.01);
+      });
+    });
+  }
 });
