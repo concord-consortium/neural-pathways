@@ -171,7 +171,12 @@ module.exports = (env, argv) => {
         publicPath: DEPLOY_PATH,
         chunks: [],
       })] : []),
-      new CleanWebpackPlugin(),
+      // dist/alien-data is written by `npm run generate:alien`, not by webpack.
+      // Without this exclusion the default clean pattern deletes it on every
+      // build and on dev-server startup.
+      new CleanWebpackPlugin({
+        cleanOnceBeforeBuildPatterns: ['**/*', '!alien-data', '!alien-data/**'],
+      }),
     ]
   };
 };

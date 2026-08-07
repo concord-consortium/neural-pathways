@@ -80,6 +80,13 @@ describe("flattenReview", () => {
     expect(result.classification_probability).toBeUndefined();
   });
 
+  it("defaults reconstruction_r2 to 0 when the review has no reconstruction data", () => {
+    const review = makeReview();
+    delete review.reconstruction_r2;
+    const result = flattenReview(review, "fit_a", yelpDataset);
+    expect(result.reconstruction_r2).toBe(0);
+  });
+
   it("handles reviews with missing optional fields", () => {
     const review = makeReview({
       name: undefined,

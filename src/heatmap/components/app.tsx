@@ -148,7 +148,7 @@ export const App = () => {
     [selectedReview, selectedFitName],
   );
 
-  const reviewR2 = selectedReview?.reconstruction_r2[selectedFitName] ?? null;
+  const reviewR2 = selectedReview?.reconstruction_r2?.[selectedFitName] ?? null;
 
   // --- Score overrides (keyed on review + fit, auto-resets when either changes) ---
   const [scoreOverrideKey, setScoreOverrideKey] = useState("");

@@ -21,4 +21,9 @@ export interface AttributeDefinition {
    * partial map — or none at all — degrades to showing the number rather than lying.
    */
   valueLabels?: Record<number, string>;
+  /**
+   * Present in the data but not shown in the explorer. Written by the dataset
+   * generator; nothing reads it until the commissioned-coding phase.
+   */
+  hidden?: boolean;
 }

@@ -1,23 +1,33 @@
+import { AttributeDefinition } from "./attributes";
+
 // --- S3 Index & Fit Types ---
 
 export interface S3Index {
   metadata: {
     fa_fits: Record<string, S3FaFit>;
     review_sets: Record<string, { count: number; description: string }>;
+    /** Present on generated datasets that carry externally coded attributes. */
+    attributes?: AttributeDefinition[];
   };
   reviews: S3Review[];
 }
 
+/**
+ * The five activation-model fields are optional because a generated dataset has
+ * no neuron activations to describe. Emitting zeros there would be inventing a
+ * model that does not exist, so they are absent instead, and the heatmap-only
+ * readers in data-loader.ts fail loudly rather than silently reading undefined.
+ */
 export interface S3FaFit {
   source_split: string;
   n_pathways: number;
-  explained_variance_total: number;
+  explained_variance_total?: number;
   explained_variance_per_pathway: number[];
   pathway_importance: number[];
-  loadings: number[][];       // n_pathways x 780
-  noise_variance: number[];   // 780
-  scaler_mean: number[];      // 780
-  scaler_scale: number[];     // 780
+  loadings?: number[][];       // n_pathways x 780
+  noise_variance?: number[];   // 780
+  scaler_mean?: number[];      // 780
+  scaler_scale?: number[];     // 780
   pathway_score_min: number[]; // n_pathways
   pathway_score_max: number[]; // n_pathways
 }
@@ -34,8 +44,13 @@ export interface S3Review {
   stars?: number;
   review_stars?: number;
   categories?: string;
+  /** An observer's written note about this item. Generated datasets only. */
+  observation?: string;
+  /** Externally coded attribute values, keyed by attribute key. */
+  attributes?: Record<string, number>;
   pathway_scores: Record<string, number[]>;
-  reconstruction_r2: Record<string, number>;
+  /** Absent on datasets with no activations to reconstruct. */
+  reconstruction_r2?: Record<string, number>;
   pathway_variance_fractions: Record<string, number[]>;
   has_shap?: string[];
   classification?: number;

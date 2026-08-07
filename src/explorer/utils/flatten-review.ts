@@ -34,7 +34,7 @@ export function flattenReview(
     stars: review.stars,
     review_stars: review.review_stars,
     categories: review.categories,
-    reconstruction_r2: review.reconstruction_r2[fitName] ?? 0,
+    reconstruction_r2: review.reconstruction_r2?.[fitName] ?? 0,
     has_word_scores: review.has_shap?.includes(fitName) ?? false,
   };
   if (review.classification != null) {
