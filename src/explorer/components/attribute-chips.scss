@@ -1,0 +1,35 @@
+.explorer-attribute-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.explorer-attribute-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: #f4f4f4;
+  color: #666;
+  border: 1px solid #e0e0e0;
+  cursor: help;
+
+  &.chip-on {
+    background: #e8f4fd;
+    color: #1a5a8a;
+    border-color: #c5e0f5;
+  }
+
+  .chip-label {
+    font-weight: normal;
+  }
+
+  .chip-value {
+    font-weight: bold;
+  }
+}

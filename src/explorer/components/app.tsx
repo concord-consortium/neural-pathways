@@ -4,6 +4,7 @@ import { S3Index, S3Review, S3ShapBucket, ReviewShapData } from "../../shared/ty
 import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope } from "../types/explorer-data";
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { flattenReview } from "../utils/flatten-review";
+import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 import { SearchInput } from "./search-input";
 import { ResultsPanel } from "./results-panel";
 import { ReviewPanel } from "./review-panel";
@@ -61,7 +62,7 @@ export const App = () => {
   // --- Flatten reviews for search ---
   const flatReviews = useMemo(() => {
     if (!indexData) return [];
-    return indexData.reviews.map(r => flattenReview(r, selectedFitName));
+    return indexData.reviews.map(r => flattenReview(r, selectedFitName, yelpDataset));
   }, [indexData, selectedFitName]);
 
   // --- Filter reviews with liqe ---
@@ -260,6 +261,7 @@ export const App = () => {
           onQueryChange={setSearchQuery}
           hasError={searchError}
           numPathways={selectedFit?.n_pathways}
+          attributes={yelpDataset.attributes}
         />
         <SettingsMenu
           scaleMode={scaleMode}
@@ -290,7 +292,12 @@ export const App = () => {
         {selectedReview ? (
           <div className="explorer-main">
             <div className="explorer-left-column">
-              <ReviewPanel review={selectedReview} reconstructionR2={reconstructionR2} />
+              <ReviewPanel
+                review={selectedReview}
+                reconstructionR2={reconstructionR2}
+                attributes={yelpDataset.attributes}
+                getAttributeValue={yelpDataset.getAttributeValue}
+              />
               <WordEffectsPanel
                 shapData={currentShapData}
                 shapLoading={shapLoading}
