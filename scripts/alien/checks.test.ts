@@ -1,9 +1,9 @@
-import { alienConfig } from "../alien-config";
+import { fourPathwayConfig } from "../alien-config";
 import { assignByShares } from "./attributes";
 import { generate } from "./pipeline";
 import { runChecks } from "./checks";
 
-const run = generate(alienConfig);
+const run = generate(fourPathwayConfig);
 const checks = runChecks(run);
 
 describe("runChecks", () => {
@@ -31,7 +31,7 @@ describe("runChecks", () => {
   });
 
   it("fails truth-is-unbiased when the truth is made to track the bias attribute", () => {
-    const bias = run.solvedAttributes.find(a => a.key === alienConfig.biasAttributeKey)!;
+    const bias = run.solvedAttributes.find(a => a.key === fourPathwayConfig.biasAttributeKey)!;
     const rigged = {
       ...run,
       outcomes: { ...run.outcomes, target: [...bias.values] },

@@ -1,14 +1,15 @@
 import * as path from "path";
-import { alienConfig } from "./alien-config";
+import { alienConfigs } from "./alien-config";
 import { checksPassed, runChecks } from "./alien/checks";
 import { writeDataset } from "./alien/emit";
 import { generate } from "./alien/pipeline";
 import { formatSummary } from "./alien/summary";
 
 function main(): void {
-  const run = generate(alienConfig);
+  const config = alienConfigs[0];
+  const run = generate(config);
   const checks = runChecks(run);
-  const outputDir = path.resolve(__dirname, "..", alienConfig.outputDir);
+  const outputDir = path.resolve(__dirname, "..", config.outputDir);
 
   writeDataset(outputDir, run.dataset);
   console.log(formatSummary(run, checks));
