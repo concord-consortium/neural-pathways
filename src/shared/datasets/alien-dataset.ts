@@ -47,40 +47,67 @@ const derivedAttributes: AttributeDefinition[] = [
   },
 ];
 
-export const alienDataset: DatasetConfig = {
+interface AlienDatasetParams {
+  id: string;
+  label: string;
+  /**
+   * Relative, no leading slash: deployed pages live under .../branch/<name>/ and
+   * the generated data is published alongside them.
+   */
+  baseUrl: string;
+}
+
+/**
+ * The alien datasets differ only in which generated directory they read and what
+ * the dropdown calls them. How many pathways a dataset has is declared by the
+ * generated metadata (`n_pathways`), not here, so one factory covers both.
+ */
+function createAlienDataset({ id, label, baseUrl }: AlienDatasetParams): DatasetConfig {
+  return {
+    id,
+    label,
+    baseUrl,
+    itemNoun: { singular: "conversation", plural: "conversations" },
+    classificationLabels: CLASSIFICATION_LABELS,
+    searchPlaceholder: "voices_raised:1 AND pathway_0:>1",
+    // Every field these datasets have beyond the shared ones is an attribute,
+    // and the help dialog lists those separately.
+    searchFields: [],
+
+    resolveAttributes(index: S3Index): AttributeDefinition[] {
+      // The generated definitions arrive over the network, so they are validated
+      // here rather than at module load. A generated key that collided with a
+      // reserved search field or with a derived attribute fails loudly instead of
+      // silently shadowing it.
+      const merged = [...derivedAttributes, ...(index.metadata.attributes ?? [])];
+      validateAttributeKeys(merged);
+      return merged;
+    },
+
+    getAttributeValue(item: S3Item, key: string): number | null {
+      switch (key) {
+        case "target":
+          return item.target;
+        case "prediction":
+          return item.classification ?? null;
+        case "model_correct":
+          if (item.classification == null || item.target == null) return null;
+          return item.classification === item.target ? 1 : 0;
+        default:
+          return item.attributes?.[key] ?? null;
+      }
+    },
+  };
+}
+
+export const alienDataset = createAlienDataset({
   id: "alien",
-  label: "Alien Conversations",
-  // Relative, no leading slash: deployed pages live under .../branch/<name>/ and
-  // the generated data is published alongside them.
+  label: "Alien Conversations (4 pathways)",
   baseUrl: "alien-data/",
-  itemNoun: { singular: "conversation", plural: "conversations" },
-  classificationLabels: CLASSIFICATION_LABELS,
-  searchPlaceholder: "voices_raised:1 AND pathway_0:>1",
-  // Every field this dataset has beyond the shared ones is an attribute, and the
-  // help dialog lists those separately.
-  searchFields: [],
+});
 
-  resolveAttributes(index: S3Index): AttributeDefinition[] {
-    // The generated definitions arrive over the network, so they are validated
-    // here rather than at module load. A generated key that collided with a
-    // reserved search field or with a derived attribute fails loudly instead of
-    // silently shadowing it.
-    const merged = [...derivedAttributes, ...(index.metadata.attributes ?? [])];
-    validateAttributeKeys(merged);
-    return merged;
-  },
-
-  getAttributeValue(item: S3Item, key: string): number | null {
-    switch (key) {
-      case "target":
-        return item.target;
-      case "prediction":
-        return item.classification ?? null;
-      case "model_correct":
-        if (item.classification == null || item.target == null) return null;
-        return item.classification === item.target ? 1 : 0;
-      default:
-        return item.attributes?.[key] ?? null;
-    }
-  },
-};
+export const alien3Dataset = createAlienDataset({
+  id: "alien3",
+  label: "Alien Conversations (3 pathways)",
+  baseUrl: "alien-data-3/",
+});

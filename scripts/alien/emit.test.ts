@@ -4,7 +4,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { alienConfig } from "../alien-config";
+import { fourPathwayConfig } from "../alien-config";
 import { createRng } from "./rng";
 import { buildCorpus } from "./conversations";
 import { solveAttributes } from "./attributes";
@@ -12,7 +12,7 @@ import { solveOutcomes } from "./outcomes";
 import { TemplateNoteRenderer, renderNotes } from "./notes";
 import { buildDataset, conversationId, conversationText, writeDataset } from "./emit";
 
-const config = { ...alienConfig, conversationCount: 200 };
+const config = { ...fourPathwayConfig, conversationCount: 200 };
 const corpus = buildCorpus(config, createRng(config.seed));
 const solvedAttributes = solveAttributes(corpus.scores, config, createRng(2));
 const outcomes = solveOutcomes(corpus.scores, solvedAttributes, config, createRng(3));

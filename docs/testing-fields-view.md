@@ -183,9 +183,10 @@ Clear the search before continuing.
 
 ## 8. A worked example on the alien dataset
 
-Switch the `Dataset:` dropdown to **Alien Conversations**, or navigate directly to
-`#dataset=alien&view=fields`. The header reads `Fields over 800 of 800 conversations` — the noun
-comes from the dataset, same as everywhere else in the app.
+Switch the `Dataset:` dropdown to **Alien Conversations (4 pathways)**, or
+navigate directly to `#dataset=alien&view=fields`. The header reads `Fields
+over 800 of 800 conversations` — the noun comes from the dataset, same as
+everywhere else in the app.
 
 Scroll the list: only eight attribute rows appear — `Actual answer`, `Predicted answer`,
 `Model was correct`, `Voices raised`, `Engaged in a task`, `Group size`, `Near water`,

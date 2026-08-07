@@ -1,14 +1,14 @@
-import { alienConfig } from "../alien-config";
+import { fourPathwayConfig } from "../alien-config";
 import { validateConfig } from "./config-validation";
 import { AlienConfig } from "./config-types";
 
 function clone(): AlienConfig {
-  return JSON.parse(JSON.stringify(alienConfig)) as AlienConfig;
+  return JSON.parse(JSON.stringify(fourPathwayConfig)) as AlienConfig;
 }
 
 describe("validateConfig", () => {
   it("accepts the shipped config", () => {
-    expect(() => validateConfig(alienConfig)).not.toThrow();
+    expect(() => validateConfig(fourPathwayConfig)).not.toThrow();
   });
 
   it("rejects a duplicate vocabulary word", () => {

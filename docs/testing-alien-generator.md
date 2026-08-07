@@ -1,11 +1,19 @@
 # Manually Testing the Alien Dataset Generator
 
-The alien dataset generator (`scripts/generate-alien-data.ts`, configured by
-`scripts/alien-config.ts`) is a seeded TypeScript script that synthesizes ~800
-"alien language" conversations into the project's existing S3 data format: four
-pathway scores, exact SHAP word attributions, nine coded attributes, and a
-deliberately biased model prediction. It has no UI of its own — everything below
-is exercised from the command line and by reading the JSON it writes.
+The alien dataset generator (`scripts/generate-alien-data.ts`) is a seeded
+TypeScript script that emits **two** "alien language" conversation datasets, one
+after the other, from the two configs exported by `scripts/alien-config.ts`: a
+four-pathway dataset (fit `alien-fa-4`) and a three-pathway dataset (fit
+`alien-fa-3`), ~800 conversations each. Both configs share their attribute
+definitions, note fragments, and thresholds via `scripts/alien/config-common.ts`,
+and differ in pathway count, vocabulary size, and where `group_size` and
+`resource_stressed` sit: in the four-pathway set `group_size` is a real pathway
+(P2) and `resource_stressed` sits on P3; in the three-pathway set `group_size`
+becomes a decoy (no pathway) and `resource_stressed` moves to P2. Each dataset
+is written into the project's existing S3 data format: pathway scores, exact
+SHAP word attributions, nine coded attributes, and a deliberately biased model
+prediction. The generator has no UI of its own — everything below is exercised
+from the command line and by reading the JSON it writes.
 
 Run it with:
 
@@ -25,22 +33,27 @@ npm run generate:alien
 ```
 
 On this machine this finishes in about a second — `ts-node`'s startup dominates,
-the generation itself is fast. Two consecutive runs produce a byte-identical
-`dist/alien-data/index.json`, because the seed and every other input are fixed in
-`scripts/alien-config.ts`.
+the generation itself is fast. Two consecutive runs produce byte-identical
+`index.json` files for both datasets, because the seed and every other input are
+fixed in `scripts/alien-config.ts`.
 
 It writes:
 
-- `dist/alien-data/index.json` — the review index (metadata, attributes, text,
-  target, pathway scores, classification, for all 800 conversations).
+- `dist/alien-data/index.json` — the four-pathway review index (metadata,
+  attributes, text, target, pathway scores, classification, for all 800
+  conversations).
 - `dist/alien-data/shap/alien-fa-4/*.json` — SHAP word-attribution buckets, one
   file per two-hex-character prefix of the conversation id.
+- `dist/alien-data-3/index.json` — the three-pathway dataset's review index,
+  same shape as above.
+- `dist/alien-data-3/shap/alien-fa-3/*.json` — its SHAP word-attribution
+  buckets, same layout as above.
 
 `npm run build` runs this generator too, as one step of
-`npm-run-all lint:build generate:alien build:webpack`. `dist/alien-data/` is
-excluded from `CleanWebpackPlugin`'s clean patterns
-(`webpack.config.js`), so a webpack build does not delete it — the data is meant
-to persist across builds that don't touch it.
+`npm-run-all lint:build generate:alien build:webpack`. `dist/alien-data/` and
+`dist/alien-data-3/` are both excluded from `CleanWebpackPlugin`'s clean patterns
+(`webpack.config.js`), so a webpack build does not delete either — the data is
+meant to persist across builds that don't touch it.
 
 `writeDataset` deletes and rewrites the whole output directory on every run, so
 there is no cache to invalidate. **To force a regenerate**, just run
@@ -52,8 +65,11 @@ described above — with the config unmodified, none of those should happen.
 
 ## 2. Reading the run summary
 
-Run `npm run generate:alien` and read the printed summary top to bottom. A
-representative real run looks like this:
+Run `npm run generate:alien` and read the printed summary top to bottom. The
+command prints **two** of these summaries in sequence, separated by a blank
+line, one per dataset — each opens with its own `output <dir>, fit "<name>"`
+line so you can tell which is which. A representative real run of the
+four-pathway summary looks like this:
 
 ```
 alien dataset — seed 20260803, 800 conversations
@@ -134,6 +150,26 @@ A bug is any block whose numbers don't match the description above — e.g. a
 variance split that's badly off, a pathway correlation far from 0, or a
 self-check failing on a config nobody touched.
 
+### The three-pathway summary
+
+Same structure, one dataset later in the same run, and only three pathways —
+this config's `targetVarianceShares` is 55/35/10, not the four-pathway
+config's 55/20/15/10, so the shares themselves differ, not just the pathway
+count. From the captured output:
+
+```
+alien dataset — seed 20260803, 800 conversations
+output dist/alien-data-3, fit "alien-fa-3"
+
+variance split (target -> realized)
+  P0  55.0% -> 54.9%
+  P1  35.0% -> 35.1%
+  P2  10.0% -> 10.0%
+```
+
+Healthy, same as the four-pathway block: each line's two percentages sit close
+together.
+
 ## 3. Requested versus achieved
 
 The attribute table (section 2, "attributes" block) prints three numeric
@@ -186,9 +222,9 @@ Measures whether every one of the 800 generated notes contains exactly one
 note fragment per attribute, matching that conversation's actual coded value (no
 fragment for a *different* value, no missing fragment, no fragment counted
 twice). A failure means `scripts/alien/notes.ts`'s template renderer or the
-fragment library in `scripts/alien-config.ts` produced or lost evidence — check
-for a fragment that's a substring of another attribute's fragment, or a value
-with too few fragments.
+fragment library in `BASE_ATTRIBUTES` (`scripts/alien/config-common.ts`)
+produced or lost evidence — check for a fragment that's a substring of another
+attribute's fragment, or a value with too few fragments.
 
 ### achieved-correlations
 
@@ -214,9 +250,9 @@ because it flattens `tilt = exp(tiltLambda * dot)` toward uniform selection,
 so a word is no longer strongly suppressed in conversations whose latent
 factors happen to disfavor it. **Adding more magnitude tiers does the
 opposite of fixing this** — each tier adds one more word per pathway per sign
-(`group()` in `scripts/alien-config.ts`), so a bigger vocabulary shares the
-same word budget and the rarest word gets rarer. Lowering
-`thresholds.minWordOccurrences` only moves the bar the check is judged
+(`MAGNITUDES` and `groupBuilder()` in `scripts/alien/config-common.ts`), so a
+bigger vocabulary shares the same word budget and the rarest word gets rarer.
+Lowering `thresholds.minWordOccurrences` only moves the bar the check is judged
 against; it doesn't make any word actually more common.
 
 ### truth-is-unbiased
@@ -285,8 +321,11 @@ exercise 2) before it ever reaches this check.
 
 ## 5. Changing a parameter and confirming it took
 
-Open `scripts/alien-config.ts` and find `voices_raised`'s `targetR: 0.65` (in
-the `attributes` array, first entry). Change it to `0.4`:
+Open `scripts/alien-config.ts` and, in `fourPathwayConfig`'s
+`withPathwayAssignments` call, find `voices_raised`'s `targetR: 0.65` (the
+first entry in the assignments object — `voices_raised` also appears in
+`threePathwayConfig`, so make sure you're editing `fourPathwayConfig`).
+Change it to `0.4`:
 
 ```bash
 npm run generate:alien
@@ -311,7 +350,10 @@ git diff scripts/alien-config.ts    # should be empty
 
 ## 6. Changing the seed
 
-Open `scripts/alien-config.ts` and change `seed: 20260803` to `seed: 42`, then:
+Open `scripts/alien-config.ts` and change `fourPathwayConfig`'s
+`seed: 20260803` to `seed: 42` (leave `threePathwayConfig`'s `seed: 20260803`
+alone — both configs currently share that seed value, and only the
+four-pathway one is exercised below), then:
 
 ```bash
 npm run generate:alien
@@ -353,7 +395,7 @@ orthogonality limit), the rarest word count changed from 291 to 302 — and yet
 all eight checks still pass. That's the evidence that the checks constrain the
 *construction*, not one lucky draw at the shipped seed.
 
-Put the seed back: change `seed` back to `20260803` and rerun
+Put the seed back: change `fourPathwayConfig`'s `seed` back to `20260803` and rerun
 `npm run generate:alien` to confirm you're back to the section 2 numbers, then
 confirm the file is clean:
 
@@ -389,18 +431,18 @@ confirm `git diff scripts/alien-config.ts` is empty.
 
 **Exercise 2 — give one vocabulary word weight in a second pathway.**
 
-Near the top of `scripts/alien-config.ts`, the `vocabulary` array is built by
-`group(pathway, positives, negatives)` calls, and each word is meant to carry
-weight in exactly one pathway. Temporarily add this line right after the
-`vocabulary` array is assigned (after the closing `];` of the `group(3, ...)`
-calls):
+`fourPathwayConfig`'s `vocabulary` (`scripts/alien-config.ts`) is built by
+calls to `groupBuilder(FOUR_SCALE)` over the `WORD_GROUPS` entries
+(`scripts/alien/config-common.ts`), and each word is meant to carry weight in
+exactly one pathway. Temporarily add this line right after `fourPathwayConfig`
+closes (after its closing `};`, before `threePathwayConfig` starts):
 
 ```ts
-vocabulary[0].weights[1] = 0.1;
+fourPathwayConfig.vocabulary[0].weights[1] = 0.1;
 ```
 
-That gives `"tarrak"` (the first word in pathway 0's group) a nonzero weight in
-pathway 1 too. Then:
+That gives `"tarrak"` (`WORD_GROUPS[0].positives[0]`, the first word in
+pathway 0's group) a nonzero weight in pathway 1 too. Then:
 
 ```bash
 npm run generate:alien
@@ -418,7 +460,8 @@ Delete the line you added and confirm `git diff scripts/alien-config.ts` is
 empty.
 
 **After both exercises**, run `npm run generate:alien` once more and confirm it
-prints all eight `PASS` lines and exits 0 — the config is back to what ships.
+prints all sixteen `PASS` lines — eight per dataset, across both summaries —
+and exits 0 — the config is back to what ships.
 
 ## 8. Inspecting the output files
 
@@ -510,7 +553,7 @@ isn't deterministic.
 - **Notes are template-written, not LLM-generated.** `scripts/alien/notes.ts`
   defines a `NoteRenderer` interface and ships exactly one implementation,
   `TemplateNoteRenderer`, which stitches together fixed fragments from
-  `scripts/alien-config.ts`. The seam exists for an LLM-backed renderer that
+  `scripts/alien/config-common.ts`. The seam exists for an LLM-backed renderer that
   reads a content-addressed cache; that renderer is not built.
 - **Parameters are starting values, not tuned ones.** The variance split,
   `targetR`s, error rates, and so on in `scripts/alien-config.ts` are what the
