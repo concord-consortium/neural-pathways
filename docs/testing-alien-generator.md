@@ -222,9 +222,9 @@ Measures whether every one of the 800 generated notes contains exactly one
 note fragment per attribute, matching that conversation's actual coded value (no
 fragment for a *different* value, no missing fragment, no fragment counted
 twice). A failure means `scripts/alien/notes.ts`'s template renderer or the
-fragment library in `scripts/alien-config.ts` produced or lost evidence — check
-for a fragment that's a substring of another attribute's fragment, or a value
-with too few fragments.
+fragment library in `BASE_ATTRIBUTES` (`scripts/alien/config-common.ts`)
+produced or lost evidence — check for a fragment that's a substring of another
+attribute's fragment, or a value with too few fragments.
 
 ### achieved-correlations
 
@@ -250,9 +250,9 @@ because it flattens `tilt = exp(tiltLambda * dot)` toward uniform selection,
 so a word is no longer strongly suppressed in conversations whose latent
 factors happen to disfavor it. **Adding more magnitude tiers does the
 opposite of fixing this** — each tier adds one more word per pathway per sign
-(`group()` in `scripts/alien-config.ts`), so a bigger vocabulary shares the
-same word budget and the rarest word gets rarer. Lowering
-`thresholds.minWordOccurrences` only moves the bar the check is judged
+(`MAGNITUDES` and `groupBuilder()` in `scripts/alien/config-common.ts`), so a
+bigger vocabulary shares the same word budget and the rarest word gets rarer.
+Lowering `thresholds.minWordOccurrences` only moves the bar the check is judged
 against; it doesn't make any word actually more common.
 
 ### truth-is-unbiased
@@ -321,8 +321,11 @@ exercise 2) before it ever reaches this check.
 
 ## 5. Changing a parameter and confirming it took
 
-Open `scripts/alien-config.ts` and find `voices_raised`'s `targetR: 0.65` (in
-the `attributes` array, first entry). Change it to `0.4`:
+Open `scripts/alien-config.ts` and, in `fourPathwayConfig`'s
+`withPathwayAssignments` call, find `voices_raised`'s `targetR: 0.65` (the
+first entry in the assignments object — `voices_raised` also appears in
+`threePathwayConfig`, so make sure you're editing `fourPathwayConfig`).
+Change it to `0.4`:
 
 ```bash
 npm run generate:alien
@@ -347,7 +350,10 @@ git diff scripts/alien-config.ts    # should be empty
 
 ## 6. Changing the seed
 
-Open `scripts/alien-config.ts` and change `seed: 20260803` to `seed: 42`, then:
+Open `scripts/alien-config.ts` and change `fourPathwayConfig`'s
+`seed: 20260803` to `seed: 42` (leave `threePathwayConfig`'s `seed: 20260803`
+alone — both configs currently share that seed value, and only the
+four-pathway one is exercised below), then:
 
 ```bash
 npm run generate:alien
@@ -389,7 +395,7 @@ orthogonality limit), the rarest word count changed from 291 to 302 — and yet
 all eight checks still pass. That's the evidence that the checks constrain the
 *construction*, not one lucky draw at the shipped seed.
 
-Put the seed back: change `seed` back to `20260803` and rerun
+Put the seed back: change `fourPathwayConfig`'s `seed` back to `20260803` and rerun
 `npm run generate:alien` to confirm you're back to the section 2 numbers, then
 confirm the file is clean:
 
@@ -425,18 +431,18 @@ confirm `git diff scripts/alien-config.ts` is empty.
 
 **Exercise 2 — give one vocabulary word weight in a second pathway.**
 
-Near the top of `scripts/alien-config.ts`, the `vocabulary` array is built by
-`group(pathway, positives, negatives)` calls, and each word is meant to carry
-weight in exactly one pathway. Temporarily add this line right after the
-`vocabulary` array is assigned (after the closing `];` of the `group(3, ...)`
-calls):
+`fourPathwayConfig`'s `vocabulary` (`scripts/alien-config.ts`) is built by
+calls to `groupBuilder(FOUR_SCALE)` over the `WORD_GROUPS` entries
+(`scripts/alien/config-common.ts`), and each word is meant to carry weight in
+exactly one pathway. Temporarily add this line right after `fourPathwayConfig`
+closes (after its closing `};`, before `threePathwayConfig` starts):
 
 ```ts
-vocabulary[0].weights[1] = 0.1;
+fourPathwayConfig.vocabulary[0].weights[1] = 0.1;
 ```
 
-That gives `"tarrak"` (the first word in pathway 0's group) a nonzero weight in
-pathway 1 too. Then:
+That gives `"tarrak"` (`WORD_GROUPS[0].positives[0]`, the first word in
+pathway 0's group) a nonzero weight in pathway 1 too. Then:
 
 ```bash
 npm run generate:alien
@@ -454,7 +460,8 @@ Delete the line you added and confirm `git diff scripts/alien-config.ts` is
 empty.
 
 **After both exercises**, run `npm run generate:alien` once more and confirm it
-prints all eight `PASS` lines and exits 0 — the config is back to what ships.
+prints all sixteen `PASS` lines — eight per dataset, across both summaries —
+and exits 0 — the config is back to what ships.
 
 ## 8. Inspecting the output files
 
@@ -546,7 +553,7 @@ isn't deterministic.
 - **Notes are template-written, not LLM-generated.** `scripts/alien/notes.ts`
   defines a `NoteRenderer` interface and ships exactly one implementation,
   `TemplateNoteRenderer`, which stitches together fixed fragments from
-  `scripts/alien-config.ts`. The seam exists for an LLM-backed renderer that
+  `scripts/alien/config-common.ts`. The seam exists for an LLM-backed renderer that
   reads a content-addressed cache; that renderer is not built.
 - **Parameters are starting values, not tuned ones.** The variance split,
   `targetR`s, error rates, and so on in `scripts/alien-config.ts` are what the
