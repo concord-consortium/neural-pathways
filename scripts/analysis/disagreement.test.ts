@@ -4,13 +4,32 @@ import { S3Item } from "../../src/shared/types/s3-data";
 const FIT = "fit";
 
 /**
+ * Jitter for one item, keyed to its position WITHIN ITS CELL — a cell being one
+ * (group, agrees/disagrees) pair. Pairing items inside the cell makes the jitter
+ * sum to exactly zero there, so it carries no information about which items
+ * disagree; an odd-sized cell leaves its last item at zero rather than tipping
+ * the balance.
+ *
+ * Keying it to the position within the GROUP instead is the trap: the
+ * disagreeing items occupy the low indices, so whenever their count is odd the
+ * +0.05 items outnumber the -0.05 ones and the jitter leaks straight into
+ * disagreement — which is a confound the analysis is supposed to expose, not one
+ * the fixture should smuggle in.
+ */
+function jitterFor(indexInCell: number, cellSize: number): number {
+  if (cellSize % 2 === 1 && indexInCell === cellSize - 1) return 0;
+  return indexInCell % 2 === 0 ? 0.05 : -0.05;
+}
+
+/**
  * One pathway with importance 1, so an item's score IS its pathway prediction,
  * and its size is the distance from the decision boundary.
  *
  * Ten groups of ten. Group g (1..10) sits at distance g, and 10 - g of its items
  * disagree with the model, so disagreement falls off linearly with distance.
  * Reconstruction error also falls off linearly with distance, plus a jitter that
- * alternates within each group and so is unrelated to which items disagree.
+ * is zero-mean within each (group, agrees/disagrees) cell and so carries no
+ * information about which items disagree.
  *
  * That makes the residual correlate with disagreement ONLY through distance,
  * which is the confound the analysis has to see through. Both relationships are
@@ -22,9 +41,12 @@ const FIT = "fit";
 function fixture(): S3Item[] {
   const items: S3Item[] = [];
   for (let g = 1; g <= 10; g++) {
+    const disagreeCount = 10 - g;
     for (let i = 0; i < 10; i++) {
-      const disagrees = i < 10 - g;
-      const residual = 1 - g / 20 + (i % 2 === 0 ? 0.05 : -0.05);
+      const disagrees = i < disagreeCount;
+      const cellSize = disagrees ? disagreeCount : 10 - disagreeCount;
+      const indexInCell = disagrees ? i : i - disagreeCount;
+      const residual = 1 - g / 20 + jitterFor(indexInCell, cellSize);
       items.push({
         id: `g${g}-i${i}`,
         sources: { test: [0] },
@@ -60,14 +82,12 @@ describe("analyzeDisagreement", () => {
   });
 
   // The point of the analysis: the raw correlation is an artifact of distance
-  // from the decision boundary, and controlling for it removes most of what
-  // looked like a relationship. On this fixture raw 0.578 collapses to 0.123, a
-  // ~79% reduction; it cannot reach zero because disagreement falls off in
-  // integer steps per group while the residual falls off smoothly, so a little
-  // non-linear signal survives a linear control. The same measurement on the
-  // real yelp data lands at 0.020 / -0.031 / -0.007.
+  // from the decision boundary. Controlling for distance removes it entirely —
+  // both disagreement and the residual are exactly linear in the group, and the
+  // jitter is zero-mean within each cell, so nothing is left to correlate. On the
+  // real yelp data the same measurement lands at 0.020 / -0.031 / -0.007.
   //
-  // Assert the claim (the control removes most of it), not a guessed magnitude.
+  // Assert the claim (the control removes it), not a magnitude picked by hand.
   // The exact arithmetic is pinned by the partialCorrelation tests below.
   it("reports a much smaller correlation once distance from the boundary is controlled for", () => {
     const result = analyzeDisagreement(fixture(), FIT, [1]);
@@ -76,12 +96,14 @@ describe("analyzeDisagreement", () => {
     expect(raw).not.toBeNull();
     expect(partial).not.toBeNull();
     expect(Math.abs(partial!)).toBeLessThan(Math.abs(raw!) / 3);
-    expect(Math.abs(partial!)).toBeLessThan(0.15);
+    expect(Math.abs(partial!)).toBeLessThan(0.01);
   });
 
   it("summarises reconstruction quality per group", () => {
     const result = analyzeDisagreement(fixture(), FIT, [1]);
-    expect(result!.meanR2Agree).toBeGreaterThan(result!.meanR2Disagree);
+    expect(result!.meanR2Agree).not.toBeNull();
+    expect(result!.meanR2Disagree).not.toBeNull();
+    expect(result!.meanR2Agree!).toBeGreaterThan(result!.meanR2Disagree!);
   });
 
   it("reports a disagreement rate for each residual quintile", () => {
