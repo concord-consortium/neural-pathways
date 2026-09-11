@@ -277,8 +277,8 @@ section offers `pathway_0 through pathway_2` — one fewer than the four-pathway
 dataset's `pathway_0 through pathway_3` — alongside the same `pathway_prediction`,
 `pathway_prediction_label`, and `pathway_prediction_matches` fields as §3. Searching
 `pathway_prediction_matches:false` here returns **`55 of 800`** — a different count
-from the four-pathway dataset's 46, since this dataset uses a different fit
-(`alien-fa-3`) over one fewer pathway.
+from the four-pathway dataset's 46. The two datasets use different fits over a
+different number of pathways, so the counts are not directly comparable.
 
 This dataset's pathway assignments differ from the four-pathway one: `group_size`
 is a decoy here (no pathway) instead of P2, and the bias attribute

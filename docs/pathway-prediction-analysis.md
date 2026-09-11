@@ -172,9 +172,8 @@ condition — the pathways barely registering the review in the first place.
 
 - **Yelp test split only.** The analysis only considers the 2,998 yelp reviews that
   were actually scored by the model (the test split). The train split is not used.
-- **Two reviews carry wrong data.** A small number of reviews in the published index
-  have data quality problems tracked in NPW-19; this analysis was not adjusted for
-  them.
+- **Two reviews carry wrong data.** Two reviews in the published index have data
+  quality problems tracked in NPW-19; this analysis was not adjusted for them.
 - **The train split is unusable for recovering the intercept or coefficients** until
   NPW-19 (the scrambled train-row bug) is fixed — see §3.
 - **The alien datasets are excluded from this analysis.** Their reconstruction and
