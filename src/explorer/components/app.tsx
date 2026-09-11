@@ -577,6 +577,8 @@ export const App = () => {
               showExtents={showExtents}
               explainedVariancePerPathway={selectedFit?.explained_variance_per_pathway}
               pathwayImportance={selectedFit?.pathway_importance}
+              classification={selectedItem?.classification ?? null}
+              classificationLabels={dataset.config.classificationLabels}
               onPathwayClick={handlePathwayClick}
               selectedPathways={selectedPathways}
               itemNoun={dataset.config.itemNoun}
