@@ -14,6 +14,7 @@ import { analyzeDisagreement } from "./disagreement";
 
 const pct = (value: number) => `${(value * 100).toFixed(2)}%`;
 const num = (value: number | null) => (value == null ? "n/a" : value.toFixed(3));
+const num4 = (value: number | null) => (value == null ? "n/a" : value.toFixed(4));
 
 async function main() {
   const index = await fetchIndex(yelpDataset);
@@ -31,8 +32,10 @@ async function main() {
     console.log(`  corr(disagree, residual):            ${num(result.rDisagreeResidual)}`);
     console.log(`  corr(disagree, |pathway sum|):       ${num(result.rDisagreeMargin)}`);
     console.log(`  corr(|pathway sum|, residual):       ${num(result.rMarginResidual)}`);
-    console.log(`  partial corr(disagree, residual | |pathway sum|): ${num(result.partialDisagreeResidualGivenMargin)}`);
-    console.log(`  mean reconstruction R²: agree ${result.meanR2Agree.toFixed(4)}, disagree ${result.meanR2Disagree.toFixed(4)}`);
+    console.log(`  partial corr(disagree, residual | |pathway sum|): `
+      + `${num(result.partialDisagreeResidualGivenMargin)}`);
+    console.log(`  mean reconstruction R²: agree ${num4(result.meanR2Agree)}, `
+      + `disagree ${num4(result.meanR2Disagree)}`);
     console.log(`  disagreement rate by residual quintile (low→high): ${
       result.disagreementRateByResidualQuintile.map(r => pct(r)).join("  ")}`);
     if (result.logistic) {

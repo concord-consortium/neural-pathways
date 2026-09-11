@@ -1,6 +1,6 @@
 import { S3Item } from "../../src/shared/types/s3-data";
 import { pathwayPrediction, pathwayPredictionClass } from "../../src/explorer/utils/pathway-prediction";
-import { pearson } from "../../src/explorer/utils/statistics";
+import { mean, pearson } from "../../src/explorer/utils/statistics";
 import { logisticRegression } from "../../src/explorer/utils/regression";
 
 export interface DisagreementAnalysis {
@@ -15,8 +15,8 @@ export interface DisagreementAnalysis {
   rDisagreeMargin: number | null;
   rMarginResidual: number | null;
   partialDisagreeResidualGivenMargin: number | null;
-  meanR2Agree: number;
-  meanR2Disagree: number;
+  meanR2Agree: number | null;
+  meanR2Disagree: number | null;
   /** Disagreement rate within each fifth of the residual range, lowest first. */
   disagreementRateByResidualQuintile: number[];
   /** Standardized log-odds per SD from a joint fit; null when it cannot be fit. */
@@ -39,8 +39,10 @@ export function partialCorrelation(
   return (rxy - rxz * ryz) / denominator;
 }
 
-const mean = (values: number[]) =>
-  values.reduce((sum, v) => sum + v, 0) / values.length;
+/** Mean of values, or null when there are none — an empty group has no mean. */
+function meanOrNull(values: number[]): number | null {
+  return values.length === 0 ? null : mean(values);
+}
 
 /**
  * How often the pathway prediction disagrees with the model, and whether that
@@ -108,8 +110,8 @@ export function analyzeDisagreement(
     rMarginResidual,
     partialDisagreeResidualGivenMargin:
       partialCorrelation(rDisagreeResidual, rDisagreeMargin, rMarginResidual),
-    meanR2Agree: mean(r2s.filter((_, i) => disagree[i] === 0)),
-    meanR2Disagree: mean(r2s.filter((_, i) => disagree[i] === 1)),
+    meanR2Agree: meanOrNull(r2s.filter((_, i) => disagree[i] === 0)),
+    meanR2Disagree: meanOrNull(r2s.filter((_, i) => disagree[i] === 1)),
     disagreementRateByResidualQuintile: quintiles,
     logistic: fit && fit.terms.length === 2
       ? { margin: fit.terms[0].coefficient, residual: fit.terms[1].coefficient }
