@@ -86,6 +86,11 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                 <tr><td><code>has_word_scores</code></td><td>Has word scores for current fit (true/false)</td></tr>
                 <tr><td><code>classification_label</code></td><td>Model&apos;s predicted label</td></tr>
                 <tr><td><code>classification_probability</code></td><td>Prediction confidence (0–1)</td></tr>
+                {/* eslint-disable-next-line max-len */}
+                <tr><td><code>pathway_prediction</code></td><td>What the pathways alone predict (sign gives the class)</td></tr>
+                <tr><td><code>pathway_prediction_label</code></td><td>Label the pathways alone predict</td></tr>
+                {/* eslint-disable-next-line max-len */}
+                <tr><td><code>pathway_prediction_matches</code></td><td>Whether that matches the model (true/false)</td></tr>
               </tbody>
             </table>
 
