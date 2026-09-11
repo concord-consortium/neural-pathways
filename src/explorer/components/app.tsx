@@ -143,7 +143,8 @@ export const App = () => {
   // --- Flatten items for search ---
   const flatItems = useMemo(() => {
     if (!indexData || !dataset) return [];
-    return indexData.items.map(r => flattenItem(r, selectedFitName, dataset));
+    const importance = indexData.metadata.fa_fits[selectedFitName]?.pathway_importance;
+    return indexData.items.map(r => flattenItem(r, selectedFitName, dataset, importance));
   }, [indexData, dataset, selectedFitName]);
 
   // --- Filter items with liqe ---

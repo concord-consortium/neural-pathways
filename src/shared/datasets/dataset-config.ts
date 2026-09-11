@@ -101,6 +101,9 @@ export const RESERVED_FIELD_NAMES = [
   "has_word_scores",
   "classification_label",
   "classification_probability",
+  "pathway_prediction",
+  "pathway_prediction_label",
+  "pathway_prediction_matches",
 ];
 
 const PATHWAY_FIELD_PATTERN = /^pathway_\d+$/;

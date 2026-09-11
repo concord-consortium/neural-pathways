@@ -40,6 +40,15 @@ describe("validateAttributeKeys", () => {
     expect(RESERVED_FIELD_NAMES).not.toContain("stars");
     expect(RESERVED_FIELD_NAMES).not.toContain("review_stars");
   });
+
+  it("rejects a key that collides with a pathway prediction field", () => {
+    expect(() => validateAttributeKeys([def("pathway_prediction")]))
+      .toThrow(/reserved search field/);
+    expect(() => validateAttributeKeys([def("pathway_prediction_label")]))
+      .toThrow(/reserved search field/);
+    expect(() => validateAttributeKeys([def("pathway_prediction_matches")]))
+      .toThrow(/reserved search field/);
+  });
 });
 
 const visible: AttributeDefinition = {
