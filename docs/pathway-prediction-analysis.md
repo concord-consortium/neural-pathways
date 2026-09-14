@@ -88,8 +88,8 @@ measures exactly the formula that ships, not a reimplementation of it. It report
 
 ## 5. Results
 
-Verbatim output of `npm run analyze:pathway-prediction`, captured in
-`.superpowers/sdd/2026-09-11-pathway-prediction/task-5-report.md`:
+Verbatim output of `npm run analyze:pathway-prediction`, run against the published
+yelp index on 2026-09-11. Re-run the script to reproduce these numbers.
 
 ### `train-fa-6` (FA fit on train)
 
