@@ -345,8 +345,10 @@ end-to-end tests.
   see.
 - New `docs/alien-activations.md` — the floor report the ticket asks for: after the check
   works, sweep `neuronCount` downward on both datasets and a couple of lower
-  `explainedVarianceTotal` values, and record the recovery correlations. The shipped config
-  stays at 14 and 0.90.
+  `explainedVarianceTotal` values, and record the recovery correlations. The sweep is a
+  committed script, `scripts/analysis/activation-floor.ts` behind
+  `npm run analyze:activation-floor`, so the note can be regenerated the way the
+  pathway-prediction analysis can. The shipped config stays at 14 and 0.90.
 
 ## Out of scope
 
