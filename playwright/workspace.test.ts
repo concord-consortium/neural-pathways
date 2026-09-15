@@ -13,7 +13,7 @@ test("renders the landing page with links to visualizations", async ({ page }) =
 test("heatmap renders the visualization", async ({ page }) => {
   await page.goto("/heatmap.html");
   await expect(page.getByText("P1")).toBeVisible();
-  await expect(page.getByText("Sentiment:")).toBeVisible();
+  await expect(page.getByText("Target:")).toBeVisible();
 });
 
 test("explorer renders the app", async ({ page }) => {
