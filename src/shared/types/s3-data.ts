@@ -30,10 +30,10 @@ export interface S3FaFit {
   explained_variance_total?: number;
   explained_variance_per_pathway: number[];
   pathway_importance: number[];
-  loadings?: number[][];       // n_pathways x 780
-  noise_variance?: number[];   // 780
-  scaler_mean?: number[];      // 780
-  scaler_scale?: number[];     // 780
+  loadings?: number[][];       // n_pathways x neuron_count
+  noise_variance?: number[];   // neuron_count
+  scaler_mean?: number[];      // neuron_count
+  scaler_scale?: number[];     // neuron_count
   pathway_score_min: number[]; // n_pathways
   pathway_score_max: number[]; // n_pathways
 }

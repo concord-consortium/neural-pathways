@@ -67,7 +67,10 @@ not happen here; every cell above is a real recovery result, not a placeholder.
 
 Both tables keep every pathway mapped to its own factor in authored order (P0→F0 through
 P3→F3 for the four-pathway set, P0→F0 through P2→F2 for the three-pathway set) at every row
-tested; no order swaps occur in either sweep. For the four-pathway dataset the first
+tested; no order swaps occur in either sweep at the shipped seed. The sweep varies neuron
+count and explained variance only; other seeds can fail `fa-recovers-pathways` at 14 neurons
+because the solver leaves the Ψ-weighted factor energies to chance, which is the check's
+known weakness and a candidate follow-up. For the four-pathway dataset the first
 sub-0.94 correlation appears at 12 neurons (P3, r 0.93), two pathways sit below 0.94 by 10
 neurons, and 8 neurons collapses outright: P1–P3 fall to r 0.72–0.80 and one loading cosine
 drops to 0.64. The three-pathway dataset holds every pathway at or above r 0.94 down to 10

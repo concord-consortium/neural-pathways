@@ -238,10 +238,10 @@ function faRecoversPathways(run: GeneratorRun): CheckResult {
     if (entry.factor !== entry.pathway) {
       problems.push(`P${entry.pathway} came back as factor ${entry.factor}, not in the authored order`);
     }
-    if (entry.scoreR < thresholds.faScoreRecoveryMin) {
+    if (!(entry.scoreR >= thresholds.faScoreRecoveryMin)) {
       problems.push(`P${entry.pathway} scores r ${entry.scoreR.toFixed(3)} < ${thresholds.faScoreRecoveryMin}`);
     }
-    if (entry.loadingCosine < thresholds.faLoadingRecoveryMin) {
+    if (!(entry.loadingCosine >= thresholds.faLoadingRecoveryMin)) {
       problems.push(
         `P${entry.pathway} loadings cos ${entry.loadingCosine.toFixed(3)} < ${thresholds.faLoadingRecoveryMin}`,
       );

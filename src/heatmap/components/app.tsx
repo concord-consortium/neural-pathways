@@ -218,8 +218,9 @@ export const App = () => {
     if (!indexData) return;
     const handleHashChange = () => {
       const hashParams = getHashParams();
-      if (hashParams.dataset && datasetFromId(hashParams.dataset).id !== datasetId) {
-        handleDatasetChange(datasetFromId(hashParams.dataset).id);
+      const hashDatasetId = datasetFromId(hashParams.dataset).id;
+      if (hashDatasetId !== datasetId) {
+        handleDatasetChange(hashDatasetId);
         return;
       }
       const validFits = Object.keys(indexData.metadata.fa_fits);

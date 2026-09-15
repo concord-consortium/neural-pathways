@@ -363,9 +363,12 @@ export const THRESHOLDS: Thresholds = {
   detectableBiasMin: 0.2,
   minWordOccurrences: 100,
   shapTolerance: 1e-9,
-  // Measured by a probe at 14 neurons across several seeds: the weakest pathway's
-  // scores came back at |r| 0.96 and its loadings at cosine 0.99. Recovery is
-  // deterministic for a fixed seed, so the margin is against retunes, not sampling.
+  // Met with margin at the shipped seeds (weakest pathway r 0.96, cos 0.99). The
+  // loading solver fixes each row's energy and each neuron's communality but not
+  // the diagonal of L Ψ⁻¹ Lᵀ, which is what scikit-learn orders factors by, so
+  // other seeds commonly fail this check by a factor swap or a mixed pair.
+  // Changing `seed` or the variance split needs fa-recovers-pathways re-checked.
+  // See docs/alien-activations.md.
   faScoreRecoveryMin: 0.94,
   faLoadingRecoveryMin: 0.97,
 };

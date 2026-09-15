@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
 import { App } from "./app";
 
 const mockFit = {
@@ -165,5 +165,19 @@ describe("dataset selection", () => {
     expect(await screen.findByText("Target: positive")).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Current review" })).toBeInTheDocument();
     expect(screen.getByText("Pathway activations for this review")).toBeInTheDocument();
+  });
+
+  it("falls back to yelp when dataset= is deleted from the hash by hand", async () => {
+    window.location.hash = "#dataset=alien";
+    render(<App />);
+    expect(await screen.findByText("alien-fa-2")).toBeInTheDocument();
+
+    await act(async () => {
+      window.location.hash = "";
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    });
+
+    expect(await screen.findByText("train-fa-2")).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("neural-pathways/data/v1/index.json"));
   });
 });
