@@ -85,10 +85,11 @@ export interface ActivationConfig {
   neuronCount: number;                 // 14
   /** Share of standardized activation variance the pathways carry; the rest is per-neuron noise. */
   explainedVarianceTotal: number;      // 0.9
-  /** Neurons each pathway leans on in the random sketch. */
-  strongNeuronsPerPathway: number;     // 5
-  /** Sketch magnitude of the remaining neurons relative to the strong ones. */
-  weakLoadingRatio: number;            // 0.15
+  /**
+   * Each neuron's noise variance is drawn uniformly from this range, then the
+   * draws are scaled so their mean is exactly 1 - explainedVarianceTotal.
+   */
+  noiseVarianceRange: [number, number]; // [0.03, 0.2]
   /** Raw scaler per neuron is drawn uniformly from these. */
   scalerMeanRange: [number, number];   // [-0.6, 0.6]
   scalerScaleRange: [number, number];  // [0.1, 0.7]
@@ -99,45 +100,65 @@ export interface ActivationConfig {
 
 ```ts
   /** Smallest |r| between a recovered factor's scores and the authored pathway it matches. */
-  faScoreRecoveryMin: number;     // 0.95
+  faScoreRecoveryMin: number;     // 0.94
   /** Smallest |cosine| between a recovered loading row and the authored one. */
-  faLoadingRecoveryMin: number;   // 0.98
+  faLoadingRecoveryMin: number;   // 0.97
 ```
 
-`validateConfig` checks the Ledermann inequality, `0 < explainedVarianceTotal < 1`,
-`1 ≤ strongNeuronsPerPathway ≤ neuronCount`, `0 ≤ weakLoadingRatio ≤ 1`, that each range is
-ordered and the scale range is positive, and that both recovery thresholds lie in `(0, 1]`.
+`validateConfig` checks the Ledermann inequality, `0 < explainedVarianceTotal < 1`, that each
+range is ordered with a positive lower bound where it must be (noise variance and scale), and
+that both recovery thresholds lie in `(0, 1]`.
+
+### Why the noise variance is prescribed, not derived
+
+An earlier draft of this design drew a sparse sketch, orthogonalized it, and let each neuron's
+noise variance fall out as `1 − communality`. A numerical probe showed that cannot work at
+0.90 explained variance over 14 neurons: the pathways must carry 12.6 units of variance across
+14 neurons, so the *average* neuron is 90% explained and no neuron may exceed 100%. There is
+no room for a neuron that a sparse sketch leaves mostly unloaded, and every sketch tried put
+some neuron's communality past 1. Per-neuron communality is a constraint to satisfy, not an
+outcome to read off, so the noise variances are drawn first and the loadings are solved to fit
+them.
 
 ### The sketch
 
-For each pathway, draw `strongNeuronsPerPathway` distinct neuron indices; those entries get
-magnitude 1, the rest get `weakLoadingRatio`; every entry gets a random sign. This is a shape,
-not the loadings: its rows are neither orthogonal nor correctly scaled.
+A k × n matrix of standard-normal draws. It only seeds the solver: the signs and relative
+sizes it starts from persist into the solution, so a different seed gives a different
+picture, but nothing about it survives exactly.
 
 ### The solver
 
-Target row energy `eₚ = targetVarianceShares[p] × explainedVarianceTotal × neuronCount`.
-Starting from the sketch scaled to those energies, iterate to a fixed point:
+Inputs: the sketch, target row energies `eₚ = targetVarianceShares[p] × explainedVarianceTotal
+× neuronCount`, and the drawn noise variances `ψⱼ`, whose mean is `1 − explainedVarianceTotal`
+so that `Σₚ eₚ = Σⱼ (1 − ψⱼ)` exactly.
 
-1. `ψⱼ = 1 − Σₚ L²ₚⱼ` for each neuron.
-2. Gram-Schmidt the rows in pathway order under the inner product `⟨a, b⟩ = Σⱼ aⱼbⱼ / ψⱼ`, so
-   P0 keeps its sketched direction and each later row is adjusted against the earlier ones.
-3. Rescale each row to energy `eₚ` (plain Euclidean energy, which is what explained variance
-   measures).
+The solver works on `M = L Ψ^(−1/2)`, in which the three constraints read: rows of `M` are
+orthogonal; `Σⱼ M²ₚⱼ ψⱼ = eₚ` for each row; `Σₚ M²ₚⱼ ψⱼ = 1 − ψⱼ` for each column. Starting
+from the sketch (divided by `√ψ`), it repeats three projections until the largest change in
+any entry is below 1e-10:
 
-Stop when the largest change in any loading is below 1e-10; throw if 1000 iterations pass
-without that. Throw, with a message naming the neuron, if any `ψⱼ` drops below 0.02: that
-means the sketch concentrates more than one unit of variance on a neuron, and the fix is a
-less concentrated sketch or a lower `explainedVarianceTotal`, not a smaller floor.
+1. Symmetric (Löwdin) orthogonalization of the rows: `M ← (M Mᵀ)^(−1/2) M`, which is the
+   nearest matrix with orthogonal rows and does not privilege any pathway.
+2. Rescale each row to its energy `eₚ`.
+3. Rescale each column to its communality `1 − ψⱼ`.
 
-The result satisfies `L Ψ⁻¹ Lᵀ` diagonal with distinct diagonal entries (the shares are
-distinct), so the FA canonical form is the authored matrix up to the sign of each row.
+Throw if 5000 iterations pass without converging. The probe converged in 50–100 iterations
+for every configuration tried (14, 12, 10 and 8 neurons; 0.9, 0.8 and 0.7 explained
+variance; both pathway counts), meeting all three constraints to within 1e-10, in a few
+milliseconds. `L = M Ψ^(1/2)` is the result: `L Ψ⁻¹ Lᵀ` is diagonal, row `p` has energy `eₚ`,
+and neuron `j` has communality `1 − ψⱼ`.
+
+The diagonal entries of `L Ψ⁻¹ Lᵀ` are what scikit-learn orders factors by. They usually
+follow the row energies but need not: the probe found a 12-neuron case where the 15% and 10%
+pathways came back swapped. The recovery check asserts the order, so a seed that produces a
+swap fails loudly rather than shipping pathways in the wrong order.
 
 ### Drawing
 
 For conversation `i` with authored scores `zᵢ`:
 
-- standardized: `xᵢ = zᵢ L + εᵢ`, `εᵢⱼ ~ N(0, ψⱼ)`;
+- standardized: `xᵢ = zᵢ L + εᵢ`, `εᵢⱼ ~ N(0, ψⱼ)`, with the RNG consumed in this order within
+  the stage: the noise variances, the sketch, the scaler, then the noise item by item;
 - raw: `rᵢⱼ = xᵢⱼ × scaleⱼ + meanⱼ`, with `meanⱼ` and `scaleⱼ` drawn once per dataset from the
   configured ranges;
 - `reconstruction_r2ᵢ = 1 − mean((xᵢ − zᵢL)²) / var(xᵢ)`, the NNMaker definition, with both
@@ -150,7 +171,8 @@ R² it would compute equal the R² in the index.
 ### Fit fields
 
 `explained_variance_per_pathway[p] = ‖Lₚ‖² / neuronCount` and `explained_variance_total` is
-their sum, the same definitions the yelp fits use. `explainedVariance` in `emit.ts`, which
+their sum, the same definitions the yelp fits use. By construction these equal
+`targetVarianceShares × explainedVarianceTotal` and `explainedVarianceTotal`. `explainedVariance` in `emit.ts`, which
 currently derives the split from the word-sum standard deviations, is replaced. The word-sum
 split still prints in the summary (see below).
 
@@ -161,6 +183,7 @@ split still prints in the summary (see below).
 - `symmetricEigen(matrix)` — cyclic Jacobi rotations, returning eigenvalues in descending order
   with their eigenvectors. Sizes here are at most 14×14.
 - `invert(matrix)` — Gauss-Jordan with partial pivoting, for the k×k matrices in scoring.
+- `inverseSqrt(matrix)` — `V diag(1/√λ) Vᵀ` from `symmetricEigen`, for the solver's Löwdin step.
 
 ### `scripts/alien/factor-analysis.ts`
 
@@ -200,6 +223,11 @@ the yelp pipeline's. `factorScores` is scikit-learn's `transform`:
 3. Pass when the `p → q` matching is the identity permutation, every `|r|` is at least
    `faScoreRecoveryMin`, and every `|cosine(Lₚ, W_q)|` is at least `faLoadingRecoveryMin`.
 
+The thresholds, 0.94 and 0.97, sit just under what the probe measured at 14 neurons across
+several seeds: the weakest pathway's scores came back at |r| 0.96 and its loadings at cosine
+0.99. Recovery is deterministic for a fixed seed, so the margin is against retunes, not
+sampling.
+
 The identity requirement is deliberate: the story is that FA returns *these* pathways *in this
 order*, and a sketch whose weighted energies put P2 ahead of P1 is a tuning problem worth
 failing on. The failing detail names the pathway, the factor it matched, and the numbers.
@@ -212,7 +240,7 @@ failing on. The failing detail names the pathway, the factor it matched, and the
 activations
   14 neurons, explained variance total 0.900 target -> 0.903 refit
   loadings share    P0 0.495  P1 0.180  P2 0.135  P3 0.090
-  reconstruction R2   mean 0.88  sd 0.09  p10 0.76
+  reconstruction R2   mean 0.82  sd 0.17  p10 0.62
   FA recovery         P0 r 0.998 cos 0.999   P1 r 0.984 cos 0.995   P2 r 0.975 cos 0.992   P3 r 0.962 cos 0.988
   refit explained variance by pathway count   1: 0.50  2: 0.68  3: 0.81  4: 0.90  5: 0.91
 ```
@@ -280,8 +308,9 @@ the residual and its R². Same for `alien3`.
   `factorScores` correlate above 0.95 with the planted scores; asking for one factor more than
   planted leaves a near-zero extra factor; the fit converges.
 - `activations.test.ts` — the solved rows hit their target energies; `L Ψ⁻¹ Lᵀ` is diagonal;
-  `ψ = 1 − communality` per neuron; the same seed reproduces the same matrices; the drawn
-  scaler lies in its ranges; an over-concentrated sketch throws with the neuron named.
+  each neuron's communality is `1 − ψⱼ`; the drawn noise variances average
+  `1 − explainedVarianceTotal`; the same seed reproduces the same matrices; the drawn scaler
+  lies in its ranges; per-item R² matches the heatmap's formula.
 - `emit.test.ts` — activation buckets are keyed by id prefix and cover every item; every
   item's R² is at most 1; the fit carries the five activation fields and both
   explained-variance numbers, with the per-pathway values summing to the total.
