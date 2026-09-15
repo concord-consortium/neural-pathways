@@ -99,8 +99,8 @@ describe("SearchInput", () => {
     expect(screen.getByText("pathway_prediction_matches")).toBeDefined();
   });
 
-  // The alien dataset declares no searchFields of its own, so these rows have to
-  // live in the shared table rather than in either dataset's config.
+  // These rows live in the shared table rather than in any dataset's config, so
+  // they must appear even when a dataset declares no searchFields at all.
   it("shows them for a dataset that declares no search fields", () => {
     render(
       <SearchInput

@@ -101,12 +101,12 @@ appearing before it has been commissioned.
 
 Click the **`?`** (Search help) button next to the search box.
 
-- **Fields**: `text` (Conversation text), `target_label`, `pathway_0` through
-  `pathway_3`, `has_word_scores`, `classification_label`,
+- **Fields**: `text` (Conversation text), `target_label`, `reconstruction_r2`,
+  `pathway_0` through `pathway_3`, `has_word_scores`, `classification_label`,
   `classification_probability`, `pathway_prediction`, `pathway_prediction_label`,
-  `pathway_prediction_matches`. Unlike Yelp's help dialog (which lists `name`,
-  `city`, `state`, `categories`, `reconstruction_r2`), **no business fields appear
-  at all** — the alien dataset has none.
+  `pathway_prediction_matches`. Unlike Yelp's help dialog (which also lists `name`,
+  `city`, `state`, `categories`), **no business fields appear at all** — the alien
+  dataset has none.
 - **Attributes**: `target`, `prediction`, `model_correct`, `voices_raised`,
   `engaged_in_task`, `group_size`, `near_water`, `food_present`. Four more attributes —
   `resource_stressed`, `gestures_repeated`, `young_present`, `carrying_burden` —
@@ -135,10 +135,8 @@ covers what this disagreement does and does not correlate with on the yelp datas
 
 - Search `reconstruction_r2:<0.6`. Expected: **144 of 800** conversations (this branch),
   each with a Reconstruction R² below 60% in the item panel. Before NPW-18 the alien
-  datasets had no R² and this search returned nothing. The search help does not list
-  `reconstruction_r2` for the alien datasets yet (the field is declared only for Yelp),
-  but the search matches any key present in the data, so the query works; this differs
-  from `observation`, below, which is deliberately excluded.
+  datasets had no R² and this search returned nothing, and the Search help dialog did
+  not list the field.
 
 **`observation` is deliberately not searchable.** Typing `observation:water`
 returns **`0 of 800`** — the field isn't recognized, so nothing matches. This is on
@@ -372,9 +370,3 @@ resource-stressed conversations — matches the intended plant.
   correlation and the other matrix values will likely change once phase 7 tunes
   them (both datasets' bias correlations, -0.2846 and -0.2896, are untuned
   starting values in this sense).
-- **The Search help dialog omits `reconstruction_r2` for the alien datasets.**
-  `src/shared/datasets/alien-dataset.ts` doesn't declare it as a search field the
-  way `src/shared/datasets/yelp-dataset.ts` does, so it's missing from the Fields
-  list in §3 even though the search itself works (see §3's `reconstruction_r2:<0.6`
-  step) — the search engine matches any key present in the data, not just the ones
-  the help dialog advertises.

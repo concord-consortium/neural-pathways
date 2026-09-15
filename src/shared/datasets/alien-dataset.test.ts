@@ -131,5 +131,15 @@ describe("alien3Dataset", () => {
     expect(alien3Dataset.getAttributeValue(item, "model_correct")).toBe(0);
     expect(alien3Dataset.classificationLabels).toBe(alienDataset.classificationLabels);
     expect(alien3Dataset.itemNoun).toEqual(alienDataset.itemNoun);
+    expect(alien3Dataset.searchFields).toEqual(alienDataset.searchFields);
+  });
+
+  it("advertises reconstruction_r2 as a search field, as yelp does", () => {
+    // The search engine matches any key present in the data, but the help
+    // dialog only lists what the config declares. Since NPW-18 every alien
+    // conversation carries an R², so the field belongs in the dialog.
+    for (const dataset of [alienDataset, alien3Dataset]) {
+      expect(dataset.searchFields.map(f => f.name)).toEqual(["reconstruction_r2"]);
+    }
   });
 });
