@@ -230,12 +230,20 @@ high. The raw numbers appear to support it: the correlation between disagreement
 8% there against roughly 0% elsewhere; mean R² 0.70 against 0.90).
 
 It does not survive a control. The size of the pathway sum correlates −0.77 with the residual: a
-review with a small sum sits near the decision boundary *and* reconstructs poorly, because P0
-carries about 85% of the variance, so a review with little P0 has little for the pathways to
-rebuild. Controlling for that distance, the disagreement-residual correlation falls to between
-−0.03 and 0.02, and in a logistic model the residual's coefficient is near zero while distance
-dominates. 53 of 54 disagreements sit in the 10% of reviews closest to the boundary.
+review with a small sum sits near the decision boundary *and* reconstructs poorly. Controlling for
+that distance, the disagreement-residual correlation falls to between −0.03 and 0.02, and in a
+logistic model the residual's coefficient is near zero while distance dominates. 53 of 54
+disagreements sit in the 10% of reviews closest to the boundary.
 
 So the answer to the story's question is that the correlation is real but explained: poor
-reconstruction does not cause the disagreement — both follow from the pathways barely registering
-the review.
+reconstruction does not cause the disagreement — both follow from the same condition.
+
+**Amendment — the mechanism stated here was wrong.** This passage originally explained the shared
+cause as "P0 carries about 85% of the variance, so a review with little P0 has little for the
+pathways to rebuild". That was never measured, and measuring it refutes it: the residual correlates
+**+0.73** with the magnitude of the *other* pathways' scores against −0.65 with P0's, and
+controlling for the other pathways collapses P0's own correlation to −0.09 on `train-fa-6`. Badly
+reconstructed reviews are ones where the minor pathways are loud, not ones where the pathways are
+quiet. The correct account, along with the decomposition of which pathways produce the
+disagreements and evidence on whether importance tracks connectivity to the classifier head, is in
+[docs/pathway-prediction-analysis.md](../../pathway-prediction-analysis.md) §6.
