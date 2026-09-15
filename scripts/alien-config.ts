@@ -1,6 +1,7 @@
 import { AlienConfig } from "./alien/config-types";
 import {
-  BASE_ATTRIBUTES, FILLER_FRAGMENTS, THRESHOLDS, WORD_GROUPS, groupBuilder, withPathwayAssignments,
+  ACTIVATIONS, BASE_ATTRIBUTES, FILLER_FRAGMENTS, THRESHOLDS, WORD_GROUPS, groupBuilder,
+  withPathwayAssignments,
 } from "./alien/config-common";
 
 /**
@@ -34,6 +35,7 @@ export const fourPathwayConfig: AlienConfig = {
     ...fourGroup(3, WORD_GROUPS[3]),
   ],
   targetVarianceShares: [0.55, 0.2, 0.15, 0.1],
+  activations: ACTIVATIONS,
 
   attributes: withPathwayAssignments(BASE_ATTRIBUTES, {
     voices_raised: { pathway: 0, targetR: 0.65 },
@@ -106,6 +108,7 @@ export const threePathwayConfig: AlienConfig = {
     ...threeGroup(2, WORD_GROUPS[3]),
   ],
   targetVarianceShares: [0.55, 0.35, 0.1],
+  activations: ACTIVATIONS,
 
   attributes: withPathwayAssignments(BASE_ATTRIBUTES, {
     voices_raised: { pathway: 0, targetR: 0.65 },

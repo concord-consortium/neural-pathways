@@ -22,6 +22,13 @@ describe("alienConfigs", () => {
       expect(() => validateConfig(config)).not.toThrow();
     }
   });
+
+  it("gives both datasets fourteen neurons at 90% explained variance", () => {
+    for (const config of alienConfigs) {
+      expect(config.activations.neuronCount).toBe(14);
+      expect(config.activations.explainedVarianceTotal).toBe(0.9);
+    }
+  });
 });
 
 describe("threePathwayConfig", () => {

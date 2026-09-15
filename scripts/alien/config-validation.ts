@@ -166,6 +166,37 @@ function checkBias(config: AlienConfig): void {
   }
 }
 
+function checkRange(name: string, range: [number, number], minimumLow: number): void {
+  const [low, high] = range;
+  if (!(low < high)) {
+    throw new Error(`${name} [${low}, ${high}] must be ordered low to high`);
+  }
+  if (!(low > minimumLow)) {
+    throw new Error(`${name} lower bound ${low} must exceed ${minimumLow}`);
+  }
+}
+
+function checkActivations(config: AlienConfig): void {
+  const { neuronCount, explainedVarianceTotal } = config.activations;
+  const k = config.pathwayCount;
+  if (!Number.isInteger(neuronCount) || (neuronCount - k) ** 2 < neuronCount + k) {
+    throw new Error(
+      `neuronCount ${neuronCount} cannot identify ${k} pathways: factor analysis needs `
+      + `(neurons - pathways)^2 >= neurons + pathways (the identifiability floor)`,
+    );
+  }
+  if (!(explainedVarianceTotal > 0 && explainedVarianceTotal < 1)) {
+    throw new Error(`explainedVarianceTotal ${explainedVarianceTotal} must lie strictly between 0 and 1`);
+  }
+  checkRange("noiseVarianceRange", config.activations.noiseVarianceRange, 0);
+  checkRange("scalerMeanRange", config.activations.scalerMeanRange, -Infinity);
+  checkRange("scalerScaleRange", config.activations.scalerScaleRange, 0);
+  for (const name of ["faScoreRecoveryMin", "faLoadingRecoveryMin"] as const) {
+    const value = config.thresholds[name];
+    if (!(value > 0 && value <= 1)) throw new Error(`${name} ${value} must lie in (0, 1]`);
+  }
+}
+
 export function validateConfig(config: AlienConfig): void {
   if (config.targetVarianceShares.length !== config.pathwayCount) {
     throw new Error("targetVarianceShares must have one entry per pathway");
@@ -181,4 +212,5 @@ export function validateConfig(config: AlienConfig): void {
   checkAttributes(config);
   checkFragmentsAreDistinguishable(config);
   checkBias(config);
+  checkActivations(config);
 }

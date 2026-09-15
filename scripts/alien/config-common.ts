@@ -1,4 +1,4 @@
-import { AttributeConfig, Thresholds, VocabularyWord } from "./config-types";
+import { ActivationConfig, AttributeConfig, Thresholds, VocabularyWord } from "./config-types";
 
 /**
  * Distinct magnitudes within each half, so a pathway score is a sum over many
@@ -363,4 +363,23 @@ export const THRESHOLDS: Thresholds = {
   detectableBiasMin: 0.2,
   minWordOccurrences: 100,
   shapTolerance: 1e-9,
+  // Measured by a probe at 14 neurons across several seeds: the weakest pathway's
+  // scores came back at |r| 0.96 and its loadings at cosine 0.99. Recovery is
+  // deterministic for a fixed seed, so the margin is against retunes, not sampling.
+  faScoreRecoveryMin: 0.94,
+  faLoadingRecoveryMin: 0.97,
+};
+
+/**
+ * Fourteen neurons is what the UI/UX designs show, and comfortably above the
+ * identifiability floor of eight for four pathways. The 0.9 total matches the
+ * yelp fits and the NNMaker rule of adding pathways until 90% is explained. The
+ * noise and scaler ranges bracket the yelp fits' 10th-90th percentiles.
+ */
+export const ACTIVATIONS: ActivationConfig = {
+  neuronCount: 14,
+  explainedVarianceTotal: 0.9,
+  noiseVarianceRange: [0.03, 0.2],
+  scalerMeanRange: [-0.6, 0.6],
+  scalerScaleRange: [0.1, 0.7],
 };

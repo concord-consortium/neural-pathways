@@ -94,4 +94,39 @@ describe("validateConfig", () => {
     config.attributes[0].key = "text";
     expect(() => validateConfig(config)).toThrow(/reserved/i);
   });
+
+  it("rejects a neuron count below the identifiability floor", () => {
+    // Four pathways need (n - 4)^2 >= n + 4, which 7 neurons fails and 8 passes.
+    const config = clone();
+    config.activations.neuronCount = 7;
+    expect(() => validateConfig(config)).toThrow(/identif/i);
+    config.activations.neuronCount = 8;
+    expect(() => validateConfig(config)).not.toThrow();
+  });
+
+  it("rejects an explained variance total outside (0, 1)", () => {
+    const config = clone();
+    config.activations.explainedVarianceTotal = 1;
+    expect(() => validateConfig(config)).toThrow(/explainedVarianceTotal/);
+  });
+
+  it("rejects a noise variance range that is unordered or touches zero", () => {
+    const config = clone();
+    config.activations.noiseVarianceRange = [0.2, 0.1];
+    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
+    config.activations.noiseVarianceRange = [0, 0.1];
+    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
+  });
+
+  it("rejects a scaler scale range that is not positive", () => {
+    const config = clone();
+    config.activations.scalerScaleRange = [0, 0.5];
+    expect(() => validateConfig(config)).toThrow(/scalerScaleRange/);
+  });
+
+  it("rejects recovery thresholds outside (0, 1]", () => {
+    const config = clone();
+    config.thresholds.faScoreRecoveryMin = 1.2;
+    expect(() => validateConfig(config)).toThrow(/faScoreRecoveryMin/);
+  });
 });
