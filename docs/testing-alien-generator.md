@@ -44,10 +44,14 @@ It writes:
   conversations).
 - `dist/alien-data/shap/alien-fa-4/*.json` — SHAP word-attribution buckets, one
   file per two-hex-character prefix of the conversation id.
+- `dist/alien-data/activations/*.json` — raw 14-neuron activation buckets, one
+  file per two-hex-character prefix of the conversation id.
 - `dist/alien-data-3/index.json` — the three-pathway dataset's review index,
   same shape as above.
 - `dist/alien-data-3/shap/alien-fa-3/*.json` — its SHAP word-attribution
   buckets, same layout as above.
+- `dist/alien-data-3/activations/*.json` — raw 14-neuron activation buckets, one
+  file per two-hex-character prefix of the conversation id.
 
 `npm run build` runs this generator too, as one step of
 `npm-run-all lint:build generate:alien build:webpack`. `dist/alien-data/` and
@@ -75,7 +79,7 @@ four-pathway summary looks like this:
 alien dataset — seed 20260803, 800 conversations
 output dist/alien-data, fit "alien-fa-4"
 
-variance split (target -> realized)
+word-sum variance split (target -> realized; what SCALE was tuned for)
   P0  55.0% -> 55.0%
   P1  20.0% -> 20.0%
   P2  15.0% -> 15.0%
@@ -109,6 +113,13 @@ classification
   corr(model_correct, bias)       -0.2846
   corr(target, bias)              0.0120
 
+activations
+  14 neurons, explained variance total 0.900 target -> 0.912 refit
+  loadings share    P0 0.495  P1 0.180  P2 0.135  P3 0.090
+  reconstruction R2   mean 0.766  sd 0.232  p10 0.477
+  FA recovery         P0->F0 r 0.994 cos 1.000   P1->F1 r 0.977 cos 0.993   P2->F2 r 0.971 cos 0.993   P3->F3 r 0.959 cos 0.998
+  refit explained variance by pathway count   1: 0.480  2: 0.655  3: 0.806  4: 0.912  5: 0.914
+
 self-checks
   PASS  shap-additivity           largest deviation 1.78e-15 (limit 1.00e-9)
   PASS  note-evidence             all 800 notes attest all 9 attributes exactly once
@@ -118,6 +129,7 @@ self-checks
   PASS  bias-is-detectable        corr(model_correct, resource_stressed) = -0.2846 (minimum magnitude 0.2). ...
   PASS  decoys-are-decoys         largest decoy correlation 0.0597 (limit 0.15)
   PASS  pathways-are-orthogonal   largest off-diagonal |r| 0.0212 (limit 0.12)
+  PASS  fa-recovers-pathways      P0->F0 r 0.994 cos 1.000, P1->F1 r 0.977 cos 0.993, P2->F2 r 0.971 cos 0.993, P3->F3 r 0.959 cos 0.998 (minimums r 0.94, cos 0.97)
 
 wrote 800 conversations to /Users/.../dist/alien-data
 ```
@@ -142,9 +154,11 @@ Block by block:
   2.9%), and `corr(model_correct, bias)` is clearly non-zero while
   `corr(target, bias)` is close to zero — the model's mistakes track the hidden
   attribute even though the ground truth doesn't.
-- **Self-checks** — eight `PASS`/`FAIL` lines, each with the measured value it
-  was judged on. Healthy: all eight read `PASS`. Any `FAIL` also prints exit
-  code 1 from `npm run generate:alien`. Section 4 covers each check.
+- **Activations block** — the 14-neuron activation model's summary. Covered in
+  detail in section 4.
+- **Self-checks** — nine `PASS`/`FAIL` lines, each with the measured value it
+  was judged on. Healthy: all nine read `PASS`. Any `FAIL` also prints exit
+  code 1 from `npm run generate:alien`. Section 5 covers each check.
 
 A bug is any block whose numbers don't match the description above — e.g. a
 variance split that's badly off, a pathway correlation far from 0, or a
@@ -161,7 +175,7 @@ count. From the captured output:
 alien dataset — seed 20260803, 800 conversations
 output dist/alien-data-3, fit "alien-fa-3"
 
-variance split (target -> realized)
+word-sum variance split (target -> realized; what SCALE was tuned for)
   P0  55.0% -> 54.9%
   P1  35.0% -> 35.1%
   P2  10.0% -> 10.0%
@@ -201,9 +215,42 @@ three, since they aren't tuned to correlate with anything):
 `achieved-correlations` (self-check 3) fails if any attribute's achieved value
 drifts too far from its requested one; `solveAttribute` (in
 `scripts/alien/attributes.ts`) itself throws before that if you request a
-`targetR` above the ceiling — see section 7.
+`targetR` above the ceiling — see section 8.
 
-## 4. The eight self-checks
+## 4. The activation model
+
+Directly above the self-checks the summary prints an `activations` block. Quoted from
+this run for the four-pathway dataset:
+
+```
+activations
+  14 neurons, explained variance total 0.900 target -> 0.912 refit
+  loadings share    P0 0.495  P1 0.180  P2 0.135  P3 0.090
+  reconstruction R2   mean 0.766  sd 0.232  p10 0.477
+  FA recovery         P0->F0 r 0.994 cos 1.000   P1->F1 r 0.977 cos 0.993   P2->F2 r 0.971 cos 0.993   P3->F3 r 0.959 cos 0.998
+  refit explained variance by pathway count   1: 0.480  2: 0.655  3: 0.806  4: 0.912  5: 0.914
+```
+
+What to read from it:
+
+- **14 neurons, 0.900 target -> 0.912 refit.** The authored loadings carry exactly 90%
+  of the standardized activation variance; the refit number is what factor analysis
+  measures on the sampled activations and should sit within a few hundredths.
+- **loadings share** follows `targetVarianceShares` times 0.9 exactly, and is what the
+  app shows as explained variance per pathway.
+- **reconstruction R2** is the per-conversation distribution the explorer's
+  `reconstruction_r2` field and the heatmap's R² draw from.
+- **FA recovery** names, for each authored pathway, the recovered factor it matched, the
+  score correlation and the loading cosine. `P0->F0`, `P1->F1` and so on means the
+  pathways came back in the authored order.
+- **refit explained variance by pathway count** is the elbow: each added pathway lifts
+  the total, the authored count is the first to reach about 0.9, and one more adds almost
+  nothing.
+
+Files on disk: `ls dist/alien-data/activations | head` lists bucket files; each holds
+`{ "reviews": [{ "id", "activations": [14 numbers] }] }`.
+
+## 5. The nine self-checks
 
 Each subsection: what it measures, what a failure means, what to change.
 
@@ -316,10 +363,24 @@ more than one pathway, or the per-pathway weight sets lost their symmetric
 if the pathways aren't independent, `resource_stressed`'s correlation with the
 truth or the model's correctness can no longer be attributed cleanly to
 `resource_stressed` itself. `scripts/alien/config-validation.ts` is supposed to
-catch the "more than one pathway" case at config-load time (section 7,
+catch the "more than one pathway" case at config-load time (section 8,
 exercise 2) before it ever reaches this check.
 
-## 5. Changing a parameter and confirming it took
+### fa-recovers-pathways
+
+Measures whether a fresh factor-analysis refit on the sampled 14-neuron activations
+(`scripts/alien/activations.ts`, a dependency-free port of scikit-learn's algorithm —
+see `docs/alien-activations.md`) recovers each authored pathway as its own factor, in
+authored order, with score correlation ≥ 0.94 and loading cosine ≥ 0.97. A failure
+means that particular draw of loadings and noise made the authored structure too
+ambiguous for factor analysis to recover cleanly — see section 7, where the `seed: 42`
+experiment fails exactly this check even though every other check still passes.
+`docs/alien-activations.md`'s neuron-count sweep shows 14 neurons clears the
+identifiability floor (8 neurons) with room to spare at the shipped seed, so a failure
+here on an otherwise-unmodified config points first at the seed, not at the neuron
+count or `SCALE`'s target variance.
+
+## 6. Changing a parameter and confirming it took
 
 Open `scripts/alien-config.ts` and, in `fourPathwayConfig`'s
 `withPathwayAssignments` call, find `voices_raised`'s `targetR: 0.65` (the
@@ -339,8 +400,10 @@ achieved 0.652` to:
 ```
 
 — the achieved column tracks the new request, the ceiling is unchanged (it only
-depends on the value shares, not `targetR`), and all eight self-checks still
-print `PASS`. Now put it back: change `targetR` back to `0.65` and rerun
+depends on the value shares, not `targetR`), and all nine self-checks still
+print `PASS` (the activations block is untouched too — it's built from the
+pathway scores, not the attributes, so its numbers match section 2 exactly).
+Now put it back: change `targetR` back to `0.65` and rerun
 `npm run generate:alien` to confirm the table returns to the section 2 numbers,
 then confirm the file is clean:
 
@@ -348,7 +411,7 @@ then confirm the file is clean:
 git diff scripts/alien-config.ts    # should be empty
 ```
 
-## 6. Changing the seed
+## 7. Changing the seed
 
 Open `scripts/alien-config.ts` and change `fourPathwayConfig`'s
 `seed: 20260803` to `seed: 42` (leave `threePathwayConfig`'s `seed: 20260803`
@@ -366,7 +429,7 @@ follow the same pattern as section 2 and are omitted here for brevity):
 ```
 alien dataset — seed 42, 800 conversations
 
-variance split (target -> realized)
+word-sum variance split (target -> realized; what SCALE was tuned for)
   P0  55.0% -> 53.1%
   P1  20.0% -> 21.8%
   P2  15.0% -> 14.8%
@@ -387,13 +450,22 @@ self-checks
   PASS  bias-is-detectable        corr(model_correct, resource_stressed) = -0.2846 (minimum magnitude 0.2). ...
   PASS  decoys-are-decoys         largest decoy correlation 0.0783 (limit 0.15)
   PASS  pathways-are-orthogonal   largest off-diagonal |r| 0.0722 (limit 0.12)
+  FAIL  fa-recovers-pathways      P1 came back as factor 2, not in the authored order; P1 scores r 0.807 < 0.94; P1 loadings cos 0.917 < 0.97; P2 came back as factor 3, not in the authored order; P2 scores r 0.894 < 0.94; P2 loadings cos 0.956 < 0.97; P3 came back as factor 1, not in the authored order; P3 scores r 0.862 < 0.94; P3 loadings cos 0.736 < 0.97. Recovered: P0->F0 r 0.994 cos 0.999, P1->F2 r 0.807 cos 0.917, P2->F3 r 0.894 cos 0.956, P3->F1 r 0.862 cos 0.736
 ```
 
 Every number moved — the variance split is off by a point or two instead of
 exact, the pathway correlations are larger (though still well inside the 0.12
-orthogonality limit), the rarest word count changed from 291 to 302 — and yet
-all eight checks still pass. That's the evidence that the checks constrain the
-*construction*, not one lucky draw at the shipped seed.
+orthogonality limit), the rarest word count changed from 291 to 302 — and eight
+of the nine checks still pass, same as at the shipped seed. **The ninth,
+`fa-recovers-pathways`, fails here**: only `P0` comes back as its own factor in
+authored order — `P1`, `P2` and `P3` come back permuted (as `F2`, `F3` and `F1`)
+with every score correlation and loading cosine below the 0.94/0.97 thresholds
+(see the `fa-recovers-pathways` subsection in section 5). `npm run generate:alien`
+therefore exits 1 at this seed. Read together with section 4: the shipped seed
+20260803 clears factor-analysis recovery comfortably (r 0.96–0.99), but that
+margin is evidently not guaranteed at an arbitrary seed the way the other eight
+checks' margins are — `seed: 42` is a genuine counterexample, not a flaky test.
+This is worth keeping in mind, not something to "fix" by editing the config.
 
 Put the seed back: change `fourPathwayConfig`'s `seed` back to `20260803` and rerun
 `npm run generate:alien` to confirm you're back to the section 2 numbers, then
@@ -403,13 +475,13 @@ confirm the file is clean:
 git diff scripts/alien-config.ts    # should be empty
 ```
 
-## 7. Deliberately breaking it
+## 8. Deliberately breaking it
 
 Two exercises, each expected to fail loudly rather than write bad data.
 
 **Exercise 1 — request more correlation than the value split can reach.**
 
-Change `voices_raised`'s `targetR` (same spot as section 5) to `0.95`, then:
+Change `voices_raised`'s `targetR` (same spot as section 6) to `0.95`, then:
 
 ```bash
 npm run generate:alien
@@ -460,16 +532,17 @@ Delete the line you added and confirm `git diff scripts/alien-config.ts` is
 empty.
 
 **After both exercises**, run `npm run generate:alien` once more and confirm it
-prints all sixteen `PASS` lines — eight per dataset, across both summaries —
+prints all eighteen `PASS` lines — nine per dataset, across both summaries —
 and exits 0 — the config is back to what ships.
 
-## 8. Inspecting the output files
+## 9. Inspecting the output files
 
 ```bash
 ls dist/alien-data
 ```
 
 ```
+activations
 index.json
 shap
 ```
@@ -478,7 +551,8 @@ shap
 `alien-fa-4` fit's variance and importance figures). `shap/alien-fa-4/` holds
 one JSON file per two-hex-character bucket of the conversation id — 249 bucket
 files on this run, since only 249 of the 256 possible two-hex prefixes are hit
-across 800 ids.
+across 800 ids. `activations/` holds the raw 14-neuron activation buckets in the
+same 249-bucket layout.
 
 Look at one conversation:
 
@@ -540,7 +614,7 @@ review on any clean run of `npm run generate:alien` at the config this repo
 ships — if it's different, either the config changed or something upstream
 isn't deterministic.
 
-## 9. What is not here yet
+## 10. What is not here yet
 
 - **No UI.** This is a data-generation script; nothing in the app reads
   `dist/alien-data/` yet. Phase 5 wires it into the explorer.
@@ -567,7 +641,7 @@ isn't deterministic.
 - **Notes are visibly templated.** At 800 items built from a handful of
   fragments per attribute value, a reader who looks at more than a few notes
   will start recognizing the fragments repeat. This is expected of the
-  template renderer (see section 9) and not something to file.
+  template renderer (see section 10) and not something to file.
 - **`group_size` is provisional and may be cut.** It's the one non-binary,
   six-value attribute in the set; it may not survive to later phases in its
   current form.

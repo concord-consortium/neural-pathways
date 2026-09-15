@@ -133,6 +133,10 @@ line with a signed total and its implied label (`approach`/`wait`), followed by 
 **Model said `<label>` — disagrees** line. `docs/pathway-prediction-target-analysis.md`
 covers what this disagreement does and does not correlate with on the yelp dataset.
 
+- Search `reconstruction_r2:<0.6`. Expected: **144 of 800** conversations (this branch),
+  each with a Reconstruction R² below 60% in the item panel. Before NPW-18 the alien
+  datasets had no R² and this search returned nothing.
+
 **`observation` is deliberately not searchable.** Typing `observation:water`
 returns **`0 of 800`** — the field isn't recognized, so nothing matches. This is on
 purpose: the generator's own self-check confirms *"all 800 notes attest all 9
@@ -342,11 +346,9 @@ resource-stressed conversations — matches the intended plant.
   find."* -0.2846 clears that 0.2 minimum comfortably, but it is a starting value
   from an untuned generator run, not a value chosen for a particular strength of
   student experience. A later phase tunes it.
-- **No heatmap support.** The alien generator emits conversation-level attributes
-  and pathway scores, but no per-neuron activation files. Navigating to
-  `heatmap.html#dataset=alien` does not error and does not show alien data either —
-  it silently ignores the `dataset` parameter and displays the Yelp heatmap (still
-  `FA Fit: train-fa-6`, the same "Awesome New York style pizza" review as always).
+- **Heatmap support.** The alien generator now emits 14-neuron activation files, and
+  `heatmap.html#dataset=alien` shows them — see
+  [testing-alien-heatmap.md](testing-alien-heatmap.md).
 - **Template-written notes.** The Observer's Note text is assembled from a fixed
   pool of template sentences per attribute, not freely generated — confirmed by the
   same self-check line quoted in §3 (*"all 800 notes attest all 9 attributes
