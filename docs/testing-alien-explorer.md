@@ -135,7 +135,10 @@ covers what this disagreement does and does not correlate with on the yelp datas
 
 - Search `reconstruction_r2:<0.6`. Expected: **144 of 800** conversations (this branch),
   each with a Reconstruction R² below 60% in the item panel. Before NPW-18 the alien
-  datasets had no R² and this search returned nothing.
+  datasets had no R² and this search returned nothing. The search help does not list
+  `reconstruction_r2` for the alien datasets yet (the field is declared only for Yelp),
+  but the search matches any key present in the data, so the query works; this differs
+  from `observation`, below, which is deliberately excluded.
 
 **`observation` is deliberately not searchable.** Typing `observation:water`
 returns **`0 of 800`** — the field isn't recognized, so nothing matches. This is on
@@ -369,3 +372,9 @@ resource-stressed conversations — matches the intended plant.
   correlation and the other matrix values will likely change once phase 7 tunes
   them (both datasets' bias correlations, -0.2846 and -0.2896, are untuned
   starting values in this sense).
+- **The Search help dialog omits `reconstruction_r2` for the alien datasets.**
+  `src/shared/datasets/alien-dataset.ts` doesn't declare it as a search field the
+  way `src/shared/datasets/yelp-dataset.ts` does, so it's missing from the Fields
+  list in §3 even though the search itself works (see §3's `reconstruction_r2:<0.6`
+  step) — the search engine matches any key present in the data, not just the ones
+  the help dialog advertises.
