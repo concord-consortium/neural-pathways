@@ -34,7 +34,7 @@ export function generate(config: AlienConfig): GeneratorRun {
   // Last on purpose: every draw above is untouched by adding activations, so the
   // text, attributes, outcomes and notes of an existing dataset do not change.
   const activations = buildActivations(corpus.scores, config, rng);
-  const dataset = buildDataset({ corpus, solvedAttributes, outcomes, notes, config });
+  const dataset = buildDataset({ corpus, solvedAttributes, outcomes, notes, activations, config });
 
   return { config, corpus, solvedAttributes, outcomes, notes, activations, dataset };
 }

@@ -18,10 +18,11 @@ export interface S3Index {
 }
 
 /**
- * The five activation-model fields are optional because a generated dataset has
- * no neuron activations to describe. Emitting zeros there would be inventing a
- * model that does not exist, so they are absent instead, and the heatmap-only
- * readers in data-loader.ts fail loudly rather than silently reading undefined.
+ * The five activation-model fields are optional so a dataset without neuron
+ * activations can still declare a fit. Every shipped dataset now carries them —
+ * the yelp pipeline fits 780 neurons, the alien generator constructs 14 — but
+ * keeping them optional means the heatmap-only readers in data-loader.ts fail
+ * loudly on a fit that lacks them instead of silently reading undefined.
  */
 export interface S3FaFit {
   source_split: string;
@@ -54,7 +55,7 @@ export interface S3Item {
   /** Externally coded attribute values, keyed by attribute key. */
   attributes?: Record<string, number>;
   pathway_scores: Record<string, number[]>;
-  /** Absent on datasets with no activations to reconstruct. */
+  /** Per fit. Absent only on a dataset with no activations to reconstruct. */
   reconstruction_r2?: Record<string, number>;
   pathway_variance_fractions: Record<string, number[]>;
   has_shap?: string[];
