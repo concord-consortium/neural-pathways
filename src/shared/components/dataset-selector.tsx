@@ -1,5 +1,5 @@
 import React from "react";
-import { DatasetConfig } from "../../shared/datasets/dataset-config";
+import { DatasetConfig } from "../datasets/dataset-config";
 import "./dataset-selector.scss";
 
 interface DatasetSelectorProps {
@@ -8,14 +8,15 @@ interface DatasetSelectorProps {
   onChange: (id: string) => void;
 }
 
+/** Shared by the explorer and the heatmap; both read the choice from a `dataset` hash param. */
 export const DatasetSelector: React.FC<DatasetSelectorProps> = ({
   datasets, selectedId, onChange,
 }) => (
   <>
-    <label className="explorer-dataset-label" htmlFor="explorer-dataset">Dataset:</label>
+    <label className="dataset-label" htmlFor="dataset-select">Dataset:</label>
     <select
-      id="explorer-dataset"
-      className="explorer-dataset-selector"
+      id="dataset-select"
+      className="dataset-selector"
       value={selectedId}
       onChange={e => onChange(e.target.value)}
     >

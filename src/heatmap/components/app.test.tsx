@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { App } from "./app";
 
 const mockFit = {
@@ -44,14 +44,47 @@ const mockBucket = {
   ],
 };
 
+const alienFit = {
+  ...mockFit,
+  loadings: [Array(14).fill(0.3), Array(14).fill(-0.2)],
+  noise_variance: Array(14).fill(0.1),
+  scaler_mean: Array(14).fill(0.0),
+  scaler_scale: Array(14).fill(1.0),
+};
+
+const alienIndexWire = {
+  metadata: {
+    fa_fits: { "alien-fa-2": alienFit },
+    review_sets: { alien: { count: 1, description: "Alien" } },
+  },
+  reviews: [
+    {
+      id: "b1c2d3e4f5a6",
+      sources: { alien: [0] },
+      text: "tarrak vosh krenn",
+      target: 1,
+      target_label: "approach",
+      pathway_scores: { "alien-fa-2": [0.5, -0.3] },
+      reconstruction_r2: { "alien-fa-2": 0.8 },
+      pathway_variance_fractions: { "alien-fa-2": [0.6, 0.3] },
+    },
+  ],
+};
+
+const alienBucket = {
+  reviews: [{ id: "b1c2d3e4f5a6", activations: Array(14).fill(0.5) }],
+};
+
 beforeEach(() => {
   jest.restoreAllMocks();
+  window.location.hash = "";
   global.fetch = jest.fn().mockImplementation((url: string) => {
+    const alien = url.startsWith("alien-data");
     if (url.includes("index.json")) {
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockIndexWire) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(alien ? alienIndexWire : mockIndexWire) });
     }
     if (url.includes("activations/")) {
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockBucket) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(alien ? alienBucket : mockBucket) });
     }
     return Promise.resolve({ ok: false, status: 404, statusText: "Not Found" });
   });
@@ -92,5 +125,30 @@ describe("App component", () => {
       expect(checkbox).toBeDefined();
       expect((checkbox as HTMLInputElement).checked).toBe(false);
     });
+  });
+});
+
+describe("dataset selection", () => {
+  it("defaults to yelp and offers every dataset", async () => {
+    render(<App />);
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Dataset:" })).toHaveValue("yelp"));
+    expect(screen.getByRole("option", { name: "Alien Conversations (4 pathways)" })).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("neural-pathways/data/v1/index.json"));
+  });
+
+  it("reads the dataset from the hash", async () => {
+    window.location.hash = "#dataset=alien";
+    render(<App />);
+    expect(await screen.findByText("alien-fa-2")).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledWith("alien-data/index.json");
+    expect(global.fetch).toHaveBeenCalledWith("alien-data/activations/b1.json");
+  });
+
+  it("refetches when the selector changes and writes the choice to the hash", async () => {
+    render(<App />);
+    expect(await screen.findByText("train-fa-2")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("combobox", { name: "Dataset:" }), { target: { value: "alien3" } });
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("alien-data-3/index.json"));
+    await waitFor(() => expect(window.location.hash).toContain("dataset=alien3"));
   });
 });
