@@ -1,6 +1,7 @@
 import { pearson } from "../../src/explorer/utils/statistics";
 import { solvedFor } from "./attributes";
-import { CheckResult } from "./checks";
+import { CheckResult, recoveryReport } from "./checks";
+import { fitFactorAnalysis } from "./factor-analysis";
 import { GeneratorRun } from "./pipeline";
 
 function percent(value: number): string {
@@ -11,6 +12,11 @@ function pad(text: string, width: number): string {
   return text.length >= width ? text : text + " ".repeat(width - text.length);
 }
 
+function quantile(values: number[], fraction: number): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.min(sorted.length - 1, Math.floor(fraction * sorted.length))];
+}
+
 export function formatSummary(run: GeneratorRun, checks: CheckResult[]): string {
   const { config, corpus, solvedAttributes, outcomes, dataset } = run;
   const lines: string[] = [];
@@ -19,10 +25,11 @@ export function formatSummary(run: GeneratorRun, checks: CheckResult[]): string 
   lines.push(`output ${config.outputDir}, fit "${config.fitName}"`);
   lines.push("");
 
-  const fit = dataset.index.metadata.fa_fits[config.fitName];
-  lines.push("variance split (target -> realized)");
-  fit.explained_variance_per_pathway.forEach((realized, p) => {
-    lines.push(`  P${p}  ${percent(config.targetVarianceShares[p])} -> ${percent(realized)}`);
+  lines.push("word-sum variance split (target -> realized; what SCALE was tuned for)");
+  const wordSumVariances = corpus.scoreSd.map(sd => sd * sd);
+  const wordSumTotal = wordSumVariances.reduce((sum, value) => sum + value, 0);
+  wordSumVariances.forEach((variance, p) => {
+    lines.push(`  P${p}  ${percent(config.targetVarianceShares[p])} -> ${percent(variance / wordSumTotal)}`);
   });
   lines.push("");
 
@@ -71,6 +78,30 @@ export function formatSummary(run: GeneratorRun, checks: CheckResult[]): string 
   lines.push(`  share of errors on the group    ${percent(achieved.shareOfErrorsWhenBiasOn)}`);
   lines.push(`  corr(model_correct, bias)       ${achieved.corrCorrectWithBias.toFixed(4)}`);
   lines.push(`  corr(target, bias)              ${achieved.corrTargetWithBias.toFixed(4)}`);
+  lines.push("");
+
+  const { activations } = run;
+  const { neuronCount, explainedVarianceTotal } = config.activations;
+  const fit = dataset.index.metadata.fa_fits[config.fitName];
+  const refit = fitFactorAnalysis(activations.standardized, config.pathwayCount);
+  lines.push("activations");
+  lines.push(`  ${neuronCount} neurons, explained variance total `
+    + `${explainedVarianceTotal.toFixed(3)} target -> ${refit.explainedVarianceTotal.toFixed(3)} refit`);
+  lines.push(`  loadings share    ${fit.explained_variance_per_pathway
+    .map((share, p) => `P${p} ${share.toFixed(3)}`).join("  ")}`);
+  const r2 = activations.reconstructionR2;
+  const r2Mean = r2.reduce((sum, value) => sum + value, 0) / r2.length;
+  const r2Sd = Math.sqrt(r2.reduce((sum, value) => sum + (value - r2Mean) ** 2, 0) / r2.length);
+  lines.push(`  reconstruction R2   mean ${r2Mean.toFixed(3)}  sd ${r2Sd.toFixed(3)}  `
+    + `p10 ${quantile(r2, 0.1).toFixed(3)}`);
+  lines.push(`  FA recovery         ${recoveryReport(run)
+    .map(e => `P${e.pathway}->F${e.factor} r ${e.scoreR.toFixed(3)} cos ${e.loadingCosine.toFixed(3)}`)
+    .join("   ")}`);
+  const byCount: string[] = [];
+  for (let k = 1; k <= config.pathwayCount + 1; k++) {
+    byCount.push(`${k}: ${fitFactorAnalysis(activations.standardized, k).explainedVarianceTotal.toFixed(3)}`);
+  }
+  lines.push(`  refit explained variance by pathway count   ${byCount.join("  ")}`);
   lines.push("");
 
   lines.push("self-checks");

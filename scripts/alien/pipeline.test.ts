@@ -35,5 +35,9 @@ describe("formatSummary", () => {
     expect(summary).toContain("requested");
     expect(summary).toContain("achieved");
     expect(summary).toContain("pathways-are-orthogonal");
+    expect(summary).toContain("fa-recovers-pathways");
+    expect(summary).toContain("reconstruction R2");
+    expect(summary).toContain("refit explained variance by pathway count");
+    expect(summary).toContain("word-sum variance split");
   });
 });
