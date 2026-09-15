@@ -25,11 +25,12 @@ interface ReviewPanelProps {
   selectedReview: S3Item | undefined;
   onSelectReview: (review: S3Item) => void;
   activationsLoading: boolean;
+  itemNoun: string;
   children?: React.ReactNode;
 }
 
 export const ReviewPanel: React.FC<ReviewPanelProps> = ({
-  reviews, selectedReview, onSelectReview, activationsLoading, children,
+  reviews, selectedReview, onSelectReview, activationsLoading, itemNoun, children,
 }) => {
   const options = useMemo<ReviewOption[]>(
     () => reviews.map((r, i) => ({
@@ -57,7 +58,7 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
         options={options}
         value={selectedOption}
         onChange={handleChange}
-        placeholder="Search by review # or text..."
+        placeholder={`Search by ${itemNoun} # or text...`}
         isSearchable
         isClearable
         styles={selectStyles}
@@ -66,8 +67,8 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({
 
       {selectedReview && (
         <>
-          <div className={`review-sentiment ${selectedReview.target_label ?? ""}`}>
-            Sentiment: {selectedReview.target_label ?? "unknown"}
+          <div className={`review-target ${selectedReview.target_label ?? ""}`}>
+            Target: {selectedReview.target_label ?? "unknown"}
           </div>
 
           {selectedReview.sources && (

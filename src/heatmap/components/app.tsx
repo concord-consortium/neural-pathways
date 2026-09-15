@@ -53,15 +53,15 @@ const scalingOptions: { value: ValueScaling; label: string }[] = [
 
 type ScaleMode = "current-review" | "multiple-scales";
 
-const scaleModeOptions: { value: ScaleMode; label: string }[] = [
-  { value: "current-review", label: "Current review" },
-  { value: "multiple-scales", label: "Multiple scales" },
-];
-
 export const App = () => {
   // --- Dataset selection ---
   const [datasetId, setDatasetId] = useState<string>(() => datasetFromId(getHashParams().dataset).id);
   const datasetConfig = datasetFromId(datasetId);
+  const itemNoun = datasetConfig.itemNoun.singular;
+  const scaleModeOptions: { value: ScaleMode; label: string }[] = [
+    { value: "current-review", label: `Current ${itemNoun}` },
+    { value: "multiple-scales", label: "Multiple scales" },
+  ];
 
   // --- Data loading state ---
   const [indexData, setIndexData] = useState<S3Index | null>(null);
@@ -454,6 +454,7 @@ export const App = () => {
         selectedReview={selectedReview}
         onSelectReview={handleSelectReview}
         activationsLoading={activationsLoading}
+        itemNoun={itemNoun}
       >
         {scaleMode !== "current-review" && (
           <ColorLegend absMax={activationsScale} {...colorLegendProps} />
@@ -466,6 +467,7 @@ export const App = () => {
           originalScores={pathwayScoresFromIndex}
           onScoreChange={handleScoreChange}
           terminologyMode={terminologyMode}
+          itemNoun={itemNoun}
           extraColumns={pathways.noise_variance ? 1 : 0}
         />
         <ScoredPathwaysView
@@ -534,13 +536,13 @@ export const App = () => {
             <div className="comparison-section-label">{getLabel("originalActivations", terminologyMode)}</div>
             {activationsLoading
               ? <div className="activation-placeholder">Loading...</div>
-              : <div className="activation-placeholder">Select a review</div>}
+              : <div className="activation-placeholder">Select a {itemNoun}</div>}
           </div>
           <div className="comparison-result">
             <div className="comparison-section-label">Reconstructed</div>
             {activationsLoading
               ? <div className="activation-placeholder">Loading...</div>
-              : <div className="activation-placeholder">Select a review</div>}
+              : <div className="activation-placeholder">Select a {itemNoun}</div>}
           </div>
         </>
       )}

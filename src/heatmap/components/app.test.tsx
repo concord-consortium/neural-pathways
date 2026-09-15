@@ -151,4 +151,19 @@ describe("dataset selection", () => {
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("alien-data-3/index.json"));
     await waitFor(() => expect(window.location.hash).toContain("dataset=alien3"));
   });
+
+  it("uses the dataset's item noun and target label", async () => {
+    window.location.hash = "#dataset=alien";
+    render(<App />);
+    expect(await screen.findByText("Target: approach")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Current conversation" })).toBeInTheDocument();
+    expect(screen.getByText("Pathway activations for this conversation")).toBeInTheDocument();
+  });
+
+  it("still says review for yelp", async () => {
+    render(<App />);
+    expect(await screen.findByText("Target: positive")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Current review" })).toBeInTheDocument();
+    expect(screen.getByText("Pathway activations for this review")).toBeInTheDocument();
+  });
 });
