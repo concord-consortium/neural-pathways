@@ -6,7 +6,7 @@
  * explained by reconstruction error or by distance from the decision boundary.
  *
  * Usage: npm run analyze:pathway-prediction
- * Findings: docs/pathway-prediction-analysis.md
+ * Findings: docs/pathway-prediction-target-analysis.md
  */
 import { fetchIndex } from "../../src/shared/data-loader";
 import { yelpDataset } from "../../src/shared/datasets/yelp-dataset";

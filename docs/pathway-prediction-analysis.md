@@ -1,174 +1,156 @@
-# Pathway Prediction: Does Disagreement Track Reconstruction Error?
+# Pathway Prediction with Classification-Fitted Importance
 
-[NPW-16](https://concord-consortium.atlassian.net/browse/NPW-16) added a **pathway
-prediction** — what an item's pathways say on their own, independent of the model —
-and made the disagreement between that and the model's own prediction searchable.
-This note records the analysis behind that story: does the disagreement happen where
-the pathways reconstruct the item poorly?
+This note reruns the pathway prediction analysis from
+[`pathway-prediction-target-analysis.md`](pathway-prediction-target-analysis.md) with
+one change: the `pathway_importance` behind the prediction is fitted against **the
+model's own prediction** rather than the true sentiment. Almost every conclusion
+changes as a result.
 
-See
-[`docs/superpowers/specs/2026-09-11-pathway-prediction-design.md`](superpowers/specs/2026-09-11-pathway-prediction-design.md)
-for the full design, including the Appendix this note's §3 draws from.
+The explorer does **not** use this importance on yelp yet. Adding it is
+[NPW-20](https://concord-consortium.atlassian.net/browse/NPW-20). Until then, the yelp
+search fields and pathway panel footer added in
+[NPW-16](https://concord-consortium.atlassian.net/browse/NPW-16) use the target-fitted
+importance that the other note analyses.
 
-## 1. Question
+## How this note differs from `pathway-prediction-target-analysis.md`
 
-The story's hypothesis: when the pathway prediction disagrees with the model's own
-prediction, that disagreement is explained by reconstruction error — the pathways
-rebuild the item poorly, so their own read on it is unreliable.
+A pathway prediction is `Σ scoreᵢ × importanceᵢ`, so every result involving it
+depends on which importance is used.
 
-The answer this analysis found is **no**. The raw correlation between disagreement
-and reconstruction error is real, but it disappears once you control for how close
-the item sits to the pathways' decision boundary. See §6.
-
-## 2. What the pathway prediction is
-
-`src/explorer/utils/pathway-prediction.ts` computes, for an item and a fit:
-
-```
-pathway_prediction = Σ scoreᵢ × importanceᵢ
-```
-
-— each pathway score times that pathway's `pathway_importance` in the selected fit,
-summed. `pathway_importance` is a per-pathway logistic regression coefficient
-(signed log-odds per standard deviation), so this sum is log-odds **without an
-intercept**. The threshold is `sum ≥ 0` is class 1, matching `logisticRegression`'s
-`eta >= 0` rule (`src/explorer/utils/regression.ts`). There is no re-standardization
-of the scores and no recovered intercept — see §3 for why.
-
-## 3. Why this formula
-
-This is a one-time investigation from the design spike, not something the committed
-analysis script reproduces. Numbers below are taken verbatim from the Appendix of
-`docs/superpowers/specs/2026-09-11-pathway-prediction-design.md`, measured on the
-2,998 scored yelp test reviews against all three fits:
-
-| Formula | Agrees with the model | Disagreeing items |
+| | [`pathway-prediction-target-analysis.md`](pathway-prediction-target-analysis.md) | This note |
 |---|---|---|
-| Raw `Σ p·imp > 0` (**shipped**) | 98.2–98.5% | 46–54 |
-| Re-standardized scores, with or without the recovered intercept | 98.2–98.5% | 46–53 |
-| P0 alone | 99.0–99.1% | 27–29 |
-| Refit directly against `classification` | 99.9% | 1–2 |
+| Importance fitted against | the **true sentiment** (`target`) | the **model's prediction** (`classification`) |
+| In ML terms | a *probe*: what the pathways can tell you about the task | a *surrogate*: what the model's output tracks |
+| Fitted on | the train split, by the NNmaker pipeline | the test split, the only split with predictions |
+| Source | the published yelp `pathway_importance` | refit for this note, **in-sample** |
+| Used by the explorer today | **yes**, on yelp | not yet (NPW-20) |
 
-The first three agree with each other on at least 99.7% of reviews, so the choice
-between them barely matters in practice. The last row would leave too few
-disagreements to search — 1–2 items is not a story field.
+If importance is meant to explain the model — which is how the project intends to use
+it — the surrogate is the relevant quantity. That is why this note has the plain name.
 
-The intercept that accompanied the published `pathway_importance` coefficients
-cannot be recovered from the published data: fitting the train-split scores against
-their labels gives coefficients near zero, because the train rows in `index.json`
-are scrambled (their pathway data belongs to other reviews — that is NPW-19). The
-coefficients themselves are sound; the pipeline fit them on data that was consistent
-at the time. There is just nothing left in the published data to recover the
-intercept or the standardization that went with them.
+Everything else is held the same so that the comparison isolates the importance. The
+pathway prediction uses the explorer's shipped formula: raw scores times importance,
+no intercept, `sum ≥ 0` is class 1. The fit mirrors how the published importance was
+produced: pathway scores standardized, an L2-regularized logistic regression with
+C = 1 (scikit-learn's default, and what the NNmaker pipeline uses), and the
+per-standard-deviation coefficients taken as importance. Details are under
+"Provenance" at the end.
 
-## 4. Method
+On the alien datasets, the generator already fits `pathway_importance` against
+`classification`, so the explorer's alien importance is already this note's kind of
+quantity (though fitted without regularization). The alien numbers are generated, not
+learned, so this note is yelp-only.
 
-`npm run analyze:pathway-prediction` runs `scripts/analysis/pathway-prediction-residual.ts`,
-which loads the published yelp index (`fetchIndex(yelpDataset)`) and runs
-`scripts/analysis/disagreement.ts` for each of the three FA fits (`train-fa-6`,
-`test-fa-7`, `dev-fa-6`).
+## 1. The two importances
 
-Only items with both a `classification` (the model's prediction) and a
-`reconstruction_r2` for that fit take part — on yelp, that is the 2,998 test-split
-reviews that were actually scored. For each such item, the script computes the
-pathway prediction from the shipped `pathway-prediction.ts` module, so the analysis
-measures exactly the formula that ships, not a reimplementation of it. It reports:
+| Fit | Fitted against | P0 | P1 | P2 | P3 | P4 | P5 | P6 |
+|---|---|---|---|---|---|---|---|---|
+| train-fa-6 | target | 5.548 | 0.112 | -0.517 | -0.188 | -0.484 | -0.159 | |
+| train-fa-6 | classification | 6.350 | 0.143 | 0.848 | 0.366 | 0.578 | -0.013 | |
+| test-fa-7 | target | -5.455 | -0.122 | 0.338 | 0.695 | 0.289 | -0.066 | -0.004 |
+| test-fa-7 | classification | -6.388 | 0.656 | -0.480 | -0.824 | -0.157 | -0.017 | 0.163 |
+| dev-fa-6 | target | -5.460 | -0.098 | -0.298 | 0.291 | -0.580 | -0.102 | |
+| dev-fa-6 | classification | -6.391 | 0.616 | 0.233 | -0.592 | 0.706 | 0.052 | |
 
-- agreement with the model and the number of disagreeing items, and the same using
-  P0 alone;
-- the correlation (`pearson`) between disagreement (1/0) and the reconstruction
-  residual (`1 − reconstruction_r2`);
-- mean reconstruction R² for agreeing vs. disagreeing items, and the disagreement
-  rate within each fifth of the residual range;
-- the correlation between `|pathway sum|` (distance from the decision boundary) and
-  the residual, and the disagreement/residual correlation with that distance
-  partialled out;
-- `logisticRegression` coefficients for disagreement from distance and residual
-  together.
+P0 keeps its sign and grows by about 15%. The minor pathways are a different story:
+**13 of the 16 minor coefficients reverse sign** between the two fits. Everything
+below follows from that.
 
-## 5. Results
+## 2. Agreement with the model
 
-Verbatim output of `npm run analyze:pathway-prediction`, run against the published
-yelp index on 2026-09-11. Re-run the script to reproduce these numbers.
+Over the 2,998 scored yelp test reviews:
 
-### `train-fa-6` (FA fit on train)
+| | train-fa-6 | test-fa-7 | dev-fa-6 |
+|---|---|---|---|
+| full pathway prediction, mismatches vs the model | **9** | **3** | **1** |
+| same, as a percentage | 99.70% | 99.90% | 99.97% |
+| P0 alone, mismatches vs the model | 27 | 29 | 29 |
+| minor pathways fixed a wrong P0 | 26 | 28 | 28 |
+| minor pathways broke a correct P0 | 8 | 2 | 0 |
 
-| Metric | Value |
-|---|---|
-| items analysed | 2998 |
-| agrees with the model | 98.20% (54 disagree) |
-| pathway 0 alone would disagree on | 27 |
-| corr(disagree, residual) | 0.340 |
-| corr(disagree, \|pathway sum\|) | -0.426 |
-| corr(\|pathway sum\|, residual) | -0.771 |
-| partial corr(disagree, residual \| \|pathway sum\|) | 0.020 |
-| mean reconstruction R² | agree 0.8971, disagree 0.6957 |
-| disagreement rate by residual quintile (low→high) | 0.17% 0.00% 0.00% 0.00% 8.83% |
-| logistic disagree ~ \|pathway sum\| + residual | margin -2.24, residual -0.09 |
+With target-fitted importance the same rows read 54 / 48 / 46 mismatches, 0 / 0 / 0
+fixed and 27 / 19 / 17 broken. The minor pathways go from strictly harmful to
+correcting nearly every mistake P0 makes. (P0 alone is identical in both notes,
+because P0's coefficient keeps its sign.)
 
-### `test-fa-7` (FA fit on test)
+Including the fitted intercept, as the regression itself would, moves `train-fa-6`
+from 9 to 3 mismatches and leaves the other two fits unchanged.
 
-| Metric | Value |
-|---|---|
-| items analysed | 2998 |
-| agrees with the model | 98.40% (48 disagree) |
-| pathway 0 alone would disagree on | 29 |
-| corr(disagree, residual) | 0.300 |
-| corr(disagree, \|pathway sum\|) | -0.414 |
-| corr(\|pathway sum\|, residual) | -0.768 |
-| partial corr(disagree, residual \| \|pathway sum\|) | -0.031 |
-| mean reconstruction R² | agree 0.9128, disagree 0.7490 |
-| disagreement rate by residual quintile (low→high) | 0.17% 0.00% 0.00% 0.17% 7.67% |
-| logistic disagree ~ \|pathway sum\| + residual | margin -2.21, residual -0.21 |
+The two importances also mirror each other against the truth:
 
-### `dev-fa-6` (FA fit on dev)
+| Agreement with the true sentiment | full prediction | P0 alone |
+|---|---|---|
+| target-fitted importance (other note) | 95.70% | 95.26% |
+| classification-fitted importance (this note) | 95.00% / 95.06% / 95.13% | 95.26% |
 
-| Metric | Value |
-|---|---|
-| items analysed | 2998 |
-| agrees with the model | 98.47% (46 disagree) |
-| pathway 0 alone would disagree on | 29 |
-| corr(disagree, residual) | 0.331 |
-| corr(disagree, \|pathway sum\|) | -0.436 |
-| corr(\|pathway sum\|, residual) | -0.768 |
-| partial corr(disagree, residual \| \|pathway sum\|) | -0.007 |
-| mean reconstruction R² | agree 0.9062, disagree 0.7030 |
-| disagreement rate by residual quintile (low→high) | 0.17% 0.00% 0.00% 0.00% 7.50% |
-| logistic disagree ~ \|pathway sum\| + residual | margin -1.56, residual 0.07 |
+Each version makes the minor pathways serve whatever it was fitted against. Fitted to
+the truth, they help against the truth and hurt against the model. Fitted to the
+model, they help against the model and hurt against the truth.
 
-Rerun it yourself with:
+## 3. Disagreement and reconstruction error
 
-```bash
-npm run analyze:pathway-prediction
-```
+This was NPW-16's original question, and **this importance leaves too little
+disagreement to answer it**. With 9, 3 and 1 disagreeing reviews, a correlation
+between disagreement and reconstruction error is not meaningful. The figures are here
+for completeness only:
 
-It fetches the published yelp index over the network (~8MB) and takes a few seconds.
+| | train-fa-6 | test-fa-7 | dev-fa-6 |
+|---|---|---|---|
+| disagreeing reviews | 9 | 3 | 1 |
+| corr(disagree, residual) | 0.078 | 0.042 | -0.017 |
+| partial corr, controlling for \|pathway sum\| | 0.134 | 0.056 | -0.017 |
+| mean reconstruction R², agree / disagree | 0.894 / 0.781 | 0.910 / 0.820 | 0.903 / 0.975 |
+| disagreements among the 10% nearest the boundary | 8 of 9 | 2 of 3 | 0 of 1 |
 
-## 6. Interpretation
+This is the practical cost of the surrogate version: a near-perfect surrogate leaves
+almost nothing for a disagreement search to find. The original design anticipated it.
 
-Across all three fits, the raw correlation between disagreement and reconstruction
-error is real: `corr(disagree, residual)` is about 0.3–0.34, and disagreements
-concentrate almost entirely in the worst-reconstructed fifth of reviews (the top
-residual quintile runs 7.5–8.8% disagreement against roughly 0% everywhere else).
+One relationship in that analysis *is* measured over all 2,998 reviews and does
+change meaningfully. How far a review sits from the decision boundary, `|pathway sum|`,
+correlated about -0.77 with the residual under target-fitted importance. Here it is
++0.221, +0.112 and -0.009.
 
-But `|pathway sum|` — how far an item sits from the pathways' own decision boundary —
-correlates strongly with the residual too, about -0.77 in every fit: a review with a
-small pathway sum sits near the boundary *and* reconstructs poorly. Controlling for
-that distance, the disagreement/residual correlation collapses to essentially zero
-(0.020, -0.031, -0.007 across the three fits). The logistic fit tells the same
-story: the residual's coefficient stays small (-0.09, -0.21, 0.07) while the margin
-term dominates.
+The following is an interpretation consistent with the numbers, not a separate test.
+Badly reconstructed reviews are ones where the minor pathways are loud (§5). With
+target-fitted importance the minor pathways' contribution runs against the model's
+prediction (§4), so loud minor pathways drag the sum toward zero and those reviews
+land near the boundary. With classification-fitted importance the contribution runs
+with it, so the same reviews are not pulled toward the boundary.
 
-**Conclusion**: poor reconstruction does not cause the pathway/model disagreement.
-Both follow from the same underlying condition, described below.
+## 4. P0 versus the minor pathways
 
-### What that underlying condition actually is
+| | train-fa-6 | test-fa-7 | dev-fa-6 |
+|---|---|---|---|
+| corr(P0 contribution, classification) | 0.987 | 0.986 | 0.986 |
+| corr(non-P0 sum, classification) | **+0.175** | **+0.088** | **+0.110** |
+| the same under target-fitted importance | -0.181 | -0.061 | -0.070 |
 
-An earlier version of this note said the reason was that "P0 carries around 85% of
-the variance, so a review with little P0 signal has little for the pathways to
-rebuild". That was an interpretation, never a measurement, and measuring it shows it
-is wrong in an interesting way. Reconstruction works from raw scores times loadings,
-so the quantity to test is score magnitude:
+P0 carries the same association with the model's output under either importance. The
+minor pathways' combined contribution changes from slightly against the model to
+slightly with it.
+
+That shows up most clearly where P0 is weak:
+
+| | train-fa-6 | test-fa-7 | dev-fa-6 |
+|---|---|---|---|
+| reviews with \|P0 contribution\| < 1 | 24 | 25 | 21 |
+| accuracy vs model: P0 alone | 0.375 | 0.480 | 0.619 |
+| accuracy vs model: minor pathways alone | **1.000** | **1.000** | **1.000** |
+| accuracy vs model: full prediction | 1.000 | 1.000 | 1.000 |
+| reviews with \|P0 contribution\| < 3 | 81 | 79 | 80 |
+| accuracy vs model: minor pathways alone | 0.790 | 0.886 | 0.938 |
+| accuracy vs model: full prediction | 0.901 | 0.975 | 1.000 |
+
+Under target-fitted importance the minor pathways matched the model on 0–4% of the
+weak-P0 reviews. Here they decide every one of them correctly. So the target note's
+finding that "the minor pathways do not step in to decide the case" holds only for
+that importance. The band sizes differ slightly from the other note because P0's
+coefficient is larger here.
+
+## 5. What does not change
+
+Reconstruction works from raw pathway scores and loadings. Importance plays no part,
+so these figures are identical to the other note's:
 
 | | train-fa-6 | test-fa-7 | dev-fa-6 |
 |---|---|---|---|
@@ -177,116 +159,109 @@ so the quantity to test is score magnitude:
 | partial(residual, \|P0\| \| others) | -0.094 | -0.269 | -0.360 |
 | partial(residual, others \| \|P0\|) | +0.427 | +0.520 | +0.535 |
 
-Badly reconstructed reviews are not ones where the pathways are quiet. They are ones
-where the **minor pathways are loud**, and that association is the stronger of the
-two: control for the other pathways' magnitude and P0's own correlation with the
-residual largely collapses (to -0.09 on `train-fa-6`). The minor factors absorb
-whatever is idiosyncratic about a review, and idiosyncratic reviews reconstruct
-poorly.
+Under either importance, badly reconstructed reviews are the ones where the minor
+pathways are loud.
 
-So the corrected statement of the condition is: a review whose activations are
-unusual expresses itself through the minor pathways rather than P0. That review sits
-near the pathway decision boundary (because P0 is what the boundary is made of) and
-reconstructs badly (because the minor pathways are carrying the load) — the same
-cause for both, which is why controlling for distance flattens the correlation.
+## 6. Does importance follow connectivity?
 
-### P0 decides; the minor pathways mostly add noise
-
-Weak-P0 reviews are rare. Only about 1% of scored reviews have a P0 contribution
-below 1 in log-odds (29, 28 and 26 reviews across the three fits), and about 3.3%
-below 3 (98, 102, 99). Almost every disagreement lives there: 52 of 54, 47 of 48 and
-45 of 46. Those reviews reconstruct far worse than average — mean residual 0.31, 0.27
-and 0.31 against overall means of 0.11, 0.09 and 0.10.
-
-Against the model's own prediction, the split between P0 and everything else is
-extreme:
-
-| | train-fa-6 | test-fa-7 | dev-fa-6 |
-|---|---|---|---|
-| corr(P0 contribution, classification) | +0.987 | +0.986 | +0.986 |
-| corr(non-P0 sum, classification) | -0.181 | -0.061 | -0.070 |
-
-The other pathways, weighted by their own fitted importance, carry no useful signal
-about what the model predicted — slightly negative, if anything. And when P0 is weak
-they do not step in to decide the case correctly; in the `|P0 contribution| < 1`
-band their sign matches the model on 0–4% of reviews.
-
-Decomposing the disagreements shows they are not merely passengers:
-
-| | train-fa-6 | test-fa-7 | dev-fa-6 |
-|---|---|---|---|
-| total disagreements | 54 | 48 | 46 |
-| P0 alone already disagreed | 27 | 29 | 29 |
-| minor pathways flipped a correct P0 into a disagreement | 27 | 19 | 17 |
-
-Roughly half of all disagreements are manufactured by the minor pathways overriding a
-P0 that had already matched the model. That is why P0 alone agrees with the model
-more often than the full weighted sum does (§3).
-
-### Does importance follow connectivity or variance?
-
-A pathway is a pattern in activations. Factor analysis never sees a weight, so
-whether a pathway influences the classification depends on whether the neurons it
-spans feed the classifier head — a fact about how the model was trained, not about
-the factor. `pathway_importance` does not measure that: it is a logistic regression
-of the classification onto pathway scores, fitted after the fact, so it records
-statistical association with the output and nothing structural.
-
-The activation vector allows a crude test, because it is not homogeneous: neurons
-0–767 are the CLS embedding and 768–779 are the two classifier-head layers. If
-influence followed connectivity, importance should track how much of a pathway's
-loading mass sits on those 12 neurons. Uniform mass would be 1.54%.
+The same test as the other note, using this importance. Neurons 768–779 are the
+classifier head, and uniform loading mass on them would be 1.54%.
 
 | Fit / pathway | \|importance\| | explained variance | classifier-head mass | final-layer mass |
 |---|---|---|---|---|
-| train-fa-6 P0 | 5.548 | 0.855 | 1.69% | 0.89% |
-| test-fa-7 P0 | 5.455 | 0.819 | 1.73% | 0.92% |
-| dev-fa-6 P0 | 5.460 | 0.810 | 1.74% | 0.93% |
-| dev-fa-6 P2 | 0.298 | 0.013 | **2.27%** | 0.08% |
-| test-fa-7 P2 | 0.338 | 0.008 | 1.70% | 0.02% |
-| test-fa-7 P3 | 0.695 | 0.008 | 0.14% | 0.02% |
+| train-fa-6 P0 | 6.350 | 0.855 | 1.69% | 0.89% |
+| test-fa-7 P0 | 6.388 | 0.819 | 1.73% | 0.92% |
+| dev-fa-6 P0 | 6.391 | 0.810 | 1.74% | 0.93% |
+| test-fa-7 P1 | 0.656 | 0.053 | 1.10% | 0.33% |
+| dev-fa-6 P1 | 0.616 | 0.054 | 1.01% | 0.29% |
+| dev-fa-6 P2 | 0.233 | 0.013 | **2.27%** | 0.08% |
+| test-fa-7 P2 | 0.480 | 0.008 | 1.70% | 0.02% |
+| test-fa-7 P3 | 0.824 | 0.008 | 0.14% | 0.02% |
 
-Pooled across all 19 pathways in the three fits, importance ranks correlate 0.218
-with classifier-head mass, 0.304 with final-layer mass, and 0.502 with explained
-variance.
+Rank correlations pooled across all 19 pathways:
 
-Two things follow. P0 is genuinely distinguished on the measure closest to the
-output — its final-layer mass (0.89–0.93%) is roughly triple the next highest and an
-order of magnitude above most — which is consistent with connectivity mattering. But
-the relationship does not generalise: `dev-fa-6 P2` has the largest classifier-head
-mass of any pathway in any fit and about one-eighteenth of P0's importance, and
-`test-fa-7 P2` sits at essentially P0's head mass with one-sixteenth of its
-importance. A pathway can occupy the classifier head as much as the dominant pathway
-does and still barely move the prediction.
+| \|importance\| against | target-fitted | classification-fitted |
+|---|---|---|
+| classifier-head mass | 0.218 | 0.184 |
+| final-layer mass | 0.304 | **0.530** |
+| explained variance | 0.502 | **0.718** |
 
-The practical consequence for reading pathways: of the 19 pathways here, exactly one
-per fit carries the association with the model's output, and the other 16 carry
-approximately none. "Pathways correlate with what the model predicts" is a statement
-about P0, not about pathways. Whether any given pathway influences the classification
-is an empirical question about a particular trained model, and a pathway that
-captures real structure in the activations while having no bearing on the output is
-a normal outcome, not a pathology. That is worth keeping in mind before treating a
-pathway's score as an explanation of a prediction.
+With this importance, the association with the layer closest to the output is
+noticeably stronger. The pathways with the most final-layer mass after P0 (P1 in
+`test-fa-7` and `dev-fa-6`) are the ones whose importance grew most, roughly
+fivefold. That fits the idea that connectivity matters more than the target-fitted
+numbers suggested.
 
-**Provenance of this subsection.** Unlike §5, these figures come from a one-time
-probe rather than from `npm run analyze:pathway-prediction`, which does not compute
-them. Each is reproducible from the published index: the correlations use the same
-`pearson` the script uses, over scored reviews with a reconstruction R² for the fit;
-"P0 contribution" is `pathway_scores[0] × pathway_importance[0]`; loading mass is the
-share of a pathway's summed squared loadings falling on neurons 768–779, using the
-`loadings` array in each fit's metadata.
+The counterexamples still stand. `dev-fa-6 P2` has the largest classifier-head mass of
+any pathway and about one twenty-seventh of P0's importance. `test-fa-7 P2` matches
+P0's head mass with about one-thirteenth of its importance.
 
-## 7. Caveats
+## 7. What this means
 
-- **Yelp test split only.** The analysis only considers the 2,998 yelp reviews that
-  were actually scored by the model (the test split). The train split is not used.
-- **Two reviews carry wrong data.** Two reviews in the published index have data
-  quality problems tracked in NPW-19; this analysis was not adjusted for them.
-- **The train split is unusable for recovering the intercept or coefficients** until
-  NPW-19 (the scrambled train-row bug) is fixed — see §3.
-- **The alien datasets are excluded from this analysis.** Their reconstruction and
-  classification numbers are generator-invented, not learned from real data, so a
-  correlation between disagreement and reconstruction error there would not mean
-  anything. The alien datasets do get the same `pathway_prediction*` search fields
-  (see `docs/testing-alien-explorer.md`), but this note's correlation analysis is
-  yelp-only.
+This note is **less favourable** than the target note to the view that pathways need
+not track the model's prediction.
+
+- Under the surrogate definition, the pathway set as a whole reproduces this model's
+  output almost exactly (1–9 mismatches in 2,998), and the minor pathways carry real
+  output-relevant signal. "The minor pathways make the pathway prediction worse" is a
+  property of the target-fitted importance, not of the pathways.
+- Importance's association with final-layer mass and explained variance is stronger
+  than the target note found.
+
+Three things limit how far that goes:
+
+- **A good surrogate shows association, not mechanism.** A logistic regression can
+  reproduce a model's outputs from features that move with the output without those
+  features' neurons being what drives it. Factor analysis still never sees a weight,
+  and importance is still fitted after the fact.
+- **The counterexamples survive.** A pathway can carry as much or more classifier-head
+  mass than P0 and a small fraction of its importance.
+- **It is in-sample.** The importance is fitted and evaluated on the same reviews. The
+  mismatch counts are optimistic, and out-of-sample numbers are future work under
+  NPW-20.
+
+The practical trade-off for the explorer: the surrogate is probably the right meaning
+for importance, but a disagreement search built on it finds almost nothing. That
+matters for NPW-20's decision about which importance the pathway prediction should
+use.
+
+## 8. Caveats
+
+- **In-sample.** Fitted and evaluated on the same 2,998 reviews. Cross-validation
+  would give honest out-of-sample mismatch counts; that is left for NPW-20.
+- **A different split from the published importance.** This importance comes from
+  the test split, the only split with predictions. The published one comes from the
+  train split. So the two importances differ in split as well as in what they were
+  fitted against.
+- **The regularization choice matters.** C = 1 matches scikit-learn's default and the
+  NNmaker pipeline. Without regularization the fit diverges, because the model's
+  predictions are almost perfectly separable from the pathway scores. A different C
+  would give different coefficients.
+- **No intercept, to match the shipped formula.** Including it changes only
+  `train-fa-6` (9 mismatches to 3).
+- **Two reviews carry wrong data.** Two reviews that appear in both the train and test
+  splits have scrambled pathway data, tracked in
+  [NPW-19](https://concord-consortium.atlassian.net/browse/NPW-19). They are included
+  here, as in the other note.
+- **Yelp only.** Alien datasets are excluded because their numbers are generated.
+
+## Provenance
+
+These figures come from a one-time probe, not from `npm run analyze:pathway-prediction`,
+which uses the published target-fitted importance. They can be reproduced from the
+published yelp index as follows, for each FA fit:
+
+1. Take the reviews with a `classification` and a `reconstruction_r2` for the fit: the
+   2,998 test-split reviews.
+2. Standardize each pathway's scores to mean 0 and standard deviation 1 over those
+   reviews.
+3. Fit an L2-regularized logistic regression of `classification` on the standardized
+   scores, with C = 1 and the intercept unpenalized.
+4. Take the per-standard-deviation coefficients as that fit's importance.
+5. Compute the pathway prediction with the shipped formula, `Σ raw scoreᵢ × importanceᵢ`
+   with `sum ≥ 0` as class 1, and run the same measures as the other note.
+
+"P0 contribution" is `pathway_scores[0] × importance[0]`. Loading mass is the share of
+a pathway's summed squared loadings that falls on neurons 768–779, from the `loadings`
+array in each fit's metadata. Correlations are Pearson; partial correlations are
+computed from the three pairwise correlations.

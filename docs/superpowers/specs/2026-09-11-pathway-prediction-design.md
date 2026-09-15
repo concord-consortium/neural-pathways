@@ -135,7 +135,7 @@ It gets the prediction from `pathway-prediction.ts` and the statistics from the 
 with `fetchIndex(yelpDataset)`, runs the analysis for each fit, and prints a table per fit. It runs
 under `ts-node --project tsconfig.generator.json`, exposed as `npm run analyze:pathway-prediction`.
 
-**`docs/pathway-prediction-analysis.md`** records:
+**`docs/pathway-prediction-target-analysis.md`** records:
 
 1. the question and the story's hypothesis;
 2. the formula decision, with the comparison table from the Appendix, labelled as a one-time
@@ -181,7 +181,7 @@ dialog) asserts the field list.
 - **§6**: the same search on the three-pathway dataset.
 
 Counts come from the running app, not from arithmetic. The yelp count belongs in
-`docs/pathway-prediction-analysis.md` rather than a walkthrough, because it varies by fit and is
+`docs/pathway-prediction-target-analysis.md` rather than a walkthrough, because it varies by fit and is
 affected by NPW-19.
 
 `docs/testing-attribute-commissioning.md` counts attributes, not fields, and does not change.
@@ -246,4 +246,4 @@ controlling for the other pathways collapses P0's own correlation to −0.09 on 
 reconstructed reviews are ones where the minor pathways are loud, not ones where the pathways are
 quiet. The correct account, along with the decomposition of which pathways produce the
 disagreements and evidence on whether importance tracks connectivity to the classifier head, is in
-[docs/pathway-prediction-analysis.md](../../pathway-prediction-analysis.md) §6.
+[docs/pathway-prediction-target-analysis.md](../../pathway-prediction-target-analysis.md) §6.

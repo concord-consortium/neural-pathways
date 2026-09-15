@@ -130,7 +130,7 @@ against each pathway's importance in `alien-fa-4`) disagrees with what the model
 actually predicted. On the run used for this document that's **`46 of 800`**. Click
 into one of them — the pathway panel on the right shows a **Pathway prediction**
 line with a signed total and its implied label (`approach`/`wait`), followed by a
-**Model said `<label>` — disagrees** line. `docs/pathway-prediction-analysis.md`
+**Model said `<label>` — disagrees** line. `docs/pathway-prediction-target-analysis.md`
 covers what this disagreement does and does not correlate with on the yelp dataset.
 
 **`observation` is deliberately not searchable.** Typing `observation:water`
