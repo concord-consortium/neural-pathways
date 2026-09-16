@@ -207,6 +207,19 @@ export const App = () => {
     activationCacheRef.current = new Map();
   }, [datasetId]);
 
+  // Picking a dataset from the selector also writes it to the hash straight
+  // away. The effect below cannot do that job: it waits for a fit and a review,
+  // and a dataset whose index fails to load never produces either, which would
+  // leave the URL naming the old dataset while the selector shows the new one —
+  // a reload would then reopen the wrong one. The hashchange path deliberately
+  // does not do this: there the hash is the source, and rewriting it would drop
+  // the review and fit of the deep link being applied.
+  const handleDatasetSelect = useCallback((id: string) => {
+    if (id === datasetId) return;
+    handleDatasetChange(id);
+    updateHash(id, null, "");
+  }, [datasetId, handleDatasetChange]);
+
   // --- Sync hash (write on state change, read on hashchange) ---
   useEffect(() => {
     if (selectedReviewId && selectedFitName) {
@@ -350,7 +363,7 @@ export const App = () => {
     return (
       <div className="app">
         <div className="toolbar">
-          <DatasetSelector datasets={DATASET_LIST} selectedId={datasetId} onChange={handleDatasetChange} />
+          <DatasetSelector datasets={DATASET_LIST} selectedId={datasetId} onChange={handleDatasetSelect} />
         </div>
         <div className="app-loading">Error loading data: {loadError}</div>
       </div>
@@ -368,7 +381,7 @@ export const App = () => {
     <div className="app">
       {/* Row 1: Toolbar spanning both columns */}
       <div className="toolbar">
-        <DatasetSelector datasets={DATASET_LIST} selectedId={datasetId} onChange={handleDatasetChange} />
+        <DatasetSelector datasets={DATASET_LIST} selectedId={datasetId} onChange={handleDatasetSelect} />
         <label className="scale-mode-label">FA Fit:</label>
         <select
           className="scale-selector"

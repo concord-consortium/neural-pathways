@@ -129,4 +129,30 @@ describe("validateConfig", () => {
     config.thresholds.faScoreRecoveryMin = 1.2;
     expect(() => validateConfig(config)).toThrow(/faScoreRecoveryMin/);
   });
+
+  it("rejects a neuron count at or below the pathway count", () => {
+    // The floor squares its difference, so on its own it also admits counts
+    // below the pathway count: 1 neuron against 4 pathways gives (1 - 4)^2 = 9,
+    // which clears 1 + 4 while being unfittable by any factor analysis.
+    const config = clone();
+    config.activations.neuronCount = 1;
+    expect(() => validateConfig(config)).toThrow(/identif/i);
+    config.activations.neuronCount = 4;
+    expect(() => validateConfig(config)).toThrow(/identif/i);
+  });
+
+  it("rejects target variance shares that do not sum to 1", () => {
+    // The solver's row and column constraints are only consistent at a total of
+    // 1. At any other total it still converges, to the normalized split, so the
+    // configured shares would be silently rescaled rather than rejected.
+    const config = clone();
+    config.targetVarianceShares = config.targetVarianceShares.map(share => share * 0.8);
+    expect(() => validateConfig(config)).toThrow(/targetVarianceShares/);
+  });
+
+  it("rejects a target variance share that is not positive", () => {
+    const config = clone();
+    config.targetVarianceShares = [0.55, 0.35, 0.1, 0];
+    expect(() => validateConfig(config)).toThrow(/targetVarianceShares/);
+  });
 });

@@ -179,10 +179,13 @@ function checkRange(name: string, range: [number, number], minimumLow: number): 
 function checkActivations(config: AlienConfig): void {
   const { neuronCount, explainedVarianceTotal } = config.activations;
   const k = config.pathwayCount;
-  if (!Number.isInteger(neuronCount) || (neuronCount - k) ** 2 < neuronCount + k) {
+  // The floor squares its difference, so by itself it also admits neuron counts
+  // below the pathway count — one neuron against four pathways clears it. Asking
+  // for more neurons than pathways is what rules that second branch out.
+  if (!Number.isInteger(neuronCount) || neuronCount <= k || (neuronCount - k) ** 2 < neuronCount + k) {
     throw new Error(
-      `neuronCount ${neuronCount} cannot identify ${k} pathways: factor analysis needs `
-      + `(neurons - pathways)^2 >= neurons + pathways (the identifiability floor)`,
+      `neuronCount ${neuronCount} cannot identify ${k} pathways: factor analysis needs more neurons `
+      + `than pathways, and (neurons - pathways)^2 >= neurons + pathways (the identifiability floor)`,
     );
   }
   if (!(explainedVarianceTotal > 0 && explainedVarianceTotal < 1)) {
@@ -194,6 +197,19 @@ function checkActivations(config: AlienConfig): void {
   for (const name of ["faScoreRecoveryMin", "faLoadingRecoveryMin"] as const) {
     const value = config.thresholds[name];
     if (!(value > 0 && value <= 1)) throw new Error(`${name} ${value} must lie in (0, 1]`);
+  }
+  // The loading solver's two families of constraints only agree when the shares
+  // sum to 1: its row energies total sum(shares) * explainedVarianceTotal *
+  // neuronCount, while the communalities it also has to satisfy total
+  // explainedVarianceTotal * neuronCount. At any other total the alternating
+  // projection still converges, to the normalized split, so a mistyped share
+  // would quietly change the emitted variance split instead of failing here.
+  if (config.targetVarianceShares.some(share => share <= 0)) {
+    throw new Error("targetVarianceShares: every share must be positive");
+  }
+  const shareTotal = config.targetVarianceShares.reduce((sum, share) => sum + share, 0);
+  if (Math.abs(shareTotal - 1) > SHARE_TOLERANCE) {
+    throw new Error(`targetVarianceShares sum to ${shareTotal}, must sum to 1`);
   }
 }
 

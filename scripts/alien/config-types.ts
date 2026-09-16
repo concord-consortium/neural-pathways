@@ -91,7 +91,12 @@ export interface AlienConfig {
   tiltLambda: number;
 
   vocabulary: VocabularyWord[];
-  /** Target share of pathway-score variance, per pathway. Reported against, not asserted. */
+  /**
+   * Target share of pathway-score variance, per pathway. The word-sum split is
+   * reported against rather than asserted, but the activation stage does assert
+   * it: the loading solver hands each pathway this share of the explained
+   * variance, so validation requires the shares to be positive and to sum to 1.
+   */
   targetVarianceShares: number[];
   activations: ActivationConfig;
 

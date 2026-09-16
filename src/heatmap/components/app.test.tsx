@@ -152,6 +152,26 @@ describe("dataset selection", () => {
     await waitFor(() => expect(window.location.hash).toContain("dataset=alien3"));
   });
 
+  it("keeps the hash on the chosen dataset when that dataset's index fails to load", async () => {
+    render(<App />);
+    expect(await screen.findByText("train-fa-2")).toBeInTheDocument();
+    // The first hash write is a passive effect, so it can still be pending when
+    // the fit renders. Waiting for it means the assertion below is about what
+    // the dataset switch did, not about a write that had not happened yet.
+    await waitFor(() => expect(window.location.hash).toContain("fit=train-fa-2"));
+    (global.fetch as jest.Mock).mockImplementation((url: string) => (
+      url.startsWith("alien-data-3")
+        ? Promise.resolve({ ok: false, status: 404, statusText: "Not Found" })
+        : Promise.resolve({ ok: true, json: () => Promise.resolve(mockIndexWire) })
+    ));
+    fireEvent.change(screen.getByRole("combobox", { name: "Dataset:" }), { target: { value: "alien3" } });
+    expect(await screen.findByText(/Error loading data/)).toBeInTheDocument();
+    // The selector reads alien3, so the URL has to as well: reloading the page
+    // must reopen the dataset that was chosen, not the one that last loaded.
+    expect(screen.getByRole("combobox", { name: "Dataset:" })).toHaveValue("alien3");
+    expect(window.location.hash).toContain("dataset=alien3");
+  });
+
   it("uses the dataset's item noun and target label", async () => {
     window.location.hash = "#dataset=alien";
     render(<App />);
