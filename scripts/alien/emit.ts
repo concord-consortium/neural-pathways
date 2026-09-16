@@ -4,6 +4,7 @@ import * as path from "path";
 import { logisticRegression } from "../../src/explorer/utils/regression";
 import { AttributeDefinition } from "../../src/shared/types/attributes";
 import { S3Index, S3Item, S3ShapItem } from "../../src/shared/types/s3-data";
+import { Activations } from "./activations";
 import { SolvedAttribute } from "./attributes";
 import { AlienConfig } from "./config-types";
 import { Corpus } from "./conversations";
@@ -24,10 +25,17 @@ export interface ShapBucketWire {
   reviews: S3ShapItem[];
 }
 
+/** The shape an activations bucket file actually has on disk. Mirrors ActivationBucket's items as `reviews`. */
+export interface ActivationBucketWire {
+  reviews: { id: string; activations: number[] }[];
+}
+
 export interface Dataset {
   index: IndexWire;
   /** Keyed by the two-hex bucket, matching id.slice(0, 2). */
   shapBuckets: Map<string, ShapBucketWire>;
+  /** Same bucketing, raw activations per conversation. */
+  activationBuckets: Map<string, ActivationBucketWire>;
   texts: string[];
   ids: string[];
 }
@@ -37,6 +45,7 @@ export interface BuildDatasetInput {
   solvedAttributes: SolvedAttribute[];
   outcomes: Outcomes;
   notes: string[];
+  activations: Activations;
   config: AlienConfig;
 }
 
@@ -66,11 +75,14 @@ function attributeDefinitions(config: AlienConfig): AttributeDefinition[] {
   });
 }
 
-/** Each pathway's share of the total variance of the raw, pre-standardization sums. */
-function explainedVariance(corpus: Corpus): number[] {
-  const variances = corpus.scoreSd.map(sd => sd * sd);
-  const total = variances.reduce((sum, value) => sum + value, 0);
-  return variances.map(value => value / total);
+/**
+ * Each pathway's summed squared loadings over the neuron count, the definition
+ * the yelp fits use. By construction this equals targetVarianceShares times
+ * explainedVarianceTotal. The word-sum split the SCALE constants were tuned for
+ * still prints in the summary; it is no longer what the app reports.
+ */
+function explainedVariancePerPathway(loadings: number[][], neuronCount: number): number[] {
+  return loadings.map(row => row.reduce((sum, value) => sum + value * value, 0) / neuronCount);
 }
 
 function shapForConversation(
@@ -102,7 +114,7 @@ function shapForConversation(
 }
 
 export function buildDataset(input: BuildDatasetInput): Dataset {
-  const { corpus, solvedAttributes, outcomes, notes, config } = input;
+  const { corpus, solvedAttributes, outcomes, notes, activations, config } = input;
   const { fitName, reviewSetName } = config;
 
   const texts = corpus.conversations.map(conversation => conversationText(conversation.turns));
@@ -130,6 +142,7 @@ export function buildDataset(input: BuildDatasetInput): Dataset {
       observation: notes[i],
       attributes,
       pathway_scores: { [fitName]: [...scores] },
+      reconstruction_r2: { [fitName]: activations.reconstructionR2[i] },
       pathway_variance_fractions: {
         [fitName]: scores.map(value => (sumOfSquares === 0 ? 0 : (value * value) / sumOfSquares)),
       },
@@ -162,13 +175,29 @@ export function buildDataset(input: BuildDatasetInput): Dataset {
     ));
   });
 
+  const activationBuckets = new Map<string, ActivationBucketWire>();
+  ids.forEach((id, i) => {
+    const bucket = id.slice(0, 2);
+    if (!activationBuckets.has(bucket)) activationBuckets.set(bucket, { reviews: [] });
+    (activationBuckets.get(bucket) as ActivationBucketWire).reviews.push({ id, activations: activations.raw[i] });
+  });
+
   const index: IndexWire = {
     metadata: {
       fa_fits: {
         [fitName]: {
           source_split: reviewSetName,
           n_pathways: config.pathwayCount,
-          explained_variance_per_pathway: explainedVariance(corpus),
+          explained_variance_per_pathway: explainedVariancePerPathway(
+            activations.loadings, config.activations.neuronCount,
+          ),
+          explained_variance_total: explainedVariancePerPathway(
+            activations.loadings, config.activations.neuronCount,
+          ).reduce((sum, value) => sum + value, 0),
+          loadings: activations.loadings,
+          noise_variance: activations.noiseVariance,
+          scaler_mean: activations.scalerMean,
+          scaler_scale: activations.scalerScale,
           pathway_importance: importance.terms.map(term => term.coefficient),
           pathway_score_min: corpus.scores[0].map((_, p) =>
             corpus.scores.reduce((min, row) => Math.min(min, row[p]), Infinity)),
@@ -187,7 +216,7 @@ export function buildDataset(input: BuildDatasetInput): Dataset {
     reviews,
   };
 
-  return { index, shapBuckets, texts, ids };
+  return { index, shapBuckets, activationBuckets, texts, ids };
 }
 
 export function writeDataset(outputDir: string, dataset: Dataset): void {
@@ -204,6 +233,15 @@ export function writeDataset(outputDir: string, dataset: Dataset): void {
     fs.writeFileSync(
       path.join(shapDir, `${bucket}.json`),
       JSON.stringify(dataset.shapBuckets.get(bucket)),
+    );
+  }
+
+  const activationsDir = path.join(outputDir, "activations");
+  fs.mkdirSync(activationsDir, { recursive: true });
+  for (const bucket of [...dataset.activationBuckets.keys()].sort()) {
+    fs.writeFileSync(
+      path.join(activationsDir, `${bucket}.json`),
+      JSON.stringify(dataset.activationBuckets.get(bucket)),
     );
   }
 }

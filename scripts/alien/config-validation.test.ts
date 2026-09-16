@@ -94,4 +94,65 @@ describe("validateConfig", () => {
     config.attributes[0].key = "text";
     expect(() => validateConfig(config)).toThrow(/reserved/i);
   });
+
+  it("rejects a neuron count below the identifiability floor", () => {
+    // Four pathways need (n - 4)^2 >= n + 4, which 7 neurons fails and 8 passes.
+    const config = clone();
+    config.activations.neuronCount = 7;
+    expect(() => validateConfig(config)).toThrow(/identif/i);
+    config.activations.neuronCount = 8;
+    expect(() => validateConfig(config)).not.toThrow();
+  });
+
+  it("rejects an explained variance total outside (0, 1)", () => {
+    const config = clone();
+    config.activations.explainedVarianceTotal = 1;
+    expect(() => validateConfig(config)).toThrow(/explainedVarianceTotal/);
+  });
+
+  it("rejects a noise variance range that is unordered or touches zero", () => {
+    const config = clone();
+    config.activations.noiseVarianceRange = [0.2, 0.1];
+    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
+    config.activations.noiseVarianceRange = [0, 0.1];
+    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
+  });
+
+  it("rejects a scaler scale range that is not positive", () => {
+    const config = clone();
+    config.activations.scalerScaleRange = [0, 0.5];
+    expect(() => validateConfig(config)).toThrow(/scalerScaleRange/);
+  });
+
+  it("rejects recovery thresholds outside (0, 1]", () => {
+    const config = clone();
+    config.thresholds.faScoreRecoveryMin = 1.2;
+    expect(() => validateConfig(config)).toThrow(/faScoreRecoveryMin/);
+  });
+
+  it("rejects a neuron count at or below the pathway count", () => {
+    // The floor squares its difference, so on its own it also admits counts
+    // below the pathway count: 1 neuron against 4 pathways gives (1 - 4)^2 = 9,
+    // which clears 1 + 4 while being unfittable by any factor analysis.
+    const config = clone();
+    config.activations.neuronCount = 1;
+    expect(() => validateConfig(config)).toThrow(/identif/i);
+    config.activations.neuronCount = 4;
+    expect(() => validateConfig(config)).toThrow(/identif/i);
+  });
+
+  it("rejects target variance shares that do not sum to 1", () => {
+    // The solver's row and column constraints are only consistent at a total of
+    // 1. At any other total it still converges, to the normalized split, so the
+    // configured shares would be silently rescaled rather than rejected.
+    const config = clone();
+    config.targetVarianceShares = config.targetVarianceShares.map(share => share * 0.8);
+    expect(() => validateConfig(config)).toThrow(/targetVarianceShares/);
+  });
+
+  it("rejects a target variance share that is not positive", () => {
+    const config = clone();
+    config.targetVarianceShares = [0.55, 0.35, 0.1, 0];
+    expect(() => validateConfig(config)).toThrow(/targetVarianceShares/);
+  });
 });

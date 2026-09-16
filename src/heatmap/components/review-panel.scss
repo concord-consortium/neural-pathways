@@ -25,15 +25,17 @@
   border-radius: 4px;
 }
 
-.review-sentiment {
+.review-target {
   font-size: 13px;
   font-weight: 600;
 
-  &.positive {
+  &.positive,
+  &.approach {
     color: #2a7d2a;
   }
 
-  &.negative {
+  &.negative,
+  &.wait {
     color: #b33;
   }
 }

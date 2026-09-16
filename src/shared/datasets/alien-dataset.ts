@@ -70,9 +70,12 @@ function createAlienDataset({ id, label, baseUrl }: AlienDatasetParams): Dataset
     itemNoun: { singular: "conversation", plural: "conversations" },
     classificationLabels: CLASSIFICATION_LABELS,
     searchPlaceholder: "voices_raised:1 AND pathway_0:>1",
-    // Every field these datasets have beyond the shared ones is an attribute,
-    // and the help dialog lists those separately.
-    searchFields: [],
+    // Every other field these datasets have beyond the shared ones is an
+    // attribute, and the help dialog lists those separately. R² became real for
+    // the alien datasets once the generator emitted neuron activations (NPW-18).
+    searchFields: [
+      { name: "reconstruction_r2", description: "Reconstruction R²" },
+    ],
 
     resolveAttributes(index: S3Index): AttributeDefinition[] {
       // The generated definitions arrive over the network, so they are validated

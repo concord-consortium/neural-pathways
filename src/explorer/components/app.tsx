@@ -17,7 +17,7 @@ import { WordEffectsPanel } from "./word-effects-panel";
 import { SettingsMenu } from "./settings-menu";
 import { CorrelationsView } from "./correlations-view";
 import { FieldsView } from "./fields-view";
-import { DatasetSelector } from "./dataset-selector";
+import { DatasetSelector } from "../../shared/components/dataset-selector";
 import { CodingsMenu } from "./codings-menu";
 
 import "./app.scss";

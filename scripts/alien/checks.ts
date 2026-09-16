@@ -1,5 +1,6 @@
 import { pearson } from "../../src/explorer/utils/statistics";
 import { solvedFor } from "./attributes";
+import { factorScores, fitFactorAnalysis } from "./factor-analysis";
 import { GeneratorRun } from "./pipeline";
 
 export interface CheckResult {
@@ -180,6 +181,84 @@ function pathwaysAreOrthogonal(run: GeneratorRun): CheckResult {
   };
 }
 
+export interface PathwayRecovery {
+  pathway: number;
+  /** The recovered factor whose scores correlate most with this pathway's. */
+  factor: number;
+  /** |r| between the authored scores and that factor's scores. */
+  scoreR: number;
+  /** |cosine| between the authored loading row and that factor's loadings. */
+  loadingCosine: number;
+}
+
+function cosine(a: number[], b: number[]): number {
+  let ab = 0;
+  let aa = 0;
+  let bb = 0;
+  for (let i = 0; i < a.length; i++) {
+    ab += a[i] * b[i];
+    aa += a[i] * a[i];
+    bb += b[i] * b[i];
+  }
+  return ab / Math.sqrt(aa * bb);
+}
+
+/**
+ * Refits factor analysis on the emitted activations, exactly as the pipeline
+ * would, and matches each authored pathway to the recovered factor its scores
+ * correlate with most. Shared with the summary so the two never disagree.
+ */
+export function recoveryReport(run: GeneratorRun): PathwayRecovery[] {
+  const { config, corpus, activations } = run;
+  const fit = fitFactorAnalysis(activations.standardized, config.pathwayCount);
+  const recovered = factorScores(activations.standardized, fit);
+  const report: PathwayRecovery[] = [];
+  for (let p = 0; p < config.pathwayCount; p++) {
+    const authored = corpus.scores.map(row => row[p]);
+    let best = { factor: -1, scoreR: -1 };
+    for (let q = 0; q < config.pathwayCount; q++) {
+      const r = Math.abs(pearson(authored, recovered.map(row => row[q])).r ?? 0);
+      if (r > best.scoreR) best = { factor: q, scoreR: r };
+    }
+    report.push({
+      pathway: p,
+      factor: best.factor,
+      scoreR: best.scoreR,
+      loadingCosine: Math.abs(cosine(activations.loadings[p], fit.loadings[best.factor])),
+    });
+  }
+  return report;
+}
+
+function faRecoversPathways(run: GeneratorRun): CheckResult {
+  const { thresholds } = run.config;
+  const report = recoveryReport(run);
+  const problems: string[] = [];
+  for (const entry of report) {
+    if (entry.factor !== entry.pathway) {
+      problems.push(`P${entry.pathway} came back as factor ${entry.factor}, not in the authored order`);
+    }
+    if (!(entry.scoreR >= thresholds.faScoreRecoveryMin)) {
+      problems.push(`P${entry.pathway} scores r ${entry.scoreR.toFixed(3)} < ${thresholds.faScoreRecoveryMin}`);
+    }
+    if (!(entry.loadingCosine >= thresholds.faLoadingRecoveryMin)) {
+      problems.push(
+        `P${entry.pathway} loadings cos ${entry.loadingCosine.toFixed(3)} < ${thresholds.faLoadingRecoveryMin}`,
+      );
+    }
+  }
+  const summary = report
+    .map(e => `P${e.pathway}->F${e.factor} r ${e.scoreR.toFixed(3)} cos ${e.loadingCosine.toFixed(3)}`)
+    .join(", ");
+  return {
+    name: "fa-recovers-pathways",
+    passed: problems.length === 0,
+    detail: problems.length === 0
+      ? `${summary} (minimums r ${thresholds.faScoreRecoveryMin}, cos ${thresholds.faLoadingRecoveryMin})`
+      : `${problems.join("; ")}. Recovered: ${summary}`,
+  };
+}
+
 export function runChecks(run: GeneratorRun): CheckResult[] {
   return [
     shapAdditivity(run),
@@ -190,6 +269,7 @@ export function runChecks(run: GeneratorRun): CheckResult[] {
     biasIsDetectable(run),
     decoysAreDecoys(run),
     pathwaysAreOrthogonal(run),
+    faRecoversPathways(run),
   ];
 }
 

@@ -6,7 +6,8 @@ import {
   fetchIndex, fetchActivations, fitToPathways, fitToScaler, fitToMetadata,
   standardizeActivations,
 } from "../../shared/data-loader";
-import { yelpDataset } from "../../shared/datasets/yelp-dataset";
+import { DATASET_LIST, DEFAULT_DATASET_ID, datasetFromId } from "../../shared/datasets/registry";
+import { DatasetSelector } from "../../shared/components/dataset-selector";
 import { ReviewPanel } from "./review-panel";
 import { PathwayPatterns, PathwayScoresRow } from "./pathway-grid";
 import { ScoredPathwaysView } from "./scored-pathways-view";
@@ -26,8 +27,9 @@ function getHashParams(): Record<string, string> {
   return params;
 }
 
-function updateHash(reviewId: string | null, fitName: string) {
+function updateHash(datasetId: string, reviewId: string | null, fitName: string) {
   const parts: string[] = [];
+  if (datasetId !== DEFAULT_DATASET_ID) parts.push(`dataset=${encodeURIComponent(datasetId)}`);
   if (reviewId) parts.push(`review=${encodeURIComponent(reviewId)}`);
   if (fitName) parts.push(`fit=${encodeURIComponent(fitName)}`);
   const newHash = parts.length > 0 ? `#${parts.join("&")}` : "";
@@ -51,12 +53,16 @@ const scalingOptions: { value: ValueScaling; label: string }[] = [
 
 type ScaleMode = "current-review" | "multiple-scales";
 
-const scaleModeOptions: { value: ScaleMode; label: string }[] = [
-  { value: "current-review", label: "Current review" },
-  { value: "multiple-scales", label: "Multiple scales" },
-];
-
 export const App = () => {
+  // --- Dataset selection ---
+  const [datasetId, setDatasetId] = useState<string>(() => datasetFromId(getHashParams().dataset).id);
+  const datasetConfig = datasetFromId(datasetId);
+  const itemNoun = datasetConfig.itemNoun.singular;
+  const scaleModeOptions: { value: ScaleMode; label: string }[] = [
+    { value: "current-review", label: `Current ${itemNoun}` },
+    { value: "multiple-scales", label: "Multiple scales" },
+  ];
+
   // --- Data loading state ---
   const [indexData, setIndexData] = useState<S3Index | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -75,10 +81,12 @@ export const App = () => {
   const [scaleMode, setScaleMode] = useState<ScaleMode>("multiple-scales");
   const [terminologyMode, setTerminologyMode] = useState<TerminologyMode>("project");
 
-  // --- Fetch index on mount ---
+  // --- Fetch index on dataset change (including the initial mount) ---
   useEffect(() => {
-    fetchIndex(yelpDataset)
+    let cancelled = false;
+    fetchIndex(datasetConfig)
       .then(data => {
+        if (cancelled) return;
         setIndexData(data);
         const hashParams = getHashParams();
         const names = Object.keys(data.metadata.fa_fits);
@@ -92,15 +100,16 @@ export const App = () => {
           setActivationsLoading(true);
         }
       })
-      .catch(err => setLoadError(err.message));
-  }, []);
+      .catch(err => { if (!cancelled) setLoadError(err.message); });
+    return () => { cancelled = true; };
+  }, [datasetConfig]);
 
   // --- Fetch activations when review changes ---
   const [activationReviewId, setActivationReviewId] = useState<string | null>(null);
   useEffect(() => {
     if (!selectedReviewId) return;
     let cancelled = false;
-    fetchActivations(yelpDataset, selectedReviewId, activationCacheRef.current)
+    fetchActivations(datasetConfig, selectedReviewId, activationCacheRef.current)
       .then(activations => {
         if (!cancelled) {
           setRawActivations(activations);
@@ -115,7 +124,7 @@ export const App = () => {
         }
       });
     return () => { cancelled = true; };
-  }, [selectedReviewId]);
+  }, [selectedReviewId, datasetConfig]);
 
   // Treat activations as null if they don't match the current review
   const currentRawActivations = activationReviewId === selectedReviewId ? rawActivations : null;
@@ -182,17 +191,51 @@ export const App = () => {
     setSelectedFitName(fitName);
   }, []);
 
+  // --- Dataset switching (selector or hash) ---
+  // The activation cache must be cleared: it is keyed by bucket, and two
+  // datasets can share a bucket name.
+  const handleDatasetChange = useCallback((id: string) => {
+    if (id === datasetId) return;
+    setDatasetId(id);
+    setIndexData(null);
+    setLoadError(null);
+    setSelectedFitName("");
+    setSelectedReviewId(null);
+    setRawActivations(null);
+    setActivationReviewId(null);
+    setScoreOverrides({});
+    activationCacheRef.current = new Map();
+  }, [datasetId]);
+
+  // Picking a dataset from the selector also writes it to the hash straight
+  // away. The effect below cannot do that job: it waits for a fit and a review,
+  // and a dataset whose index fails to load never produces either, which would
+  // leave the URL naming the old dataset while the selector shows the new one —
+  // a reload would then reopen the wrong one. The hashchange path deliberately
+  // does not do this: there the hash is the source, and rewriting it would drop
+  // the review and fit of the deep link being applied.
+  const handleDatasetSelect = useCallback((id: string) => {
+    if (id === datasetId) return;
+    handleDatasetChange(id);
+    updateHash(id, null, "");
+  }, [datasetId, handleDatasetChange]);
+
   // --- Sync hash (write on state change, read on hashchange) ---
   useEffect(() => {
     if (selectedReviewId && selectedFitName) {
-      updateHash(selectedReviewId, selectedFitName);
+      updateHash(datasetId, selectedReviewId, selectedFitName);
     }
-  }, [selectedReviewId, selectedFitName]);
+  }, [datasetId, selectedReviewId, selectedFitName]);
 
   useEffect(() => {
     if (!indexData) return;
     const handleHashChange = () => {
       const hashParams = getHashParams();
+      const hashDatasetId = datasetFromId(hashParams.dataset).id;
+      if (hashDatasetId !== datasetId) {
+        handleDatasetChange(hashDatasetId);
+        return;
+      }
       const validFits = Object.keys(indexData.metadata.fa_fits);
       if (hashParams.fit && validFits.includes(hashParams.fit)) {
         setSelectedFitName(hashParams.fit);
@@ -204,7 +247,7 @@ export const App = () => {
     };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [indexData]);
+  }, [indexData, datasetId, handleDatasetChange]);
 
   // --- Computed pathway data (no activations needed) ---
   const scoredPathways = useMemo(() =>
@@ -317,7 +360,14 @@ export const App = () => {
 
   // --- Loading / error states ---
   if (loadError) {
-    return <div className="app-loading">Error loading data: {loadError}</div>;
+    return (
+      <div className="app">
+        <div className="toolbar">
+          <DatasetSelector datasets={DATASET_LIST} selectedId={datasetId} onChange={handleDatasetSelect} />
+        </div>
+        <div className="app-loading">Error loading data: {loadError}</div>
+      </div>
+    );
   }
 
   if (!indexData || !pathways || !metadata || !scaler) {
@@ -331,6 +381,7 @@ export const App = () => {
     <div className="app">
       {/* Row 1: Toolbar spanning both columns */}
       <div className="toolbar">
+        <DatasetSelector datasets={DATASET_LIST} selectedId={datasetId} onChange={handleDatasetSelect} />
         <label className="scale-mode-label">FA Fit:</label>
         <select
           className="scale-selector"
@@ -417,6 +468,7 @@ export const App = () => {
         selectedReview={selectedReview}
         onSelectReview={handleSelectReview}
         activationsLoading={activationsLoading}
+        itemNoun={itemNoun}
       >
         {scaleMode !== "current-review" && (
           <ColorLegend absMax={activationsScale} {...colorLegendProps} />
@@ -429,6 +481,7 @@ export const App = () => {
           originalScores={pathwayScoresFromIndex}
           onScoreChange={handleScoreChange}
           terminologyMode={terminologyMode}
+          itemNoun={itemNoun}
           extraColumns={pathways.noise_variance ? 1 : 0}
         />
         <ScoredPathwaysView
@@ -497,13 +550,13 @@ export const App = () => {
             <div className="comparison-section-label">{getLabel("originalActivations", terminologyMode)}</div>
             {activationsLoading
               ? <div className="activation-placeholder">Loading...</div>
-              : <div className="activation-placeholder">Select a review</div>}
+              : <div className="activation-placeholder">Select a {itemNoun}</div>}
           </div>
           <div className="comparison-result">
             <div className="comparison-section-label">Reconstructed</div>
             {activationsLoading
               ? <div className="activation-placeholder">Loading...</div>
-              : <div className="activation-placeholder">Select a review</div>}
+              : <div className="activation-placeholder">Select a {itemNoun}</div>}
           </div>
         </>
       )}

@@ -7,8 +7,8 @@ const run = generate(fourPathwayConfig);
 const checks = runChecks(run);
 
 describe("runChecks", () => {
-  it("reports all eight checks", () => {
-    expect(checks).toHaveLength(8);
+  it("reports all nine checks", () => {
+    expect(checks).toHaveLength(9);
     expect(checks.map(c => c.name)).toEqual([
       "shap-additivity",
       "note-evidence",
@@ -18,6 +18,7 @@ describe("runChecks", () => {
       "bias-is-detectable",
       "decoys-are-decoys",
       "pathways-are-orthogonal",
+      "fa-recovers-pathways",
     ]);
   });
 
@@ -121,5 +122,26 @@ describe("runChecks", () => {
     const rigged = { ...run, corpus: { ...run.corpus, scores: riggedScores } };
     const result = runChecks(rigged).find(c => c.name === "pathways-are-orthogonal")!;
     expect(result.passed).toBe(false);
+  });
+
+  it("fails fa-recovers-pathways when the activations are shuffled across items", () => {
+    const rigged = {
+      ...run,
+      activations: {
+        ...run.activations,
+        standardized: [...run.activations.standardized].reverse(),
+      },
+    };
+    const result = runChecks(rigged).find(c => c.name === "fa-recovers-pathways")!;
+    expect(result.passed).toBe(false);
+    expect(result.detail).toMatch(/P0/);
+  });
+
+  it("names every pathway's recovered factor, correlation and cosine when it passes", () => {
+    const result = checks.find(c => c.name === "fa-recovers-pathways")!;
+    expect(result.passed).toBe(true);
+    for (let p = 0; p < fourPathwayConfig.pathwayCount; p++) {
+      expect(result.detail).toMatch(new RegExp(`P${p}->F${p} r [01]\\.\\d+ cos [01]\\.\\d+`));
+    }
   });
 });

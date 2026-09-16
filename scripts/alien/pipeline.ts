@@ -1,3 +1,4 @@
+import { Activations, buildActivations } from "./activations";
 import { SolvedAttribute, solveAttributes } from "./attributes";
 import { validateConfig } from "./config-validation";
 import { AlienConfig } from "./config-types";
@@ -13,6 +14,7 @@ export interface GeneratorRun {
   solvedAttributes: SolvedAttribute[];
   outcomes: Outcomes;
   notes: string[];
+  activations: Activations;
   dataset: Dataset;
 }
 
@@ -29,7 +31,10 @@ export function generate(config: AlienConfig): GeneratorRun {
   const solvedAttributes = solveAttributes(corpus.scores, config, rng);
   const outcomes = solveOutcomes(corpus.scores, solvedAttributes, config, rng);
   const notes = renderNotes(solvedAttributes, config, new TemplateNoteRenderer(config), rng);
-  const dataset = buildDataset({ corpus, solvedAttributes, outcomes, notes, config });
+  // Last on purpose: every draw above is untouched by adding activations, so the
+  // text, attributes, outcomes and notes of an existing dataset do not change.
+  const activations = buildActivations(corpus.scores, config, rng);
+  const dataset = buildDataset({ corpus, solvedAttributes, outcomes, notes, activations, config });
 
-  return { config, corpus, solvedAttributes, outcomes, notes, dataset };
+  return { config, corpus, solvedAttributes, outcomes, notes, activations, dataset };
 }

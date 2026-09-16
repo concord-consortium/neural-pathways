@@ -11,13 +11,15 @@ import { solveAttributes } from "./attributes";
 import { solveOutcomes } from "./outcomes";
 import { TemplateNoteRenderer, renderNotes } from "./notes";
 import { buildDataset, conversationId, conversationText, writeDataset } from "./emit";
+import { buildActivations } from "./activations";
 
 const config = { ...fourPathwayConfig, conversationCount: 200 };
 const corpus = buildCorpus(config, createRng(config.seed));
 const solvedAttributes = solveAttributes(corpus.scores, config, createRng(2));
 const outcomes = solveOutcomes(corpus.scores, solvedAttributes, config, createRng(3));
 const notes = renderNotes(solvedAttributes, config, new TemplateNoteRenderer(config), createRng(4));
-const dataset = buildDataset({ corpus, solvedAttributes, outcomes, notes, config });
+const activations = buildActivations(corpus.scores, config, createRng(5));
+const dataset = buildDataset({ corpus, solvedAttributes, outcomes, notes, activations, config });
 
 describe("conversationText and conversationId", () => {
   it("joins words within a turn and turns with newlines", () => {
@@ -36,15 +38,18 @@ describe("buildDataset", () => {
     expect(new Set(dataset.ids).size).toBe(config.conversationCount);
   });
 
-  it("declares one fit with four pathways and no activation model", () => {
+  it("declares one fit with four pathways and a fourteen-neuron activation model", () => {
     const fit = dataset.index.metadata.fa_fits[config.fitName];
     expect(fit.n_pathways).toBe(4);
     expect(fit.source_split).toBe(config.reviewSetName);
     expect(fit.explained_variance_per_pathway).toHaveLength(4);
     expect(fit.pathway_importance).toHaveLength(4);
-    expect(fit.loadings).toBeUndefined();
-    expect(fit.scaler_mean).toBeUndefined();
-    expect(fit.explained_variance_total).toBeUndefined();
+    expect(fit.loadings).toHaveLength(4);
+    expect(fit.loadings![0]).toHaveLength(14);
+    expect(fit.noise_variance).toHaveLength(14);
+    expect(fit.scaler_mean).toHaveLength(14);
+    expect(fit.scaler_scale).toHaveLength(14);
+    expect(fit.explained_variance_total).toBeCloseTo(0.9, 8);
   });
 
   it("sets pathway score bounds to the corpus column extremes", () => {
@@ -59,10 +64,15 @@ describe("buildDataset", () => {
     }
   });
 
-  it("orders explained variance by the configured target split", () => {
-    const shares = dataset.index.metadata.fa_fits[config.fitName].explained_variance_per_pathway;
-    expect(shares.reduce((s, v) => s + v, 0)).toBeCloseTo(1, 10);
-    for (let p = 1; p < shares.length; p++) expect(shares[p]).toBeLessThan(shares[p - 1]);
+  it("reports explained variance from the loadings, summing to the configured total", () => {
+    const fit = dataset.index.metadata.fa_fits[config.fitName];
+    const shares = fit.explained_variance_per_pathway;
+    expect(shares.reduce((s, v) => s + v, 0)).toBeCloseTo(fit.explained_variance_total!, 8);
+    shares.forEach((share, p) => {
+      expect(share).toBeCloseTo(config.targetVarianceShares[p] * 0.9, 8);
+      const energy = fit.loadings![p].reduce((s, v) => s + v * v, 0);
+      expect(share).toBeCloseTo(energy / 14, 10);
+    });
   });
 
   it("carries the attribute definitions, hidden flags included", () => {
@@ -82,10 +92,25 @@ describe("buildDataset", () => {
     }
   });
 
-  it("omits reconstruction_r2", () => {
-    for (const review of dataset.index.reviews) {
-      expect(review.reconstruction_r2).toBeUndefined();
+  it("carries each item's reconstruction R2 under the fit name", () => {
+    dataset.index.reviews.forEach((review, i) => {
+      expect(review.reconstruction_r2).toEqual({ [config.fitName]: activations.reconstructionR2[i] });
+    });
+  });
+
+  it("buckets each conversation's raw activations by the first two characters of its id", () => {
+    let total = 0;
+    for (const [bucket, wire] of dataset.activationBuckets) {
+      for (const item of wire.reviews) {
+        expect(item.id.slice(0, 2)).toBe(bucket);
+        expect(item.activations).toHaveLength(14);
+        total++;
+      }
     }
+    expect(total).toBe(config.conversationCount);
+    const first = dataset.ids[0];
+    const entry = dataset.activationBuckets.get(first.slice(0, 2))!.reviews.find(r => r.id === first)!;
+    expect(entry.activations).toEqual(activations.raw[0]);
   });
 
   it("carries observation, labels, and variance fractions", () => {
@@ -148,6 +173,10 @@ describe("writeDataset", () => {
       const bucket = [...dataset.shapBuckets.keys()][0];
       const shapPath = path.join(dir, "shap", config.fitName, `${bucket}.json`);
       expect(fs.existsSync(shapPath)).toBe(true);
+      const activationFile = path.join(dir, "activations", `${dataset.ids[0].slice(0, 2)}.json`);
+      expect(fs.existsSync(activationFile)).toBe(true);
+      const wire = JSON.parse(fs.readFileSync(activationFile, "utf8"));
+      expect(wire.reviews.some((r: { id: string }) => r.id === dataset.ids[0])).toBe(true);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

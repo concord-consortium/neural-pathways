@@ -1,4 +1,4 @@
-import { AttributeConfig, Thresholds, VocabularyWord } from "./config-types";
+import { ActivationConfig, AttributeConfig, Thresholds, VocabularyWord } from "./config-types";
 
 /**
  * Distinct magnitudes within each half, so a pathway score is a sum over many
@@ -363,4 +363,26 @@ export const THRESHOLDS: Thresholds = {
   detectableBiasMin: 0.2,
   minWordOccurrences: 100,
   shapTolerance: 1e-9,
+  // Met with margin at the shipped seeds (weakest pathway r 0.96, cos 0.99). The
+  // loading solver fixes each row's energy and each neuron's communality but not
+  // the diagonal of L Ψ⁻¹ Lᵀ, which is what scikit-learn orders factors by, so
+  // other seeds commonly fail this check by a factor swap or a mixed pair.
+  // Changing `seed` or the variance split needs fa-recovers-pathways re-checked.
+  // See docs/alien-activations.md.
+  faScoreRecoveryMin: 0.94,
+  faLoadingRecoveryMin: 0.97,
+};
+
+/**
+ * Fourteen neurons is what the UI/UX designs show, and comfortably above the
+ * identifiability floor of eight for four pathways. The 0.9 total matches the
+ * yelp fits and the NNMaker rule of adding pathways until 90% is explained. The
+ * noise and scaler ranges bracket the yelp fits' 10th-90th percentiles.
+ */
+export const ACTIVATIONS: ActivationConfig = {
+  neuronCount: 14,
+  explainedVarianceTotal: 0.9,
+  noiseVarianceRange: [0.03, 0.2],
+  scalerMeanRange: [-0.6, 0.6],
+  scalerScaleRange: [0.1, 0.7],
 };

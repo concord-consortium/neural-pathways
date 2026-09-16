@@ -250,7 +250,8 @@ export default defineConfig(
       jest.configs["flat/recommended"]
     ],
     rules: {
-      "@typescript-eslint/no-non-null-assertion": "off"
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "jest/expect-expect": ["warn", { assertFunctionNames: ["expect", "expectMatrixClose"] }]
     }
   },
 );

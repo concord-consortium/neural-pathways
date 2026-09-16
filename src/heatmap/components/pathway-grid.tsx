@@ -2,7 +2,7 @@ import React from "react";
 import { Heatmap } from "./heatmap";
 import { PathwayScoreInput } from "./pathway-score-input";
 import { ScaleType, ValueScaling } from "../../shared/color-scale";
-import { TerminologyMode, getLabel, getPathwayHeader } from "../utils/terminology";
+import { TerminologyMode, getLabel, getPathwayHeader, getItemScoresLabel } from "../utils/terminology";
 import "./pathway-grid.scss";
 
 function pathwayColumnTemplate(nPathways: number, extraColumns = 0): string {
@@ -91,11 +91,12 @@ interface PathwayScoresRowProps {
   originalScores: number[];
   onScoreChange: (pathwayIndex: number, value: number) => void;
   terminologyMode: TerminologyMode;
+  itemNoun: string;
   extraColumns?: number;
 }
 
 export const PathwayScoresRow: React.FC<PathwayScoresRowProps> = ({
-  pathwayScores, originalScores, onScoreChange, terminologyMode, extraColumns = 0
+  pathwayScores, originalScores, onScoreChange, terminologyMode, itemNoun, extraColumns = 0
 }) => {
   const nPathways = pathwayScores.length;
   const columnTemplate = pathwayColumnTemplate(nPathways, extraColumns);
@@ -103,7 +104,7 @@ export const PathwayScoresRow: React.FC<PathwayScoresRowProps> = ({
   return (
     <div className="pathway-grid" style={{ gridTemplateColumns: columnTemplate }}>
       {/* Row label: Scores */}
-      <div className="pathway-grid-row-label">{getLabel("pathwayScoresForReview", terminologyMode)}</div>
+      <div className="pathway-grid-row-label">{getItemScoresLabel(terminologyMode, itemNoun)}</div>
 
       {/* Scores row */}
       {pathwayScores.map((score, i) => (

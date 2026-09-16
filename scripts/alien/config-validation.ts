@@ -166,6 +166,53 @@ function checkBias(config: AlienConfig): void {
   }
 }
 
+function checkRange(name: string, range: [number, number], minimumLow: number): void {
+  const [low, high] = range;
+  if (!(low < high)) {
+    throw new Error(`${name} [${low}, ${high}] must be ordered low to high`);
+  }
+  if (!(low > minimumLow)) {
+    throw new Error(`${name} lower bound ${low} must exceed ${minimumLow}`);
+  }
+}
+
+function checkActivations(config: AlienConfig): void {
+  const { neuronCount, explainedVarianceTotal } = config.activations;
+  const k = config.pathwayCount;
+  // The floor squares its difference, so by itself it also admits neuron counts
+  // below the pathway count — one neuron against four pathways clears it. Asking
+  // for more neurons than pathways is what rules that second branch out.
+  if (!Number.isInteger(neuronCount) || neuronCount <= k || (neuronCount - k) ** 2 < neuronCount + k) {
+    throw new Error(
+      `neuronCount ${neuronCount} cannot identify ${k} pathways: factor analysis needs more neurons `
+      + `than pathways, and (neurons - pathways)^2 >= neurons + pathways (the identifiability floor)`,
+    );
+  }
+  if (!(explainedVarianceTotal > 0 && explainedVarianceTotal < 1)) {
+    throw new Error(`explainedVarianceTotal ${explainedVarianceTotal} must lie strictly between 0 and 1`);
+  }
+  checkRange("noiseVarianceRange", config.activations.noiseVarianceRange, 0);
+  checkRange("scalerMeanRange", config.activations.scalerMeanRange, -Infinity);
+  checkRange("scalerScaleRange", config.activations.scalerScaleRange, 0);
+  for (const name of ["faScoreRecoveryMin", "faLoadingRecoveryMin"] as const) {
+    const value = config.thresholds[name];
+    if (!(value > 0 && value <= 1)) throw new Error(`${name} ${value} must lie in (0, 1]`);
+  }
+  // The loading solver's two families of constraints only agree when the shares
+  // sum to 1: its row energies total sum(shares) * explainedVarianceTotal *
+  // neuronCount, while the communalities it also has to satisfy total
+  // explainedVarianceTotal * neuronCount. At any other total the alternating
+  // projection still converges, to the normalized split, so a mistyped share
+  // would quietly change the emitted variance split instead of failing here.
+  if (config.targetVarianceShares.some(share => share <= 0)) {
+    throw new Error("targetVarianceShares: every share must be positive");
+  }
+  const shareTotal = config.targetVarianceShares.reduce((sum, share) => sum + share, 0);
+  if (Math.abs(shareTotal - 1) > SHARE_TOLERANCE) {
+    throw new Error(`targetVarianceShares sum to ${shareTotal}, must sum to 1`);
+  }
+}
+
 export function validateConfig(config: AlienConfig): void {
   if (config.targetVarianceShares.length !== config.pathwayCount) {
     throw new Error("targetVarianceShares must have one entry per pathway");
@@ -181,4 +228,5 @@ export function validateConfig(config: AlienConfig): void {
   checkAttributes(config);
   checkFragmentsAreDistinguishable(config);
   checkBias(config);
+  checkActivations(config);
 }

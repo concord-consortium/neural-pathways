@@ -35,6 +35,24 @@ export interface AttributeConfig {
   notes: Record<number, string[]>;
 }
 
+export interface ActivationConfig {
+  /**
+   * Width of the loading matrix. Factor analysis can only identify k factors
+   * from n variables when (n - k)^2 >= n + k; validation enforces it.
+   */
+  neuronCount: number;
+  /** Share of standardized activation variance the pathways carry; the rest is per-neuron noise. */
+  explainedVarianceTotal: number;
+  /**
+   * Each neuron's noise variance is drawn uniformly from this range, then the
+   * draws are scaled so their mean is exactly 1 - explainedVarianceTotal.
+   */
+  noiseVarianceRange: [number, number];
+  /** The raw scaler's per-neuron mean and scale are drawn uniformly from these. */
+  scalerMeanRange: [number, number];
+  scalerScaleRange: [number, number];
+}
+
 export interface Thresholds {
   /** How far an achieved attribute correlation may sit from its target. */
   correlationTolerance: number;
@@ -50,6 +68,10 @@ export interface Thresholds {
   minWordOccurrences: number;
   /** SHAP additivity tolerance. */
   shapTolerance: number;
+  /** Smallest |r| between a recovered factor's scores and the authored pathway it matches. */
+  faScoreRecoveryMin: number;
+  /** Smallest |cosine| between a recovered loading row and the authored one. */
+  faLoadingRecoveryMin: number;
 }
 
 export interface AlienConfig {
@@ -69,8 +91,14 @@ export interface AlienConfig {
   tiltLambda: number;
 
   vocabulary: VocabularyWord[];
-  /** Target share of pathway-score variance, per pathway. Reported against, not asserted. */
+  /**
+   * Target share of pathway-score variance, per pathway. The word-sum split is
+   * reported against rather than asserted, but the activation stage does assert
+   * it: the loading solver hands each pathway this share of the explained
+   * variance, so validation requires the shares to be positive and to sum to 1.
+   */
   targetVarianceShares: number[];
+  activations: ActivationConfig;
 
   attributes: AttributeConfig[];
 
