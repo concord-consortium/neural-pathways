@@ -103,7 +103,8 @@ Click the **`?`** (Search help) button next to the search box.
 
 - **Fields**: `text` (Conversation text), `target_label`, `pathway_0` through
   `pathway_3`, `has_word_scores`, `classification_label`,
-  `classification_probability`. Unlike Yelp's help dialog (which lists `name`,
+  `classification_probability`, `pathway_prediction`, `pathway_prediction_label`,
+  `pathway_prediction_matches`. Unlike Yelp's help dialog (which lists `name`,
   `city`, `state`, `categories`, `reconstruction_r2`), **no business fields appear
   at all** — the alien dataset has none.
 - **Attributes**: `target`, `prediction`, `model_correct`, `voices_raised`,
@@ -120,6 +121,17 @@ Try these searches (results header shown from the run used for this document):
 | `voices_raised:1` | `280 of 800` |
 | `group_size:>3` | `336 of 800` |
 | `model_correct:0` | `63 of 800` |
+| `pathway_prediction_matches:false` | `46 of 800` |
+
+**The pathways have their own opinion, independent of the model.** Type
+`pathway_prediction_matches:false` into the search box: this is the set of
+conversations where what the four pathways add up to (`pathway_prediction`, scored
+against each pathway's importance in `alien-fa-4`) disagrees with what the model
+actually predicted. On the run used for this document that's **`46 of 800`**. Click
+into one of them — the pathway panel on the right shows a **Pathway prediction**
+line with a signed total and its implied label (`approach`/`wait`), followed by a
+**Model said `<label>` — disagrees** line. `docs/pathway-prediction-target-analysis.md`
+covers what this disagreement does and does not correlate with on the yelp dataset.
 
 **`observation` is deliberately not searchable.** Typing `observation:water`
 returns **`0 of 800`** — the field isn't recognized, so nothing matches. This is on
@@ -262,7 +274,11 @@ Open `explorer.html#dataset=alien3&coded=resource_stressed` (as in §4,
 bar settles on `explorer.html#dataset=alien3&fit=alien-fa-3&coded=resource_stressed`.
 The results header reads **`800 of 800`**. Open Search help: the **Fields**
 section offers `pathway_0 through pathway_2` — one fewer than the four-pathway
-dataset's `pathway_0 through pathway_3`.
+dataset's `pathway_0 through pathway_3` — alongside the same `pathway_prediction`,
+`pathway_prediction_label`, and `pathway_prediction_matches` fields as §3. Searching
+`pathway_prediction_matches:false` here returns **`55 of 800`** — a different count
+from the four-pathway dataset's 46. The two datasets use different fits over a
+different number of pathways, so the counts are not directly comparable.
 
 This dataset's pathway assignments differ from the four-pathway one: `group_size`
 is a decoy here (no pathway) instead of P2, and the bias attribute

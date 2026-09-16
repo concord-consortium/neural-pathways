@@ -43,3 +43,40 @@
 .legend-item {
   color: #999;
 }
+
+.pathway-panel-prediction {
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #555;
+}
+
+.pathway-panel-prediction-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.pathway-panel-prediction-title {
+  font-weight: 600;
+  color: #555;
+}
+
+.pathway-panel-prediction-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.pathway-panel-prediction-label {
+  color: #666;
+}
+
+.pathway-panel-prediction-agreement {
+  margin-top: 2px;
+  font-size: 11px;
+  // #666 on this card's #fafafa is 5.5:1. #888 would be 3.4:1, under the 4.5:1
+  // minimum for normal text.
+  color: #666;
+}

@@ -1,5 +1,6 @@
 import { S3Item } from "../../shared/types/s3-data";
 import { ActiveDataset } from "../../shared/datasets/dataset-config";
+import { pathwayPrediction, pathwayPredictionClass } from "./pathway-prediction";
 
 export interface FlatItem {
   text: string;
@@ -14,6 +15,9 @@ export interface FlatItem {
   has_word_scores: boolean;
   classification_label?: string;
   classification_probability?: number;
+  pathway_prediction?: number;
+  pathway_prediction_label?: string;
+  pathway_prediction_matches?: boolean;
   // Pathway scores (pathway_0, pathway_1, ...) and attribute values are added
   // dynamically, so the index signature covers every value type used above.
   [key: string]: string | number | boolean | null | undefined;
@@ -23,6 +27,7 @@ export function flattenItem(
   item: S3Item,
   fitName: string,
   dataset: ActiveDataset,
+  pathwayImportance?: number[],
 ): FlatItem {
   const scores = item.pathway_scores[fitName] ?? [];
   const flat: FlatItem = {
@@ -42,6 +47,20 @@ export function flattenItem(
     flat.classification_label = dataset.config.classificationLabels[item.classification]
       ?? String(item.classification);
     flat.classification_probability = item.classification_probability;
+  }
+  // What the pathways predict on their own, and whether that agrees with the
+  // model. Absent — rather than zero or false — whenever the fit carries no
+  // usable importance, so a query can never match an item on a value that was
+  // never computed.
+  const prediction = pathwayPrediction(scores, pathwayImportance);
+  if (prediction != null) {
+    const predictedClass = pathwayPredictionClass(prediction);
+    flat.pathway_prediction = prediction;
+    flat.pathway_prediction_label = dataset.config.classificationLabels[predictedClass]
+      ?? String(predictedClass);
+    if (item.classification != null) {
+      flat.pathway_prediction_matches = predictedClass === item.classification;
+    }
   }
   for (let i = 0; i < scores.length; i++) {
     flat[`pathway_${i}`] = scores[i];

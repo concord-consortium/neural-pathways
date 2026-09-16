@@ -90,6 +90,28 @@ describe("SearchInput", () => {
     fireEvent.click(helpButton);
     expect(screen.queryByText("Search Syntax")).toBeNull();
   });
+
+  it("shows the pathway prediction fields in the help dialog", () => {
+    render(<SearchInput query="" onQueryChange={jest.fn()} {...yelpProps} />);
+    fireEvent.click(screen.getByRole("button", { name: /search help/i }));
+    expect(screen.getByText("pathway_prediction")).toBeDefined();
+    expect(screen.getByText("pathway_prediction_label")).toBeDefined();
+    expect(screen.getByText("pathway_prediction_matches")).toBeDefined();
+  });
+
+  // The alien dataset declares no searchFields of its own, so these rows have to
+  // live in the shared table rather than in either dataset's config.
+  it("shows them for a dataset that declares no search fields", () => {
+    render(
+      <SearchInput
+        query="" onQueryChange={jest.fn()}
+        itemNoun={{ singular: "conversation", plural: "conversations" }}
+        searchPlaceholder="voices_raised:1" searchFields={[]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /search help/i }));
+    expect(screen.getByText("pathway_prediction_matches")).toBeDefined();
+  });
 });
 
 describe("SearchInput attribute fields", () => {

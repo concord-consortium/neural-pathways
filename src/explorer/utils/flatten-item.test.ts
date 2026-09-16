@@ -191,3 +191,60 @@ describe("flattenItem visibility", () => {
     expect(flat.resource_stressed).toBe(1);
   });
 });
+
+describe("flattenItem pathway prediction", () => {
+  const importanceA = [1, 2, -1]; // fit_a scores [0.8, 0.3, 0.5] sum to 0.9
+
+  it("writes the weighted sum and the label it implies", () => {
+    const flat = flattenItem(makeItem(), "fit_a", activeYelp, importanceA);
+    expect(flat.pathway_prediction).toBeCloseTo(0.9, 10);
+    expect(flat.pathway_prediction_label).toBe("positive");
+  });
+
+  it("labels a negative sum with the dataset's negative label", () => {
+    const flat = flattenItem(makeItem(), "fit_a", activeYelp, [-1, -2, 1]);
+    expect(flat.pathway_prediction).toBeCloseTo(-0.9, 10);
+    expect(flat.pathway_prediction_label).toBe("negative");
+  });
+
+  it("uses the scores of the selected fit", () => {
+    // fit_b has two scores [0.1, 0.9], so it needs a two-long importance.
+    const flat = flattenItem(makeItem(), "fit_b", activeYelp, [2, 1]);
+    expect(flat.pathway_prediction).toBeCloseTo(1.1, 10);
+  });
+
+  it("sets matches true when the implied class equals the classification", () => {
+    const item = makeItem({ classification: 1, classification_probability: 0.9 });
+    expect(flattenItem(item, "fit_a", activeYelp, importanceA).pathway_prediction_matches)
+      .toBe(true);
+  });
+
+  it("sets matches false when the implied class differs", () => {
+    const item = makeItem({ classification: 0, classification_probability: 0.4 });
+    expect(flattenItem(item, "fit_a", activeYelp, importanceA).pathway_prediction_matches)
+      .toBe(false);
+  });
+
+  // False would read as "the pathways disagree with the model" on an item the
+  // model never scored — which is most yelp reviews, since only the test split
+  // was scored.
+  it("omits matches when the item has no classification", () => {
+    const flat = flattenItem(makeItem(), "fit_a", activeYelp, importanceA);
+    expect("pathway_prediction_matches" in flat).toBe(false);
+    expect(flat.pathway_prediction).toBeCloseTo(0.9, 10);
+  });
+
+  it("omits all three fields when no importance is passed", () => {
+    const flat = flattenItem(makeItem({ classification: 1 }), "fit_a", activeYelp);
+    expect("pathway_prediction" in flat).toBe(false);
+    expect("pathway_prediction_label" in flat).toBe(false);
+    expect("pathway_prediction_matches" in flat).toBe(false);
+  });
+
+  it("omits all three fields when the importance length does not match", () => {
+    const flat = flattenItem(makeItem({ classification: 1 }), "fit_a", activeYelp, [1, 2]);
+    expect("pathway_prediction" in flat).toBe(false);
+    expect("pathway_prediction_label" in flat).toBe(false);
+    expect("pathway_prediction_matches" in flat).toBe(false);
+  });
+});

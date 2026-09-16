@@ -45,6 +45,7 @@
     "build:webpack": "webpack --mode production",
     "build:top-test": "cross-env DEPLOY_PATH=specific/release/ webpack --mode production --output-path top-test/specific/release && cp top-test/specific/release/index-top.html top-test/",
     "generate:alien": "ts-node --project tsconfig.generator.json scripts/generate-alien-data.ts",
+    "analyze:pathway-prediction": "ts-node --project tsconfig.generator.json scripts/analysis/pathway-prediction-residual.ts",
     "lint": "eslint",
     "lint:build": "eslint --config eslint.build.config.mjs",
     "lint:fix": "eslint --fix",
