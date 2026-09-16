@@ -28,7 +28,11 @@ depends on which importance is used.
 If importance is meant to explain the model — which is how the project intends to use
 it — the surrogate is the relevant quantity. That is why this note has the plain name.
 
-Everything else is held the same so that the comparison isolates the importance. The
+Everything else is held the same, so the comparison isolates which importance vector
+is used. It does **not** isolate the fitting target: the two importances differ in two
+ways at once, in what they were fitted against and in which split they were fitted on,
+so no single difference between the notes can be attributed to the fitting target
+alone. The
 pathway prediction uses the explorer's shipped formula: raw scores times importance,
 no intercept, `sum ≥ 0` is class 1. The fit mirrors how the published importance was
 produced: pathway scores standardized, an L2-regularized logistic regression with

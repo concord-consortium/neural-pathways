@@ -73,7 +73,7 @@ analysis script reproduces. Numbers below are taken verbatim from the Appendix o
 
 | Formula | Agrees with the model | Disagreeing items |
 |---|---|---|
-| Raw `Σ p·imp > 0` (**shipped**) | 98.2–98.5% | 46–54 |
+| Raw `Σ p·imp ≥ 0` (**shipped**) | 98.2–98.5% | 46–54 |
 | Re-standardized scores, with or without the recovered intercept | 98.2–98.5% | 46–53 |
 | P0 alone | 99.0–99.1% | 27–29 |
 | Refit directly against `classification` | 99.9% | 1–2 |
@@ -188,8 +188,11 @@ that distance, the disagreement/residual correlation collapses to essentially ze
 story: the residual's coefficient stays small (-0.09, -0.21, 0.07) while the margin
 term dominates.
 
-**Conclusion**: poor reconstruction does not cause the pathway/model disagreement.
-Both follow from the same underlying condition, described below.
+**Conclusion**: the association between reconstruction error and disagreement does not
+survive controlling for distance from the decision boundary. This is observational, so
+it does not establish that reconstruction error cannot cause disagreement; what it
+rules out is the unconditional association the story's hypothesis rested on. The
+condition that accounts for both is described below.
 
 ### What that underlying condition actually is
 
@@ -257,9 +260,15 @@ more often than the full weighted sum does (§3).
 A pathway is a pattern in activations. Factor analysis never sees a weight, so
 whether a pathway influences the classification depends on whether the neurons it
 spans feed the classifier head — a fact about how the model was trained, not about
-the factor. `pathway_importance` does not measure that: it is a logistic regression
-of the classification onto pathway scores, fitted after the fact, so it records
-statistical association with the output and nothing structural.
+the factor. `pathway_importance` does not measure that. The importance used in this
+note is a logistic regression of the **true sentiment** onto pathway scores, fitted
+after the fact, so it records statistical association with the label and nothing
+structural — and an association with the label is a step further from the model's
+output than an association with the prediction would be.
+
+[`pathway-prediction-analysis.md`](pathway-prediction-analysis.md) runs this same
+test against importance fitted to the model's prediction, where the association with
+the final layer comes out stronger.
 
 The activation vector allows a crude test, because it is not homogeneous: neurons
 0–767 are the CLS embedding and 768–779 are the two classifier-head layers. If

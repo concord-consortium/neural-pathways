@@ -76,5 +76,7 @@
 .pathway-panel-prediction-agreement {
   margin-top: 2px;
   font-size: 11px;
-  color: #888;
+  // #666 on this card's #fafafa is 5.5:1. #888 would be 3.4:1, under the 4.5:1
+  // minimum for normal text.
+  color: #666;
 }

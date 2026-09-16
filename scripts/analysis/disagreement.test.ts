@@ -127,6 +127,49 @@ describe("analyzeDisagreement", () => {
   });
 });
 
+/**
+ * `p0Disagreements` is reported by the entry script and both analysis notes lean on
+ * it, but the fixture above has a single pathway, which makes P0 alone and the full
+ * prediction the same number — it cannot tell the two calculations apart. These
+ * cases can.
+ */
+describe("analyzeDisagreement, P0 against the full prediction", () => {
+  const twoPathwayItem = (id: string, p0: number, p1: number, classification: number): S3Item => ({
+    id,
+    sources: { test: [0] },
+    text: "t",
+    target: classification,
+    target_label: null,
+    pathway_scores: { [FIT]: [p0, p1] },
+    reconstruction_r2: { [FIT]: 0.9 },
+    pathway_variance_fractions: { [FIT]: [0.5, 0.5] },
+    classification,
+  });
+
+  it("counts every disagreement as a P0 disagreement when there is one pathway", () => {
+    const result = analyzeDisagreement(fixture(), FIT, [1]);
+    expect(result!.p0Disagreements).toBe(45);
+    expect(result!.p0Disagreements).toBe(result!.disagreements);
+  });
+
+  // With importance [1, 1] the full prediction is p0 + p1 while P0 alone is p0, so
+  // each item below is decided differently by the two.
+  it("counts P0-only disagreements separately from the full prediction's", () => {
+    const items = [
+      // full +3 → 1, P0 +3 → 1, model says 1: both agree.
+      twoPathwayItem("both-agree", 3, 0, 1),
+      // full -1 → 0, P0 +2 → 1, model says 0: only P0 is wrong.
+      twoPathwayItem("p0-wrong", 2, -3, 0),
+      // full +1 → 1, P0 -2 → 0, model says 0: only the full prediction is wrong.
+      twoPathwayItem("full-wrong", -2, 3, 0),
+    ];
+    const result = analyzeDisagreement(items, FIT, [1, 1]);
+    expect(result!.n).toBe(3);
+    expect(result!.disagreements).toBe(1);
+    expect(result!.p0Disagreements).toBe(1);
+  });
+});
+
 describe("partialCorrelation", () => {
   it("removes the control's share of the correlation", () => {
     // (0.5 - 0.6 * 0.7) / sqrt((1 - 0.36) * (1 - 0.49)) = 0.08 / 0.571314

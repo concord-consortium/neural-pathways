@@ -205,7 +205,7 @@ committed script does not reproduce all of them.
 
 | Formula | Agrees with the model | Disagreeing items |
 |---|---|---|
-| Raw `Σ p·imp > 0` (**shipped**) | 98.2–98.5% | 46–54 |
+| Raw `Σ p·imp ≥ 0` (**shipped**) | 98.2–98.5% | 46–54 |
 | Re-standardized scores, with or without the recovered intercept | 98.2–98.5% | 46–53 |
 | P0 alone | 99.0–99.1% | 27–29 |
 | Refit directly against `classification` | 99.9% | 1–2 |
@@ -235,8 +235,11 @@ that distance, the disagreement-residual correlation falls to between −0.03 an
 logistic model the residual's coefficient is near zero while distance dominates. 53 of 54
 disagreements sit in the 10% of reviews closest to the boundary.
 
-So the answer to the story's question is that the correlation is real but explained: poor
-reconstruction does not cause the disagreement — both follow from the same condition.
+So the answer to the story's question is that the correlation is real but accounted for: once
+distance from the decision boundary is controlled for, no association between reconstruction error
+and disagreement remains. This is observational, so it does not establish that reconstruction error
+cannot cause disagreement; what it rules out is the unconditional association the hypothesis rested
+on.
 
 **Amendment — the mechanism stated here was wrong.** This passage originally explained the shared
 cause as "P0 carries about 85% of the variance, so a review with little P0 has little for the
