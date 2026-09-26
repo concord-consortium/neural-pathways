@@ -38,9 +38,10 @@ output dist/alien-data-3, fit "alien-fa-3"
 followed by `wrote 800 conversations to .../dist/alien-data-3`, and then webpack
 compiled and served the app at `http://localhost:8080`.
 
-- Open `http://localhost:8080/`. The landing page heading reads **Neural
-  Pathways**, with four links: **Heatmap**, **Explorer**, **Alien Explorer (4
-  pathways)**, and **Alien Explorer (3 pathways)**. The **Alien Explorer (4
+- Open `http://localhost:8080/lab.html`. The heading reads **Neural Pathways
+  Lab**, with five links: **Heatmap**, **Explorer**, **Alien Explorer (4
+  pathways)**, **Alien Explorer (3 pathways)**, and **Student app**. (The root
+  `http://localhost:8080/` is the student app, not this page.) The **Alien Explorer (4
   pathways)** link points at `explorer.html#dataset=alien`; **Alien Explorer (3
   pathways)** points at `explorer.html#dataset=alien3`.
 - Click **Alien Explorer (4 pathways)**. The `Dataset:` dropdown reads **Alien
