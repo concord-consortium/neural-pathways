@@ -13,6 +13,19 @@
 Every line under `src/app/`, `src/views/` and `src/core/` is reviewed, and none of it may import
 from `src/lab/`. ESLint enforces this. See [src/core/README.md](src/core/README.md).
 
+## URLs
+
+| URL | Shows |
+|---|---|
+| `index.html` | The student app: a list of views on the left, the first view selected |
+| `index.html#view=<id>` | The student app with that view selected |
+| `index.html?interactive=<id>` | That view alone, for embedding in the Activity Player |
+| `lab.html` | Links to the research tools |
+| `explorer.html`, `heatmap.html` | The explorer and the heatmap |
+
+View ids, in lesson order: `trace-a-case`, `extract-pathways`, `investigate-pathways`,
+`prediction-chain`, `correlations`, `investigate-unknown-pathway`, `correlations-part-2`.
+
 ## Development
 
 ### Initial steps
