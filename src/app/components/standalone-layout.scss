@@ -1,0 +1,10 @@
+.standalone-layout {
+  display: flex;
+  height: 100vh;
+}
+
+.standalone-view {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 0 16px;
+}
