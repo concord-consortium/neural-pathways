@@ -42,6 +42,7 @@ module.exports = (env, argv) => {
     },
     devtool: devMode ? 'eval-cheap-module-source-map' : 'source-map',
     entry: {
+      app: './src/app/index.tsx',
       heatmap: './src/lab/heatmap/index.tsx',
       explorer: './src/lab/explorer/index.tsx',
     },
@@ -145,6 +146,13 @@ module.exports = (env, argv) => {
       }),
       new HtmlWebpackPlugin({
         filename: 'index.html',
+        template: 'src/app/index.html',
+        favicon: 'src/public/favicon.ico',
+        publicPath: '.',
+        chunks: ['app'],
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'lab.html',
         template: 'src/lab/index.html',
         favicon: 'src/public/favicon.ico',
         publicPath: '.',
@@ -166,10 +174,10 @@ module.exports = (env, argv) => {
       }),
       ...(DEPLOY_PATH ? [new HtmlWebpackPlugin({
         filename: 'index-top.html',
-        template: 'src/lab/index.html',
+        template: 'src/app/index.html',
         favicon: 'src/public/favicon.ico',
         publicPath: DEPLOY_PATH,
-        chunks: [],
+        chunks: ['app'],
       })] : []),
       // dist/alien-data and dist/alien-data-3 are written by
       // `npm run generate:alien`, not by webpack. Without these exclusions the
