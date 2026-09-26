@@ -13,7 +13,32 @@ import js from "@eslint/js";
 import { defineConfig } from "eslint/config";
 import comments from "@eslint-community/eslint-plugin-eslint-comments/configs";
 import { flatConfigs as importPluginConfig } from "eslint-plugin-import";
+import fs from "node:fs";
+import path from "node:path";
 
+// Student-facing code (src/app, src/views, src/core) is fully reviewed and must not depend on
+// the research code in src/lab. Views are independent of each other and of the app shell.
+// See src/core/README.md.
+const viewsDir = path.join(import.meta.dirname, "src/views");
+const viewFolders = fs.existsSync(viewsDir)
+  ? fs.readdirSync(viewsDir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name)
+  : [];
+const boundaryMessage = "Student-facing code may not import this. See src/core/README.md.";
+const importBoundaryZones = [
+  { target: "./src/app", from: "./src/lab", message: boundaryMessage },
+  { target: "./src/views", from: "./src/lab", message: boundaryMessage },
+  { target: "./src/views", from: "./src/app", message: boundaryMessage },
+  { target: "./src/core", from: "./src/lab", message: boundaryMessage },
+  { target: "./src/core", from: "./src/app", message: boundaryMessage },
+  { target: "./src/core", from: "./src/views", message: boundaryMessage },
+  // A view may not import from a sibling view; shared code belongs in src/core.
+  ...viewFolders.map(name => ({
+    target: `./src/views/${name}`,
+    from: "./src/views",
+    except: [`./${name}`],
+    message: "A view may not import from another view; move shared code to src/core.",
+  })),
+];
 
 export default defineConfig(
   {
@@ -141,6 +166,16 @@ export default defineConfig(
     rules: {
       "@typescript-eslint/prefer-optional-chain": "warn",
     }
+  },
+  {
+    name: "student-facing import boundary",
+    files: ["src/**/*.{ts,tsx,js,jsx}"],
+    rules: {
+      "import/no-restricted-paths": ["error", {
+        basePath: import.meta.dirname,
+        zones: importBoundaryZones,
+      }],
+    },
   },
   {
     name: "rules specific to Jest tests",
