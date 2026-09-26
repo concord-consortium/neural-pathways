@@ -1,5 +1,5 @@
 import { analyzeDisagreement, partialCorrelation } from "./disagreement";
-import { S3Item } from "../../src/shared/types/s3-data";
+import { S3Item } from "../../src/lab/shared/types/s3-data";
 
 const FIT = "fit";
 

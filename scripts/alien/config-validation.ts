@@ -1,5 +1,5 @@
 import * as path from "path";
-import { validateAttributeKeys } from "../../src/shared/datasets/dataset-config";
+import { validateAttributeKeys } from "../../src/lab/shared/datasets/dataset-config";
 import { AlienConfig } from "./config-types";
 
 const SHARE_TOLERANCE = 1e-9;
