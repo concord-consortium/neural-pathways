@@ -31,6 +31,10 @@ const importBoundaryZones = [
   { target: "./src/core", from: "./src/lab", message: boundaryMessage },
   { target: "./src/core", from: "./src/app", message: boundaryMessage },
   { target: "./src/core", from: "./src/views", message: boundaryMessage },
+  // scripts/ is unreviewed and itself imports src/lab, so it is off limits too.
+  { target: "./src/app", from: "./scripts", message: boundaryMessage },
+  { target: "./src/views", from: "./scripts", message: boundaryMessage },
+  { target: "./src/core", from: "./scripts", message: boundaryMessage },
   // A view may not import from a sibling view; shared code belongs in src/core.
   ...viewFolders.map(name => ({
     target: `./src/views/${name}`,
