@@ -646,7 +646,7 @@ isn't deterministic.
   six-value attribute in the set; it may not survive to later phases in its
   current form.
 - **The explorer's `classification_label` wording still says positive/negative.**
-  `src/explorer/components/review-panel.tsx` renders the classification badge
+  `src/lab/heatmap/components/review-panel.tsx` renders the classification badge
   as `"positive"`/`"negative"` rather than the dataset's own
   `target_label` (`"approach"`/`"wait"` in this dataset). Phase 5, which wires
   the explorer up to this data, is expected to fix the wording.
