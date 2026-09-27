@@ -11,7 +11,7 @@ Deploying to S3 is handled by the [S3 Deploy Action](https://github.com/concord-
 - **released version path**: the released version of the application is available at `neural-pathways/index.html`
 - **main branch**: the main branch build is available at both `neural-pathways/index-main.html` and `neural-pathways/branch/main/index.html`.  The `index-main.html` form is preferred because it verifies the top level deployment is working for the current code. Additional branches can be added to the top level by updating the `topBranches` configuration in `ci.yml`
 - **staging or other top level paths**: additional top level releases can be added so they are available at `neural-pathways/index-[name].html`
-- **what the top level shows**: `index.html` and `index-top.html` are the student app. The research tools are at `lab.html`, `explorer.html` and `heatmap.html` in each branch or version folder.
+- **what the top level shows**: `index.html` and `index-top.html` are the student app. A release copies only `index-top.html` to the top level (see `release.yml`), so only the student app is released. The lab tools (`lab.html`, `explorer.html`, `heatmap.html`) are deliberately not released: they are for developers and authors, who use them from a branch or version folder, usually `neural-pathways/branch/main/lab.html`. There is no top-level `lab.html`, `explorer.html` or `heatmap.html`.
 
 ## index-top.html
 
