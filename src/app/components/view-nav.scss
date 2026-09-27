@@ -17,7 +17,7 @@
     display: block;
     padding: 6px 8px;
     border-radius: 4px;
-    color: #1a73e8;
+    color: #1558b0;
     text-decoration: none;
 
     &:hover {
@@ -25,7 +25,7 @@
     }
 
     &[aria-current="page"] {
-      background: #1a73e8;
+      background: #1558b0;
       color: white;
     }
   }

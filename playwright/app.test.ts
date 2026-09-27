@@ -8,6 +8,11 @@ test("the root shows the standalone app with every view in the nav", async ({ pa
   await expect(page.getByRole("heading", { name: "Trace a Case" })).toBeVisible();
 });
 
+test("the student app declares its language for screen readers", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+});
+
 test("clicking a nav item selects that view and back returns", async ({ page }) => {
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Views" });
