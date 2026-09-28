@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "loadingSelection": { "kind": "neuron", "index": 7 },
+  "$modelType": "npw/InvestigatePathwaysState"
+}
