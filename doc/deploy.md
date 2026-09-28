@@ -45,6 +45,10 @@ declare const __webpack_public_path__: string;
 ```
 A possible reason for doing this is if you are working with an external library that you don't have control over and need to pass it a path to load an asset.
 
+This project does this for its generated data: `src/core/data-url.ts` resolves every data file
+URL (for example `alien-data-3/index.json`) against `__webpack_public_path__`, so the released
+top-level `index.html` loads the data from its version folder.
+
 When possible, switching to an import is preferred because it means that webpack knows about all of the referenced assets. This means we can use webpack to build a manifest which is useful for offline support.
 
 Note: there is a `publicPath` configuration option for the `HtmlWebpackPlugin`. This is a different but related option, it controls the prefix the plugin adds before assets (javascript and css) referenced in the generated html file. This option is used so the `index-top.html` references assets in the version folder and `index.html` references assets in the same folder.
