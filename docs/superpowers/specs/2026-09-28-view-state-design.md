@@ -101,9 +101,12 @@ Specific actions beyond the setters:
 
 - `setStep(conversationId, step)` on the step maps.
 - `toggleAttribute(pane, key)` on Investigate Unknown Pathway.
-- `ensureValidPane2Conversation(filteredIds)`. It behaves like `ensureValidConversation`, but
-  falls back to `filteredIds[1]`, or to `filteredIds[0]` when there is only one. That matches
-  the prototype, where the two panes open on different conversations.
+- `ensureValidPane2Conversation(filteredIds, pane1ConversationId)`. It behaves like
+  `ensureValidConversation`, but falls back to the first conversation that pane 1 isn't showing,
+  or to `filteredIds[0]` when that is the only one. The two panes then open on different
+  conversations, as in the prototype, wherever pane 1's conversation sits in the list. (Amended
+  after review. The first version always fell back to `filteredIds[1]`, which put both panes on
+  the same case whenever pane 1 was showing the second one.)
 
 ### Not kept
 
@@ -232,8 +235,8 @@ Unit tests (Jest), in `src/core/state/` and `src/app/state/`:
 - **View actions:**
   - `setStep` records the step under the conversation id.
   - `toggleAttribute` adds and removes a key.
-  - `ensureValidPane2Conversation` falls back to the second conversation, or to the first when
-    the list has only one.
+  - `ensureValidPane2Conversation` falls back to the first conversation pane 1 isn't showing, or
+    to the only one.
 - **`AppState`:**
   - The first `getViewState` creates a tree of the view's model type.
   - A second call returns the same instance.

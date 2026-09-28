@@ -19,12 +19,4 @@ describe("validConversationId", () => {
     expect(validConversationId("00000000", [])).toBe("00000000");
     expect(validConversationId(undefined, [])).toBeUndefined();
   });
-
-  it("falls back to the id at the fallback index", () => {
-    expect(validConversationId(undefined, ids, 1)).toBe("a07b5d10");
-  });
-
-  it("falls back to the last id when the fallback index is past the end", () => {
-    expect(validConversationId(undefined, ["3fa91c2e"], 1)).toBe("3fa91c2e");
-  });
 });

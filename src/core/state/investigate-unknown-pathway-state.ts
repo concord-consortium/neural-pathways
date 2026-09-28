@@ -40,15 +40,19 @@ export class InvestigateUnknownPathwayState extends Model({
   }
 
   /**
-   * Like SharedState.ensureValidConversation, but falls back to the second conversation so the
-   * panes open on different cases, as in the prototype. It changes state without a student action:
-   * wrap it in `withoutUndo` once undo exists.
+   * Like SharedState.ensureValidConversation, but when pane 2's conversation isn't in the list it
+   * falls back to the first one that pane 1 isn't showing, so the panes open on different cases.
+   * Pass SharedState's `conversationId`. It changes state without a student action: wrap it in
+   * `withoutUndo` once undo exists.
    */
   @modelAction
-  ensureValidPane2Conversation(filteredIds: readonly string[]) {
-    const id = validConversationId(this.pane2.conversationId, filteredIds, 1);
-    if (id !== this.pane2.conversationId) {
-      this.pane2.conversationId = id;
+  ensureValidPane2Conversation(filteredIds: readonly string[], pane1ConversationId: string | undefined) {
+    const current = this.pane2.conversationId;
+    if (filteredIds.length === 0 || (current !== undefined && filteredIds.includes(current))) {
+      return;
     }
+    // Pane 1 falls back the way SharedState does, so avoid the case it shows or is about to show.
+    const pane1Id = validConversationId(pane1ConversationId, filteredIds);
+    this.pane2.conversationId = filteredIds.find(id => id !== pane1Id) ?? filteredIds[0];
   }
 }
