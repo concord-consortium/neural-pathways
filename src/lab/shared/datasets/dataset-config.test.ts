@@ -1,5 +1,5 @@
-import { AttributeDefinition } from "../types/attributes";
-import { S3Index } from "../types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
+import { S3Index } from "../../../core/types/s3-data";
 import {
   validateAttributeKeys, RESERVED_FIELD_NAMES, activateDataset, capitalize,
   applyCommissions, codeableAttributes, NO_COMMISSIONS, LoadedDataset,

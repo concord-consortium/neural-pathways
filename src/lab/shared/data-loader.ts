@@ -1,6 +1,6 @@
 import {
   S3Index, S3Item, S3FaFit, ActivationBucket, S3ShapBucket, S3ShapItem, ItemShapData,
-} from "./types/s3-data";
+} from "../../core/types/s3-data";
 import { Pathways, Scaler, Metadata } from "../heatmap/types/viz-data";
 import { DatasetConfig } from "./datasets/dataset-config";
 

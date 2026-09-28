@@ -2,8 +2,8 @@ import React from "react";
 import { act, render, screen, fireEvent } from "@testing-library/react";
 import { App } from "./app";
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
-import { S3Index, S3FaFit, S3Item } from "../../shared/types/s3-data";
-import { AttributeDefinition } from "../../shared/types/attributes";
+import { S3Index, S3FaFit, S3Item } from "../../../core/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
 import { DatasetConfig } from "../../shared/datasets/dataset-config";
 
 // The App under test always talks to the network through data-loader; mocking

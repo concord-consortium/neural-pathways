@@ -7,7 +7,7 @@ import {
   fitToMetadata,
   standardizeActivations,
 } from "./data-loader";
-import { S3FaFit } from "./types/s3-data";
+import { S3FaFit } from "../../core/types/s3-data";
 import { yelpDataset } from "./datasets/yelp-dataset";
 
 const BASE_URL = yelpDataset.baseUrl;

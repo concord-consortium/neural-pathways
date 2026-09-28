@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useDeferredValue, useCallback, useEffect, useRef } from "react";
 import { filter, parse } from "liqe";
-import { S3Index, S3Item, S3ShapBucket, ItemShapData } from "../../shared/types/s3-data";
+import { S3Index, S3Item, S3ShapBucket, ItemShapData } from "../../../core/types/s3-data";
 import { ScaleMode, ScaleExtents, WordColorMode, WordScaleScope, ViewMode } from "../types/explorer-data";
 import { fetchIndex, fetchShap } from "../../shared/data-loader";
 import { flattenItem } from "../utils/flatten-item";

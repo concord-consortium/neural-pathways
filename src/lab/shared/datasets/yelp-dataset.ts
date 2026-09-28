@@ -1,5 +1,5 @@
-import { S3Item } from "../types/s3-data";
-import { AttributeDefinition } from "../types/attributes";
+import { S3Item } from "../../../core/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
 import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
 
 /**

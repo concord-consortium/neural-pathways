@@ -24,7 +24,7 @@ export interface AttributeDefinition {
   /**
    * Present in the data but not shown in the explorer until a student
    * commissions it. Written by the dataset generator. `applyCommissions`
-   * (shared/datasets/dataset-config.ts) filters a hidden attribute out of
+   * (src/lab/shared/datasets/dataset-config.ts) filters a hidden attribute out of
    * `ActiveDataset.attributes` — the list every explorer surface reads —
    * unless its key is in the commissioned set; `codeableAttributes` in the
    * same file uses it to build the Codings dialog's list of attributes a
@@ -46,12 +46,13 @@ export interface AttributeDefinition {
    * with pairwise interactions switched on, the `target × prediction` column plus
    * the `target` and `prediction` main effects span `model_correct` exactly, so
    * the design matrix is exactly singular and the fit fails outright. Every
-   * candidate starts checked (`excludedKeys` in regression-panel.tsx begins
-   * empty), so that is not an exotic selection a user has to go looking for — it
-   * is the panel's default state the moment the interactions box is ticked.
-   * `buildDesignMatrix`'s duplicate-column check (shared/utils/design-matrix.ts)
-   * compares columns pairwise only and cannot see a three-column dependency, so
-   * nothing downstream catches this; the panel just reports "Not enough usable
+   * candidate starts checked (`excludedKeys` in
+   * src/lab/explorer/components/regression-panel.tsx begins empty), so that is
+   * not an exotic selection a user has to go looking for — it is the panel's
+   * default state the moment the interactions box is ticked.
+   * `buildDesignMatrix`'s duplicate-column check
+   * (src/lab/explorer/utils/design-matrix.ts) compares columns pairwise only and
+   * cannot see a three-column dependency, so nothing downstream catches this; the panel just reports "Not enough usable
    * data to fit a model", which misdescribes the cause.
    *
    * So: if you are here because an attribute is missing its regression checkbox

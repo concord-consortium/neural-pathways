@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { WordColorMode, WordScaleScope } from "../types/explorer-data";
-import { ItemShapData } from "../../shared/types/s3-data";
+import { ItemShapData } from "../../../core/types/s3-data";
 import { WordEffectDisplay } from "./word-effect-display";
 import { ColorScale } from "./color-scale";
 import "./word-effects-panel.scss";

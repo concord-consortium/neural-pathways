@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { S3Item } from "../../shared/types/s3-data";
+import { S3Item } from "../../../core/types/s3-data";
 import "./results-panel.scss";
 
 const SNIPPET_LENGTH = 80;

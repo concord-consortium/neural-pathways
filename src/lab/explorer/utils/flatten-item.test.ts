@@ -1,6 +1,6 @@
 import { flattenItem } from "./flatten-item";
-import { S3Item, S3Index } from "../../shared/types/s3-data";
-import { AttributeDefinition } from "../../shared/types/attributes";
+import { S3Item, S3Index } from "../../../core/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
 import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 import {
   activateDataset, applyCommissions, NO_COMMISSIONS, LoadedDataset,
