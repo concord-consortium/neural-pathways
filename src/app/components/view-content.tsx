@@ -1,12 +1,15 @@
 import React from "react";
+import { ViewStateProvider } from "../../core/state/view-state-context";
+import { AppState } from "../state/app-state";
 import { findView, VIEWS } from "../views";
 import "./view-content.scss";
 
 interface ViewContentProps {
   viewId: string;
+  appState: AppState;
 }
 
-export const ViewContent: React.FC<ViewContentProps> = ({ viewId }) => {
+export const ViewContent: React.FC<ViewContentProps> = ({ viewId, appState }) => {
   const view = findView(viewId);
   if (!view) {
     return (
@@ -19,5 +22,9 @@ export const ViewContent: React.FC<ViewContentProps> = ({ viewId }) => {
     );
   }
   const ViewComponent = view.component;
-  return <ViewComponent />;
+  return (
+    <ViewStateProvider viewId={view.id} view={appState.getViewState(view.id)} shared={appState.shared}>
+      <ViewComponent />
+    </ViewStateProvider>
+  );
 };
