@@ -1,18 +1,12 @@
 import { S3Index, S3Item } from "../../../core/types/s3-data";
 import { AttributeDefinition } from "../../../core/types/attributes";
+import { DatasetDefinition } from "../../../core/datasets/dataset-definition";
 
-export interface DatasetConfig {
-  id: string;
-  label: string;
-  baseUrl: string;
-  itemNoun: { singular: string; plural: string };
-  classificationLabels: Record<number, string>;
+/** A dataset as the explorer and heatmap use it: the core definition plus search help. */
+export interface DatasetConfig extends DatasetDefinition {
   searchPlaceholder: string;
   /** Help rows for fields only this dataset has. */
   searchFields: { name: string; description: string }[];
-  resolveAttributes(index: S3Index): AttributeDefinition[];
-  /** Returns null when the attribute does not apply to this item. */
-  getAttributeValue: (item: S3Item, key: string) => number | null;
 }
 
 /**
@@ -78,48 +72,4 @@ export function codeableAttributes(attributes: AttributeDefinition[]): Attribute
 /** Sentence-initial and heading use of a lowercase item noun. */
 export function capitalize(text: string): string {
   return text.length === 0 ? text : text[0].toUpperCase() + text.slice(1);
-}
-
-/**
- * Search field names an attribute key must not shadow, because the existing
- * field holds a different kind of value than an attribute would.
- *
- * `stars` and `review_stars` are deliberately absent: they are numeric fields
- * whose values an attribute may legitimately alias. See yelp-dataset.ts. Such an
- * alias MUST derive the identical value as the search field it shadows — nothing
- * here enforces that, so a future dataset config that aliased one of these names
- * with a different value would silently change search semantics.
- */
-export const RESERVED_FIELD_NAMES = [
-  "text",
-  "target_label",
-  "name",
-  "city",
-  "state",
-  "categories",
-  "reconstruction_r2",
-  "has_word_scores",
-  "classification_label",
-  "classification_probability",
-  "pathway_prediction",
-  "pathway_prediction_label",
-  "pathway_prediction_matches",
-];
-
-const PATHWAY_FIELD_PATTERN = /^pathway_\d+$/;
-
-export function validateAttributeKeys(attributes: AttributeDefinition[]): void {
-  const seen = new Set<string>();
-  for (const attr of attributes) {
-    if (RESERVED_FIELD_NAMES.includes(attr.key)) {
-      throw new Error(`Attribute key "${attr.key}" collides with a reserved search field name`);
-    }
-    if (PATHWAY_FIELD_PATTERN.test(attr.key)) {
-      throw new Error(`Attribute key "${attr.key}" collides with the reserved pathway_<n> pattern`);
-    }
-    if (seen.has(attr.key)) {
-      throw new Error(`Duplicate attribute key "${attr.key}"`);
-    }
-    seen.add(attr.key);
-  }
 }

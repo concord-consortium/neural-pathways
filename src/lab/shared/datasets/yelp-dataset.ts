@@ -1,6 +1,7 @@
 import { S3Item } from "../../../core/types/s3-data";
 import { AttributeDefinition } from "../../../core/types/attributes";
-import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
+import { DatasetConfig } from "./dataset-config";
+import { validateAttributeKeys } from "../../../core/datasets/dataset-definition";
 
 /**
  * The label space this dataset's binary outcome lives in, shared by the three
