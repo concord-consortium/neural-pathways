@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "query": "model_correct:0",
+  "conversationId": "3fa91c2e",
+  "commissioned": ["young_present", "gestures_repeated"],
+  "$modelType": "npw/SharedState"
+}
