@@ -26,6 +26,16 @@ describe("AppState", () => {
     expect((appState.getViewState("trace-a-case") as TraceACaseState).speed).toBe(2);
   });
 
+  it("gives every view the same shared state", () => {
+    const appState = new AppState();
+    const shared = appState.shared;
+    appState.getViewState("trace-a-case");
+    appState.getViewState("correlations");
+    expect(appState.shared).toBe(shared);
+    shared.setQuery("model_correct:0");
+    expect(appState.shared.query).toBe("model_correct:0");
+  });
+
   it("keeps Correlations and Correlations Part 2 separate, though they share a model", () => {
     const appState = new AppState();
     const part1 = appState.getViewState("correlations") as CorrelationsState;

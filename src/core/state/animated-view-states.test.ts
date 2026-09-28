@@ -71,6 +71,10 @@ describe("ExtractPathwaysState", () => {
     });
   });
 
+  it("rejects a saved form with a wrong-typed field", () => {
+    expect(() => fromSnapshot(ExtractPathwaysState, { ...extractFixture, extracted: "yes" } as any)).toThrow();
+  });
+
   it("rejects a negative collected count", () => {
     expect(() => new ExtractPathwaysState({}).setCollected(-1)).toThrow();
   });
