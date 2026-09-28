@@ -27,3 +27,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   [doc/deploy.md](../../doc/deploy.md).
 - `datasets/dataset-definition.ts`: what a dataset is, and attribute-key validation.
 - `datasets/alien3-dataset.ts`: the lesson's dataset, `alien3Dataset`.
+
+Comments here sometimes mention the Yelp and 4-pathway alien datasets, which live in `lab`. The
+data format was designed around Yelp first. See [doc/datasets.md](../../doc/datasets.md) for what
+each dataset is.

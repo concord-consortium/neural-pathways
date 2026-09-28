@@ -13,6 +13,9 @@
 Every line under `src/app/`, `src/views/` and `src/core/` is reviewed, and none of it may import
 from `src/lab/`. ESLint enforces this. See [src/core/README.md](src/core/README.md).
 
+The code works with three datasets: real Yelp reviews and two generated alien-conversation
+datasets. See [doc/datasets.md](doc/datasets.md) for what each one is and why it exists.
+
 ## URLs
 
 | URL | Shows |
