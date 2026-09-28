@@ -16,3 +16,9 @@ data loading, types, math, generic charts.
 Promotion is a copy-and-review, rewriting where warranted, not a blind move. When the promotion
 is essentially a move, switch `lab` to import the `core` version and delete the `lab` copy. When
 it is a real rewrite, the `lab` original may stay until nothing in `lab` needs it.
+
+## State
+
+`state/` holds the mobx-keystone models for the shared state and each view's state, and the
+context views use to reach them. What each view keeps, and the rules for changing a saved shape,
+are in `docs/view-state.md`.
