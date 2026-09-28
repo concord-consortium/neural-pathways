@@ -2,10 +2,10 @@ import React, { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { S3Index, S3Item, ActivationBucket } from "../types/viz-data";
 import { ScaleType, ValueScaling, computeAbsMax } from "../../shared/color-scale";
 import { computeScoredPathway, computeSum } from "../utils/reconstruction";
+import { fetchIndex, fetchActivations } from "../../../core/data-loader";
 import {
-  fetchIndex, fetchActivations, fitToPathways, fitToScaler, fitToMetadata,
-  standardizeActivations,
-} from "../../shared/data-loader";
+  fitToPathways, fitToScaler, fitToMetadata, standardizeActivations,
+} from "../utils/fit-to-viz";
 import { DATASET_LIST, DEFAULT_DATASET_ID, datasetFromId } from "../../shared/datasets/registry";
 import { DatasetSelector } from "../../shared/components/dataset-selector";
 import { ReviewPanel } from "./review-panel";
