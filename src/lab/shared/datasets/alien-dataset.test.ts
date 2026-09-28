@@ -24,7 +24,7 @@ const item = {
 } as unknown as S3Item;
 
 describe("alienDataset", () => {
-  it("loads its data from a path relative to the page", () => {
+  it("loads its data from a path relative to the build root", () => {
     expect(alienDataset.baseUrl).toBe("alien-data/");
     expect(alienDataset.baseUrl.startsWith("/")).toBe(false);
   });

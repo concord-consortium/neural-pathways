@@ -21,8 +21,9 @@ export interface S3Index {
  * The five activation-model fields are optional so a dataset without neuron
  * activations can still declare a fit. Every shipped dataset now carries them —
  * the yelp pipeline fits 780 neurons, the alien generator constructs 14 — but
- * keeping them optional means the heatmap-only readers in data-loader.ts fail
- * loudly on a fit that lacks them instead of silently reading undefined.
+ * keeping them optional means the heatmap-only readers in
+ * src/lab/heatmap/utils/fit-to-viz.ts fail loudly on a fit that lacks them
+ * instead of silently reading undefined.
  */
 export interface S3FaFit {
   source_split: string;
