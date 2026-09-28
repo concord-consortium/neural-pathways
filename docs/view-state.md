@@ -46,10 +46,12 @@ the stages it has completed, but not one in progress.
   the network, so they are stored as numbers.
 - **Keep the conversation valid.** A view that shows a conversation calls
   `shared.ensureValidConversation(filteredIds)` when it first renders and whenever its filtered
-  list changes. Pane 2 of Investigate Unknown Pathway calls `ensureValidPane2Conversation`. If
-  the saved conversation isn't in the list, the first one (for pane 2, the second one) is written
-  back, so the next view opens on the same case. An empty list leaves the id alone. This writes
-  state without a student action: when undo is added, wrap it in `withoutUndo`.
+  list changes. If the saved conversation isn't in the list, the first one is written back, so
+  the next view opens on the same case. Pane 2 of Investigate Unknown Pathway calls
+  `ensureValidPane2Conversation(filteredIds, shared.conversationId)`, which falls back to the
+  first conversation pane 1 isn't showing, so the panes open on different cases. An empty list
+  leaves the id alone. This writes state without a student action: when undo is added, wrap it
+  in `withoutUndo`.
 - **`$modelType` names are permanent.** They are stored in saved student data, like view ids.
   Renaming one needs a migration.
 - **Every tree has `version: 1`.** There are no migrations yet. When the saved shape changes,
@@ -59,9 +61,17 @@ the stages it has completed, but not one in progress.
 - **No snapshot processors that change the shape.** The saved form is exactly the keystone
   snapshot, so recorded patches match what is stored.
 - **Type checking in production.** In development and tests, keystone checks every load and write
-  against the types, including refinements such as "a step from 0 to 4". In production it checks
-  only primitive kinds and literals (a string where a number belongs, or a speed of 5), not
-  refinements or integers. Code that loads saved state must call `typeCheck` itself.
+  against the types, including refinements such as "a step from 0 to 4". In production only some
+  mismatches are caught on load: a wrong value in a top-level field or a union (a string where a
+  number belongs, or a speed of 5). None of these are checked in production:
+  - values inside arrays, records and objects (`commissioned: [5]` or
+    `stepsByConversation: { "…": "3" }` loads as it is);
+  - a missing required field inside an object (`pane2: {}` loads without `selectedAttributes`,
+    and `toggleAttribute` then crashes);
+  - refinements and integers;
+  - writes.
+
+  Code that loads saved state must call `typeCheck` itself.
 
 ## Where initial state comes from
 
@@ -88,9 +98,22 @@ are no built-in default queries. An author who wants an interactive to open on a
 Saved interactive state will be loaded through one function, `loadInteractiveState(json)`, which
 returns the two trees or an error result and never throws. It returns an error when the JSON:
 
-- fails `typeCheck`;
+- fails `typeCheck` against the expected model, as in `typeCheck(types.model(TraceACaseState), view)`.
+  This check is needed even when `fromSnapshot` succeeds. A snapshot whose `$modelType` names a
+  different registered model loads as that other class: `fromSnapshot(TraceACaseState, …)` given
+  Correlations state returns a `CorrelationsState`. `typeCheck`, or an `instanceof` check, catches
+  it;
 - has an unknown `$modelType`;
 - has a `version` other than 1.
+
+Keystone behaves in three more ways the loader has to allow for:
+
+- **Fields the model doesn't declare are kept,** pass `typeCheck`, and are saved again. A
+  misspelled field (`animat: false`) is therefore not an error: the real field keeps its default,
+  and the misspelled one lingers.
+- **A snapshot with no `version`** loads as version 1, through the default.
+- **The commission budget** is enforced only by `commission()`. A saved list with three keys
+  loads.
 
 That version check is where a migration pass would go. Simply starting fresh after an error
 would overwrite the student's unreadable work on the first save, so NPW-43 has to decide what an
