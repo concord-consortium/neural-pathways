@@ -82,7 +82,7 @@
   white-space: nowrap;
   cursor: pointer;
 
-  &:hover:not(:disabled):not([aria-pressed="true"]) {
+  &:hover:not([aria-disabled="true"]):not([aria-pressed="true"]) {
     background: colors.$surface;
   }
 
@@ -98,7 +98,7 @@
   color: #fff;
 }
 
-.step-row__reset:disabled {
+.step-row__reset[aria-disabled="true"] {
   opacity: 0.35;
   cursor: default;
 }
