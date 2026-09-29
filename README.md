@@ -4,14 +4,14 @@
 
 | Folder | Holds |
 |---|---|
-| `src/app/` | The student app shell: entry point, view registry, navigation, AP embed mode |
+| `src/app/` | The student app shell: entry point, view registry, navigation, interactive mode for the Activity Player (AP) |
 | `src/views/` | One folder per lesson view |
 | `src/core/` | Reviewed code shared by the app and views |
 | `src/lab/` | Research and authoring tools: the explorer, the heatmap, and their shared code |
 | `scripts/` | The alien dataset generator and analysis scripts |
 
 Every line under `src/app/`, `src/views/` and `src/core/` is reviewed, and none of it may import
-from `src/lab/`. ESLint enforces this. See [src/core/README.md](src/core/README.md).
+from `src/lab/` or `scripts/`. ESLint enforces this. See [src/core/README.md](src/core/README.md).
 
 The code works with three datasets: real Yelp reviews and two generated alien-conversation
 datasets. See [doc/datasets.md](doc/datasets.md) for what each one is and why it exists.
@@ -20,14 +20,13 @@ datasets. See [doc/datasets.md](doc/datasets.md) for what each one is and why it
 
 | URL | Shows |
 |---|---|
-| `index.html` | The student app: a list of views on the left, the first view selected |
-| `index.html#view=<id>` | The student app with that view selected |
-| `index.html?interactive=<id>` | That view alone, for embedding in the Activity Player |
+| `index.html` | The standalone app: a list of views on the left, the first view selected |
+| `index.html#view=<id>` | The standalone app with that view selected |
+| `index.html?interactive=<id>` | That view alone, in interactive mode, for embedding in the Activity Player |
 | `lab.html` | Links to the research tools |
 | `explorer.html`, `heatmap.html` | The explorer and the heatmap |
 
-View ids, in lesson order: `trace-a-case`, `extract-pathways`, `investigate-pathways`,
-`prediction-chain`, `correlations`, `investigate-unknown-pathway`, `correlations-part-2`.
+The view ids, in lesson order, are in `VIEWS` in [src/app/views.ts](src/app/views.ts).
 
 ## Development
 

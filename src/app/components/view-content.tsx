@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { findView, VIEWS } from "../views";
 import "./view-content.scss";
+
+export const APP_TITLE = "Neural Pathways";
 
 interface ViewContentProps {
   viewId: string;
@@ -8,6 +10,12 @@ interface ViewContentProps {
 
 export const ViewContent: React.FC<ViewContentProps> = ({ viewId }) => {
   const view = findView(viewId);
+
+  // A per-view page title helps history, tab lists and screen readers tell views apart.
+  useEffect(() => {
+    document.title = view ? `${view.title} – ${APP_TITLE}` : APP_TITLE;
+  }, [view]);
+
   if (!view) {
     return (
       <div className="unknown-view">

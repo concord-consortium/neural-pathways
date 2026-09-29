@@ -48,6 +48,30 @@ describe("App", () => {
       expect(screen.getByRole("heading", { name: "Prediction Chain" })).toBeInTheDocument();
     });
 
+    it("starts a newly selected view at the top and announces it", () => {
+      setUrl("/");
+      render(<App />);
+      const main = screen.getByRole("main");
+      main.scrollTop = 200;
+      act(() => {
+        setUrl("/#view=correlations");
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+      });
+      expect(main.scrollTop).toBe(0);
+      expect(screen.getByRole("status")).toHaveTextContent("Correlations");
+    });
+
+    it("titles the page after the selected view", () => {
+      setUrl("/#view=correlations");
+      render(<App />);
+      expect(document.title).toBe("Correlations – Neural Pathways");
+      act(() => {
+        setUrl("/#view=nope");
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+      });
+      expect(document.title).toBe("Neural Pathways");
+    });
+
     it("selects the first view when the hash has no view key", () => {
       setUrl("/#correlations");
       render(<App />);
@@ -62,12 +86,18 @@ describe("App", () => {
     });
   });
 
-  describe("embed mode", () => {
-    it("shows only the embedded view, with no nav", () => {
+  describe("interactive mode", () => {
+    it("shows only that view, with no nav", () => {
       setUrl("/?interactive=correlations");
       render(<App />);
       expect(screen.getByRole("heading", { name: "Correlations" })).toBeInTheDocument();
       expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    });
+
+    it("titles the page after the view", () => {
+      setUrl("/?interactive=correlations");
+      render(<App />);
+      expect(document.title).toBe("Correlations – Neural Pathways");
     });
 
     it("ignores the standalone hash", () => {

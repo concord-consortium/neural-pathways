@@ -1,5 +1,6 @@
 .unknown-view {
-  padding: 16px;
+  // A long mistyped id wraps instead of scrolling the page sideways.
+  overflow-wrap: anywhere;
 
   code {
     font-size: 14px;

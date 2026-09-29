@@ -24,9 +24,11 @@
       background: #e8eef9;
     }
 
+    // The weight keeps the current item distinct in forced-colors mode, which drops the colors.
     &[aria-current="page"] {
       background: #1558b0;
       color: white;
+      font-weight: 600;
     }
   }
 }

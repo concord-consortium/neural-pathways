@@ -1,19 +1,19 @@
-import { getEmbedViewId, getHashViewId, viewHash } from "./url-state";
+import { getInteractiveViewId, getHashViewId, viewHash } from "./url-state";
 
-describe("getEmbedViewId", () => {
+describe("getInteractiveViewId", () => {
   it("returns null when there is no interactive param", () => {
-    expect(getEmbedViewId("")).toBeNull();
-    expect(getEmbedViewId("?other=1")).toBeNull();
+    expect(getInteractiveViewId("")).toBeNull();
+    expect(getInteractiveViewId("?other=1")).toBeNull();
   });
 
   it("returns the interactive param", () => {
-    expect(getEmbedViewId("?interactive=correlations")).toBe("correlations");
-    expect(getEmbedViewId("?a=1&interactive=trace-a-case")).toBe("trace-a-case");
+    expect(getInteractiveViewId("?interactive=correlations")).toBe("correlations");
+    expect(getInteractiveViewId("?a=1&interactive=trace-a-case")).toBe("trace-a-case");
   });
 
   it("returns an empty string when the param is present but empty", () => {
-    expect(getEmbedViewId("?interactive=")).toBe("");
-    expect(getEmbedViewId("?interactive")).toBe("");
+    expect(getInteractiveViewId("?interactive=")).toBe("");
+    expect(getInteractiveViewId("?interactive")).toBe("");
   });
 });
 
