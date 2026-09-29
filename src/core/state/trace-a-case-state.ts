@@ -1,5 +1,5 @@
 import { Model, model, modelAction, tProp, types } from "mobx-keystone";
-import { animationProps, countType, Speed } from "./animation";
+import { Animated, animationProps, countType, Speed } from "./animation";
 
 /**
  * Trace a Case's own state. The query and the current conversation are in SharedState.
@@ -11,7 +11,7 @@ export class TraceACaseState extends Model({
   /** Steps done for each conversation stepped so far, by conversation id. */
   stepsByConversation: tProp(types.record(countType), () => ({})),
   ...animationProps,
-}) {
+}) implements Animated {
   @modelAction
   setStep(conversationId: string, stepsDone: number) {
     this.stepsByConversation[conversationId] = stepsDone;

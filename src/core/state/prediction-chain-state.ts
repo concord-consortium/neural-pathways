@@ -1,5 +1,5 @@
 import { Model, model, modelAction, tProp, types } from "mobx-keystone";
-import { animationProps, Speed } from "./animation";
+import { Animated, animationProps, Speed } from "./animation";
 
 /** The chain's last step: 0 is the empty skeleton, and each of the four buttons fills in one more. */
 export const PREDICTION_CHAIN_LAST_STEP = 4;
@@ -18,7 +18,7 @@ export class PredictionChainState extends Model({
   /** The step each conversation is on, by conversation id. */
   stepByConversation: tProp(types.record(stepType), () => ({})),
   ...animationProps,
-}) {
+}) implements Animated {
   @modelAction
   setStep(conversationId: string, step: number) {
     this.stepByConversation[conversationId] = step;

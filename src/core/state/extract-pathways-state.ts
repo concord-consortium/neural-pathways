@@ -1,5 +1,5 @@
 import { Model, model, modelAction, tProp, types } from "mobx-keystone";
-import { animationProps, countType, Speed } from "./animation";
+import { Animated, animationProps, countType, Speed } from "./animation";
 
 /**
  * Extract Pathways' state: the extraction stages completed so far. A stage in progress is not
@@ -14,7 +14,7 @@ export class ExtractPathwaysState extends Model({
   collected: tProp(countType, 0),
   cubeDone: tProp(types.boolean, false),
   pathwaysDone: tProp(types.boolean, false),
-}) {
+}) implements Animated {
   @modelAction
   setAnimate(animate: boolean) {
     this.animate = animate;

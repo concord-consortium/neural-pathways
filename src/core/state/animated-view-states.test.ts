@@ -2,6 +2,7 @@ import { fromSnapshot } from "mobx-keystone";
 import { TraceACaseState } from "./trace-a-case-state";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 import { PREDICTION_CHAIN_LAST_STEP, PredictionChainState } from "./prediction-chain-state";
+import { Animated, SPEED } from "./animation";
 import { savedJson } from "./test-helpers";
 import traceFixture from "./__fixtures__/trace-a-case-state.v1.json";
 import extractFixture from "./__fixtures__/extract-pathways-state.v1.json";
@@ -105,5 +106,21 @@ describe("PredictionChainState", () => {
     expect(() => fromSnapshot(PredictionChainState, {
       ...chainFixture, stepByConversation: { "3fa91c2e": 5 },
     } as any)).toThrow();
+  });
+});
+
+describe("Animated", () => {
+  const animatedViews: [string, () => Animated][] = [
+    ["TraceACaseState", () => new TraceACaseState({})],
+    ["ExtractPathwaysState", () => new ExtractPathwaysState({})],
+    ["PredictionChainState", () => new PredictionChainState({})],
+  ];
+
+  it.each(animatedViews)("%s can be driven through the Animated interface", (_name, create) => {
+    const state = create();
+    state.setAnimate(false);
+    state.setSpeed(SPEED.fast);
+    expect(state.animate).toBe(false);
+    expect(state.speed).toBe(SPEED.fast);
   });
 });
