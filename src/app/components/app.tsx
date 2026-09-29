@@ -4,10 +4,7 @@ import { StandaloneLayout } from "./standalone-layout";
 import { ViewContent } from "./view-content";
 import "./app.scss";
 
-/**
- * `?interactive=<id>` is interactive mode: the AP author fixed the view, so it is shown alone and the
- * hash is ignored. Without that param the page is the standalone app with its view nav.
- */
+// In interactive mode the AP author fixed the view, so the hash is ignored. See src/app/README.md.
 export const App: React.FC = () => {
   const interactiveViewId = getInteractiveViewId(window.location.search);
   if (interactiveViewId === null) {

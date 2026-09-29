@@ -8,7 +8,7 @@ import { InvestigateUnknownPathway } from "../views/investigate-unknown-pathway/
 import { CorrelationsPart2 } from "../views/correlations-part-2/correlations-part-2";
 
 export interface ViewDef {
-  /** Used in `?interactive=<id>` and `#view=<id>`. AP activities embed these, so never rename one. */
+  /** Used in `?interactive=<id>` and `#view=<id>`. See src/app/README.md before renaming or removing one. */
   id: string;
   title: string;
   component: React.ComponentType;
