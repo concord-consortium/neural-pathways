@@ -8,10 +8,12 @@ test("Trace a Case steps through the 800 conversations", async ({ page }) => {
   await expect(page.getByText("2 / 800", { exact: true })).toBeVisible();
 });
 
-test("the network shows its answer for the conversation", async ({ page }) => {
+test("Step 4 animates to the network's answer", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800")).toBeVisible();
-  await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ })).toBeVisible();
+  await page.getByRole("button", { name: "Step 4" }).click();
+  await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
+    .toBeVisible({ timeout: 10_000 });
 });
 
 test("the conversation survives switching views", async ({ page }) => {

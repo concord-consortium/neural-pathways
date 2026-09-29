@@ -5,16 +5,21 @@ The lesson's first view: follow one conversation through the network, a layer at
 ## What's here
 
 - `trace-a-case.tsx`: the view. It loads the alien3 conversations, keeps the shared conversation
-  valid, and lays out the conversation card and the network. The network shows the whole pass
-  for the current conversation.
+  valid, and lays out the conversation card and the network, with the step row above the network.
+- `step-timeline.ts`: what Steps 1–4 draw at any moment, as a pure function of time, at the
+  prototype's "Med" speed. Step 1 fills the inputs one by one; Steps 2–4 play the fan into the next
+  layer one source unit at a time; Step 4 ends with the answer.
+- `use-step-player.ts`: plays a step on a `requestAnimationFrame` clock. Pressing a step jumps to
+  the state before it and plays it. Reset clears everything. Under `prefers-reduced-motion` a step
+  jumps straight to its end. Progress starts over when the conversation changes and isn't saved.
+- `step-row.tsx`: the Step 1–4 and Reset buttons.
 
 The network, the diagram, the conversation card and the data loading live in `src/core/`, where
 Extract Pathways and Investigate Pathways can use them.
 
 ## Still to come
 
-Next come Steps 1–4 and Reset, which build the pass up a layer at a time, with each conversation's
-steps kept in the view's own state (`TraceACaseState`). After those, the view still needs:
+The view still needs:
 - the filter;
 - the label chip, observation notes and attribute icons;
 - node hover and the pinned readout;
