@@ -1,4 +1,4 @@
-// src/explorer/components/settings-menu.test.tsx
+// src/lab/explorer/components/settings-menu.test.tsx
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { SettingsMenu } from "./settings-menu";
