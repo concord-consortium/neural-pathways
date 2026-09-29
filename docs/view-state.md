@@ -2,7 +2,8 @@
 
 What each lesson view keeps, what the views share, and what is deliberately not kept. Also how
 that state is saved and loaded. The design and its reasons are in
-`docs/superpowers/specs/2026-09-28-view-state-design.md`.
+`docs/superpowers/specs/2026-09-28-view-state-design.md`. Undo isn't built. What it would need
+from this state, and the places that would have to change, are in [undo.md](undo.md).
 
 The state is held in [mobx-keystone](https://mobx-keystone.js.org) models in `src/core/state/`.
 Each view's state is its own tree, and the shared state is one more tree. The student app keeps
@@ -50,8 +51,7 @@ the stages it has completed, but not one in progress.
   the next view opens on the same case. Pane 2 of Investigate Unknown Pathway calls
   `ensureValidPane2Conversation(filteredIds, shared.conversationId)`, which falls back to the
   first conversation pane 1 isn't showing, so the panes open on different cases. An empty list
-  leaves the id alone. This writes state without a student action: when undo is added, wrap it
-  in `withoutUndo`.
+  leaves the id alone.
 - **`$modelType` names are permanent.** They are stored in saved student data, like view ids.
   Renaming one needs a migration.
 - **Every tree has `version: 1`.** There are no migrations yet. When the saved shape changes,
