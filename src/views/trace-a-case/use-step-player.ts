@@ -71,10 +71,12 @@ export function useStepPlayer(columnSizes: readonly number[], resetKey: string |
     setState({ key: resetKey, stepsDone: 0 });
   }, [resetKey, stop]);
 
-  // Progress recorded for another conversation doesn't apply to this one.
-  const current = state.key === resetKey ? state : undefined;
-  const stepsDone = current?.stepsDone ?? 0;
-  const running = current?.running;
+  // Progress belongs to one conversation: discard it when the conversation changes, so returning
+  // to an earlier one starts over rather than bringing its old progress back.
+  if (state.key !== resetKey) {
+    setState({ key: resetKey, stepsDone: 0 });
+  }
+  const { stepsDone, running } = state.key === resetKey ? state : { stepsDone: 0, running: undefined };
   const scene = useMemo(() => sceneAt(columnSizes, stepsDone, running), [columnSizes, stepsDone, running]);
   return { stepsDone, shownStep: running?.step ?? stepsDone, scene, play, reset };
 }
