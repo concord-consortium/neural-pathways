@@ -7,9 +7,10 @@ from this state, and the places that would have to change, are in [undo.md](undo
 
 The state is held in [mobx-keystone](https://mobx-keystone.js.org) models in `src/core/state/`.
 Each view's state is its own tree, and the shared state is one more tree. The student app keeps
-all of them in an `AppState` (`src/app/state/app-state.ts`) for the life of the page. In the
-Activity Player (AP), each interactive will save `{ view, shared }`: its own view tree and the
-shared tree (NPW-43).
+all of them in an `AppState` (`src/app/state/app-state.ts`) for the life of the page.
+`index.tsx` creates it once, outside React, because its constructor registers root stores and
+StrictMode would run a `useState` initializer twice. In the Activity Player (AP), each
+interactive will save `{ view, shared }`: its own view tree and the shared tree (NPW-43).
 
 ## How the state arrives
 
