@@ -82,4 +82,13 @@ describe("useDatasetIndex", () => {
     expect(await screen.findByText("b: ready")).toBeInTheDocument();
     expect(mockedFetchIndex).toHaveBeenCalledTimes(2);
   });
+
+  it("shows an error when onLoaded throws", async () => {
+    mockedFetchIndex.mockResolvedValue(index);
+    const onLoaded = jest.fn(() => {
+      throw new Error("bad list");
+    });
+    render(<Probe name="a" onLoaded={onLoaded} />);
+    expect(await screen.findByText("a: error: bad list")).toBeInTheDocument();
+  });
 });
