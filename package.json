@@ -129,6 +129,7 @@
     "liqe": "^3.8.5",
     "mobx": "^7.0.5",
     "mobx-keystone": "^2.2.0",
+    "mobx-react-lite": "^5.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-select": "^5.10.2",

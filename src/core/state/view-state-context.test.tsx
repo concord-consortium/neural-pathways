@@ -1,12 +1,18 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { Model, model, tProp, types } from "mobx-keystone";
+import { act, render, screen } from "@testing-library/react";
+import { Model, model, modelAction, tProp, types } from "mobx-keystone";
+import { observer } from "mobx-react-lite";
 import { SharedState } from "./shared-state";
 import { useSharedState, useViewState, ViewStateProvider } from "./view-state-context";
 
 // Test-only models: the real view models arrive with their view stories.
 @model("test/CounterState")
-class CounterState extends Model({ count: tProp(types.number, 0) }) {}
+class CounterState extends Model({ count: tProp(types.number, 0) }) {
+  @modelAction
+  increment() {
+    this.count++;
+  }
+}
 
 @model("test/OtherState")
 class OtherState extends Model({}) {}
@@ -16,6 +22,9 @@ const Probe: React.FC = () => {
   const shared = useSharedState();
   return <p>{`count ${view.count}, shared version ${shared.version}`}</p>;
 };
+
+// Views that read state are wrapped in `observer`; without it a model action doesn't re-render them.
+const ObserverProbe = observer(() => <p>{`count ${useViewState(CounterState).count}`}</p>);
 
 const SharedOnlyProbe: React.FC = () => <p>{`shared version ${useSharedState().version}`}</p>;
 
@@ -37,6 +46,17 @@ describe("ViewStateProvider", () => {
       </ViewStateProvider>
     );
     expect(screen.getByText("count 2, shared version 1")).toBeInTheDocument();
+  });
+
+  it("re-renders an observer view when its state changes", () => {
+    const state = new CounterState({});
+    render(
+      <ViewStateProvider viewId="counter" view={state} shared={new SharedState({})}>
+        <ObserverProbe />
+      </ViewStateProvider>
+    );
+    act(() => state.increment());
+    expect(screen.getByText("count 1")).toBeInTheDocument();
   });
 
   it("gives the shared state to a view that has no state model", () => {
