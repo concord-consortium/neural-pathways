@@ -210,9 +210,9 @@ URL param names start with the tree id, which is the view id, and use dots for n
 first created:
 
 - **Standalone app:** the shared tree at startup, and each view's tree on its first visit.
-- **Embedded interactive:** only when it has no saved state.
+- **Interactive mode:** only when it has no saved state.
 
-An embedded interactive uses `shared.*` and its own view's params, and ignores the rest.
+In interactive mode the app uses `shared.*` and its own view's params, and ignores the rest.
 
 Saved interactive state will be loaded through a single `loadInteractiveState(json)` that
 returns either the two trees or an error result, and never throws. It returns an error when the
