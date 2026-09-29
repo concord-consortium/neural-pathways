@@ -1,9 +1,9 @@
 name: Continuous Integration
 
-on:
-  push:
-    branches: [main]
-  pull_request:
+# The deploy runs on push, not pull_request, so its GitHub deployment is recorded against the
+# branch and PRs show the deploy link. Playwright runs in playwright.yml, which also runs on
+# pull_request so it can post its PR comment. See START-12 and SDEPLOY-4.
+on: push
 
 jobs:
   build_test:
@@ -23,54 +23,10 @@ jobs:
         with:
           flags: jest
           token: ${{ secrets.CODECOV_TOKEN }}
-  playwright:
-    name: Run Playwright Tests
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-      - name: Install Dependencies
-        run: npm ci
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-      - name: Run Playwright tests
-        run: npx playwright test
-        env:
-          CI: "true"
-      - name: Upload coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@v5
-        with:
-          flags: playwright
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: test-results/coverage/coverage.lcov
-      - uses: concord-consortium/s3-deploy-action/deploy-path@v1
-        if: always()
-        id: s3-deploy-path
-      - uses: aws-actions/configure-aws-credentials@v4
-        if: always()
-        with:
-          role-to-assume: arn:aws:iam::612297603577:role/neural-pathways
-          aws-region: us-east-1
-      - name: Upload Playwright Report
-        if: always()
-        run: aws s3 sync ./playwright-report s3://models-resources/neural-pathways/playwright-report/${{ steps.s3-deploy-path.outputs.deployPath }} --delete --cache-control "no-cache, max-age=0"
-      - uses: daun/playwright-report-summary@v3
-        if: always()
-        with:
-          report-file: test-results/results.json
-          report-url: https://models-resources.concord.org/neural-pathways/playwright-report/${{ steps.s3-deploy-path.outputs.deployPath }}/
   s3-deploy:
     name: S3 Deploy
     needs:
       - build_test
-      - playwright
     runs-on: ubuntu-latest
     permissions:
       id-token: write
