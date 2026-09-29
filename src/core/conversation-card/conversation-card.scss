@@ -1,0 +1,75 @@
+@use "../colors" as colors;
+@use "../panel";
+
+.conversation-card {
+  @include panel.panel;
+}
+
+.conversation-card__head {
+  @include panel.panel-head;
+}
+
+.conversation-card__title {
+  margin: 0;
+  font: inherit;
+}
+
+.conversation-card__count {
+  margin-left: auto;
+  font-family: colors.$mono;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.conversation-card__nav {
+  display: flex;
+  gap: 6px;
+}
+
+.conversation-card__nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0;
+  border: 2px solid colors.$rule;
+  border-radius: 5px;
+  background: #fff;
+  color: colors.$ink-2;
+  cursor: pointer;
+
+  svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+
+  &:hover:not([aria-disabled="true"]) {
+    background: colors.$surface;
+  }
+
+  &:focus-visible {
+    outline: 2px solid colors.$wait;
+    outline-offset: 1px;
+  }
+
+  &[aria-disabled="true"] {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+.conversation-card__text {
+  margin: 0;
+  padding: 12px 14px;
+  color: colors.$ink;
+  font-family: "Lato", sans-serif;
+  font-size: 13px;
+  line-height: 1.85;
+  word-break: break-word;
+}
