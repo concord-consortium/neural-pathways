@@ -8,6 +8,10 @@ export type DatasetIndexState =
   | { status: "error"; error: Error }
   | { status: "ready"; index: S3Index };
 
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
+}
+
 interface CacheEntry {
   promise: Promise<S3Index>;
   /** Set once the promise resolves, so a later mount can start ready. */
@@ -65,13 +69,18 @@ export function useDatasetIndex(dataset: DatasetDefinition, options?: UseDataset
         if (!active) {
           return;
         }
-        onLoadedRef.current?.(index);
+        try {
+          onLoadedRef.current?.(index);
+        } catch (error: unknown) {
+          setState({ status: "error", error: toError(error) });
+          return;
+        }
         setState(previous =>
           previous.status === "ready" && previous.index === index ? previous : { status: "ready", index });
       },
       (error: unknown) => {
         if (active) {
-          setState({ status: "error", error: error instanceof Error ? error : new Error(String(error)) });
+          setState({ status: "error", error: toError(error) });
         }
       },
     );
