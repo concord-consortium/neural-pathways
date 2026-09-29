@@ -1,14 +1,16 @@
 import { tProp, types } from "mobx-keystone";
 
-/** Animation speed: 0 slow, 1 normal, 2 fast, the three stops of the prototype's slider. */
-export type Speed = 0 | 1 | 2;
-
-const speedType = types.or(types.literal(0), types.literal(1), types.literal(2));
+/**
+ * Animation speeds: the three stops of the prototype's slider. The values are stored in saved
+ * student data: never change them.
+ */
+export const SPEED = { slow: 0, normal: 1, fast: 2 } as const;
+export type Speed = typeof SPEED[keyof typeof SPEED];
 
 /** Props for the views with an Animate toggle and a speed slider. Spread into `Model({...})`. */
 export const animationProps = {
   animate: tProp(types.boolean, true),
-  speed: tProp(speedType, 1 as Speed),
+  speed: tProp(types.enum(SPEED), SPEED.normal),
 };
 
 /**
