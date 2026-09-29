@@ -1,0 +1,83 @@
+@use "../colors" as colors;
+
+.network-diagram {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.network-diagram__svg {
+  display: block;
+  overflow: visible;
+}
+
+.network-diagram__wires line {
+  stroke: colors.$wire;
+  stroke-width: 0.5;
+}
+
+.network-diagram__edge {
+  fill: none;
+}
+
+.network-diagram__discs circle {
+  fill: #fff;
+}
+
+.network-diagram__node {
+  fill: none;
+  stroke: colors.$node-outline;
+  stroke-width: 1;
+}
+
+.network-diagram__caption,
+.network-diagram__weight-label {
+  font-family: "Lato", sans-serif;
+  font-size: 12px;
+  fill: colors.$ink-2;
+}
+
+.network-diagram__output-caption {
+  font-family: "Lato", sans-serif;
+  font-size: 12px;
+  fill: colors.$ink-3;
+}
+
+.network-diagram__output-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.network-diagram__output-label--approach {
+  fill: colors.$approach-text;
+}
+
+.network-diagram__output-label--wait {
+  fill: colors.$wait-text;
+}
+
+// Scaled about its own centre while it pops, so it grows in place.
+.network-diagram__pill {
+  fill: #fff;
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.network-diagram__pill--approach {
+  stroke: colors.$approach;
+
+  &.network-diagram__pill--won {
+    fill: colors.$approach-soft;
+  }
+}
+
+.network-diagram__pill--wait {
+  stroke: colors.$wait;
+
+  &.network-diagram__pill--won {
+    fill: colors.$wait-soft;
+  }
+}
