@@ -10,15 +10,18 @@ line here is reviewed; see `src/core/README.md`.
 
 - **View**: one unit of the lesson (Trace a Case, Extract Pathways, …). The code's name for it.
 - **Interactive**: a view embedded in the Activity Player, via `index.html?interactive=<view-id>`.
+- **Interactive mode**: how the app runs as an Interactive: the view alone, filling the frame,
+  with no nav. Later it also talks to the AP through the LARA interactive API, for example
+  waiting for saved interactive state before rendering.
 - **Standalone app**: `index.html` without that param. A list of views on the left; the
   selection is kept in `#view=<view-id>`.
 
 ## Modes
 
-`App` (`components/app.tsx`) reads `?interactive=` once. If it is present, the page is in embed
-mode: that view is shown alone and the hash is ignored. Otherwise `StandaloneLayout` shows the
-view nav and follows `#view=`. An id that is not in the registry shows "Unknown view" with the
-list of valid ids, in either mode.
+`App` (`components/app.tsx`) reads `?interactive=` once. If it is present, the page is in
+interactive mode: that view is shown alone and the hash is ignored. Otherwise
+`StandaloneLayout` shows the view nav and follows `#view=`. An id that is not in the registry
+shows "Unknown view" with the list of valid ids, in either mode.
 
 ## Adding a view
 

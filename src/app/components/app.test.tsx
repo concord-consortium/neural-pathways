@@ -62,8 +62,8 @@ describe("App", () => {
     });
   });
 
-  describe("embed mode", () => {
-    it("shows only the embedded view, with no nav", () => {
+  describe("interactive mode", () => {
+    it("shows only that view, with no nav", () => {
       setUrl("/?interactive=correlations");
       render(<App />);
       expect(screen.getByRole("heading", { name: "Correlations" })).toBeInTheDocument();

@@ -28,7 +28,7 @@ test("the view hash selects a view on load", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
 });
 
-test("the interactive param embeds one view with no nav", async ({ page }) => {
+test("the interactive param shows one view in interactive mode, with no nav", async ({ page }) => {
   await page.goto("/?interactive=correlations");
   await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
   await expect(page.getByRole("navigation")).toHaveCount(0);

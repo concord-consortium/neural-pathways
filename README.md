@@ -19,7 +19,7 @@ from `src/lab/` or `scripts/`. ESLint enforces this. See [src/core/README.md](sr
 |---|---|
 | `index.html` | The student app: a list of views on the left, the first view selected |
 | `index.html#view=<id>` | The student app with that view selected |
-| `index.html?interactive=<id>` | That view alone, for embedding in the Activity Player |
+| `index.html?interactive=<id>` | That view alone, in interactive mode, for embedding in the Activity Player |
 | `lab.html` | Links to the research tools |
 | `explorer.html`, `heatmap.html` | The explorer and the heatmap |
 
