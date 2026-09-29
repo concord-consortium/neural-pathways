@@ -88,9 +88,9 @@ URL param names start with the tree id and use dots for nested fields: `shared.q
 created:
 
 - **Standalone app:** the shared tree at startup, and each view's tree on its first visit.
-- **Embedded interactive:** only when it has no saved state.
+- **Interactive mode:** only when it has no saved state.
 
-An embedded interactive uses `shared.*` and its own view's params, and ignores the rest. There
+In interactive mode the app uses `shared.*` and its own view's params, and ignores the rest. There
 are no built-in default queries. An author who wants an interactive to open on a query sets
 `shared.query` in its URL.
 
