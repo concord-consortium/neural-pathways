@@ -33,6 +33,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   setup every model imports, and the context views use to reach their state. A model only one
   view uses lives in that view's folder. What each view keeps, and the rules for changing a saved
   form, are in `docs/view-state.md`.
+- `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
+  it between views.
+- `conversation-card/`: the minimal conversation card. NPW-36 completes it.
+- `colors.ts`, `colors.scss`, `panel.scss`: the lesson's colours and the panel look.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and
 files that use this code (the explorer's search, Codings dialog, regression panel and item panel,
