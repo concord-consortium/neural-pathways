@@ -195,6 +195,13 @@ export default defineConfig(
     },
   },
   {
+    name: "student-facing import boundary may not be disabled",
+    files: [`src/{app,views,core}/**/*.${sourceExtensions}`],
+    rules: {
+      "@eslint-community/eslint-comments/no-restricted-disable": ["error", "import/no-restricted-paths"],
+    },
+  },
+  {
     name: "rules specific to Jest tests",
     files: ["src/**/*.test.*"],
     languageOptions: {
