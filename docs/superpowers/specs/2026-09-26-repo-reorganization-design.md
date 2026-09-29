@@ -248,7 +248,9 @@ Candidates for follow-up stories:
   it likely gets retargeted to the student app's interactive mode.
 - Coverage thresholds or stricter lint for `app/`, `views/` and `core/`.
 - The real views (NPW-23…28).
-- Moving `scripts/` under the lab, or giving it its own boundary.
+- Moving the alien generator out of `scripts/` to a reviewed `generator/` folder with its own
+  boundary: [NPW-46](https://concord-consortium.atlassian.net/browse/NPW-46), designed in
+  `2026-09-29-generator-move-design.md`. The analysis scripts stay in `scripts/`, unreviewed.
 
 ## Risks
 
