@@ -5,11 +5,15 @@ data loading, types, math, generic charts.
 
 ## Rules
 
-- Every line under `src/app/`, `src/views/` and `src/core/` has been reviewed. Code enters these
+- Every line under `src/app/`, `src/views/` and `src/core/` is reviewed. Code enters these
   folders only through a story's PR.
-- `core` imports only from `core`. It never imports `app`, `views` or `lab`.
-- Nothing student-facing imports from `src/lab/`. ESLint (`import/no-restricted-paths`) enforces
-  this; see `eslint.config.mjs`.
+- `core` imports only from `core` and packages. It never imports `app`, `views` or `lab`.
+- Nothing student-facing imports from `src/lab/` or `scripts/`, which are unreviewed, or from
+  anything else outside `app`, `views` and `core`. ESLint (`import/no-restricted-paths`) enforces
+  this; see `eslint.config.mjs`. Disabling the rule in these folders is itself a lint error, and
+  `npm run lint:boundary` checks that the rule still catches violations.
+- ESLint does not see SCSS `@use` or `@import`, so a reviewer checks that stylesheets here do
+  not pull in styles from `src/lab/`.
 
 ## Promoting code from `src/lab/`
 

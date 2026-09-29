@@ -75,24 +75,35 @@ imports any of them.
 Enforced with `import/no-restricted-paths` (eslint-plugin-import is already loaded) at `error`
 level, so `npm run lint`, `lint:build` and CI fail on a violation.
 
-| From | May import | May not import |
-|---|---|---|
-| `src/app/` | `views/`, `core/` | `lab/` |
-| `src/views/` | `core/` | `app/`, `lab/`, and other views |
-| `src/core/` | nothing under `src/` except `core/` | `app/`, `views/`, `lab/` |
-| `src/lab/`, `scripts/` | anything | — |
+The zones are an allow-list: each student-facing area may import only the folders listed below
+and packages from `node_modules`. Everything else in the repo is off limits, including `lab/`,
+`scripts/` (unreviewed, and it imports `lab/`), `src/test/`, `playwright/`, root files and any new
+top-level folder.
+
+| From | May import |
+|---|---|
+| `src/app/` | `app/`, `views/`, `core/` |
+| `src/views/` | `core/`, and its own view folder |
+| `src/core/` | `core/` |
+| `src/lab/`, `scripts/` | anything |
 
 "Other views" means a view may not import from a sibling view folder. Anything two views share
 belongs in `core/`. A single static zone cannot express "siblings", so `eslint.config.mjs`
 reads the `src/views/` directory listing and generates one zone per view folder (target: that
 folder; from: `src/views/`; except: the folder itself). The registry lives in `app/` because lesson order and navigation are the
-app's concern; a view does not know its position in the lesson.
+app's concern; a view does not know its position in the lesson. A file placed directly in
+`src/views/`, outside any view folder, may not import a view.
+
+An `eslint-disable` comment for the rule is itself an error in `app/`, `views/` and `core/`
+(`eslint-comments/no-restricted-disable`). `npm run lint:boundary` lints sample imports against
+the real config and checks which are flagged, so a refactor that quietly disables a zone fails
+the build.
 
 ## Review convention
 
-Written into `src/app/README.md`, `src/views/README.md` and `src/core/README.md`:
+Written into `src/core/README.md`; `src/app/README.md` and `src/views/README.md` point to it:
 
-- Every line under `src/app/`, `src/views/` and `src/core/` has been reviewed.
+- Every line under `src/app/`, `src/views/` and `src/core/` is reviewed.
 - Code enters these folders only through a story's PR.
 - Promoting code from `lab/` is a copy-and-review, rewriting where warranted, not a blind move.
 - When a promotion is essentially a move, `lab/` switches to importing the `core/` version and
@@ -119,7 +130,7 @@ Branch: `NPW-22-repo-reorganization`.
 - Add the import-boundary rule, including the generated per-view zones (which produce no zones
   until PR 2 adds view folders).
 - Update living docs that name moved paths: `README.md`, `doc/heatmap-viz.md`,
-  `docs/testing-*.md`, `docs/pathway-prediction-target-analysis.md`. The dated specs and plans
+  `docs/testing-alien-generator.md`, `docs/pathway-prediction-target-analysis.md`. The dated specs and plans
   in `docs/superpowers/` are historical records and stay as written.
 
 **Commits**
@@ -243,8 +254,9 @@ Candidates for follow-up stories:
 - **PR 1** changes no URLs; the main risk is a missed import path, which the type check, lint,
   jest, webpack build and Playwright all catch.
 - **PR 2** changes what `/` shows. Anyone with a bookmark to the old landing page gets the
-  student app; direct `explorer.html` and `heatmap.html` links keep working, and the old links
-  are one click away at `lab.html`.
+  student app. The lab tools are not released to the top level, so there is no top-level
+  `lab.html`; in a branch or version folder, `explorer.html` and `heatmap.html` keep working and
+  the old landing page's links are one click away at `lab.html`.
 - Open PRs or local branches that touch `src/explorer`, `src/heatmap` or `src/shared` will
   conflict with PR 1. Git's rename detection handles most of it on rebase, but it is worth
   merging PR 1 at a quiet moment.

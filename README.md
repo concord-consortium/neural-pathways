@@ -11,7 +11,7 @@
 | `scripts/` | The alien dataset generator and analysis scripts |
 
 Every line under `src/app/`, `src/views/` and `src/core/` is reviewed, and none of it may import
-from `src/lab/`. ESLint enforces this. See [src/core/README.md](src/core/README.md).
+from `src/lab/` or `scripts/`. ESLint enforces this. See [src/core/README.md](src/core/README.md).
 
 ## Development
 
