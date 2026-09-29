@@ -36,11 +36,23 @@ function showView(shared = new SharedState({})) {
   return shared;
 }
 
+function setReducedMotion() {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: jest.fn().mockReturnValue({ matches: true }),
+  });
+}
+
 describe("TraceACase", () => {
   beforeEach(() => {
     clearDatasetIndexCache();
     mockedFetchIndex.mockReset();
     mockedFetchIndex.mockResolvedValue(index);
+  });
+
+  afterEach(() => {
+    delete (window as any).matchMedia;
   });
 
   it("shows loading, then the first conversation and the network", async () => {
@@ -50,8 +62,7 @@ describe("TraceACase", () => {
     expect(await screen.findByText("1 / 3")).toBeInTheDocument();
     expect(screen.getByText(items[0].text.split(/\s+/).join(" "))).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Network" })).toBeInTheDocument();
-    // The whole pass is drawn, so the diagram names the network's answer.
-    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Network diagram" })).toBeInTheDocument();
   });
 
   it("sets the shared conversation once the conversations arrive", async () => {
@@ -92,5 +103,25 @@ describe("TraceACase", () => {
     mockedFetchIndex.mockResolvedValue({ ...index, items: [] });
     showView();
     expect(await screen.findByText("No conversations.")).toBeInTheDocument();
+  });
+
+  it("reveals the network's answer at Step 4", async () => {
+    setReducedMotion();
+    showView();
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
+    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("starts the steps over when the conversation changes", async () => {
+    setReducedMotion();
+    showView();
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
+    expect(screen.getByRole("button", { name: "Reset" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
+    expect(screen.getByRole("button", { name: "Reset" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-pressed", "false");
   });
 });
