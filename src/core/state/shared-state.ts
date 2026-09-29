@@ -1,5 +1,6 @@
 import "./setup";
-import { Model, model, tProp, types } from "mobx-keystone";
+import { Model, model, modelAction, tProp, types } from "mobx-keystone";
+import { validConversationId } from "./conversation";
 
 /**
  * The state every view reads and writes, carried from one interactive to the next in the Activity
@@ -11,4 +12,23 @@ import { Model, model, tProp, types } from "mobx-keystone";
 @model("npw/SharedState")
 export class SharedState extends Model({
   version: tProp(types.literal(1), 1),
-}) {}
+  /** The current conversation, in every view that shows one. Unset until a view first loads them. */
+  conversationId: tProp(types.maybe(types.string)),
+}) {
+  @modelAction
+  setConversationId(conversationId: string | undefined) {
+    this.conversationId = conversationId;
+  }
+
+  /**
+   * Called by a view that shows a conversation when its list of conversations arrives or changes,
+   * so the next view opens on the same case.
+   */
+  @modelAction
+  ensureValidConversation(ids: readonly string[]) {
+    const id = validConversationId(this.conversationId, ids);
+    if (id !== this.conversationId) {
+      this.conversationId = id;
+    }
+  }
+}
