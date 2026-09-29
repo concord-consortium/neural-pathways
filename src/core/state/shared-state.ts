@@ -31,8 +31,7 @@ export class SharedState extends Model({
 
   /**
    * Called by a view that shows a conversation, when it first renders and whenever its filtered
-   * list changes, so the next view opens on the same case. It changes state without a student
-   * action: wrap it in `withoutUndo` once undo exists.
+   * list changes, so the next view opens on the same case.
    */
   @modelAction
   ensureValidConversation(filteredIds: readonly string[]) {

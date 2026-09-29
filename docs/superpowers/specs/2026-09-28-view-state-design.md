@@ -46,7 +46,7 @@ After this work:
 | Decision | Choice | Why |
 |---|---|---|
 | State library | **mobx-keystone** 2.2 on MobX 7 | Class models; snapshots, patches, action recording and built-in undo; runtime type checking on load. The comparison with MST and plain MobX is written up in the `ideas` repo (`mobx-keystone-for-serialized-state.md`). |
-| Trees | **Separate trees in both modes:** one per view, plus one shared | Matches the AP, where each interactive saves its own state. Save and load work the same way in the standalone app and in the AP. Undo, when added, is naturally per view. |
+| Trees | **Separate trees in both modes:** one per view, plus one shared | Matches the AP, where each interactive saves its own state. Save and load work the same way in the standalone app and in the AP. |
 | Query and conversation | **Shared** | Moving between views keeps the student on the same filter and the same case. The one exception is Investigate Unknown Pathway's second pane, which keeps its own conversation. |
 | Default queries | **None in code** | Keeps the views free of lesson content. An author who wants a starting query sets it in the interactive's URL (NPW-45). |
 | Showing a conversation | **Write the first matching one back if the saved id doesn't match the filter** | The next interactive opens on the same case. |
@@ -123,9 +123,6 @@ calls `ensureValidPane2Conversation`. Correlations filters but shows no conversa
 doesn't call either. The next view that shows a conversation corrects the id if it no longer
 matches. The filtered list depends on the filter engine (NPW-35), so NPW-30 provides and tests
 the actions, and the view stories call them.
-
-This write happens without the student doing anything. When undo is added, it must be wrapped in
-`withoutUndo`, or undo will step back through automatic corrections.
 
 ### Saved form
 
@@ -254,7 +251,7 @@ Playwright test that state survives switching views.
 
 - **`docs/view-state.md`**, the reference doc the ticket asks for:
   - for each view, what it keeps, what it shares, and what is deliberately not kept;
-  - the conversation-validity rule, and the note about `withoutUndo`;
+  - the conversation-validity rule;
   - the version fields and the permanent `$modelType` names;
   - the load precedence and URL param format;
   - the planned `loadInteractiveState` contract.
