@@ -9,12 +9,11 @@
     "allowJs": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "experimentalDecorators": true,
     "importHelpers": true,
     "strict": true,
     "types": ["jest", "node"],
     "jsx": "react",
-    "lib": ["dom", "dom.iterable", "es2018"]
+    "lib": ["dom", "dom.iterable", "es2018", "es2020.bigint", "esnext.collection", "esnext.disposable"]
   },
   "include": [
     "./src/**/*"
