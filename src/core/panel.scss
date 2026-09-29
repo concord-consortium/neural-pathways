@@ -1,0 +1,30 @@
+@use "./colors" as colors;
+
+// A lesson panel: a white card with a grey header strip, from the demo prototype's .nnm-panel.
+@mixin panel {
+  background: #fff;
+  border: 1px solid colors.$rule;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@mixin panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 9px 14px 8px;
+  border-bottom: 1px solid colors.$rule-soft;
+  border-radius: 7px 7px 0 0;
+  background: colors.$surface;
+  color: colors.$ink-2;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
