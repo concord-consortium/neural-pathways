@@ -1,18 +1,16 @@
-import { Model, model, modelAction, tProp, types } from "mobx-keystone";
+import { Model, model, modelAction, tProp, types, TypeToData } from "mobx-keystone";
 
 /** The Correlations views' modes. The values are stored in saved student data: never change them. */
 export const CORRELATIONS_MODES = ["measures", "graphs"] as const;
 export type CorrelationsMode = typeof CORRELATIONS_MODES[number];
 
-/** The open detail card: one cell of the matrix, or a whole pathway column. */
-export type OpenDetail =
-  | { kind: "cell"; attribute: string; pathway: number }
-  | { kind: "pathway"; pathway: number };
-
 const openDetailType = types.or(
   types.object(() => ({ kind: types.literal("cell"), attribute: types.string, pathway: types.integer })),
   types.object(() => ({ kind: types.literal("pathway"), pathway: types.integer })),
 );
+
+/** The open detail card: one cell of the matrix, or a whole pathway column. */
+export type OpenDetail = TypeToData<typeof openDetailType>;
 
 /**
  * The state of Correlations, and of Correlations Part 2 as a separate tree. The query is in
