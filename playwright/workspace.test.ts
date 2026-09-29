@@ -1,13 +1,14 @@
 import { test } from "./lib/base-url";
 import { expect, type Page } from "@playwright/test";
 
-test("renders the landing page with links to visualizations", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByText("Neural Pathways")).toBeVisible();
+test("renders the lab page with links to visualizations", async ({ page }) => {
+  await page.goto("/lab.html");
+  await expect(page.getByText("Neural Pathways Lab")).toBeVisible();
   await expect(page.getByRole("link", { name: "Heatmap" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Explorer", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Alien Explorer (4 pathways)" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Alien Explorer (3 pathways)" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Student app" })).toHaveAttribute("href", "index.html");
 });
 
 test("heatmap renders the visualization", async ({ page }) => {

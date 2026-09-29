@@ -189,8 +189,8 @@ not confused by a one-character `?`/`#` difference.
 ### Placeholder views
 
 One folder per view, e.g. `src/views/trace-a-case/`, with a small component showing the view's
-title and "Coming in NPW-23" (or "Coming soon" where there is no story). The folder is where
-that story's code goes.
+title and "Coming soon." Students see this text, so it names no Jira story; the table above maps
+views to stories. The folder is where that story's code goes.
 
 ### Styling
 
