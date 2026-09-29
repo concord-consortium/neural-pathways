@@ -29,7 +29,7 @@ The work is built on one branch. How it splits into PRs is decided once the code
 | Step progress | React state in the view, not saved. Changing conversation resets it to 0. | `TraceACaseState` (steps for each conversation, Animate, speed) arrives with NPW-23. |
 | Conversation text | One paragraph of words, as in the prototype. The line breaks between turns are dropped. | NPW-36 owns how the full card looks. |
 | Loading the index | A core hook backed by a module-level promise cache. | NPW-29 left "a hook or shared cache" to the first view that needs one. Switching views must not refetch. |
-| Top-level page in CI | Not added. The release rehearsal stays manual, and a follow-up story covers a CI project. | The check adds a production build to every CI run, and this kind of breakage is rare. |
+| Top-level page in CI | Not added. The release rehearsal stays manual. | The check would add a production build to every CI run, and this kind of breakage is rare. |
 
 ## The network: `src/core/network/`
 
@@ -118,8 +118,10 @@ interface Scene {
 }
 function emptyScene(columnSizes: readonly number[]): Scene;
 function fullScene(columnSizes: readonly number[]): Scene;
-function cubicBezier(x1: number, y1: number, x2: number, y2: number): (t: number) => number;
 ```
+
+`easing.ts`, next to it, holds `clamp01`, `cubicBezier(x1, y1, x2, y2)` and `ease` (CSS's `ease`),
+which any animated scene can use.
 
 - **Columns** are the drawn layers: embedding (captioned "Input Layer", as in the prototype),
   Hidden Layer 1, Hidden Layer 2, and Output Layer.
@@ -154,7 +156,8 @@ This is one SVG with no state, no timers and no store access. It fills its conta
 exist). From back to front:
 
 1. **Scaffold wires:** grey (`#909090`, 0.5 px), running from each source node's right edge to the
-   target's left edge. A wire is hidden once its far half is fully drawn.
+   target's left edge. They stay drawn: an edge half is at least 1 px wide along the same line,
+   so a drawn half covers its wire. The prototype hid them instead.
 2. **Edge halves** (`paintSignal`, lines 12542–12554). The dash offset comes from `edgeDraw` of
    the edge's source unit.
    - **Near half** (source to midpoint): coloured by the sign of the source activation, banded by
@@ -425,11 +428,6 @@ It is an `observer`.
 - **`src/core/README.md`, "What's here":** add `network/`, `network-diagram/`,
   `conversation-card/`, `colors`, `use-dataset-index` and `use-element-size`.
 - **`src/views/trace-a-case/`:** a short README naming what's here and what NPW-23 adds.
-
-## Follow-ups
-
-- **A story for a CI Playwright project against `build:top-test`,** to catch `dataUrl`
-  regressions on the released layout.
 
 ## Out of scope
 
