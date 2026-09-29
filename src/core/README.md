@@ -34,10 +34,16 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   `docs/view-state.md`.
 - `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
   it between views.
+- `network/`: the network types, the toy network Trace a Case uses until there is one built from
+  the real alien3 activations (`toy-network.ts`), the forward pass, and the scales the diagram
+  draws against (`network-scales.ts`).
+- `network-diagram/`: the shared network diagram. A view says what to show as a `Scene`, and
+  `NetworkDiagram` draws it. `layout.ts` is its geometry; `easing.ts` has the timing curves.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words. Items are plain data, so these are functions that take the text.
 - `colors.ts`, `colors.scss`, `panel.scss`: the lesson's colors and the panel look.
+- `use-element-size.ts`: an element's size, kept current with a ResizeObserver.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and
 files that use this code (the explorer's search, Codings dialog, regression panel and item panel,
