@@ -4,6 +4,10 @@ import { App } from "./app";
 import { VIEWS } from "../views";
 import { AppState } from "../state/app-state";
 
+// Trace a Case, the default view, loads the conversations. Leave them loading: these tests are
+// about the app shell, not the view.
+jest.mock("../../core/data-loader", () => ({ fetchIndex: jest.fn(() => new Promise(() => undefined)) }));
+
 // replaceState changes the URL without firing hashchange, so each test controls events itself.
 function setUrl(url: string) {
   window.history.replaceState(null, "", url);
