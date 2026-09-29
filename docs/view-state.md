@@ -60,18 +60,16 @@ the stages it has completed, but not one in progress.
   URL param loader needs.
 - **No snapshot processors that change the shape.** The saved form is exactly the keystone
   snapshot, so recorded patches match what is stored.
-- **Type checking in production.** In development and tests, keystone checks every load and write
-  against the types, including refinements such as "a step from 0 to 4". In production only some
-  mismatches are caught on load: a wrong value in a top-level field or a union (a string where a
-  number belongs, or a speed of 5). None of these are checked in production:
-  - values inside arrays, records and objects (`commissioned: [5]` or
-    `stepsByConversation: { "…": "3" }` loads as it is);
-  - a missing required field inside an object (`pane2: {}` loads without `selectedAttributes`,
-    and `toggleAttribute` then crashes);
-  - refinements and integers;
-  - writes.
+- **Type checking is on everywhere, production included.** `src/app/state/app-state.ts` sets
+  `modelAutoTypeChecking` to `AlwaysOn`. Every load and write is checked against the types,
+  including values inside arrays, records and objects, and refinements such as "a step from 0 to
+  4". A bad value throws where it is written, so it never reaches saved student state. The
+  trees are small, so the cost is negligible.
 
-  Code that loads saved state must call `typeCheck` itself.
+  Keystone's default, `DevModeOnly`, skips most of these checks in production, and they
+  would load bad data silently: `commissioned: [5]`, `stepsByConversation: { "…": "3" }`, or
+  `pane2: {}` (which loads without `selectedAttributes`, so `toggleAttribute` then crashes). Code
+  that uses these models outside the student app must turn the setting on itself.
 
 ## Where initial state comes from
 
@@ -99,10 +97,10 @@ Saved interactive state will be loaded through one function, `loadInteractiveSta
 returns the two trees or an error result and never throws. It returns an error when the JSON:
 
 - fails `typeCheck` against the expected model, as in `typeCheck(types.model(TraceACaseState), view)`.
-  This check is needed even when `fromSnapshot` succeeds. A snapshot whose `$modelType` names a
-  different registered model loads as that other class: `fromSnapshot(TraceACaseState, …)` given
-  Correlations state returns a `CorrelationsState`. `typeCheck`, or an `instanceof` check, catches
-  it;
+  This check is needed even when `fromSnapshot` succeeds with type checking on. A snapshot whose
+  `$modelType` names a different registered model loads as that other class:
+  `fromSnapshot(TraceACaseState, …)` given Correlations state returns a `CorrelationsState`.
+  `typeCheck`, or an `instanceof` check, catches it;
 - has an unknown `$modelType`;
 - has a `version` other than 1.
 

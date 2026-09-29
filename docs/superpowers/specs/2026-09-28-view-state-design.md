@@ -211,8 +211,10 @@ an error. Simply starting fresh would overwrite the student's unreadable work on
 ## Error handling
 
 - The standalone app keeps state in memory only. A reload is a fresh start, as in the prototype.
-- In development, keystone type-checks every write (`modelAutoTypeChecking` default), so a view
-  that sets a wrong-typed value throws in development.
+- Keystone type-checks every load and write in every environment. `app-state.ts` sets
+  `modelAutoTypeChecking` to `AlwaysOn`, so a view that sets a wrong-typed value throws, in
+  production too. (Amended after review. The first version relied on keystone's default, which
+  checks only in development.)
 - `useViewState` with the wrong model class throws, with a message naming the view id and both
   classes.
 

@@ -11,5 +11,8 @@ export const animationProps = {
   speed: tProp(speedType, 1 as Speed),
 };
 
-/** A count that can't go below zero. Checked in development and tests, not in production. */
+/**
+ * A count that can't go below zero. Checked whenever keystone type checking is on, which the
+ * student app turns on everywhere.
+ */
 export const countType = types.refinement(types.integer, n => n >= 0, "non-negative integer");

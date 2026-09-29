@@ -1,6 +1,11 @@
-import { AnyModel, registerRootStore } from "mobx-keystone";
+import { AnyModel, ModelAutoTypeCheckingMode, registerRootStore, setGlobalConfig } from "mobx-keystone";
 import { SharedState } from "../../core/state/shared-state";
 import { findView } from "../views";
+
+// Check every load and write against the models' types in production too, not only in
+// development. The trees are small, so the cost is negligible, and a bad value then throws where
+// it is written instead of being saved into a student's state. See docs/view-state.md.
+setGlobalConfig({ modelAutoTypeChecking: ModelAutoTypeCheckingMode.AlwaysOn });
 
 /**
  * The student app's state: the shared tree plus one tree per view, each its own root. Held for
