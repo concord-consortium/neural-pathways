@@ -15,7 +15,7 @@ import { CorrelationsState } from "../core/state/correlations-state";
 import { InvestigateUnknownPathwayState } from "../core/state/investigate-unknown-pathway-state";
 
 export interface ViewDef {
-  /** Used in `?interactive=<id>` and `#view=<id>`. AP activities embed these, so never rename one. */
+  /** Used in `?interactive=<id>` and `#view=<id>`. See src/app/README.md before renaming or removing one. */
   id: string;
   title: string;
   component: React.ComponentType;

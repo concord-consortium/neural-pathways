@@ -1,0 +1,4 @@
+// The shell owns the gutter around a view, the same in both modes, so views never pad themselves.
+.view-frame {
+  padding: 0 16px;
+}

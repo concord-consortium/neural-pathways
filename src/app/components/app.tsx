@@ -1,23 +1,21 @@
 import React, { useState } from "react";
-import { getEmbedViewId } from "../url-state";
+import { getInteractiveViewId } from "../url-state";
 import { AppState } from "../state/app-state";
 import { StandaloneLayout } from "./standalone-layout";
 import { ViewContent } from "./view-content";
+import "./app.scss";
 
-/**
- * `?interactive=<id>` is embed mode: the AP author fixed the view, so it is shown alone and the
- * hash is ignored. Without that param the page is the standalone app with its view nav. Both modes
- * hold their state in one AppState for the life of the page.
- */
+// In interactive mode the AP author fixed the view, so the hash is ignored. Both modes hold their
+// state in one AppState for the life of the page. See src/app/README.md.
 export const App: React.FC = () => {
   const [appState] = useState(() => new AppState());
-  const embedViewId = getEmbedViewId(window.location.search);
-  if (embedViewId === null) {
+  const interactiveViewId = getInteractiveViewId(window.location.search);
+  if (interactiveViewId === null) {
     return <StandaloneLayout appState={appState} />;
   }
   return (
-    <main className="embed-view">
-      <ViewContent viewId={embedViewId} appState={appState} />
+    <main className="interactive-view view-frame">
+      <ViewContent viewId={interactiveViewId} appState={appState} />
     </main>
   );
 };

@@ -1,4 +1,4 @@
-// src/explorer/components/settings-menu.tsx
+// src/lab/explorer/components/settings-menu.tsx
 import React, { useState, useRef, useEffect } from "react";
 import { ScaleMode, WordColorMode, WordScaleScope } from "../types/explorer-data";
 import "./settings-menu.scss";
