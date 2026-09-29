@@ -108,10 +108,11 @@ behind, and the student's original conversation is lost.
 1. **Every place the student changes the query.** Each filter bar calls `setQueryAndCorrect`
    (option 1), not `setQuery`. Views that show a conversation then stop correcting it when their
    list changes. They still check it when state arrives from outside, such as saved state, the
-   previous interactive, or URL params (item 6). Trace a Case, Investigate Pathways, Prediction
-   Chain and pane 1 of Investigate Unknown Pathway call `ensureValidConversation` today. With
-   option 2 or 3 instead, each must correct in a reaction, never a `useEffect`.
-2. **Pane 2 of Investigate Unknown Pathway.** It calls `ensureValidPane2Conversation(filteredIds,
+   previous interactive, or URL params (item 6). In the target design (draft PR #29), Trace a
+   Case, Investigate Pathways, Prediction Chain and pane 1 of Investigate Unknown Pathway call
+   `ensureValidConversation` when their list changes. With option 2 or 3 instead, each must
+   correct in a reaction, never a `useEffect`.
+2. **Pane 2 of Investigate Unknown Pathway.** It would call `ensureValidPane2Conversation(filteredIds,
    pane1ConversationId)`. It needs the same treatment, and its correction also depends on pane
    1's conversation, which lives in the shared tree.
 3. **A query changed in a view that shows no conversation.** Option 1 handles this: Correlations

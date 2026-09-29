@@ -25,6 +25,8 @@ list of valid ids, in either mode.
 1. Create `src/views/<view-id>/<view-id>.tsx` exporting the view component. It may import only
    from `src/core/`.
 2. Add it to `VIEWS` in `views.ts`, at its place in the lesson order.
-3. Update the expected id list in `views.test.ts` and the view list in the top-level README.
+3. If the view keeps state, create its state model in `src/core/state/` and set `stateModel` in
+   its `VIEWS` entry. See "How the state arrives" in `docs/view-state.md`.
+4. Update the expected id list in `views.test.ts` and the view list in the top-level README.
 
 View ids are embedded in AP activities, so never rename or remove one that has shipped.
