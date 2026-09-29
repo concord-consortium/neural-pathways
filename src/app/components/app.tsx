@@ -2,6 +2,7 @@ import React from "react";
 import { getInteractiveViewId } from "../url-state";
 import { StandaloneLayout } from "./standalone-layout";
 import { ViewContent } from "./view-content";
+import "./app.scss";
 
 /**
  * `?interactive=<id>` is interactive mode: the AP author fixed the view, so it is shown alone and the
@@ -13,7 +14,7 @@ export const App: React.FC = () => {
     return <StandaloneLayout />;
   }
   return (
-    <main className="interactive-view">
+    <main className="interactive-view view-frame">
       <ViewContent viewId={interactiveViewId} />
     </main>
   );

@@ -22,7 +22,7 @@ export const StandaloneLayout: React.FC = () => {
   return (
     <div className="standalone-layout">
       <ViewNav selectedId={viewId} />
-      <main className="standalone-view">
+      <main className="standalone-view view-frame">
         <ViewContent viewId={viewId} />
       </main>
     </div>
