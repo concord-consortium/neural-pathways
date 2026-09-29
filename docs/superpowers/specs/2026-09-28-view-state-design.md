@@ -162,9 +162,10 @@ itself:
 - `getViewState(viewId)` creates that view's tree on first use, from type defaults, and returns
   the same instance after that.
 - Each tree is registered as a root store (`registerRootStore`).
-- Both modes use the holder. The standalone app creates one for the page, and switching views
-  reuses it. Embed mode creates one and asks it for the single embedded view. In NPW-43, embed
-  mode will fill it from saved interactive state instead.
+- Both modes use the holder. `index.tsx` creates one for the page, outside React, and passes it
+  to `App`: its constructor registers a root store, and StrictMode would run a `useState`
+  initializer twice. The standalone app reuses it as views switch; interactive mode asks it for
+  its single view. In NPW-43, interactive mode will fill it from saved interactive state instead.
 
 **Context.** `view-state-context.tsx` in `core` exports a provider and two hooks:
 
