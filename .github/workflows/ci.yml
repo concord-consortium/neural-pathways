@@ -2,7 +2,7 @@ name: Continuous Integration
 
 # The deploy runs on push, not pull_request, so its GitHub deployment is recorded against the
 # branch and PRs show the deploy link. Playwright runs in playwright.yml, which also runs on
-# pull_request so it can post its PR comment. See START-12 and SDEPLOY-4.
+# pull_request so it can post its PR comment.
 on: push
 
 jobs:
