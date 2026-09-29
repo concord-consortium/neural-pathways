@@ -29,6 +29,7 @@ After this work:
 |---|---|
 | **View** | One unit of the lesson: Trace a Case, Extract Pathways, and so on. The code's name for it. |
 | **Interactive** | A view embedded in the AP, via `index.html?interactive=<view-id>`. Reserved for that use. |
+| **Interactive mode** | How the app runs as an Interactive: the view alone, filling the frame, with no nav. Later it also talks to the AP through the LARA interactive API, for example waiting for saved interactive state before rendering. |
 | **Standalone app** | `index.html` without the `interactive` param: a left navigation list of views plus the selected view. For students working outside the AP with written instructions. |
 | **Lab** | Research, authoring and developer tools (explorer, heatmap). Not student-facing. |
 
@@ -53,7 +54,7 @@ pages; "production" was avoided because it collides with production/staging depl
 
 ```
 src/
-  app/            student app: entry, index.html, view registry (views.ts), standalone layout, nav, embed mode
+  app/            student app: entry, index.html, view registry (views.ts), standalone layout, nav, interactive mode
   views/          one folder per view: trace-a-case/, extract-pathways/, …
   core/           reviewed code shared by app and views (empty at first)
   lab/
@@ -171,7 +172,7 @@ Ids are URL-stable: AP pages will embed them. Renaming one later breaks authored
 
 `src/app/index.tsx` renders `App`, which picks a mode from the URL:
 
-- **Embed mode:** `?interactive=<id>` renders that view alone, filling the frame, with no nav.
+- **Interactive mode:** `?interactive=<id>` renders that view alone, filling the frame, with no nav.
   The query param is fixed by the AP author and never changed by the app.
 - **Standalone mode:** no `interactive` param. A left nav column lists the views in order with
   the current one highlighted; the selected view fills the rest. The selection is kept in the
@@ -179,7 +180,7 @@ Ids are URL-stable: AP pages will embed them. Renaming one later breaks authored
   convention the explorer uses). With no hash, or an empty one, the first view is selected.
   Selecting a nav item updates the hash.
 - **Unknown id**, in either mode: a short "Unknown view" message that lists the valid ids,
-  instead of a blank page. In embed mode this is how an author sees a typo.
+  instead of a blank page. In interactive mode this is how an author sees a typo.
 
 The query param selects the *mode* and the hash holds *navigation state*, so an embedded
 interactive can never show the nav. The names differ (`interactive` vs `view`) so the two are
@@ -211,7 +212,7 @@ The NPW-13 UI/UX work will restyle it.
 |---|---|
 | `index.html` | Standalone app, first view |
 | `index.html#view=<id>` | Standalone app, that view |
-| `index.html?interactive=<id>` | That view alone (AP embed) |
+| `index.html?interactive=<id>` | That view alone, in interactive mode (for the AP) |
 | `lab.html` | Research landing page |
 | `explorer.html`, `heatmap.html` | Unchanged |
 
@@ -220,7 +221,7 @@ The NPW-13 UI/UX work will restyle it.
 Jest:
 
 - Registry: ids are unique, non-empty, URL-safe; order matches the table above.
-- Mode selection: embed with a valid id, standalone with and without a hash, unknown id in
+- Mode selection: interactive mode with a valid id, standalone with and without a hash, unknown id in
   both modes.
 - Standalone nav: clicking a nav item shows that view and updates the hash; a `hashchange`
   (back/forward) updates the selection.
@@ -244,7 +245,7 @@ Candidates for follow-up stories:
 
 - LARA interactive API integration (height reporting, interactive state, supported features).
   [NPW-14](https://concord-consortium.atlassian.net/browse/NPW-14) targets the explorer today;
-  it likely gets retargeted to the student app's embed mode.
+  it likely gets retargeted to the student app's interactive mode.
 - Coverage thresholds or stricter lint for `app/`, `views/` and `core/`.
 - The real views (NPW-23…28).
 - Moving `scripts/` under the lab, or giving it its own boundary.

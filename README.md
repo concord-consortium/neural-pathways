@@ -4,7 +4,7 @@
 
 | Folder | Holds |
 |---|---|
-| `src/app/` | The student app shell: entry point, view registry, navigation, AP embed mode |
+| `src/app/` | The student app shell: entry point, view registry, navigation, interactive mode for the Activity Player (AP) |
 | `src/views/` | One folder per lesson view |
 | `src/core/` | Reviewed code shared by the app and views |
 | `src/lab/` | Research and authoring tools: the explorer, the heatmap, and their shared code |
