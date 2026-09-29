@@ -1,4 +1,4 @@
-import { pearson } from "../../src/explorer/utils/statistics";
+import { pearson } from "../../src/lab/explorer/utils/statistics";
 import { solvedFor } from "./attributes";
 import { factorScores, fitFactorAnalysis } from "./factor-analysis";
 import { GeneratorRun } from "./pipeline";

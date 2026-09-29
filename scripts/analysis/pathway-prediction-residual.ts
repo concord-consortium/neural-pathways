@@ -8,8 +8,8 @@
  * Usage: npm run analyze:pathway-prediction
  * Findings: docs/pathway-prediction-target-analysis.md
  */
-import { fetchIndex } from "../../src/shared/data-loader";
-import { yelpDataset } from "../../src/shared/datasets/yelp-dataset";
+import { fetchIndex } from "../../src/lab/shared/data-loader";
+import { yelpDataset } from "../../src/lab/shared/datasets/yelp-dataset";
 import { analyzeDisagreement } from "./disagreement";
 
 const pct = (value: number) => `${(value * 100).toFixed(2)}%`;

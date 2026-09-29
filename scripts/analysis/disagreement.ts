@@ -1,7 +1,7 @@
-import { S3Item } from "../../src/shared/types/s3-data";
-import { pathwayPrediction, pathwayPredictionClass } from "../../src/explorer/utils/pathway-prediction";
-import { mean, pearson } from "../../src/explorer/utils/statistics";
-import { logisticRegression } from "../../src/explorer/utils/regression";
+import { S3Item } from "../../src/lab/shared/types/s3-data";
+import { pathwayPrediction, pathwayPredictionClass } from "../../src/lab/explorer/utils/pathway-prediction";
+import { mean, pearson } from "../../src/lab/explorer/utils/statistics";
+import { logisticRegression } from "../../src/lab/explorer/utils/regression";
 
 export interface DisagreementAnalysis {
   fitName: string;

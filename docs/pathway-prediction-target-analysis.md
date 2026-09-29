@@ -51,7 +51,7 @@ the item sits to the pathways' decision boundary. See §6.
 
 ## 2. What the pathway prediction is
 
-`src/explorer/utils/pathway-prediction.ts` computes, for an item and a fit:
+`src/lab/explorer/utils/pathway-prediction.ts` computes, for an item and a fit:
 
 ```
 pathway_prediction = Σ scoreᵢ × importanceᵢ
@@ -61,7 +61,7 @@ pathway_prediction = Σ scoreᵢ × importanceᵢ
 summed. `pathway_importance` is a per-pathway logistic regression coefficient
 (signed log-odds per standard deviation), so this sum is log-odds **without an
 intercept**. The threshold is `sum ≥ 0` is class 1, matching `logisticRegression`'s
-`eta >= 0` rule (`src/explorer/utils/regression.ts`). There is no re-standardization
+`eta >= 0` rule (`src/lab/explorer/utils/regression.ts`). There is no re-standardization
 of the scores and no recovered intercept — see §3 for why.
 
 ## 3. Why this formula

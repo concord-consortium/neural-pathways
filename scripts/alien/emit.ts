@@ -1,9 +1,9 @@
 import { createHash } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
-import { logisticRegression } from "../../src/explorer/utils/regression";
-import { AttributeDefinition } from "../../src/shared/types/attributes";
-import { S3Index, S3Item, S3ShapItem } from "../../src/shared/types/s3-data";
+import { logisticRegression } from "../../src/lab/explorer/utils/regression";
+import { AttributeDefinition } from "../../src/lab/shared/types/attributes";
+import { S3Index, S3Item, S3ShapItem } from "../../src/lab/shared/types/s3-data";
 import { Activations } from "./activations";
 import { SolvedAttribute } from "./attributes";
 import { AlienConfig } from "./config-types";

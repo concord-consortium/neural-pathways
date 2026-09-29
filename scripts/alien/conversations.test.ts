@@ -1,7 +1,7 @@
 import { fourPathwayConfig } from "../alien-config";
 import { createRng } from "./rng";
 import { buildCorpus, drawConversation } from "./conversations";
-import { pearson } from "../../src/explorer/utils/statistics";
+import { pearson } from "../../src/lab/explorer/utils/statistics";
 
 describe("drawConversation", () => {
   it("respects the turn and word bounds", () => {

@@ -13,7 +13,49 @@ import js from "@eslint/js";
 import { defineConfig } from "eslint/config";
 import comments from "@eslint-community/eslint-plugin-eslint-comments/configs";
 import { flatConfigs as importPluginConfig } from "eslint-plugin-import";
+import fs from "node:fs";
+import path from "node:path";
 
+// Student-facing code (src/app, src/views, src/core) is fully reviewed and must not depend on
+// the research code in src/lab. Views are independent of each other and of the app shell.
+// See src/core/README.md.
+// The view folders are read once, when the config loads. A long-running editor ESLint server
+// won't enforce the sibling-view rule for a new view folder until it restarts; CI is unaffected.
+const viewsDir = path.join(import.meta.dirname, "src/views");
+const viewFolders = fs.existsSync(viewsDir)
+  ? fs.readdirSync(viewsDir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name)
+  : [];
+const sourceExtensions = "{ts,tsx,mts,cts,js,jsx,mjs,cjs}";
+const boundaryMessage = "Student-facing code may not import this. See src/core/README.md.";
+const importBoundaryZones = [
+  // Allow-list: each area may import only the listed folders and packages. Everything else in the
+  // repo (src/lab, scripts, src/test, playwright, root files, any new folder) is off limits.
+  {
+    target: "./src/app", from: "./", message: boundaryMessage,
+    except: ["./src/app", "./src/views", "./src/core", "./node_modules"],
+  },
+  {
+    target: "./src/views", from: "./", message: boundaryMessage,
+    except: ["./src/views", "./src/core", "./node_modules"],
+  },
+  {
+    target: "./src/core", from: "./", message: boundaryMessage,
+    except: ["./src/core", "./node_modules"],
+  },
+  // A view may not import from a sibling view; shared code belongs in src/core.
+  ...viewFolders.map(name => ({
+    target: `./src/views/${name}`,
+    from: "./src/views",
+    except: [`./${name}`],
+    message: "A view may not import from another view; move shared code to src/core.",
+  })),
+  // Files directly in src/views belong to no view and may not import any view.
+  {
+    target: `./src/views/*.${sourceExtensions}`,
+    from: "./src/views/*/**",
+    message: "Put view code in a view folder; move shared code to src/core.",
+  },
+];
 
 export default defineConfig(
   {
@@ -22,7 +64,7 @@ export default defineConfig(
   },
   {
     name: "shared JS/TS configs",
-    files: ["**/*.{js,mjs,ts,tsx,jsx}"],
+    files: [`**/*.${sourceExtensions}`],
     extends: [
       js.configs.recommended,
       tsConfigs.recommended,
@@ -43,7 +85,7 @@ export default defineConfig(
   },
   {
     name: "general rules",
-    files: ["**/*.{js,mjs,ts,tsx,jsx}"],
+    files: [`**/*.${sourceExtensions}`],
     plugins: {
       "@stylistic": stylisticEslintPlugin,
     },
@@ -141,6 +183,23 @@ export default defineConfig(
     rules: {
       "@typescript-eslint/prefer-optional-chain": "warn",
     }
+  },
+  {
+    name: "student-facing import boundary",
+    files: [`src/**/*.${sourceExtensions}`],
+    rules: {
+      "import/no-restricted-paths": ["error", {
+        basePath: import.meta.dirname,
+        zones: importBoundaryZones,
+      }],
+    },
+  },
+  {
+    name: "student-facing import boundary may not be disabled",
+    files: [`src/{app,views,core}/**/*.${sourceExtensions}`],
+    rules: {
+      "@eslint-community/eslint-comments/no-restricted-disable": ["error", "import/no-restricted-paths"],
+    },
   },
   {
     name: "rules specific to Jest tests",
