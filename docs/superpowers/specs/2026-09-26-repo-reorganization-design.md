@@ -29,6 +29,7 @@ After this work:
 |---|---|
 | **View** | One unit of the lesson: Trace a Case, Extract Pathways, and so on. The code's name for it. |
 | **Interactive** | A view embedded in the AP, via `index.html?interactive=<view-id>`. Reserved for that use. |
+| **Interactive mode** | How the app runs as an Interactive: the view alone, filling the frame, with no nav. Later it also talks to the AP through the LARA interactive API, for example waiting for saved interactive state before rendering. |
 | **Standalone app** | `index.html` without the `interactive` param: a left navigation list of views plus the selected view. For students working outside the AP with written instructions. |
 | **Lab** | Research, authoring and developer tools (explorer, heatmap). Not student-facing. |
 
@@ -53,7 +54,7 @@ pages; "production" was avoided because it collides with production/staging depl
 
 ```
 src/
-  app/            student app: entry, index.html, view registry (views.ts), standalone layout, nav, embed mode
+  app/            student app: entry, index.html, view registry (views.ts), standalone layout, nav, interactive mode
   views/          one folder per view: trace-a-case/, extract-pathways/, …
   core/           reviewed code shared by app and views (empty at first)
   lab/
@@ -75,24 +76,35 @@ imports any of them.
 Enforced with `import/no-restricted-paths` (eslint-plugin-import is already loaded) at `error`
 level, so `npm run lint`, `lint:build` and CI fail on a violation.
 
-| From | May import | May not import |
-|---|---|---|
-| `src/app/` | `views/`, `core/` | `lab/` |
-| `src/views/` | `core/` | `app/`, `lab/`, and other views |
-| `src/core/` | nothing under `src/` except `core/` | `app/`, `views/`, `lab/` |
-| `src/lab/`, `scripts/` | anything | — |
+The zones are an allow-list: each student-facing area may import only the folders listed below
+and packages from `node_modules`. Everything else in the repo is off limits, including `lab/`,
+`scripts/` (unreviewed, and it imports `lab/`), `src/test/`, `playwright/`, root files and any new
+top-level folder.
+
+| From | May import |
+|---|---|
+| `src/app/` | `app/`, `views/`, `core/` |
+| `src/views/` | `core/`, and its own view folder |
+| `src/core/` | `core/` |
+| `src/lab/`, `scripts/` | anything |
 
 "Other views" means a view may not import from a sibling view folder. Anything two views share
 belongs in `core/`. A single static zone cannot express "siblings", so `eslint.config.mjs`
 reads the `src/views/` directory listing and generates one zone per view folder (target: that
 folder; from: `src/views/`; except: the folder itself). The registry lives in `app/` because lesson order and navigation are the
-app's concern; a view does not know its position in the lesson.
+app's concern; a view does not know its position in the lesson. A file placed directly in
+`src/views/`, outside any view folder, may not import a view.
+
+An `eslint-disable` comment for the rule is itself an error in `app/`, `views/` and `core/`
+(`eslint-comments/no-restricted-disable`). `npm run lint:boundary` lints sample imports against
+the real config and checks which are flagged, so a refactor that quietly disables a zone fails
+the build.
 
 ## Review convention
 
-Written into `src/app/README.md`, `src/views/README.md` and `src/core/README.md`:
+Written into `src/core/README.md`; `src/app/README.md` and `src/views/README.md` point to it:
 
-- Every line under `src/app/`, `src/views/` and `src/core/` has been reviewed.
+- Every line under `src/app/`, `src/views/` and `src/core/` is reviewed.
 - Code enters these folders only through a story's PR.
 - Promoting code from `lab/` is a copy-and-review, rewriting where warranted, not a blind move.
 - When a promotion is essentially a move, `lab/` switches to importing the `core/` version and
@@ -119,7 +131,7 @@ Branch: `NPW-22-repo-reorganization`.
 - Add the import-boundary rule, including the generated per-view zones (which produce no zones
   until PR 2 adds view folders).
 - Update living docs that name moved paths: `README.md`, `doc/heatmap-viz.md`,
-  `docs/testing-*.md`, `docs/pathway-prediction-target-analysis.md`. The dated specs and plans
+  `docs/testing-alien-generator.md`, `docs/pathway-prediction-target-analysis.md`. The dated specs and plans
   in `docs/superpowers/` are historical records and stay as written.
 
 **Commits**
@@ -160,7 +172,7 @@ Ids are URL-stable: AP pages will embed them. Renaming one later breaks authored
 
 `src/app/index.tsx` renders `App`, which picks a mode from the URL:
 
-- **Embed mode:** `?interactive=<id>` renders that view alone, filling the frame, with no nav.
+- **Interactive mode:** `?interactive=<id>` renders that view alone, filling the frame, with no nav.
   The query param is fixed by the AP author and never changed by the app.
 - **Standalone mode:** no `interactive` param. A left nav column lists the views in order with
   the current one highlighted; the selected view fills the rest. The selection is kept in the
@@ -168,7 +180,7 @@ Ids are URL-stable: AP pages will embed them. Renaming one later breaks authored
   convention the explorer uses). With no hash, or an empty one, the first view is selected.
   Selecting a nav item updates the hash.
 - **Unknown id**, in either mode: a short "Unknown view" message that lists the valid ids,
-  instead of a blank page. In embed mode this is how an author sees a typo.
+  instead of a blank page. In interactive mode this is how an author sees a typo.
 
 The query param selects the *mode* and the hash holds *navigation state*, so an embedded
 interactive can never show the nav. The names differ (`interactive` vs `view`) so the two are
@@ -200,7 +212,7 @@ The NPW-13 UI/UX work will restyle it.
 |---|---|
 | `index.html` | Standalone app, first view |
 | `index.html#view=<id>` | Standalone app, that view |
-| `index.html?interactive=<id>` | That view alone (AP embed) |
+| `index.html?interactive=<id>` | That view alone, in interactive mode (for the AP) |
 | `lab.html` | Research landing page |
 | `explorer.html`, `heatmap.html` | Unchanged |
 
@@ -209,7 +221,7 @@ The NPW-13 UI/UX work will restyle it.
 Jest:
 
 - Registry: ids are unique, non-empty, URL-safe; order matches the table above.
-- Mode selection: embed with a valid id, standalone with and without a hash, unknown id in
+- Mode selection: interactive mode with a valid id, standalone with and without a hash, unknown id in
   both modes.
 - Standalone nav: clicking a nav item shows that view and updates the hash; a `hashchange`
   (back/forward) updates the selection.
@@ -233,18 +245,21 @@ Candidates for follow-up stories:
 
 - LARA interactive API integration (height reporting, interactive state, supported features).
   [NPW-14](https://concord-consortium.atlassian.net/browse/NPW-14) targets the explorer today;
-  it likely gets retargeted to the student app's embed mode.
+  it likely gets retargeted to the student app's interactive mode.
 - Coverage thresholds or stricter lint for `app/`, `views/` and `core/`.
 - The real views (NPW-23…28).
-- Moving `scripts/` under the lab, or giving it its own boundary.
+- Moving the alien generator out of `scripts/` to a reviewed `generator/` folder with its own
+  boundary: [NPW-46](https://concord-consortium.atlassian.net/browse/NPW-46), designed in
+  `2026-09-29-generator-move-design.md`. The analysis scripts stay in `scripts/`, unreviewed.
 
 ## Risks
 
 - **PR 1** changes no URLs; the main risk is a missed import path, which the type check, lint,
   jest, webpack build and Playwright all catch.
 - **PR 2** changes what `/` shows. Anyone with a bookmark to the old landing page gets the
-  student app; direct `explorer.html` and `heatmap.html` links keep working, and the old links
-  are one click away at `lab.html`.
+  student app. The lab tools are not released to the top level, so there is no top-level
+  `lab.html`; in a branch or version folder, `explorer.html` and `heatmap.html` keep working and
+  the old landing page's links are one click away at `lab.html`.
 - Open PRs or local branches that touch `src/explorer`, `src/heatmap` or `src/shared` will
   conflict with PR 1. Git's rename detection handles most of it on rebase, but it is worth
   merging PR 1 at a quiet moment.

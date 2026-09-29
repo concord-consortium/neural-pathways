@@ -19,9 +19,9 @@ The key feature of `index-top.html` is that it references the javascript and css
 
 Building a functional index.js that works when it is loaded either by `index.html` or `index-top.html` depends on using Webpack a certain way.  Since Webpack 5, the `publicPath` configuration option's default value is `'auto'`. With this value the public path is computed at runtime based on the path the script was loaded from. So if the script was loaded from `/neural-pathways/version/v1.2.3/index.[hash].js` then at runtime the public path will be set to `/neural-pathways/version/v1.2.3/`. The reason the public path matters has to do with how javascript loads and references assets like images or json files.
 
-For example `components/app.tsx` uses:
+For example, a component that shows an image would use:
 ```
-import Icon from "../assets/concord.png";
+import Icon from "../assets/logo.png";
 ...
 <img src={Icon}/>
 ```
@@ -29,9 +29,9 @@ This `<img>` tag will be added by React to the dom. When the browser loads the i
 
 If the import statement is not used and instead the src of the image was hard coded like:
 ```
-<img src="assets/concord.png"/>
+<img src="assets/logo.png"/>
 ```
-Webpack has no control of this, so at runtime this will be loaded relative to the html file.  So when the `index.html` is at the top level, the browser will look for `/neural-pathways/assets/concord.png` and not find it. So hard coded paths like this should be converted to using import statements.
+Webpack has no control of this, so at runtime this will be loaded relative to the html file.  So when the `index.html` is at the top level, the browser will look for `/neural-pathways/assets/logo.png` and not find it. So hard coded paths like this should be converted to using import statements.
 
 In some cases we dynamically compute a path to load an asset from. In most of these places webpack imports can still be used. Webpack supports this by static analysis of the import function, so we just need to change those places in the code slightly. Here is the documentation about this:
 https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
@@ -41,7 +41,7 @@ If using import is too difficult you can work around this by using the special `
 ```
 declare const __webpack_public_path__: string;
 ...
-<img src={`${__webpack_public_path__}assets/concord.png`}/>
+<img src={`${__webpack_public_path__}assets/logo.png`}/>
 ```
 A possible reason for doing this is if you are working with an external library that you don't have control over and need to pass it a path to load an asset.
 
