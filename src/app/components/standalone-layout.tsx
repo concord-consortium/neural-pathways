@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { VIEWS } from "../views";
 import { getHashViewId } from "../url-state";
 import { ViewContent } from "./view-content";
+import { AppState } from "../state/app-state";
 import { ViewNav } from "./view-nav";
 import "./standalone-layout.scss";
 
@@ -10,7 +11,11 @@ function selectedIdFromHash(): string {
   return getHashViewId(window.location.hash) || VIEWS[0].id;
 }
 
-export const StandaloneLayout: React.FC = () => {
+interface StandaloneLayoutProps {
+  appState: AppState;
+}
+
+export const StandaloneLayout: React.FC<StandaloneLayoutProps> = ({ appState }) => {
   const [viewId, setViewId] = useState(selectedIdFromHash);
 
   useEffect(() => {
@@ -23,7 +28,7 @@ export const StandaloneLayout: React.FC = () => {
     <div className="standalone-layout">
       <ViewNav selectedId={viewId} />
       <main className="standalone-view">
-        <ViewContent viewId={viewId} />
+        <ViewContent viewId={viewId} appState={appState} />
       </main>
     </div>
   );
