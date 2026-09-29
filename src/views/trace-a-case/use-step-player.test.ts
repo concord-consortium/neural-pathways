@@ -115,6 +115,30 @@ describe("useStepPlayer", () => {
     expect(result.current.scene).toEqual(emptyScene(SIZES));
   });
 
+  it("does not bring progress back when returning to an earlier conversation", () => {
+    setReducedMotion(true);
+    const { result, rerender } = renderPlayer("a");
+    act(() => result.current.play(4));
+    rerender({ key: "b" });
+    rerender({ key: "a" });
+    expect(result.current.stepsDone).toBe(0);
+    expect(result.current.scene).toEqual(emptyScene(SIZES));
+  });
+
+  it("does not bring back a step that was mid-animation when returning to its conversation", () => {
+    const { result, rerender } = renderPlayer("a");
+    act(() => result.current.play(2));
+    act(() => jest.advanceTimersByTime(500));
+    rerender({ key: "b" });
+    rerender({ key: "a" });
+    expect(result.current.stepsDone).toBe(0);
+    expect(result.current.scene).toEqual(emptyScene(SIZES));
+    expect(jest.getTimerCount()).toBe(0);
+    act(() => jest.advanceTimersByTime(5000));
+    expect(result.current.stepsDone).toBe(0);
+    expect(result.current.scene).toEqual(emptyScene(SIZES));
+  });
+
   it("stops the clock when unmounted", () => {
     const { result, unmount } = renderPlayer();
     act(() => result.current.play(2));
