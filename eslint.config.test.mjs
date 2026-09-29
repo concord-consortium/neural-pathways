@@ -9,24 +9,34 @@ import path from "node:path";
 import { ESLint } from "eslint";
 
 const root = import.meta.dirname;
-// Two throwaway views. They must exist before the config loads, since it lists the view folders.
+// Throwaway files to import, so the tests don't depend on real files that later move (lab code
+// is promoted to core, for example). An import of a missing file is not flagged at all.
+// The views must exist before the config loads, since it lists the view folders.
 const viewA = path.join(root, "src/views/boundary-test-a");
 const viewB = path.join(root, "src/views/boundary-test-b");
+const labDir = path.join(root, "src/lab/boundary-test");
+const scriptsDir = path.join(root, "scripts/boundary-test");
+const fixtureDirs = [viewA, viewB, labDir, scriptsDir];
 
 let eslint;
 
 before(() => {
   fs.mkdirSync(path.join(viewA, "sub"), { recursive: true });
   fs.mkdirSync(viewB, { recursive: true });
+  fs.mkdirSync(labDir, { recursive: true });
+  fs.mkdirSync(scriptsDir, { recursive: true });
   fs.writeFileSync(path.join(viewA, "sub/inner.js"), "export const inner = 1;\n");
   fs.writeFileSync(path.join(viewB, "b.js"), "export const b = 1;\n");
+  fs.writeFileSync(path.join(labDir, "lab.js"), "export const lab = 1;\n");
+  fs.writeFileSync(path.join(scriptsDir, "script.js"), "export const script = 1;\n");
   // import/no-cycle crashes on lintText input.
   eslint = new ESLint({ cwd: root, overrideConfig: { rules: { "import/no-cycle": "off" } } });
 });
 
 after(() => {
-  fs.rmSync(viewA, { recursive: true, force: true });
-  fs.rmSync(viewB, { recursive: true, force: true });
+  for (const dir of fixtureDirs) {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 // Lints `code` as if it lived at `file` and returns the boundary errors.
@@ -37,19 +47,19 @@ async function boundaryErrors(file, code) {
 }
 
 const forbidden = [
-  ["src/core/x.js", "../lab/shared/data-loader"],
-  ["src/core/x.js", "../../scripts/alien/checks"],
+  ["src/core/x.js", "../lab/boundary-test/lab"],
+  ["src/core/x.js", "../../scripts/boundary-test/script"],
   ["src/core/x.js", "../test/setupTests"],
   ["src/core/x.js", "../../playwright.config"],
   ["src/core/x.js", "../app/README.md"],
   ["src/core/x.js", "../views/boundary-test-b/b"],
-  ["src/core/x.mjs", "../lab/shared/data-loader"],
-  ["src/views/boundary-test-a/x.js", "../../lab/shared/data-loader"],
+  ["src/core/x.mjs", "../lab/boundary-test/lab"],
+  ["src/views/boundary-test-a/x.js", "../../lab/boundary-test/lab"],
   ["src/views/boundary-test-a/x.js", "../../app/README.md"],
   ["src/views/boundary-test-a/x.js", "../boundary-test-b/b"],
   ["src/views/x.js", "./boundary-test-b/b"],
-  ["src/app/x.js", "../lab/shared/data-loader"],
-  ["src/app/x.js", "../../scripts/alien/checks"],
+  ["src/app/x.js", "../lab/boundary-test/lab"],
+  ["src/app/x.js", "../../scripts/boundary-test/script"],
 ];
 
 const allowed = [
@@ -60,7 +70,7 @@ const allowed = [
   ["src/views/boundary-test-a/x.js", "../../core/README.md"],
   ["src/app/x.js", "../views/boundary-test-b/b"],
   ["src/app/x.js", "../core/README.md"],
-  ["src/lab/x.js", "../../scripts/alien/checks"],
+  ["src/lab/x.js", "../../scripts/boundary-test/script"],
 ];
 
 describe("student-facing import boundary", () => {
@@ -79,7 +89,7 @@ describe("student-facing import boundary", () => {
   }
 
   it("forbids disabling the rule in student-facing code", async () => {
-    const code = `// eslint-disable-next-line import/no-restricted-paths\nexport * from "../lab/shared/data-loader";\n`;
+    const code = `// eslint-disable-next-line import/no-restricted-paths\nexport * from "../lab/boundary-test/lab";\n`;
     const errors = await boundaryErrors("src/core/x.js", code);
     assert.deepEqual(errors.map(e => e.ruleId), ["@eslint-community/eslint-comments/no-restricted-disable"]);
   });
