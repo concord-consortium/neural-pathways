@@ -165,9 +165,9 @@ describe("TraceACase", () => {
     showView();
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
-    expect(screen.getByRole("button", { name: "Reset" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "false");
     fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
-    expect(screen.getByRole("button", { name: "Reset" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-pressed", "false");
   });
 });
