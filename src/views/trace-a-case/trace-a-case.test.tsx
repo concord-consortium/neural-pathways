@@ -1,6 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
+import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import { SharedState } from "../../core/state/shared-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
 import { S3Index, S3Item } from "../../core/types/s3-data";
@@ -10,22 +11,19 @@ import { TraceACase } from "./trace-a-case";
 jest.mock("../../core/data-loader", () => ({ fetchIndex: jest.fn() }));
 const mockedFetchIndex = fetchIndex as jest.MockedFunction<typeof fetchIndex>;
 
-function item(id: string, text: string): S3Item {
+function item(id: string, text: string, classification: number): S3Item {
   return {
-    id, text,
+    id, text, classification,
     sources: { alien3: [0] },
-    target: 0,
+    target: classification,
     target_label: null,
     pathway_scores: {},
     pathway_variance_fractions: {},
   };
 }
 
-const items = [
-  item("361e65b1002a", "yandor quissa\nblikka murrash\naloven sooma nimbar"),
-  item("7b117e548ba4", "arvek karnok\nmellu chullo tovril"),
-  item("7ca6475a5371", "chullo yandor vaneth\nkippa dweshi mellu"),
-];
+// The first is classified Wait.
+const items = fixture.conversations.slice(0, 3).map(c => item(c.id, c.text, c.classification));
 const ids = items.map(i => i.id);
 const index: S3Index = { metadata: { fa_fits: {}, review_sets: {} }, items };
 
@@ -49,12 +47,15 @@ describe("TraceACase", () => {
     mockedFetchIndex.mockResolvedValue(index);
   });
 
-  it("shows loading, then the first conversation", async () => {
+  it("shows loading, then the first conversation and the network", async () => {
     showView();
     expect(screen.getByRole("heading", { name: "Trace a Case" })).toBeInTheDocument();
     expect(screen.getByText("Loading conversations…")).toBeInTheDocument();
     expect(await screen.findByText("1 / 3")).toBeInTheDocument();
-    expect(screen.getByText("yandor quissa blikka murrash aloven sooma nimbar")).toBeInTheDocument();
+    expect(screen.getByText(items[0].text.split(/\s+/).join(" "))).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The Network" })).toBeInTheDocument();
+    // The whole pass is drawn, so the diagram names the network's answer.
+    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
   });
 
   it("sets the shared conversation once the conversations arrive", async () => {
