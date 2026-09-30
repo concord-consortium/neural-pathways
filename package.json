@@ -42,7 +42,7 @@
     "start:secure:no-certs": "webpack serve --server-options-cert-reset --server-options-key-reset",
     "build": "npm-run-all lint:build lint:boundary generate:alien build:webpack",
     "build:webpack": "webpack --mode production",
-    "build:top-test": "npm run generate:alien && cross-env DEPLOY_PATH=specific/release/ webpack --mode production --output-path top-test/specific/release && cp top-test/specific/release/index-top.html top-test/ && cp -R dist/alien-data dist/alien-data-3 top-test/specific/release/",
+    "build:top-test": "rm -rf top-test && npm run generate:alien && cross-env DEPLOY_PATH=specific/release/ webpack --mode production --output-path top-test/specific/release && cp top-test/specific/release/index-top.html top-test/ && cp -R dist/alien-data dist/alien-data-3 top-test/specific/release/",
     "generate:alien": "ts-node --project tsconfig.generator.json scripts/generate-alien-data.ts",
     "analyze:pathway-prediction": "ts-node --project tsconfig.generator.json scripts/analysis/pathway-prediction-residual.ts",
     "analyze:activation-floor": "ts-node --project tsconfig.generator.json scripts/analysis/activation-floor.ts",

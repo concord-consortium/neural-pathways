@@ -101,7 +101,21 @@ describe("fetchIndex", () => {
   it("throws on a failed response", async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 404, statusText: "Not Found" }) as
       unknown as typeof fetch;
-    await expect(fetchIndex(alien3Dataset)).rejects.toThrow("Failed to fetch index: 404 Not Found");
+    await expect(fetchIndex(alien3Dataset)).rejects.toThrow("Failed to fetch alien-data-3/index.json: 404 Not Found");
+  });
+
+  it("names the URL when the fetch itself rejects", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new TypeError("Network down")) as unknown as typeof fetch;
+    await expect(fetchIndex(alien3Dataset))
+      .rejects.toThrow("Failed to fetch alien-data-3/index.json: Network down");
+  });
+
+  it("names the URL when the body is not JSON", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true, json: async () => { throw new SyntaxError("Unexpected token <"); },
+    }) as unknown as typeof fetch;
+    await expect(fetchIndex(alien3Dataset))
+      .rejects.toThrow("Failed to fetch alien-data-3/index.json: Unexpected token <");
   });
 });
 
@@ -132,7 +146,18 @@ describe("fetchActivations", () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500, statusText: "Oops" }) as
       unknown as typeof fetch;
     await expect(fetchActivations(alien3Dataset, ID, new Map()))
-      .rejects.toThrow("Failed to fetch activations bucket 36: 500 Oops");
+      .rejects.toThrow("Failed to fetch alien-data-3/activations/36.json: 500 Oops");
+  });
+
+  it("does not cache a bucket that has no reviews array", async () => {
+    const fetchMock = mockFetch({});
+    const cache = new Map();
+    await expect(fetchActivations(alien3Dataset, ID, cache))
+      .rejects.toThrow("alien-data-3/activations/36.json has no reviews array");
+    expect(cache.has("36")).toBe(false);
+
+    fetchMock.mockResolvedValue({ ok: true, json: async () => activationWire });
+    expect(await fetchActivations(alien3Dataset, ID, cache)).toEqual([0.1, 0.2, 0.3]);
   });
 });
 
@@ -169,5 +194,13 @@ describe("fetchShap", () => {
     mockFetch(shapWire);
     await expect(fetchShap(alien3Dataset, "36zzzzzzzzzz", FIT, new Map()))
       .rejects.toThrow(`Review 36zzzzzzzzzz not found in SHAP bucket ${FIT}/36`);
+  });
+
+  it("does not cache a bucket that has no reviews array", async () => {
+    mockFetch({ items: [] });
+    const cache = new Map();
+    await expect(fetchShap(alien3Dataset, ID, FIT, cache))
+      .rejects.toThrow(`alien-data-3/shap/${FIT}/36.json has no reviews array`);
+    expect(cache.size).toBe(0);
   });
 });

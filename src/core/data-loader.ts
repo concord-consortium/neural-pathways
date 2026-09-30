@@ -20,15 +20,37 @@ interface S3ShapBucketWire {
   reviews: S3ShapItem[];
 }
 
-export async function fetchIndex(dataset: DatasetDefinition): Promise<S3Index> {
-  const response = await fetch(dataUrl(dataset.baseUrl, "index.json"));
-  if (!response.ok) {
-    throw new Error(`Failed to fetch index: ${response.status} ${response.statusText}`);
+/**
+ * Fetches one data file and checks it has the `reviews` array every wire shape
+ * carries, so a malformed bucket is never cached. Every error names the URL,
+ * because on a broken deploy the URL is what needs checking.
+ */
+async function fetchWire<T extends { reviews: unknown[] }>(url: string): Promise<T> {
+  let wire: T;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+    wire = await response.json();
+  } catch (err) {
+    throw new Error(`Failed to fetch ${url}: ${err instanceof Error ? err.message : String(err)}`);
   }
-  const wire: S3IndexWire = await response.json();
+  if (!Array.isArray(wire?.reviews)) {
+    throw new Error(`${url} has no reviews array`);
+  }
+  return wire;
+}
+
+export async function fetchIndex(dataset: DatasetDefinition): Promise<S3Index> {
+  const wire = await fetchWire<S3IndexWire>(dataUrl(dataset.baseUrl, "index.json"));
   return { metadata: wire.metadata, items: wire.reviews };
 }
 
+/**
+ * `cache` is keyed by bucket, not by dataset: give each dataset its own Map, and
+ * replace it when the dataset changes.
+ */
 export async function fetchActivations(
   dataset: DatasetDefinition,
   itemId: string,
@@ -36,11 +58,7 @@ export async function fetchActivations(
 ): Promise<number[]> {
   const bucket = itemId.slice(0, 2);
   if (!cache.has(bucket)) {
-    const response = await fetch(dataUrl(dataset.baseUrl, `activations/${bucket}.json`));
-    if (!response.ok) {
-      throw new Error(`Failed to fetch activations bucket ${bucket}: ${response.status} ${response.statusText}`);
-    }
-    const wire: ActivationBucketWire = await response.json();
+    const wire = await fetchWire<ActivationBucketWire>(dataUrl(dataset.baseUrl, `activations/${bucket}.json`));
     cache.set(bucket, { items: wire.reviews });
   }
   const bucketData = cache.get(bucket)!;
@@ -51,6 +69,10 @@ export async function fetchActivations(
   return item.activations;
 }
 
+/**
+ * `cache` is keyed by fit and bucket, not by dataset: give each dataset its own
+ * Map, and replace it when the dataset changes.
+ */
 export async function fetchShap(
   dataset: DatasetDefinition,
   itemId: string,
@@ -60,11 +82,7 @@ export async function fetchShap(
   const bucket = itemId.slice(0, 2);
   const cacheKey = `${fitName}/${bucket}`;
   if (!cache.has(cacheKey)) {
-    const response = await fetch(dataUrl(dataset.baseUrl, `shap/${fitName}/${bucket}.json`));
-    if (!response.ok) {
-      throw new Error(`Failed to fetch SHAP bucket ${cacheKey}: ${response.status} ${response.statusText}`);
-    }
-    const wire: S3ShapBucketWire = await response.json();
+    const wire = await fetchWire<S3ShapBucketWire>(dataUrl(dataset.baseUrl, `shap/${fitName}/${bucket}.json`));
     cache.set(cacheKey, { items: wire.reviews });
   }
   const bucketData = cache.get(cacheKey)!;
