@@ -244,11 +244,13 @@ The hook keeps `{ stepsDone, running?: { step, startedAt } }` in React state and
 
 ### The step row
 
-The step row sits in a toolbar above both panels, as in the prototype:
+The step row sits in a toolbar above the network panel, as in the prototype:
 - "Step 1" to "Step 4" as buttons, with `aria-pressed` on the step shown;
 - then Reset, which is disabled when `stepsDone` is 0.
 
-In the prototype this toolbar also holds the filter and About; those come in NPW-35 and NPW-44.
+In the prototype the filter sits in a matching toolbar above the conversation card, and About
+sits at the right end of the step row; those come in NPW-35 and NPW-44. The filter's toolbar
+cell is left empty until then, so the steps still line up over the network.
 
 ## Data, the card and shared state
 
@@ -321,10 +323,11 @@ version:
 
 It is an `observer`.
 
-- **Layout:**
-  - the step toolbar on top;
-  - the conversation card on the left, 447 px wide;
-  - "The Network" panel on the right, holding the diagram at up to 537 px wide.
+- **Layout:** a two-column grid, each column a toolbar over a panel:
+  - on the left, 447 px wide, the (empty) filter cell over the conversation card;
+  - on the right, the step toolbar over "The Network" panel, which holds the diagram at up to
+    537 px wide;
+  - narrower than 857 px, the columns stack: card, steps, network.
 - **While loading:** it shows "Loading conversations…".
 - **On error:** it shows the error message.
 - **Once ready**, it computes, in one `useMemo` keyed on the index:
