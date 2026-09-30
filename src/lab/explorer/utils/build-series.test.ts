@@ -1,5 +1,5 @@
-import { S3Index, S3Item } from "../../shared/types/s3-data";
-import { AttributeDefinition } from "../../shared/types/attributes";
+import { S3Index, S3Item } from "../../../core/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
 import {
   ActiveDataset, DatasetConfig, LoadedDataset,
   activateDataset, applyCommissions, NO_COMMISSIONS,

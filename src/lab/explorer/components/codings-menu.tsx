@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { AttributeDefinition } from "../../shared/types/attributes";
+import { AttributeDefinition } from "../../../core/types/attributes";
 import "./codings-menu.scss";
 
 interface CodingsMenuProps {

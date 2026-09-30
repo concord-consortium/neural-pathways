@@ -8,7 +8,7 @@
  * Usage: npm run analyze:pathway-prediction
  * Findings: docs/pathway-prediction-target-analysis.md
  */
-import { fetchIndex } from "../../src/lab/shared/data-loader";
+import { fetchIndex } from "../../src/core/data-loader";
 import { yelpDataset } from "../../src/lab/shared/datasets/yelp-dataset";
 import { analyzeDisagreement } from "./disagreement";
 

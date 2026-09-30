@@ -1,8 +1,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { AttributeChips } from "./attribute-chips";
-import { S3Item } from "../../shared/types/s3-data";
-import { AttributeDefinition } from "../../shared/types/attributes";
+import { S3Item } from "../../../core/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
 
 const item = { id: "r1" } as S3Item;
 

@@ -1,8 +1,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { ItemPanel } from "./item-panel";
-import { S3Item } from "../../shared/types/s3-data";
-import { AttributeDefinition } from "../../shared/types/attributes";
+import { S3Item } from "../../../core/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
 
 const mockItem: S3Item = {
   id: "r719",

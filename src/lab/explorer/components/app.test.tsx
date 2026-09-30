@@ -1,16 +1,16 @@
 import React from "react";
 import { act, render, screen, fireEvent } from "@testing-library/react";
 import { App } from "./app";
-import { fetchIndex, fetchShap } from "../../shared/data-loader";
-import { S3Index, S3FaFit, S3Item } from "../../shared/types/s3-data";
-import { AttributeDefinition } from "../../shared/types/attributes";
-import { DatasetConfig } from "../../shared/datasets/dataset-config";
+import { fetchIndex, fetchShap } from "../../../core/data-loader";
+import { S3Index, S3FaFit, S3Item } from "../../../core/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
+import { DatasetDefinition } from "../../../core/datasets/dataset-definition";
 
 // The App under test always talks to the network through data-loader; mocking
 // it here is what lets these tests control exactly when each dataset's index
 // "arrives," which is the whole point of the race-condition and stale-hash
 // tests below.
-jest.mock("../../shared/data-loader", () => ({
+jest.mock("../../../core/data-loader", () => ({
   fetchIndex: jest.fn(),
   fetchShap: jest.fn(),
 }));
@@ -98,7 +98,7 @@ describe("App dataset switching", () => {
     pending = {};
     mockedFetchIndex.mockReset();
     mockedFetchShap.mockReset();
-    mockedFetchIndex.mockImplementation((config: DatasetConfig) => {
+    mockedFetchIndex.mockImplementation((config: DatasetDefinition) => {
       const entry = deferred<S3Index>();
       (pending[config.id] ??= []).push(entry);
       return entry.promise;

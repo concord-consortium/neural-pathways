@@ -1,4 +1,4 @@
-import { S3Item } from "../../shared/types/s3-data";
+import { S3Item } from "../../../core/types/s3-data";
 import { ActiveDataset } from "../../shared/datasets/dataset-config";
 import { Series } from "../types/explorer-data";
 
