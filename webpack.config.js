@@ -138,9 +138,11 @@ module.exports = (env, argv) => {
       warningsFilter: /export .* was not found in/,
     },
     plugins: [
-      new ESLintPlugin({
+      // Lint while developing only. Production builds are linted by `npm run lint:build`, which
+      // `npm run build` runs first, so linting again here would report every warning twice.
+      ...(devMode ? [new ESLintPlugin({
         extensions: ['ts', 'tsx', 'js', 'jsx'],
-      }),
+      })] : []),
       new MiniCssExtractPlugin({
         filename: devMode ? 'assets/[name].css' : 'assets/[name].[contenthash].css',
       }),

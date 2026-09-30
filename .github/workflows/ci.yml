@@ -48,6 +48,9 @@ jobs:
           prefix: neural-pathways
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           deployRunUrl: https://models-resources.concord.org/neural-pathways/__deployPath__/index.html
+          # The build_test job, which this job needs, already lints, so the deploy build skips
+          # linting rather than reporting every warning a second time.
+          build: npm run build:deploy
           # Parameters to GHActions have to be strings, so a regular yaml array cannot
           # be used. Instead the `|` turns the following lines into a string
           topBranches: |
