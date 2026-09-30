@@ -16,9 +16,10 @@ import { flatConfigs as importPluginConfig } from "eslint-plugin-import";
 import fs from "node:fs";
 import path from "node:path";
 
-// Student-facing code (src/app, src/views, src/core) is fully reviewed and must not depend on
-// the research code in src/lab. Views are independent of each other and of the app shell.
-// See src/core/README.md.
+// Reviewed code may not depend on unreviewed code. Student-facing code (src/app, src/views,
+// src/core) must not depend on the research code in src/lab, and views are independent of each
+// other and of the app shell. The dataset generator (generator/) writes the data students see,
+// so it is reviewed too and imports only itself and src/core. See src/core/README.md.
 // The view folders are read once, when the config loads. A long-running editor ESLint server
 // won't enforce the sibling-view rule for a new view folder until it restarts; CI is unaffected.
 const viewsDir = path.join(import.meta.dirname, "src/views");
@@ -26,7 +27,7 @@ const viewFolders = fs.existsSync(viewsDir)
   ? fs.readdirSync(viewsDir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name)
   : [];
 const sourceExtensions = "{ts,tsx,mts,cts,js,jsx,mjs,cjs}";
-const boundaryMessage = "Student-facing code may not import this. See src/core/README.md.";
+const boundaryMessage = "Reviewed code may not import this. See src/core/README.md.";
 const importBoundaryZones = [
   // Allow-list: each area may import only the listed folders and packages. Everything else in the
   // repo (src/lab, scripts, src/test, playwright, root files, any new folder) is off limits.
@@ -41,6 +42,10 @@ const importBoundaryZones = [
   {
     target: "./src/core", from: "./", message: boundaryMessage,
     except: ["./src/core", "./node_modules"],
+  },
+  {
+    target: "./generator", from: "./", message: boundaryMessage,
+    except: ["./generator", "./src/core", "./node_modules"],
   },
   // A view may not import from a sibling view; shared code belongs in src/core.
   ...viewFolders.map(name => ({
@@ -185,8 +190,8 @@ export default defineConfig(
     }
   },
   {
-    name: "student-facing import boundary",
-    files: [`src/**/*.${sourceExtensions}`],
+    name: "reviewed-code import boundary",
+    files: [`src/**/*.${sourceExtensions}`, `generator/**/*.${sourceExtensions}`],
     rules: {
       "import/no-restricted-paths": ["error", {
         basePath: import.meta.dirname,
@@ -195,8 +200,8 @@ export default defineConfig(
     },
   },
   {
-    name: "student-facing import boundary may not be disabled",
-    files: [`src/{app,views,core}/**/*.${sourceExtensions}`],
+    name: "reviewed-code import boundary may not be disabled",
+    files: [`src/{app,views,core}/**/*.${sourceExtensions}`, `generator/**/*.${sourceExtensions}`],
     rules: {
       "@eslint-community/eslint-comments/no-restricted-disable": ["error", "import/no-restricted-paths"],
     },
