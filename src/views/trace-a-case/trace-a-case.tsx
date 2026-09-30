@@ -13,7 +13,7 @@ import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import "./trace-a-case.scss";
 
-/** The whole pass, drawn at once. The steps that build it up come next in NPW-32. */
+/** The whole pass, drawn at once. There are no steps yet to build it up a layer at a time. */
 const FULL_SCENE = fullScene(toyNetwork.layers.map(layer => layer.biases.length));
 
 /** Follow one conversation through the network, a layer at a time. */

@@ -9,7 +9,7 @@ import { Network } from "./network";
  * - Layers: an embedding of 10, hidden layers of 8 and 6, all tanh; then 2 linear outputs,
  *   indexed by class (0 wait, 1 approach), as in `alien3Dataset.classificationLabels`.
  *
- * NPW-34 replaces it with a network whose hidden units are the real alien3 activations.
+ * It is temporary: a network whose hidden units are the real alien3 activations will replace it.
  */
 export const toyNetwork: Network = {
   vocabulary: [
