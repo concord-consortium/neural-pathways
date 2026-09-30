@@ -5,8 +5,8 @@ import { validConversationId } from "./conversation";
 export const COMMISSION_BUDGET = 2;
 
 /**
- * The state every view reads and writes. In the Activity Player it is saved alongside each
- * interactive's own state and carried from one interactive to the next (NPW-43).
+ * The state every view reads and writes. In the Activity Player it will be saved alongside each
+ * interactive's own state and carried from one interactive to the next.
  *
  * The `$modelType` is stored in saved student data: never rename it. See docs/view-state.md.
  */
