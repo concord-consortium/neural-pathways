@@ -77,6 +77,30 @@ describe("validateConfig", () => {
     expect(() => validateConfig(config)).toThrow(/outputDir/i);
   });
 
+  it("rejects an outputDir outside dist/, such as a source folder", () => {
+    for (const dir of ["src", "generator", "docs/alien-data", "dist/../src"]) {
+      const config = clone();
+      config.outputDir = dir;
+      expect(() => validateConfig(config)).toThrow(/outputDir/i);
+    }
+  });
+
+  it("rejects dist/ itself, which holds the whole build", () => {
+    for (const dir of ["dist", "dist/", "dist/."]) {
+      const config = clone();
+      config.outputDir = dir;
+      expect(() => validateConfig(config)).toThrow(/outputDir/i);
+    }
+  });
+
+  it("accepts a folder inside dist/", () => {
+    for (const dir of ["dist/alien-data", "./dist/alien-data-3", "dist/nested/alien", "dist/..cache"]) {
+      const config = clone();
+      config.outputDir = dir;
+      expect(() => validateConfig(config)).not.toThrow();
+    }
+  });
+
   it("rejects an unknown bias attribute key", () => {
     const config = clone();
     config.biasAttributeKey = "nope";

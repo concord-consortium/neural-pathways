@@ -7,18 +7,23 @@ const WEIGHT_TOLERANCE = 1e-9;
 
 /**
  * writeDataset (emit.ts) recursively deletes outputDir with force: true before
- * writing. An empty, ".", "..", absolute, or escaping path would resolve outside
- * the intended dist/ directory — at worst to the repo root — and be wiped
- * silently. Keep it a plain relative path that stays inside the repo.
+ * writing, so outputDir must name a folder strictly inside dist/. Anything else
+ * — a source folder such as "src", dist/ itself, an absolute path, or one that
+ * climbs out with ".." — would be wiped silently. The check resolves the path
+ * against a stand-in root, so it does not depend on where the repo lives, and
+ * uses the platform's path rules, so "\" separators are caught on Windows.
  */
 function checkOutputDir(config: AlienConfig): void {
   const dir = config.outputDir;
-  const unsafe = dir === "" || dir === "."
-    || path.isAbsolute(dir) || dir.split("/").some(segment => segment === "..");
-  if (unsafe) {
+  const root = path.resolve("/repo");
+  const fromDist = path.relative(path.join(root, "dist"), path.resolve(root, dir));
+  const insideDist = dir !== "" && !path.isAbsolute(dir)
+    && fromDist !== "" && fromDist !== ".." && !fromDist.startsWith(`..${path.sep}`)
+    && !path.isAbsolute(fromDist);
+  if (!insideDist) {
     throw new Error(
       `outputDir "${dir}" is unsafe: writeDataset deletes it recursively before writing. Use a `
-      + `non-empty relative path inside the repo, e.g. "dist/alien-data".`,
+      + `relative path to a folder inside dist/, e.g. "dist/alien-data".`,
     );
   }
 }
