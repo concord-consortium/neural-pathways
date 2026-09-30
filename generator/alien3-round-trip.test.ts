@@ -73,6 +73,15 @@ describe("alien3 generator output read by core's loader", () => {
     expect(bad.map(item => item.id)).toEqual([]);
   });
 
+  it("gives every item a binary prediction and whether it was correct", () => {
+    const bad = index.items.filter(item => {
+      const prediction = alien3Dataset.getAttributeValue(item, "prediction");
+      const correct = alien3Dataset.getAttributeValue(item, "model_correct");
+      return (prediction !== 0 && prediction !== 1) || (correct !== 0 && correct !== 1);
+    });
+    expect(bad.map(item => item.id)).toEqual([]);
+  });
+
   it("finds every conversation's activations in its bucket", async () => {
     const cache = new Map<string, ActivationBucket>();
     const wrong: string[] = [];
