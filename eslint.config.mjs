@@ -284,21 +284,22 @@ export default defineConfig(
     }
   },
   {
-    name: "generator scripts",
-    files: ["scripts/**/*.ts"],
+    name: "generator and analysis scripts",
+    files: ["generator/**/*.ts", "scripts/**/*.ts"],
     languageOptions: {
       globals: {
         ...globals.node
       },
     },
     rules: {
-      // The generator's whole user interface is its printed run summary.
+      // The generator's whole user interface is its printed run summary, and the analysis
+      // scripts report the same way.
       "no-console": "off",
     },
   },
   {
-    name: "rules specific to generator tests",
-    files: ["scripts/**/*.test.ts"],
+    name: "rules specific to generator and analysis tests",
+    files: ["generator/**/*.test.ts", "scripts/**/*.test.ts"],
     languageOptions: {
       globals: {
         ...globals.node,

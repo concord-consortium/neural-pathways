@@ -5,5 +5,5 @@
     "moduleResolution": "node",
     "noEmit": true
   },
-  "include": ["scripts/**/*"]
+  "include": ["generator/**/*", "scripts/**/*"]
 }
