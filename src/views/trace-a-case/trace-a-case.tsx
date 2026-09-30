@@ -51,8 +51,8 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const goTo = (to: number) => shared.setConversationId(ids[to]);
 
   return (
-    <div className="trace-a-case__panels">
-      <div className="trace-a-case__left">
+    <div className="trace-a-case__layout">
+      <div className="trace-a-case__case">
         <ConversationCard conversation={index.items[position]} position={position} total={ids.length}
           onPrev={() => goTo(position - 1)} onNext={() => goTo(position + 1)} />
       </div>
