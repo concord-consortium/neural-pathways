@@ -3,7 +3,7 @@ import { createRng } from "./rng";
 import { buildCorpus } from "./conversations";
 import { assignByShares, solveAttribute, solveAttributes } from "./attributes";
 import { AttributeConfig } from "./config-types";
-import { pearson } from "../../src/lab/explorer/utils/statistics";
+import { pearson } from "../../src/core/math/statistics";
 
 const corpus = buildCorpus(fourPathwayConfig, createRng(fourPathwayConfig.seed));
 

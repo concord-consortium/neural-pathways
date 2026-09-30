@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
-import { logisticRegression } from "../../src/lab/explorer/utils/regression";
+import { logisticRegression } from "../../src/core/math/regression";
 import { AttributeDefinition } from "../../src/core/types/attributes";
 import { S3Index, S3Item, S3ShapItem } from "../../src/core/types/s3-data";
 import { Activations } from "./activations";
