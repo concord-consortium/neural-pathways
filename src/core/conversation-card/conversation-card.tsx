@@ -13,8 +13,8 @@ interface ConversationCardProps {
 
 /**
  * The conversation panel, minimal version: which conversation of how many, previous and next, and
- * its words. NPW-36 builds the full card on this: the label chip, observation notes and attribute
- * icons.
+ * its words. The full card, with the label chip, observation notes and attribute icons, will build
+ * on this.
  */
 export const ConversationCard: React.FC<ConversationCardProps> = ({
   conversation, position, total, onPrev, onNext,
