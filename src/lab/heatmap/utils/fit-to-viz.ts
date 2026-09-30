@@ -2,9 +2,9 @@ import { S3FaFit } from "../../../core/types/s3-data";
 import { Pathways, Scaler, Metadata } from "../types/viz-data";
 
 /**
- * These three functions feed the heatmap, which visualizes the 780-neuron
- * activation model. A fit without that model cannot answer them, and returning
- * empty arrays would draw an empty heatmap that looks like real data.
+ * fitToPathways, fitToScaler and fitToMetadata feed the heatmap. A fit without
+ * an activation model cannot answer them, and returning empty arrays would draw
+ * an empty heatmap that looks like real data.
  */
 function requireActivationModel<T>(value: T | undefined, field: string): T {
   if (value === undefined) {

@@ -112,8 +112,8 @@ export function dataUrl(baseUrl: string, path: string): string {
   `requireActivationModel`: only the heatmap uses them, so they move to
   `src/lab/heatmap/utils/fit-to-viz.ts`, next to the `viz-data` types they return.
   `src/lab/shared/data-loader.ts` and `src/lab/shared/types/` are deleted.
-- Every other lab importer (explorer, heatmap, `dataset-selector.tsx`) switches its type and
-  loader imports to core.
+- Every other lab importer in the explorer and heatmap switches its type and loader imports to
+  core.
 
 ### `scripts/`
 

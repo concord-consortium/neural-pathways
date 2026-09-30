@@ -24,7 +24,8 @@ lesson can run on. The student lesson uses the three-pathway dataset.
 | `alien3` | The same generator with three planted pathways | `npm run generate:alien`, written to `dist/alien-data-3/` | 800 conversations | 14 | 3 (`alien-fa-3`) | The student lesson, and the lab tools |
 
 The two alien datasets are not committed. `npm start` and `npm run build` generate them, and a
-deploy publishes them next to the pages.
+deploy publishes them at each build's root (see
+[src/core/data-url.ts](../src/core/data-url.ts)).
 
 ## Where each one is defined
 

@@ -7,8 +7,8 @@ import { DatasetConfig } from "./dataset-config";
 /**
  * Adds the explorer's search help to a core alien definition. Every other
  * field these datasets have beyond the shared ones is an attribute, and the help
- * dialog lists those separately. R² became real for the alien datasets once the
- * generator emitted neuron activations (NPW-18).
+ * dialog lists those separately. The alien datasets have neuron activations, so
+ * R² is meaningful.
  */
 function withAlienSearch(definition: DatasetDefinition): DatasetConfig {
   return {

@@ -52,8 +52,9 @@ export interface AttributeDefinition {
    * default state the moment the interactions box is ticked.
    * `buildDesignMatrix`'s duplicate-column check
    * (src/lab/explorer/utils/design-matrix.ts) compares columns pairwise only and
-   * cannot see a three-column dependency, so nothing downstream catches this; the panel just reports "Not enough usable
-   * data to fit a model", which misdescribes the cause.
+   * cannot see a three-column dependency, so nothing downstream catches this;
+   * the panel just reports "Not enough usable data to fit a model", which
+   * misdescribes the cause.
    *
    * So: if you are here because an attribute is missing its regression checkbox
    * and that looks like a bug, it is not. Restoring it re-breaks the panel's

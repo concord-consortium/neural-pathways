@@ -50,7 +50,7 @@ const derivedAttributes: AttributeDefinition[] = [
 export interface AlienDatasetParams {
   id: string;
   label: string;
-  /** Relative, no leading slash: the generated data is published beside the build. */
+  /** Relative (see DatasetDefinition.baseUrl). */
   baseUrl: string;
 }
 
@@ -58,7 +58,6 @@ export interface AlienDatasetParams {
  * The alien datasets differ only in which generated directory they read and what
  * they are called. How many pathways a dataset has is declared by the generated
  * metadata (`n_pathways`), not here, so one factory covers every alien dataset.
- * The lab builds its 4-pathway dataset with this too.
  */
 export function createAlienDataset({ id, label, baseUrl }: AlienDatasetParams): DatasetDefinition {
   return {
@@ -94,7 +93,7 @@ export function createAlienDataset({ id, label, baseUrl }: AlienDatasetParams): 
   };
 }
 
-/** The lesson's dataset: three pathways, 800 conversations. */
+/** The lesson's dataset (see doc/datasets.md). */
 export const alien3Dataset = createAlienDataset({
   id: "alien3",
   label: "Alien Conversations (3 pathways)",

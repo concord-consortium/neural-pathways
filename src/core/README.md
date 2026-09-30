@@ -26,12 +26,11 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `types/`: the data format. `s3-data.ts` (the index, activation and SHAP buckets) and
   `attributes.ts`.
 - `data-loader.ts`: `fetchIndex`, `fetchActivations`, `fetchShap`.
-- `data-url.ts`: `dataUrl`. Every fetched data URL goes through it. A page-relative URL breaks on
-  the released top-level `index.html`, whose build and data live in `version/<tag>/`. See
-  [doc/deploy.md](../../doc/deploy.md).
+- `data-url.ts`: `dataUrl`. Every fetched data URL goes through it; see the comment there.
 - `datasets/dataset-definition.ts`: what a dataset is, and attribute-key validation.
 - `datasets/alien3-dataset.ts`: the lesson's dataset, `alien3Dataset`.
 
-Comments here sometimes mention the Yelp and 4-pathway alien datasets, which live in `lab`. The
-data format was designed around Yelp first. See [doc/datasets.md](../../doc/datasets.md) for what
-each dataset is.
+Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and
+files that use this code (the explorer's search, Codings dialog, regression panel and item panel,
+and the heatmap). The code was written for the lab tools first, and the data format around Yelp.
+See [doc/datasets.md](../../doc/datasets.md) for what each dataset is.
