@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ResultsPanel } from "./results-panel";
-import { S3Item } from "../../shared/types/s3-data";
+import { S3Item } from "../../../core/types/s3-data";
 
 const makeItem = (id: string, text: string, scores: number[]): S3Item => ({
   id,

@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { WordEffectsPanel } from "./word-effects-panel";
-import { ItemShapData } from "../../shared/types/s3-data";
+import { ItemShapData } from "../../../core/types/s3-data";
 
 const mockShapData: ItemShapData = {
   words: [

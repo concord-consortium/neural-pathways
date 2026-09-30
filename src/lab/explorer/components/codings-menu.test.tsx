@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { AttributeDefinition } from "../../shared/types/attributes";
+import { AttributeDefinition } from "../../../core/types/attributes";
 import { CodingsMenu } from "./codings-menu";
 
 const codings: AttributeDefinition[] = [

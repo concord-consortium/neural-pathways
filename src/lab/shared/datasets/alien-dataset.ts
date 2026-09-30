@@ -1,116 +1,29 @@
-import { S3Index, S3Item } from "../types/s3-data";
-import { AttributeDefinition } from "../types/attributes";
-import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
+import { DatasetDefinition } from "../../../core/datasets/dataset-definition";
+import {
+  alien3Dataset as alien3Definition, createAlienDataset,
+} from "../../../core/datasets/alien3-dataset";
+import { DatasetConfig } from "./dataset-config";
 
 /**
- * The label space this dataset's binary outcome lives in, shared by the three
- * declarations that must agree: the ground truth (`target`), what the model said
- * (`prediction`), and the confidence badge in the item panel
- * (`classificationLabels`, below). The classifier predicts the same space the
- * target is drawn from, so one constant is the honest way to say it — written
- * out three times they can drift, and the drift would be visible: the fields
- * view's axis would disagree with the badge sitting above it.
+ * Adds the explorer's search help to a core alien definition. Every other
+ * field these datasets have beyond the shared ones is an attribute, and the help
+ * dialog lists those separately. The alien datasets have neuron activations, so
+ * R² is meaningful.
  */
-const CLASSIFICATION_LABELS = { 0: "wait", 1: "approach" };
-
-/**
- * The generator emits nine coded attributes but not these three, and
- * model_correct is what makes the planted bias findable at all — filtering to
- * the model's errors and seeing which group they land on is the whole activity.
- * All three are derived here exactly as the Yelp config derives its own.
- */
-const derivedAttributes: AttributeDefinition[] = [
-  {
-    key: "target",
-    label: "Actual answer",
-    description: "Whether this really was a good time to approach: 1 for approach, 0 for wait. "
-      + "This is the ground truth the model was trying to predict.",
-    type: "binary",
-    valueLabels: CLASSIFICATION_LABELS,
-  },
-  {
-    key: "prediction",
-    label: "Predicted answer",
-    description: "What the model predicted for this conversation: 1 for approach, 0 for wait. "
-      + "Only defined for conversations the model has scored.",
-    type: "binary",
-    valueLabels: CLASSIFICATION_LABELS,
-    excludeFromRegression: true,
-  },
-  {
-    key: "model_correct",
-    label: "Model was correct",
-    description: "Whether the model's prediction matched the actual answer. Only defined for "
-      + "conversations that have both a prediction and a ground-truth answer.",
-    type: "binary",
-    valueLabels: { 0: "no", 1: "yes" },
-  },
-];
-
-interface AlienDatasetParams {
-  id: string;
-  label: string;
-  /**
-   * Relative, no leading slash: deployed pages live under .../branch/<name>/ and
-   * the generated data is published alongside them.
-   */
-  baseUrl: string;
-}
-
-/**
- * The alien datasets differ only in which generated directory they read and what
- * the dropdown calls them. How many pathways a dataset has is declared by the
- * generated metadata (`n_pathways`), not here, so one factory covers both.
- */
-function createAlienDataset({ id, label, baseUrl }: AlienDatasetParams): DatasetConfig {
+function withAlienSearch(definition: DatasetDefinition): DatasetConfig {
   return {
-    id,
-    label,
-    baseUrl,
-    itemNoun: { singular: "conversation", plural: "conversations" },
-    classificationLabels: CLASSIFICATION_LABELS,
+    ...definition,
     searchPlaceholder: "voices_raised:1 AND pathway_0:>1",
-    // Every other field these datasets have beyond the shared ones is an
-    // attribute, and the help dialog lists those separately. R² became real for
-    // the alien datasets once the generator emitted neuron activations (NPW-18).
     searchFields: [
       { name: "reconstruction_r2", description: "Reconstruction R²" },
     ],
-
-    resolveAttributes(index: S3Index): AttributeDefinition[] {
-      // The generated definitions arrive over the network, so they are validated
-      // here rather than at module load. A generated key that collided with a
-      // reserved search field or with a derived attribute fails loudly instead of
-      // silently shadowing it.
-      const merged = [...derivedAttributes, ...(index.metadata.attributes ?? [])];
-      validateAttributeKeys(merged);
-      return merged;
-    },
-
-    getAttributeValue(item: S3Item, key: string): number | null {
-      switch (key) {
-        case "target":
-          return item.target;
-        case "prediction":
-          return item.classification ?? null;
-        case "model_correct":
-          if (item.classification == null || item.target == null) return null;
-          return item.classification === item.target ? 1 : 0;
-        default:
-          return item.attributes?.[key] ?? null;
-      }
-    },
   };
 }
 
-export const alienDataset = createAlienDataset({
+export const alienDataset = withAlienSearch(createAlienDataset({
   id: "alien",
   label: "Alien Conversations (4 pathways)",
   baseUrl: "alien-data/",
-});
+}));
 
-export const alien3Dataset = createAlienDataset({
-  id: "alien3",
-  label: "Alien Conversations (3 pathways)",
-  baseUrl: "alien-data-3/",
-});
+export const alien3Dataset = withAlienSearch(alien3Definition);

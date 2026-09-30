@@ -4,8 +4,9 @@ import { AttributeDefinition } from "./attributes";
 
 /**
  * The index as the application uses it. The JSON on the wire calls this array
- * `reviews`; fetchIndex renames it once so nothing downstream has to know that
- * the format predates the app carrying more than one kind of item.
+ * `reviews`; the loader renames it once, here and in the buckets, so nothing
+ * downstream has to know that the format predates the app carrying more than
+ * one kind of item.
  */
 export interface S3Index {
   metadata: {
@@ -19,10 +20,11 @@ export interface S3Index {
 
 /**
  * The five activation-model fields are optional so a dataset without neuron
- * activations can still declare a fit. Every shipped dataset now carries them —
+ * activations can still declare a fit. Every shipped dataset carries them —
  * the yelp pipeline fits 780 neurons, the alien generator constructs 14 — but
- * keeping them optional means the heatmap-only readers in data-loader.ts fail
- * loudly on a fit that lacks them instead of silently reading undefined.
+ * keeping them optional means the heatmap-only readers in
+ * src/lab/heatmap/utils/fit-to-viz.ts fail loudly on a fit that lacks them
+ * instead of silently reading undefined.
  */
 export interface S3FaFit {
   source_split: string;
@@ -65,23 +67,14 @@ export interface S3Item {
 
 // --- Activation Types (heatmap) ---
 
-/**
- * An activation bucket as the application uses it. The JSON on the wire calls
- * this array `reviews`; fetchActivations renames it once so nothing downstream
- * has to know that the format predates the app carrying more than one kind of
- * item.
- */
+/** An activation bucket as the application uses it. See S3Index for `items`. */
 export interface ActivationBucket {
   items: { id: string; activations: number[] }[];
 }
 
 // --- SHAP Types (explorer) ---
 
-/**
- * A SHAP bucket as the application uses it. The JSON on the wire calls this
- * array `reviews`; fetchShap renames it once so nothing downstream has to know
- * that the format predates the app carrying more than one kind of item.
- */
+/** A SHAP bucket as the application uses it. See S3Index for `items`. */
 export interface S3ShapBucket {
   items: S3ShapItem[];
 }

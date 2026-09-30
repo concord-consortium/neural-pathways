@@ -1,6 +1,7 @@
 import { flattenItem } from "./flatten-item";
-import { S3Item, S3Index } from "../../shared/types/s3-data";
-import { AttributeDefinition } from "../../shared/types/attributes";
+import { S3Item, S3Index } from "../../../core/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
+import { RESERVED_FIELD_NAMES } from "../../../core/datasets/dataset-definition";
 import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 import {
   activateDataset, applyCommissions, NO_COMMISSIONS, LoadedDataset,
@@ -246,5 +247,18 @@ describe("flattenItem pathway prediction", () => {
     expect("pathway_prediction" in flat).toBe(false);
     expect("pathway_prediction_label" in flat).toBe(false);
     expect("pathway_prediction_matches" in flat).toBe(false);
+  });
+});
+
+describe("flattenItem reserved fields", () => {
+  // An attribute written over a fixed field would silently replace it in search,
+  // so every fixed field must be reserved. stars and review_stars are the
+  // deliberate exceptions: attributes may alias them with the identical value.
+  it("reserves every fixed field except the aliasable ones", () => {
+    const item = makeItem({ classification: 1, classification_probability: 0.9, has_shap: ["fit_a"] });
+    const noAttributes = { ...activeYelp, attributes: [] };
+    const flat = flattenItem(item, "fit_a", noAttributes, [1, 2, -1]);
+    const fixedKeys = Object.keys(flat).filter(key => !/^pathway_\d+$/.test(key));
+    expect(fixedKeys.sort()).toEqual([...RESERVED_FIELD_NAMES, "stars", "review_stars"].sort());
   });
 });

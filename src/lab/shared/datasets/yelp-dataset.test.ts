@@ -1,4 +1,4 @@
-import { S3Item, S3Index } from "../types/s3-data";
+import { S3Item, S3Index } from "../../../core/types/s3-data";
 import { yelpDataset } from "./yelp-dataset";
 
 const emptyIndex = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
@@ -95,7 +95,7 @@ describe("yelpDataset", () => {
     // The regression panel filters on this flag, not on the key, so this is the
     // assertion that binds the two: renaming the key would no longer silently
     // restore a predictor that makes the design matrix singular. See
-    // excludeFromRegression in shared/types/attributes.ts.
+    // excludeFromRegression in src/core/types/attributes.ts.
     expect(attributes.find(a => a.key === "prediction")?.excludeFromRegression).toBe(true);
     expect(attributes.find(a => a.key === "target")?.excludeFromRegression).toBeUndefined();
     expect(attributes.find(a => a.key === "model_correct")?.excludeFromRegression).toBeUndefined();
