@@ -1,8 +1,8 @@
 import React from "react";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { SearchInput } from "./search-input";
-import { AttributeDefinition } from "../../shared/types/attributes";
-import { S3Index } from "../../shared/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
+import { S3Index } from "../../../core/types/s3-data";
 import { yelpDataset } from "../../shared/datasets/yelp-dataset";
 
 const emptyIndex = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;

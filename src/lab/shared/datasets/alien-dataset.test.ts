@@ -1,5 +1,6 @@
-import { S3Index, S3Item } from "../types/s3-data";
+import { S3Index, S3Item } from "../../../core/types/s3-data";
 import { alien3Dataset, alienDataset } from "./alien-dataset";
+import { alien3Dataset as alien3Definition } from "../../../core/datasets/alien3-dataset";
 
 const generatedDefinition = {
   key: "voices_raised",
@@ -23,88 +24,9 @@ const item = {
 } as unknown as S3Item;
 
 describe("alienDataset", () => {
-  it("loads its data from a path relative to the page", () => {
+  it("loads its data from a path relative to the build root", () => {
     expect(alienDataset.baseUrl).toBe("alien-data/");
     expect(alienDataset.baseUrl.startsWith("/")).toBe(false);
-  });
-
-  it("puts the derived outcomes before the generated attributes", () => {
-    expect(alienDataset.resolveAttributes(index).map(a => a.key))
-      .toEqual(["target", "prediction", "model_correct", "voices_raised"]);
-  });
-
-  it("survives an index with no attributes", () => {
-    const bare = { metadata: { fa_fits: {}, review_sets: {} }, items: [] } as unknown as S3Index;
-    expect(alienDataset.resolveAttributes(bare).map(a => a.key))
-      .toEqual(["target", "prediction", "model_correct"]);
-  });
-
-  it("rejects a generated attribute that collides with a derived one", () => {
-    const clashing = {
-      metadata: { fa_fits: {}, review_sets: {}, attributes: [{ ...generatedDefinition, key: "target" }] },
-      items: [],
-    } as unknown as S3Index;
-    expect(() => alienDataset.resolveAttributes(clashing)).toThrow(/duplicate/i);
-  });
-
-  it("derives target and model_correct", () => {
-    expect(alienDataset.getAttributeValue(item, "target")).toBe(1);
-    expect(alienDataset.getAttributeValue(item, "model_correct")).toBe(0);
-  });
-
-  it("returns null for model_correct when either side is missing", () => {
-    const noPrediction = { ...item, classification: undefined } as unknown as S3Item;
-    expect(alienDataset.getAttributeValue(noPrediction, "model_correct")).toBeNull();
-  });
-
-  it("reads generated attributes off the item, hidden ones included", () => {
-    expect(alienDataset.getAttributeValue(item, "voices_raised")).toBe(1);
-    expect(alienDataset.getAttributeValue(item, "resource_stressed")).toBe(0);
-  });
-
-  it("returns null for an attribute the item does not carry", () => {
-    expect(alienDataset.getAttributeValue(item, "nope")).toBeNull();
-  });
-
-  it("names the model's two answers", () => {
-    expect(alienDataset.classificationLabels).toEqual({ 0: "wait", 1: "approach" });
-  });
-
-  it("derives prediction instead of reading it from the generated bag", () => {
-    // This is the test that earns its place. getAttributeValue's default arm
-    // reads item.attributes[key], so without an explicit "prediction" case the
-    // attribute would resolve to null for every conversation — no error, no
-    // warning, just a silently empty column in the matrix and the fields view.
-    // The fixture has classification 0 and no "prediction" key in its bag, so
-    // only a real derivation can return 0 here.
-    expect(item.attributes).not.toHaveProperty("prediction");
-    expect(alienDataset.getAttributeValue(item, "prediction")).toBe(0);
-  });
-
-  it("returns null for prediction when the conversation was never scored", () => {
-    const noPrediction = { ...item, classification: undefined } as unknown as S3Item;
-    expect(alienDataset.getAttributeValue(noPrediction, "prediction")).toBeNull();
-  });
-
-  it("keeps prediction out of the regression panel's predictors", () => {
-    // The regression panel filters on this flag, not on the key, so this is the
-    // assertion that binds the two: renaming the key would no longer silently
-    // restore a predictor that makes the design matrix singular. See
-    // excludeFromRegression in shared/types/attributes.ts.
-    const attrs = alienDataset.resolveAttributes(index);
-    expect(attrs.find(a => a.key === "prediction")?.excludeFromRegression).toBe(true);
-    expect(attrs.find(a => a.key === "target")?.excludeFromRegression).toBeUndefined();
-    expect(attrs.find(a => a.key === "model_correct")?.excludeFromRegression).toBeUndefined();
-  });
-
-  it("labels target and prediction from the same object as the classification badge", () => {
-    // toBe, not toEqual: identity is what stops the fields view's axis drifting
-    // away from the item panel's badge.
-    const attrs = alienDataset.resolveAttributes(index);
-    expect(attrs.find(a => a.key === "prediction")?.valueLabels)
-      .toBe(alienDataset.classificationLabels);
-    expect(attrs.find(a => a.key === "target")?.valueLabels)
-      .toBe(alienDataset.classificationLabels);
   });
 });
 
@@ -141,5 +63,15 @@ describe("alien3Dataset", () => {
     for (const dataset of [alienDataset, alien3Dataset]) {
       expect(dataset.searchFields.map(f => f.name)).toEqual(["reconstruction_r2"]);
     }
+  });
+
+  it("is core's alien3 definition plus the search help", () => {
+    // The lab config spreads the core definition, so its methods must survive
+    // the spread and give the same answers.
+    expect(alien3Dataset.baseUrl).toBe(alien3Definition.baseUrl);
+    expect(alien3Dataset.resolveAttributes(index)).toEqual(alien3Definition.resolveAttributes(index));
+    expect(alien3Dataset.getAttributeValue(item, "model_correct"))
+      .toBe(alien3Definition.getAttributeValue(item, "model_correct"));
+    expect(alien3Dataset.searchPlaceholder).toBe("voices_raised:1 AND pathway_0:>1");
   });
 });

@@ -1,4 +1,4 @@
-import { S3Item } from "../../src/lab/shared/types/s3-data";
+import { S3Item } from "../../src/core/types/s3-data";
 import { pathwayPrediction, pathwayPredictionClass } from "../../src/lab/explorer/utils/pathway-prediction";
 import { mean, pearson } from "../../src/lab/explorer/utils/statistics";
 import { logisticRegression } from "../../src/lab/explorer/utils/regression";

@@ -1,4 +1,4 @@
-import { AttributeType } from "../../src/lab/shared/types/attributes";
+import { AttributeType } from "../../src/core/types/attributes";
 
 export interface VocabularyWord {
   word: string;

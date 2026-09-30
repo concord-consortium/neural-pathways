@@ -1,15 +1,12 @@
-import { S3Item } from "../types/s3-data";
-import { AttributeDefinition } from "../types/attributes";
-import { DatasetConfig, validateAttributeKeys } from "./dataset-config";
+import { S3Item } from "../../../core/types/s3-data";
+import { AttributeDefinition } from "../../../core/types/attributes";
+import { DatasetConfig } from "./dataset-config";
+import { validateAttributeKeys } from "../../../core/datasets/dataset-definition";
 
 /**
- * The label space this dataset's binary outcome lives in, shared by the three
- * declarations that must agree: the ground truth (`target`), what the model said
- * (`prediction`), and the confidence badge in the item panel
- * (`classificationLabels`, below). The classifier predicts the same space the
- * target is drawn from, so one constant is the honest way to say it — written
- * out three times they can drift, and the drift would be visible: the fields
- * view's axis would disagree with the badge sitting above it.
+ * The label space this dataset's binary outcome lives in. See
+ * CLASSIFICATION_LABELS in src/core/datasets/alien3-dataset.ts for why one
+ * constant serves `target`, `prediction` and `classificationLabels`.
  *
  * These are also the labels carried as `target_label` alongside `target` in the
  * S3 data.

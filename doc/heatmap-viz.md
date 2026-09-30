@@ -12,7 +12,7 @@ This metaphor supports both addition and subtraction symmetrically, unlike light
 
 ## Data
 
-Source: the selected dataset's `index.json` and activation bucket files, loaded with `fetchIndex` and `fetchActivations` from `src/lab/shared/data-loader.ts` (variable number of neurons, pathways, and reviews)
+Source: the selected dataset's `index.json` and activation bucket files, loaded with `fetchIndex` and `fetchActivations` from `src/core/data-loader.ts` (variable number of neurons, pathways, and reviews)
 
 Each review has standardized neuron activations. The pathways are computed via factor analysis, where each pathway is a vector of coefficients (one per neuron). Each review gets a score per pathway, and optionally a `source` label and `reconstruction_r2` value.
 

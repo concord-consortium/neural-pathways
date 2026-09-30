@@ -1,4 +1,4 @@
-import { AttributeType } from "../../shared/types/attributes";
+import { AttributeType } from "../../../core/types/attributes";
 
 export interface WordEffect {
   word: string;
@@ -39,7 +39,7 @@ export interface Series {
   description: string;
   /**
    * Carried from the attribute definition; see `excludeFromRegression` in
-   * shared/types/attributes.ts for why an attribute would set it.
+   * src/core/types/attributes.ts for why an attribute would set it.
    */
   excludeFromRegression?: boolean;
   /** One entry per item, aligned by index. null means missing. */

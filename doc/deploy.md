@@ -45,6 +45,10 @@ declare const __webpack_public_path__: string;
 ```
 A possible reason for doing this is if you are working with an external library that you don't have control over and need to pass it a path to load an asset.
 
+This project uses the workaround for its generated data: `src/core/data-url.ts` resolves every
+data file URL (for example `alien-data-3/index.json`) against `__webpack_public_path__`, so the
+released top-level `index.html` loads the data from the build root, `version/<tag>/`.
+
 When possible, switching to an import is preferred because it means that webpack knows about all of the referenced assets. This means we can use webpack to build a manifest which is useful for offline support.
 
 Note: there is a `publicPath` configuration option for the `HtmlWebpackPlugin`. This is a different but related option, it controls the prefix the plugin adds before assets (javascript and css) referenced in the generated html file. This option is used so the `index-top.html` references assets in the version folder and `index.html` references assets in the same folder.
@@ -56,7 +60,7 @@ When running in the regular dev server, you won't see errors when using hard cod
 Typically, hard coded paths will only work if you are using `CopyWebpackPlugin`. This is because these assets need to be copied into the `dist` folder. With import statements the assets are copied for you. If you remove the `CopyWebpackPlugin` you will likely see errors when using the dev server, so you can find the places that need to fixed.
 
 If you need to continue referencing files without using import, you can find these issues and test fixes for them locally using the following npm scripts:
-- **`build:top-test`** builds the project into the `top-test/specific/release` folder and copies `top-test/specific/release/index-top.html` to `top-test/index-top.html`.
+- **`build:top-test`** clears `top-test`, generates the alien data, builds the project into the `top-test/specific/release` folder, copies `top-test/specific/release/index-top.html` to `top-test/index-top.html`, and copies the alien data into `top-test/specific/release`.
 - **`serve:top-test`** starts a web server which is serving the `top-test` folder.
 
 ## Benefits compared to previous branch based releases
