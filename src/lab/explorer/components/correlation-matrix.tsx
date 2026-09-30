@@ -49,8 +49,7 @@ export const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({
     if (result.n < PARTIAL_COVERAGE_THRESHOLD * scopeCount) classes.push("partial-n");
     if (colIndex === boundary && boundary > 0) classes.push("boundary-left");
     if (rowIndex === boundary && boundary > 0) classes.push("boundary-top");
-    if (selectedCell
-      && selectedCell.rowKey === series[rowIndex].key
+    if (selectedCell?.rowKey === series[rowIndex].key
       && selectedCell.colKey === series[colIndex].key) {
       classes.push("selected");
     }

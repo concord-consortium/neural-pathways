@@ -11,5 +11,13 @@ export default defineConfig(
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "no-debugger": "error"
     }
+  },
+  {
+    // The generator and analysis scripts report by printing, so the no-console rule above does
+    // not apply to them (the base config turns it off there too).
+    files: ["generator/**/*.ts", "scripts/**/*.ts"],
+    rules: {
+      "no-console": "off"
+    }
   }
 );
