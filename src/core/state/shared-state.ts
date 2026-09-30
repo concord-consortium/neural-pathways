@@ -1,8 +1,8 @@
 import { Model, model, tProp, types } from "mobx-keystone";
 
 /**
- * The state every view reads and writes. In the Activity Player it is saved alongside each
- * interactive's own state and carried from one interactive to the next (NPW-43).
+ * The state every view reads and writes. In the Activity Player it will be saved alongside each
+ * interactive's own state and carried from one interactive to the next.
  *
  * Fields arrive with the view stories that first use them: the current conversation with Trace a
  * Case, the query with the filter, the commissioned codings with Investigate Unknown Pathway. The

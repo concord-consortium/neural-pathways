@@ -12,8 +12,8 @@ type ViewLookup = (viewId: string) => Pick<ViewDef, "stateModel"> | undefined;
 /**
  * The student app's state: the shared tree plus one tree per view, each its own root. Held for
  * the life of the page, so switching views in the standalone app keeps each view's state. It is
- * never saved as a whole: in the Activity Player each interactive saves its view tree and the
- * shared tree (NPW-43). See docs/view-state.md.
+ * never saved as a whole: in the Activity Player each interactive will save its view tree and the
+ * shared tree. See docs/view-state.md.
  */
 export class AppState {
   readonly shared = new SharedState({});
