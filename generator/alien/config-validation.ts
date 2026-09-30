@@ -197,6 +197,22 @@ function checkActivations(config: AlienConfig): void {
     throw new Error(`explainedVarianceTotal ${explainedVarianceTotal} must lie strictly between 0 and 1`);
   }
   checkRange("noiseVarianceRange", config.activations.noiseVarianceRange, 0);
+  // drawNoiseVariances (activations.ts) rescales the draws to mean
+  // 1 - explainedVarianceTotal. A neuron's communality is 1 minus its variance, so
+  // a rescaled variance of 1 or more leaves nothing for the pathways to explain and
+  // the loading solver fails with an opaque linear-algebra error. The largest one
+  // comes from a single draw at the top of the range with every other draw at the
+  // bottom; ruling that out here keeps every validated config solvable.
+  const [noiseLow, noiseHigh] = config.activations.noiseVarianceRange;
+  const worstNoise = noiseHigh * (1 - explainedVarianceTotal) * neuronCount
+    / (noiseHigh + (neuronCount - 1) * noiseLow);
+  if (!(worstNoise < 1)) {
+    throw new Error(
+      `noiseVarianceRange [${noiseLow}, ${noiseHigh}] can rescale a neuron's noise variance to `
+      + `${worstNoise.toFixed(3)}, leaving it no communality. Narrow the range or raise `
+      + `explainedVarianceTotal so the worst case stays below 1.`,
+    );
+  }
   checkRange("scalerMeanRange", config.activations.scalerMeanRange, -Infinity);
   checkRange("scalerScaleRange", config.activations.scalerScaleRange, 0);
   for (const name of ["faScoreRecoveryMin", "faLoadingRecoveryMin"] as const) {

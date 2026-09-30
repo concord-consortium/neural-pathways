@@ -142,6 +142,23 @@ describe("validateConfig", () => {
     expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
   });
 
+  it("rejects a noise variance range that can rescale to a variance of 1 or more", () => {
+    // Draws are rescaled to mean 1 - explainedVarianceTotal. With 14 neurons, one draw at
+    // the top of [0.01, 100] and the rest at the bottom rescale the top one to about 11.
+    const config = clone();
+    config.activations.explainedVarianceTotal = 0.2;
+    config.activations.noiseVarianceRange = [0.01, 100];
+    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
+  });
+
+  it("accepts a wide noise variance range whose worst case stays below 1", () => {
+    // Worst case: 0.6 * (1 - 0.5) * 14 / (0.6 + 13 * 0.4) ≈ 0.72.
+    const config = clone();
+    config.activations.explainedVarianceTotal = 0.5;
+    config.activations.noiseVarianceRange = [0.4, 0.6];
+    expect(() => validateConfig(config)).not.toThrow();
+  });
+
   it("rejects a scaler scale range that is not positive", () => {
     const config = clone();
     config.activations.scalerScaleRange = [0, 0.5];
