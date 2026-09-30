@@ -5,23 +5,36 @@
   flex-direction: column;
   gap: 9px;
   padding-bottom: 16px;
+  container-type: inline-size;
 }
 
-.trace-a-case__panels {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 10px;
+// The conversation card on the left and the network on the right, as in the prototype.
+.trace-a-case__layout {
+  display: grid;
+  grid-template-columns: 447px minmax(400px, 1fr);
+  grid-template-areas: "case network";
+  align-items: start;
+  gap: 9px 10px;
 }
 
-.trace-a-case__left {
-  flex: 0 0 447px;
+// Too narrow for both columns: stack them.
+@container (width < 857px) {
+  .trace-a-case__layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "case"
+      "network";
+  }
+}
+
+.trace-a-case__case {
+  grid-area: case;
   min-width: 0;
 }
 
 .trace-a-case__network {
   @include panel.panel;
-  flex: 1 1 400px;
+  grid-area: network;
 }
 
 .trace-a-case__network-head {
