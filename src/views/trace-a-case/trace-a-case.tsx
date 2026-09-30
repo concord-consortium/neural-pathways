@@ -12,7 +12,7 @@ import "./trace-a-case.scss";
 export const TraceACase: React.FC = observer(function TraceACase() {
   const shared = useSharedState();
   // Correct the shared conversation when the list arrives, not in a render effect: see
-  // docs/undo.md. Until the filter arrives (NPW-35) the list is every conversation.
+  // docs/undo.md. There is no filter yet, so the list is every conversation.
   const onLoaded = useCallback(
     (index: S3Index) => shared.ensureValidConversation(index.items.map(item => item.id)), [shared]);
   const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
