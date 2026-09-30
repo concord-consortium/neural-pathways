@@ -61,7 +61,7 @@ pathway_prediction = Σ scoreᵢ × importanceᵢ
 summed. `pathway_importance` is a per-pathway logistic regression coefficient
 (signed log-odds per standard deviation), so this sum is log-odds **without an
 intercept**. The threshold is `sum ≥ 0` is class 1, matching `logisticRegression`'s
-`eta >= 0` rule (`src/lab/explorer/utils/regression.ts`). There is no re-standardization
+`eta >= 0` rule (`src/core/math/regression.ts`). There is no re-standardization
 of the scores and no recovered intercept — see §3 for why.
 
 ## 3. Why this formula
