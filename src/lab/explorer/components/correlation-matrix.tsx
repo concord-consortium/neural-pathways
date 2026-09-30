@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Series } from "../types/explorer-data";
-import { pearson, CorrelationResult } from "../utils/statistics";
+import { pearson, CorrelationResult } from "../../../core/math/statistics";
 import { valueToColor } from "../../shared/color-scale";
 import "./correlation-matrix.scss";
 

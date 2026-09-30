@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { linearFit, isUsable } from "../utils/statistics";
+import { isUsable } from "../../../core/math/statistics";
+import { linearFit } from "../utils/statistics";
 import { formatAxisValue } from "../utils/axis";
 import "./scatter-plot.scss";
 

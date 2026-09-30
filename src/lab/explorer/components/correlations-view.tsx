@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Series } from "../types/explorer-data";
-import { pearson, compareGroups, isUsable } from "../utils/statistics";
+import { pearson, isUsable } from "../../../core/math/statistics";
+import { compareGroups } from "../utils/statistics";
 import { CorrelationMatrix, MatrixCell } from "./correlation-matrix";
 import { DistributionComparison } from "./distribution-comparison";
 import { ScatterPlot } from "./scatter-plot";

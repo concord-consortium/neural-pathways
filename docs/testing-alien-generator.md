@@ -1,11 +1,11 @@
 # Manually Testing the Alien Dataset Generator
 
-The alien dataset generator (`scripts/generate-alien-data.ts`) is a seeded
+The alien dataset generator (`generator/generate-alien-data.ts`) is a seeded
 TypeScript script that emits **two** "alien language" conversation datasets, one
-after the other, from the two configs exported by `scripts/alien-config.ts`: a
+after the other, from the two configs exported by `generator/alien-config.ts`: a
 four-pathway dataset (fit `alien-fa-4`) and a three-pathway dataset (fit
 `alien-fa-3`), ~800 conversations each. Both configs share their attribute
-definitions, note fragments, and thresholds via `scripts/alien/config-common.ts`,
+definitions, note fragments, and thresholds via `generator/alien/config-common.ts`,
 and differ in pathway count, vocabulary size, and where `group_size` and
 `resource_stressed` sit: in the four-pathway set `group_size` is a real pathway
 (P2) and `resource_stressed` sits on P3; in the three-pathway set `group_size`
@@ -35,7 +35,7 @@ npm run generate:alien
 On this machine this finishes in about a second — `ts-node`'s startup dominates,
 the generation itself is fast. Two consecutive runs produce byte-identical
 `index.json` files for both datasets, because the seed and every other input are
-fixed in `scripts/alien-config.ts`.
+fixed in `generator/alien-config.ts`.
 
 It writes:
 
@@ -190,7 +190,7 @@ The attribute table (section 2, "attributes" block) prints three numeric
 columns for every attribute that belongs to a pathway (decoys show `-` in all
 three, since they aren't tuned to correlate with anything):
 
-- **requested** — the `targetR` set in `scripts/alien-config.ts`.
+- **requested** — the `targetR` set in `generator/alien-config.ts`.
 - **achieved** — the correlation actually measured between the produced
   attribute values and their pathway's score, computed from the written data,
   not assumed.
@@ -203,7 +203,7 @@ three, since they aren't tuned to correlate with anything):
   *not* simply "closer to an even split reaches higher": `engaged_in_task`'s
   50/50 split isn't the top of the three, and `resource_stressed`'s 70/30
   split, further from even than `voices_raised`'s 65/35, has the highest
-  ceiling of all. `solveAttribute` (`scripts/alien/attributes.ts`) computes
+  ceiling of all. `solveAttribute` (`generator/alien/attributes.ts`) computes
   the ceiling from `column = scores.map(row => row[pathway])` — that
   attribute's own pathway's score distribution — so the ceiling is a function
   of the value split *and* the shape of that specific pathway's scores
@@ -214,7 +214,7 @@ three, since they aren't tuned to correlate with anything):
 
 `achieved-correlations` (self-check 3) fails if any attribute's achieved value
 drifts too far from its requested one; `solveAttribute` (in
-`scripts/alien/attributes.ts`) itself throws before that if you request a
+`generator/alien/attributes.ts`) itself throws before that if you request a
 `targetR` above the ceiling — see section 8.
 
 ## 4. The activation model
@@ -260,7 +260,7 @@ Measures the largest gap, across every conversation and pathway, between a
 pathway's score and its own SHAP decomposition (`[CLS]` + every word's score +
 `[SEP]`, plus the base value). A failure means the SHAP values written to
 `dist/alien-data/shap/` don't actually explain the pathway score — a bug in
-`scripts/alien/emit.ts`'s `shapForConversation`, not something to fix by
+`generator/alien/emit.ts`'s `shapForConversation`, not something to fix by
 changing config.
 
 ### note-evidence
@@ -268,8 +268,8 @@ changing config.
 Measures whether every one of the 800 generated notes contains exactly one
 note fragment per attribute, matching that conversation's actual coded value (no
 fragment for a *different* value, no missing fragment, no fragment counted
-twice). A failure means `scripts/alien/notes.ts`'s template renderer or the
-fragment library in `BASE_ATTRIBUTES` (`scripts/alien/config-common.ts`)
+twice). A failure means `generator/alien/notes.ts`'s template renderer or the
+fragment library in `BASE_ATTRIBUTES` (`generator/alien/config-common.ts`)
 produced or lost evidence — check for a fragment that's a substring of another
 attribute's fragment, or a value with too few fragments.
 
@@ -285,10 +285,10 @@ tightened past what the solver can reliably hit.
 
 Measures the rarest vocabulary word's conversation count (a word counted once
 per conversation it appears in, not per occurrence — `wordCoverage` in
-`scripts/alien/checks.ts`). A failure means some word is too rare to be a
+`generator/alien/checks.ts`). A failure means some word is too rare to be a
 reliable evidence source. Every word is drawn from the same shared vocabulary
 against a fixed per-conversation word budget (`drawConversation` in
-`scripts/alien/conversations.ts`), so what actually raises a word's count is
+`generator/alien/conversations.ts`), so what actually raises a word's count is
 more draws relative to the vocabulary size: raise `conversationCount`, widen
 `minWords`/`maxWords` (more words drawn per conversation), or shrink the
 vocabulary (fewer words per pathway) so the same draws are spread over fewer
@@ -297,7 +297,7 @@ because it flattens `tilt = exp(tiltLambda * dot)` toward uniform selection,
 so a word is no longer strongly suppressed in conversations whose latent
 factors happen to disfavor it. **Adding more magnitude tiers does the
 opposite of fixing this** — each tier adds one more word per pathway per sign
-(`MAGNITUDES` and `groupBuilder()` in `scripts/alien/config-common.ts`), so a
+(`MAGNITUDES` and `groupBuilder()` in `generator/alien/config-common.ts`), so a
 bigger vocabulary shares the same word budget and the rarest word gets rarer.
 Lowering `thresholds.minWordOccurrences` only moves the bar the check is judged
 against; it doesn't make any word actually more common.
@@ -310,7 +310,7 @@ truth has started tracking resource condition, and the model would then be
 correct rather than biased** — the whole point of this dataset is a model that
 is *wrong* in a way correlated with a hidden attribute, not one that has simply
 learned a real signal. There is no config field that directly wires the bias
-attribute into the truth: `targetAt` in `scripts/alien/outcomes.ts` computes
+attribute into the truth: `targetAt` in `generator/alien/outcomes.ts` computes
 `target` from `truthScore` (the `truthPathway` column) plus independent noise
 only — `biasValues` never appears in it — and `config-validation.ts`'s
 `checkBias` already refuses a config where the bias attribute's `pathway`
@@ -327,7 +327,7 @@ own separate fix.
 Measures `corr(model_correct, resource_stressed)`. **A failure here means the
 bias is real but too weak to find** — a downstream analysis correlating model
 correctness against attributes wouldn't turn it up. `modelCorrect` comes from
-`classification`, and `solveOutcomes` (`scripts/alien/outcomes.ts`) solves
+`classification`, and `solveOutcomes` (`generator/alien/outcomes.ts`) solves
 `classification` by bisecting `beta` until the error rate among
 `resource_stressed = 1` conversations matches `errorRateWhenBiasOn`; separately,
 it bisects `sigma` — which shapes `target`, the ground truth, not
@@ -340,7 +340,7 @@ creates the correlation with `resource_stressed` in the first place —
 bias." So the fix is to widen that gap (raise `errorRateWhenBiasOn`, lower
 `errorRateWhenBiasOff`, or both). **`logitScale` is not a fix**: it only
 rescales `classificationProbability`'s logit in `solveOutcomes` — its own doc
-comment in `scripts/alien/config-types.ts` says it is "Purely cosmetic ... 
+comment in `generator/alien/config-types.ts` says it is "Purely cosmetic ... 
 cannot move the 0.5 decision boundary or any error rate," and `classification`
 itself never reads it at all.
 
@@ -362,14 +362,14 @@ more than one pathway, or the per-pathway weight sets lost their symmetric
 (positive/negative) balance. This quietly undermines both bias checks above:
 if the pathways aren't independent, `resource_stressed`'s correlation with the
 truth or the model's correctness can no longer be attributed cleanly to
-`resource_stressed` itself. `scripts/alien/config-validation.ts` is supposed to
+`resource_stressed` itself. `generator/alien/config-validation.ts` is supposed to
 catch the "more than one pathway" case at config-load time (section 8,
 exercise 2) before it ever reaches this check.
 
 ### fa-recovers-pathways
 
 Measures whether a fresh factor-analysis refit on the sampled 14-neuron activations
-(`scripts/alien/activations.ts`, a dependency-free port of scikit-learn's algorithm —
+(`generator/alien/activations.ts`, a dependency-free port of scikit-learn's algorithm —
 see `docs/alien-activations.md`) recovers each authored pathway as its own factor, in
 authored order, with score correlation ≥ 0.94 and loading cosine ≥ 0.97. A failure
 means that particular draw of loadings and noise made the authored structure too
@@ -382,7 +382,7 @@ count or `SCALE`'s target variance.
 
 ## 6. Changing a parameter and confirming it took
 
-Open `scripts/alien-config.ts` and, in `fourPathwayConfig`'s
+Open `generator/alien-config.ts` and, in `fourPathwayConfig`'s
 `withPathwayAssignments` call, find `voices_raised`'s `targetR: 0.65` (the
 first entry in the assignments object — `voices_raised` also appears in
 `threePathwayConfig`, so make sure you're editing `fourPathwayConfig`).
@@ -408,12 +408,12 @@ Now put it back: change `targetR` back to `0.65` and rerun
 then confirm the file is clean:
 
 ```bash
-git diff scripts/alien-config.ts    # should be empty
+git diff generator/alien-config.ts    # should be empty
 ```
 
 ## 7. Changing the seed
 
-Open `scripts/alien-config.ts` and change `fourPathwayConfig`'s
+Open `generator/alien-config.ts` and change `fourPathwayConfig`'s
 `seed: 20260803` to `seed: 42` (leave `threePathwayConfig`'s `seed: 20260803`
 alone — both configs currently share that seed value, and only the
 four-pathway one is exercised below), then:
@@ -472,7 +472,7 @@ Put the seed back: change `fourPathwayConfig`'s `seed` back to `20260803` and re
 confirm the file is clean:
 
 ```bash
-git diff scripts/alien-config.ts    # should be empty
+git diff generator/alien-config.ts    # should be empty
 ```
 
 ## 8. Deliberately breaking it
@@ -499,13 +499,13 @@ even split, which raises the ceiling.
 
 It names both the requested value (`0.95`) and the measured ceiling (`0.717`,
 matching the ceiling column from section 2). Set `targetR` back to `0.65` and
-confirm `git diff scripts/alien-config.ts` is empty.
+confirm `git diff generator/alien-config.ts` is empty.
 
 **Exercise 2 — give one vocabulary word weight in a second pathway.**
 
-`fourPathwayConfig`'s `vocabulary` (`scripts/alien-config.ts`) is built by
+`fourPathwayConfig`'s `vocabulary` (`generator/alien-config.ts`) is built by
 calls to `groupBuilder(FOUR_SCALE)` over the `WORD_GROUPS` entries
-(`scripts/alien/config-common.ts`), and each word is meant to carry weight in
+(`generator/alien/config-common.ts`), and each word is meant to carry weight in
 exactly one pathway. Temporarily add this line right after `fourPathwayConfig`
 closes (after its closing `};`, before `threePathwayConfig` starts):
 
@@ -528,7 +528,7 @@ Cross-pathway weight correlates the pathway scores and breaks the bias
 construction.
 ```
 
-Delete the line you added and confirm `git diff scripts/alien-config.ts` is
+Delete the line you added and confirm `git diff generator/alien-config.ts` is
 empty.
 
 **After both exercises**, run `npm run generate:alien` once more and confirm it
@@ -624,13 +624,13 @@ isn't deterministic.
   review's `attributes` and note text like any other attribute — nothing in
   the generator or the explorer currently does anything different for them.
   Phase 6 is where the `hidden` flag starts to matter.
-- **Notes are template-written, not LLM-generated.** `scripts/alien/notes.ts`
+- **Notes are template-written, not LLM-generated.** `generator/alien/notes.ts`
   defines a `NoteRenderer` interface and ships exactly one implementation,
   `TemplateNoteRenderer`, which stitches together fixed fragments from
-  `scripts/alien/config-common.ts`. The seam exists for an LLM-backed renderer that
+  `generator/alien/config-common.ts`. The seam exists for an LLM-backed renderer that
   reads a content-addressed cache; that renderer is not built.
 - **Parameters are starting values, not tuned ones.** The variance split,
-  `targetR`s, error rates, and so on in `scripts/alien-config.ts` are what the
+  `targetR`s, error rates, and so on in `generator/alien-config.ts` are what the
   generator was built and validated against — tuning them for pedagogical
   effect is phase 7's job, not this one's.
 
