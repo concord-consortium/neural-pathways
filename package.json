@@ -117,6 +117,8 @@
     "sass-loader": "^16.0.5",
     "script-loader": "^0.7.2",
     "style-loader": "^4.0.0",
+    "terser": "~5.46.1",
+    "terser-webpack-plugin": "~5.4.0",
     "ts-jest": "^29.2.6",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
@@ -128,7 +130,11 @@
     "webpack-dev-server": "^5.2.0"
   },
   "dependencies": {
+    "core-js": "^3.50.0",
     "liqe": "^3.8.5",
+    "mobx": "^7.0.5",
+    "mobx-keystone": "^2.2.0",
+    "mobx-react-lite": "^5.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-select": "^5.10.2",

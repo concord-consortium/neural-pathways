@@ -1,4 +1,5 @@
 import React from "react";
+import type { AnyModel, ModelClass } from "mobx-keystone";
 import { TraceACase } from "../views/trace-a-case/trace-a-case";
 import { ExtractPathways } from "../views/extract-pathways/extract-pathways";
 import { InvestigatePathways } from "../views/investigate-pathways/investigate-pathways";
@@ -12,6 +13,8 @@ export interface ViewDef {
   id: string;
   title: string;
   component: React.ComponentType;
+  /** The model for this view's own state, if it keeps any. See docs/view-state.md. */
+  stateModel?: ModelClass<AnyModel>;
 }
 
 /** The lesson's views, in lesson order. This order is the navigation order. */

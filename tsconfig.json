@@ -9,12 +9,13 @@
     "allowJs": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "experimentalDecorators": true,
     "importHelpers": true,
     "strict": true,
     "types": ["jest", "node"],
     "jsx": "react",
-    "lib": ["dom", "dom.iterable", "es2018"]
+    // esnext.collection: mobx-keystone's public types use the newer Set methods. They are
+    // polyfilled in src/core/state/setup.ts for browsers that predate them.
+    "lib": ["dom", "dom.iterable", "es2018", "esnext.collection"]
   },
   "include": [
     "./src/**/*"
