@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo } from "react";
+import { _getGlobalState } from "mobx";
 import type { AnyModel } from "mobx-keystone";
 import type { SharedState } from "./shared-state";
 
@@ -21,10 +22,22 @@ export const ViewStateProvider: React.FC<ViewStateProviderProps> = ({ viewId, vi
   return <ViewStateContext.Provider value={value}>{children}</ViewStateContext.Provider>;
 };
 
+// Views warned about reading state outside `observer`, so each view warns only once.
+const warnedNotObserver = new WeakSet<ViewStateContextValue>();
+
 function useViewStateContext(hookName: string): ViewStateContextValue {
   const value = useContext(ViewStateContext);
   if (!value) {
     throw new Error(`${hookName} must be used inside a ViewStateProvider`);
+  }
+  // MobX sets a tracking derivation while an `observer` component renders.
+  if (process.env.NODE_ENV !== "production" && !_getGlobalState().trackingDerivation &&
+      !warnedNotObserver.has(value)) {
+    warnedNotObserver.add(value);
+    console.warn(
+      `${hookName} was called outside an observer component in view "${value.viewId}", so the view ` +
+      "won't re-render when the state changes. Wrap the component in observer from mobx-react-lite."
+    );
   }
   return value;
 }

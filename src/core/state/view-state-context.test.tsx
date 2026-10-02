@@ -17,21 +17,22 @@ class CounterState extends Model({ count: tProp(types.number, 0) }) {
 @model("test/OtherState")
 class OtherState extends Model({}) {}
 
-const Probe: React.FC = () => {
+// Views that read state are wrapped in `observer`; without it a model action doesn't re-render them.
+const Probe = observer(() => {
   const view = useViewState(CounterState);
   const shared = useSharedState();
   return <p>{`count ${view.count}, shared version ${shared.version}`}</p>;
-};
+});
 
-// Views that read state are wrapped in `observer`; without it a model action doesn't re-render them.
-const ObserverProbe = observer(() => <p>{`count ${useViewState(CounterState).count}`}</p>);
+const SharedOnlyProbe = observer(() => <p>{`shared version ${useSharedState().version}`}</p>);
 
-const SharedOnlyProbe: React.FC = () => <p>{`shared version ${useSharedState().version}`}</p>;
-
-const WrongModelProbe: React.FC = () => {
+const WrongModelProbe = observer(() => {
   useViewState(OtherState);
   return null;
-};
+});
+
+// Reads state without `observer`, which the hooks warn about in development.
+const PlainProbe: React.FC = () => <p>{`count ${useViewState(CounterState).count}`}</p>;
 
 function muteConsoleErrors() {
   // React reports the thrown render error to console.error, which is expected in these tests.
@@ -50,13 +51,37 @@ describe("ViewStateProvider", () => {
 
   it("re-renders an observer view when its state changes", () => {
     const state = new CounterState({});
+    const warn = jest.spyOn(console, "warn");
     render(
       <ViewStateProvider viewId="counter" view={state} shared={new SharedState({})}>
-        <ObserverProbe />
+        <Probe />
       </ViewStateProvider>
     );
     act(() => state.increment());
-    expect(screen.getByText("count 1")).toBeInTheDocument();
+    expect(screen.getByText("count 1, shared version 1")).toBeInTheDocument();
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("warns once when a view reads state outside observer, which leaves it stale", () => {
+    const state = new CounterState({});
+    const shared = new SharedState({});
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { rerender } = render(
+      <ViewStateProvider viewId="counter" view={state} shared={shared}>
+        <PlainProbe />
+      </ViewStateProvider>
+    );
+    act(() => state.increment());
+    expect(screen.getByText("count 0")).toBeInTheDocument();
+    rerender(
+      <ViewStateProvider viewId="counter" view={state} shared={shared}>
+        <PlainProbe />
+      </ViewStateProvider>
+    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain(`outside an observer component in view "counter"`);
+    warn.mockRestore();
   });
 
   it("gives the shared state to a view that has no state model", () => {

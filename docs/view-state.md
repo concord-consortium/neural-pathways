@@ -41,7 +41,8 @@ To give a view its state:
    `useSharedState()`. Both come from `src/core/state/view-state-context.tsx`. Wrap every
    component that reads state in `observer` from `mobx-react-lite`. Context doesn't re-render on
    a model change, because the tree it holds stays the same object, so without `observer` a view
-   shows stale values.
+   shows stale values. In development, the hooks warn once per view when they are called outside
+   an `observer` component.
 5. Update the tables below.
 
 A view without a `stateModel` can still use `useSharedState()`. Calling `useViewState` in it
