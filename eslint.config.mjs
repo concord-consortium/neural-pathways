@@ -246,6 +246,12 @@ export default defineConfig(
       "json/no-empty-keys": "error",
     },
   },
+  {
+    // TypeScript reads its config files as JSON with comments.
+    name: "tsconfig files",
+    files: ["**/tsconfig*.json"],
+    language: "json/jsonc",
+  },
   { 
     name: "eslint configs",
     files: ["eslint.*.mjs"],
