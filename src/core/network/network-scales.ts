@@ -55,7 +55,11 @@ function terciles(pool: number[]): BandThresholds {
   return [sorted[Math.floor(sorted.length / 3)], sorted[Math.floor((2 * sorted.length) / 3)]];
 }
 
+/**
+ * A value on a threshold goes in the band above, except zero, which is always thin: with a zero
+ * threshold, the rule would otherwise draw no signal as a mid or thick edge.
+ */
 export function magnitudeBand(value: number, [low, high]: BandThresholds): MagnitudeBand {
   const magnitude = Math.abs(value);
-  return magnitude < low ? 0 : magnitude < high ? 1 : 2;
+  return magnitude === 0 || magnitude < low ? 0 : magnitude < high ? 1 : 2;
 }

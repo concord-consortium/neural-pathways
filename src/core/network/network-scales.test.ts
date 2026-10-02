@@ -59,4 +59,10 @@ describe("magnitudeBand", () => {
   it("puts zero in the thinnest band", () => {
     expect(magnitudeBand(0, thresholds)).toBe(0);
   });
+
+  it("puts zero in the thinnest band even when a threshold is zero", () => {
+    expect(magnitudeBand(0, [0, 0])).toBe(0);
+    expect(magnitudeBand(-0, [0, 0.5])).toBe(0);
+    expect(magnitudeBand(0.1, [0, 0])).toBe(2);
+  });
 });
