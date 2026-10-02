@@ -51,11 +51,14 @@ interface UseDatasetIndexOptions {
   onLoaded?: (index: S3Index) => void;
 }
 
+function initialState(dataset: DatasetDefinition): DatasetIndexState {
+  const index = cache.get(dataset.id)?.index;
+  return index ? { status: "ready", index } : { status: "loading" };
+}
+
 export function useDatasetIndex(dataset: DatasetDefinition, options?: UseDatasetIndexOptions): DatasetIndexState {
-  const [state, setState] = useState<DatasetIndexState>(() => {
-    const index = cache.get(dataset.id)?.index;
-    return index ? { status: "ready", index } : { status: "loading" };
-  });
+  // Tagged with its dataset, so a change of dataset never shows the previous one's index.
+  const [state, setState] = useState(() => ({ datasetId: dataset.id, value: initialState(dataset) }));
   const onLoaded = options?.onLoaded;
   const onLoadedRef = useRef(onLoaded);
   useEffect(() => {
@@ -72,15 +75,17 @@ export function useDatasetIndex(dataset: DatasetDefinition, options?: UseDataset
         try {
           onLoadedRef.current?.(index);
         } catch (error: unknown) {
-          setState({ status: "error", error: toError(error) });
+          setState({ datasetId: dataset.id, value: { status: "error", error: toError(error) } });
           return;
         }
         setState(previous =>
-          previous.status === "ready" && previous.index === index ? previous : { status: "ready", index });
+          previous.datasetId === dataset.id && previous.value.status === "ready" && previous.value.index === index
+            ? previous
+            : { datasetId: dataset.id, value: { status: "ready", index } });
       },
       (error: unknown) => {
         if (active) {
-          setState({ status: "error", error: toError(error) });
+          setState({ datasetId: dataset.id, value: { status: "error", error: toError(error) } });
         }
       },
     );
@@ -89,7 +94,8 @@ export function useDatasetIndex(dataset: DatasetDefinition, options?: UseDataset
     };
   }, [dataset]);
 
-  return state;
+  // Until the effect catches up with a new dataset, show that dataset's cached index or loading.
+  return state.datasetId === dataset.id ? state.value : initialState(dataset);
 }
 
 /** Tests only: forget every loaded index. */
