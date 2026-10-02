@@ -1,7 +1,4 @@
-import {
-  getGlobalConfig, getRootStore, Model, model, modelAction, ModelAutoTypeCheckingMode, runUnprotected, tProp, types,
-  undoMiddleware,
-} from "mobx-keystone";
+import { getRootStore, Model, model, modelAction, runUnprotected, tProp, types, undoMiddleware } from "mobx-keystone";
 import { AppState } from "./app-state";
 import { VIEWS } from "../views";
 import { SharedState } from "../../core/state/shared-state";
@@ -27,10 +24,6 @@ const testViews = [
 ];
 
 describe("AppState", () => {
-  it("turns on type checking in every environment, production included", () => {
-    expect(getGlobalConfig().modelAutoTypeChecking).toBe(ModelAutoTypeCheckingMode.AlwaysOn);
-  });
-
   it("holds the shared state and every view's state under one root store", () => {
     const appState = new AppState(testViews);
     expect(appState.shared).toBeInstanceOf(SharedState);

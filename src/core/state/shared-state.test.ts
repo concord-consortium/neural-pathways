@@ -1,9 +1,13 @@
-import { fromSnapshot } from "mobx-keystone";
+import { fromSnapshot, getGlobalConfig, ModelAutoTypeCheckingMode } from "mobx-keystone";
 import { SharedState } from "./shared-state";
 import { savedJson } from "./test-helpers";
 import fixture from "./__fixtures__/shared-state.v1.json";
 
 describe("SharedState", () => {
+  it("turns on type checking in every environment when it is imported, production included", () => {
+    expect(getGlobalConfig().modelAutoTypeChecking).toBe(ModelAutoTypeCheckingMode.AlwaysOn);
+  });
+
   it("starts at version 1", () => {
     expect(savedJson(new SharedState({}))).toEqual({ version: 1, $modelType: "npw/SharedState" });
   });

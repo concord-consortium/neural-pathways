@@ -1,3 +1,4 @@
+import "./setup";
 import { Model, model, tProp, types } from "mobx-keystone";
 
 /**

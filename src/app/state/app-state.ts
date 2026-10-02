@@ -1,13 +1,7 @@
-import {
-  AnyModel, Model, model, ModelAutoTypeCheckingMode, registerRootStore, setGlobalConfig, tProp, types,
-} from "mobx-keystone";
+import "../../core/state/setup";
+import { AnyModel, Model, model, registerRootStore, tProp, types } from "mobx-keystone";
 import { SharedState } from "../../core/state/shared-state";
 import { VIEWS, ViewDef } from "../views";
-
-// Check every load and write against the models' types in production too, not only in
-// development. The trees are small, so the cost is negligible, and a bad value then throws where
-// it is written instead of being saved into a student's state. See docs/view-state.md.
-setGlobalConfig({ modelAutoTypeChecking: ModelAutoTypeCheckingMode.AlwaysOn });
 
 type ViewWithState = Pick<ViewDef, "id" | "stateModel">;
 
