@@ -2,11 +2,19 @@ import React, { useCallback, useMemo } from "react";
 import { observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
+import { forward } from "../../core/network/forward";
+import { networkScales } from "../../core/network/network-scales";
+import { toyNetwork } from "../../core/network/toy-network";
+import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
+import { fullScene } from "../../core/network-diagram/scene";
 import { validConversationId } from "../../core/state/conversation";
 import { useSharedState } from "../../core/state/view-state-context";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import "./trace-a-case.scss";
+
+/** The whole pass, drawn at once. There are no steps yet to build it up a layer at a time. */
+const FULL_SCENE = fullScene(toyNetwork.layers.map(layer => layer.biases.length));
 
 /** Follow one conversation through the network, a layer at a time. */
 export const TraceACase: React.FC = observer(function TraceACase() {
@@ -31,6 +39,8 @@ export const TraceACase: React.FC = observer(function TraceACase() {
 const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3Index }) {
   const shared = useSharedState();
   const ids = useMemo(() => index.items.map(item => item.id), [index]);
+  const passes = useMemo(() => index.items.map(item => forward(toyNetwork, item.text)), [index]);
+  const scales = useMemo(() => networkScales(toyNetwork, passes), [passes]);
   // Shown even before the store's correction lands, so an invalid id never reaches the screen.
   const currentId = validConversationId(shared.conversationId, ids);
 
@@ -41,11 +51,18 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const goTo = (to: number) => shared.setConversationId(ids[to]);
 
   return (
-    <div className="trace-a-case__panels">
-      <div className="trace-a-case__left">
+    <div className="trace-a-case__layout">
+      <div className="trace-a-case__case">
         <ConversationCard conversation={index.items[position]} position={position} total={ids.length}
           onPrev={() => goTo(position - 1)} onNext={() => goTo(position + 1)} />
       </div>
+      <section className="trace-a-case__network" aria-label="The Network">
+        <h2 className="trace-a-case__network-head">The Network</h2>
+        <div className="trace-a-case__diagram">
+          <NetworkDiagram network={toyNetwork} pass={passes[position]} scales={scales}
+            outputLabels={alien3Dataset.classificationLabels} scene={FULL_SCENE} />
+        </div>
+      </section>
     </div>
   );
 });
