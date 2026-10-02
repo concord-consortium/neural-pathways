@@ -1,4 +1,5 @@
 import React from "react";
+import { conversationWords } from "../conversation-text";
 import { S3Item } from "../types/s3-data";
 import "./conversation-card.scss";
 
@@ -20,7 +21,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
   conversation, position, total, onPrev, onNext,
 }) => {
   // One paragraph, as in the prototype: the line breaks between turns are dropped.
-  const words = conversation.text.split(/\s+/).filter(word => word !== "").join(" ");
+  const words = conversationWords(conversation.text).join(" ");
   return (
     <section className="conversation-card" aria-label="Conversation">
       <div className="conversation-card__head">

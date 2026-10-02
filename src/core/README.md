@@ -35,6 +35,8 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
   it between views.
 - `conversation-card/`: the minimal conversation card. NPW-36 completes it.
+- `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
+  words. Items are plain data, so these are functions that take the text.
 - `colors.ts`, `colors.scss`, `panel.scss`: the lesson's colors and the panel look.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and
