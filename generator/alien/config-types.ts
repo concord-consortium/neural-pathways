@@ -28,9 +28,8 @@ export interface AttributeConfig {
   valueLabels?: Record<number, string>;
   /**
    * Note fragments per value, keyed by the value itself. Every value in
-   * valueShares needs at least two, and every fragment across the whole config
-   * must be unique and must not be a substring of any other fragment — self-check
-   * 2 identifies which value a note attests by substring match.
+   * valueShares needs at least two, and fragments must be distinguishable across
+   * the whole config (see checkFragmentsAreDistinguishable in config-validation.ts).
    */
   notes: Record<number, string[]>;
 }
@@ -93,9 +92,9 @@ export interface AlienConfig {
   vocabulary: VocabularyWord[];
   /**
    * Target share of pathway-score variance, per pathway. The word-sum split is
-   * reported against rather than asserted, but the activation stage does assert
-   * it: the loading solver hands each pathway this share of the explained
-   * variance, so validation requires the shares to be positive and to sum to 1.
+   * only reported against these; the loading solver gives each pathway exactly
+   * this share of the explained variance (see checkActivations in
+   * config-validation.ts for why the shares must sum to 1).
    */
   targetVarianceShares: number[];
   activations: ActivationConfig;

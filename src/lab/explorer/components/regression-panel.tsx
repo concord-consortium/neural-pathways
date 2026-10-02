@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { Series } from "../types/explorer-data";
-import { isUsable } from "../utils/statistics";
+import { isUsable } from "../../../core/math/statistics";
 import { buildDesignMatrix } from "../utils/design-matrix";
-import { multipleRegression, logisticRegression } from "../utils/regression";
+import { multipleRegression, logisticRegression } from "../../../core/math/regression";
 import "./regression-panel.scss";
 
 interface RegressionPanelProps {

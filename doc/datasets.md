@@ -34,7 +34,7 @@ deploy publishes them at each build's root (see
   built with the core alien factory
 - `alien3`: [src/core/datasets/alien3-dataset.ts](../src/core/datasets/alien3-dataset.ts). The lab
   version adds the explorer's search help.
-- Generator configs for both alien datasets: [scripts/alien-config.ts](../scripts/alien-config.ts)
+- Generator configs for both alien datasets: [generator/alien-config.ts](../generator/alien-config.ts)
 
 ## Further reading
 

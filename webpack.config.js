@@ -138,9 +138,12 @@ module.exports = (env, argv) => {
       warningsFilter: /export .* was not found in/,
     },
     plugins: [
-      new ESLintPlugin({
+      // Lint while developing only. `npm run build` runs `lint:build` before webpack (and CI's
+      // deploy build relies on build_test having done that), so linting here too would report
+      // every warning twice.
+      ...(devMode ? [new ESLintPlugin({
         extensions: ['ts', 'tsx', 'js', 'jsx'],
-      }),
+      })] : []),
       new MiniCssExtractPlugin({
         filename: devMode ? 'assets/[name].css' : 'assets/[name].[contenthash].css',
       }),
