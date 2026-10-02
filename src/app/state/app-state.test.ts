@@ -73,9 +73,9 @@ describe("AppState", () => {
     const appState = new AppState();
     const matches = VIEWS.map(view => {
       const state = appState.getViewState(view.id);
-      return view.stateModel ? state instanceof view.stateModel : state === undefined;
+      return [view.id, view.stateModel ? state instanceof view.stateModel : state === undefined];
     });
-    expect(matches).toEqual(VIEWS.map(() => true));
+    expect(matches).toEqual(VIEWS.map(view => [view.id, true]));
   });
 
   it("throws for an unknown view id", () => {
