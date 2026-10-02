@@ -26,9 +26,8 @@ describe("withPathwayAssignments", () => {
   });
 
   it("keeps the base order", () => {
-    // solveAttributes consumes the single PRNG one attribute at a time in list
-    // order, so reordering the list changes every value in the dataset. An
-    // object literal's key order must not be able to leak into the output.
+    // The list order is load-bearing (see BASE_ATTRIBUTES), so an object
+    // literal's key order must not be able to leak into the output.
     const result = withPathwayAssignments(twoAttributes, {
       beta: { pathway: null, targetR: 0 },
       alpha: { pathway: 0, targetR: 0.65 },

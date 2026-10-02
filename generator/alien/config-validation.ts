@@ -120,9 +120,9 @@ function checkAttributes(config: AlienConfig): void {
 }
 
 /**
- * Self-check 2 attests an attribute value by finding one of its fragments inside
- * the note. That only identifies a value if no fragment appears anywhere else,
- * including inside a longer fragment.
+ * The note-evidence self-check attests an attribute value by finding one of its
+ * fragments inside the note. That only identifies a value if no fragment appears
+ * anywhere else, including inside a longer fragment.
  */
 function checkFragmentsAreDistinguishable(config: AlienConfig): void {
   const fragments: { text: string; owner: string }[] = [];

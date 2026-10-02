@@ -124,7 +124,7 @@ yelp index on 2026-09-11. Re-run the script to reproduce these numbers.
 
 | Metric | Value |
 |---|---|
-| items analysed | 2998 |
+| items analyzed | 2998 |
 | agrees with the model | 98.20% (54 disagree) |
 | pathway 0 alone would disagree on | 27 |
 | corr(disagree, residual) | 0.340 |
@@ -139,7 +139,7 @@ yelp index on 2026-09-11. Re-run the script to reproduce these numbers.
 
 | Metric | Value |
 |---|---|
-| items analysed | 2998 |
+| items analyzed | 2998 |
 | agrees with the model | 98.40% (48 disagree) |
 | pathway 0 alone would disagree on | 29 |
 | corr(disagree, residual) | 0.300 |
@@ -154,7 +154,7 @@ yelp index on 2026-09-11. Re-run the script to reproduce these numbers.
 
 | Metric | Value |
 |---|---|
-| items analysed | 2998 |
+| items analyzed | 2998 |
 | agrees with the model | 98.47% (46 disagree) |
 | pathway 0 alone would disagree on | 29 |
 | corr(disagree, residual) | 0.331 |

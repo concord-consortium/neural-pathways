@@ -25,9 +25,8 @@ export function standardDeviation(values: number[]): number {
 }
 
 /**
- * Determines whether a value is a usable observation: not null, not NaN, and not infinite.
- * This is the module's single definition of a usable observation, used consistently
- * across all statistics functions to ensure predictable filtering behavior.
+ * The one definition of a usable observation (not null, NaN or infinite), shared by
+ * `pearson` and the lab code that filters missing values.
  */
 export function isUsable(value: number | null): value is number {
   return value != null && Number.isFinite(value);

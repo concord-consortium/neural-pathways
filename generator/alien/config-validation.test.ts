@@ -135,7 +135,7 @@ describe("validateConfig", () => {
   });
 
   it("rejects a neuron count below the identifiability floor", () => {
-    // Four pathways need (n - 4)^2 >= n + 4, which 7 neurons fails and 8 passes.
+    // For four pathways, 7 neurons is just below the floor and 8 just above it.
     const config = clone();
     config.activations.neuronCount = 7;
     expect(() => validateConfig(config)).toThrow(/identif/i);
@@ -206,9 +206,7 @@ describe("validateConfig", () => {
   });
 
   it("rejects target variance shares that do not sum to 1", () => {
-    // The solver's row and column constraints are only consistent at a total of
-    // 1. At any other total it still converges, to the normalized split, so the
-    // configured shares would be silently rescaled rather than rejected.
+    // See checkActivations for why a total other than 1 must fail rather than rescale.
     const config = clone();
     config.targetVarianceShares = config.targetVarianceShares.map(share => share * 0.8);
     expect(() => validateConfig(config)).toThrow(/targetVarianceShares/);

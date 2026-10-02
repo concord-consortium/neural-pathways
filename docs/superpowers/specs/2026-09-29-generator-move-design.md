@@ -16,8 +16,8 @@ whole unreviewed. The review raised two points this work settles:
   catch it.
 
 Jira: [NPW-46](https://concord-consortium.atlassian.net/browse/NPW-46), a separate story under
-the NPW-15 epic. NPW-29 was not used: it covers loading the alien3 data in core and was already
-in review as PR #28, and this work builds on it.
+the NPW-15 epic. NPW-29 was not used: it covers loading the alien3 data in core, and this work
+builds on its PR, #28.
 
 After this work:
 
@@ -77,6 +77,7 @@ generator/
   generate-alien-data.ts
   alien-config.ts
   alien-config.test.ts
+  alien3-round-trip.test.ts  see Round-trip test
   alien/                     unchanged internally
 scripts/
   analysis/                  unreviewed research scripts
@@ -138,7 +139,8 @@ outside their own folders. Add cases to `eslint.config.test.mjs` (`npm run lint:
 
 ## Round-trip test
 
-A test that runs the generator on a small config, writes to a temporary folder, and reads the
+A test (`generator/alien3-round-trip.test.ts`) that runs the generator on the shipped alien3
+config, writes to a temporary folder, and reads the
 result back with core's loader from NPW-29 (the index, activations and SHAP buckets). The
 loader fetches by URL, so the test serves or mocks those fetches from the temporary folder;
 the implementation plan settles how. This catches the generator and core disagreeing about the

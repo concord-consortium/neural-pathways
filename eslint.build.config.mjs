@@ -13,8 +13,8 @@ export default defineConfig(
     }
   },
   {
-    // The generator and analysis scripts report by printing, so the no-console rule above does
-    // not apply to them (the base config turns it off there too).
+    // The block above turns no-console back on for every file, overriding the base config's
+    // "off" for the generator and analysis scripts, which report by printing. Restore it.
     files: ["generator/**/*.ts", "scripts/**/*.ts"],
     rules: {
       "no-console": "off"
