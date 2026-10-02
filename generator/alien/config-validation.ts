@@ -95,6 +95,11 @@ function checkAttributes(config: AlienConfig): void {
     if (attr.type === "binary" && attr.valueShares.length !== 2) {
       throw new Error(`Attribute "${attr.key}": a binary attribute needs exactly two value shares`);
     }
+    // Outcomes and the self-checks read a binary 1 as "on" (biasValues[i] === 1 in
+    // outcomes.ts), so a binary attribute counted from 1 would silently invert.
+    if (attr.type === "binary" && attr.minValue !== 0) {
+      throw new Error(`Attribute "${attr.key}": a binary attribute's values must be 0 and 1 (minValue 0)`);
+    }
     if (attr.pathway !== null
         && (attr.pathway < 0 || attr.pathway >= config.pathwayCount)) {
       throw new Error(`Attribute "${attr.key}": pathway ${attr.pathway} is out of range`);
