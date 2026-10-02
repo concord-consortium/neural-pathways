@@ -1,3 +1,4 @@
+import * as path from "path";
 import { fourPathwayConfig } from "../alien-config";
 import { validateConfig } from "./config-validation";
 import { AlienConfig } from "./config-types";
@@ -66,9 +67,13 @@ describe("validateConfig", () => {
   });
 
   it("rejects an absolute outputDir", () => {
-    const config = clone();
-    config.outputDir = "/tmp/alien-data";
-    expect(() => validateConfig(config)).toThrow(/outputDir/i);
+    // The second path lands inside dist/ relative to the check's stand-in root, so only
+    // the absolute-path clause rejects it.
+    for (const dir of ["/tmp/alien-data", path.resolve("/repo", "dist", "alien-data")]) {
+      const config = clone();
+      config.outputDir = dir;
+      expect(() => validateConfig(config)).toThrow(/outputDir/i);
+    }
   });
 
   it("rejects an outputDir that escapes via ..", () => {
@@ -113,6 +118,16 @@ describe("validateConfig", () => {
     expect(() => validateConfig(config)).toThrow(/binary/i);
   });
 
+  it("rejects a binary attribute whose values do not start at 0", () => {
+    // Outcomes and checks read a binary attribute's 1 as "on", so values {1, 2} would invert
+    // its meaning. Notes are re-keyed so only minValue is wrong.
+    const config = clone();
+    const binary = config.attributes.find(a => a.type === "binary" && a.key !== config.biasAttributeKey)!;
+    binary.notes = { 1: binary.notes[0], 2: binary.notes[1] };
+    binary.minValue = 1;
+    expect(() => validateConfig(config)).toThrow(/binary attribute's values must be 0 and 1/);
+  });
+
   it("rejects an attribute key that collides with a reserved search field", () => {
     const config = clone();
     config.attributes[0].key = "text";
@@ -134,28 +149,36 @@ describe("validateConfig", () => {
     expect(() => validateConfig(config)).toThrow(/explainedVarianceTotal/);
   });
 
-  it("rejects a noise variance range that is unordered or touches zero", () => {
+  it("rejects a noise variance range that is unordered", () => {
     const config = clone();
     config.activations.noiseVarianceRange = [0.2, 0.1];
-    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
-    config.activations.noiseVarianceRange = [0, 0.1];
-    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
+    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange .* must be ordered low to high/);
   });
 
-  it("rejects a noise variance range that can rescale to a variance of 1 or more", () => {
-    // Draws are rescaled to mean 1 - explainedVarianceTotal. With 14 neurons, one draw at
-    // the top of [0.01, 100] and the rest at the bottom rescale the top one to about 11.
-    const config = clone();
-    config.activations.explainedVarianceTotal = 0.2;
-    config.activations.noiseVarianceRange = [0.01, 100];
-    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
+  it("rejects a noise variance range whose low end is zero or negative", () => {
+    // The worst-case check below would also reject [0, 0.1], but not [-0.05, 0.1]: a negative
+    // low end makes its denominator negative. Only the lower-bound check catches both.
+    for (const range of [[0, 0.1], [-0.05, 0.1]] as [number, number][]) {
+      const config = clone();
+      config.activations.noiseVarianceRange = range;
+      expect(() => validateConfig(config)).toThrow(/noiseVarianceRange lower bound .* must exceed 0/);
+    }
   });
 
-  it("accepts a wide noise variance range whose worst case stays below 1", () => {
-    // Worst case: 0.6 * (1 - 0.5) * 14 / (0.6 + 13 * 0.4) ≈ 0.72.
+  // Draws are rescaled to mean 1 - explainedVarianceTotal. The worst case is one draw at the
+  // top of the range and the other 13 at the bottom: high * (1 - E) * 14 / (high + 13 * low).
+  // With E = 0.5 and low = 0.4 that reaches 1 at high ≈ 0.867.
+  it("rejects a noise variance range whose worst case is just over 1", () => {
     const config = clone();
     config.activations.explainedVarianceTotal = 0.5;
-    config.activations.noiseVarianceRange = [0.4, 0.6];
+    config.activations.noiseVarianceRange = [0.4, 0.87];  // worst case ≈ 1.003
+    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange .* can rescale/);
+  });
+
+  it("accepts a noise variance range whose worst case is just under 1", () => {
+    const config = clone();
+    config.activations.explainedVarianceTotal = 0.5;
+    config.activations.noiseVarianceRange = [0.4, 0.86];  // worst case ≈ 0.993
     expect(() => validateConfig(config)).not.toThrow();
   });
 
