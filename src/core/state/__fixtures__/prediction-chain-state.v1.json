@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "stepByConversation": { "3fa91c2e": 4, "e41c9f22": 2 },
+  "animate": true,
+  "speed": 1,
+  "$modelType": "npw/PredictionChainState"
+}

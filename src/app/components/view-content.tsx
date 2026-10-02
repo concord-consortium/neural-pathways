@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import { ViewStateProvider } from "../../core/state/view-state-context";
+import { AppState } from "../state/app-state";
 import { findView, VIEWS } from "../views";
 import "./view-content.scss";
 
@@ -6,9 +8,10 @@ export const APP_TITLE = "Neural Pathways";
 
 interface ViewContentProps {
   viewId: string;
+  appState: AppState;
 }
 
-export const ViewContent: React.FC<ViewContentProps> = ({ viewId }) => {
+export const ViewContent: React.FC<ViewContentProps> = ({ viewId, appState }) => {
   const view = findView(viewId);
 
   // A per-view page title helps history, tab lists and screen readers tell views apart.
@@ -27,5 +30,9 @@ export const ViewContent: React.FC<ViewContentProps> = ({ viewId }) => {
     );
   }
   const ViewComponent = view.component;
-  return <ViewComponent />;
+  return (
+    <ViewStateProvider viewId={view.id} view={appState.getViewState(view.id)} shared={appState.shared}>
+      <ViewComponent />
+    </ViewStateProvider>
+  );
 };

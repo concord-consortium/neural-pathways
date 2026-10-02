@@ -32,8 +32,10 @@ around it.
 
 1. Create `src/views/<view-id>/<view-id>.tsx` exporting the view component. See
    `src/views/README.md` for what a view may import.
-2. Add it to `VIEWS` in `views.ts`, at its place in the lesson order.
-3. Update the expected id list in `views.test.ts` and the nav link count in
-   `playwright/app.test.ts`.
+2. Create its state model in `src/core/state/`, with a new permanent `npw/<Name>State`
+   `$modelType` and `version: 1`, and a saved-form fixture test. See `docs/view-state.md`.
+3. Add it to `VIEWS` in `views.ts`, at its place in the lesson order, with its `stateModel`.
+4. Update the expected id list in `views.test.ts`, the nav link count in
+   `playwright/app.test.ts`, and the tables in `docs/view-state.md`.
 
 View ids are embedded in AP activities, so never rename or remove one that has shipped.

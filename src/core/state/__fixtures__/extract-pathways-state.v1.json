@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "animate": true,
+  "speed": 0,
+  "extracted": true,
+  "collected": 12,
+  "cubeDone": true,
+  "pathwaysDone": false,
+  "$modelType": "npw/ExtractPathwaysState"
+}
