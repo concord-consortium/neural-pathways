@@ -7,9 +7,18 @@ from this state, and the places that would have to change, are in [undo.md](undo
 
 The state is held in [mobx-keystone](https://mobx-keystone.js.org) models in `src/core/state/`.
 Each view's state is its own tree, and the shared state is one more tree. The student app keeps
-all of them in an `AppState` (`src/app/state/app-state.ts`) for the life of the page.
-`index.tsx` creates it once, outside React, because its constructor registers root stores and
-StrictMode would run a `useState` initializer twice. In the Activity Player (AP), each
+all of them as children of one root, in an `AppState` (`src/app/state/app-state.ts`), for the
+life of the page:
+- **One root:** a student action that changes a view's state and the shared state can then be one
+  undo step (see [undo.md](undo.md)).
+- **Created at startup:** every view's tree is created when the app starts, from the view's
+  `stateModel` in `VIEWS`. The root's type is built from `VIEWS` too, so each view id can hold only
+  a tree of its own model.
+- **Never saved whole:** the root is runtime only. What is saved is a view's tree and the shared
+  tree, each as its own snapshot.
+
+`index.tsx` creates the `AppState` once, outside React, because its constructor registers a root
+store and StrictMode would run a `useState` initializer twice. In the Activity Player (AP), each
 interactive will save `{ view, shared }`: its own view tree and the shared tree (NPW-43).
 
 ## How the state arrives
@@ -118,7 +127,7 @@ URL param names start with the tree id and use dots for nested fields: `shared.q
 `investigate-unknown-pathway.pane2.conversationId=…`. The params apply only when a tree is first
 created:
 
-- **Standalone app:** the shared tree at startup, and each view's tree on its first visit.
+- **Standalone app:** at startup, when every tree is created.
 - **Interactive mode:** only when it has no saved state.
 
 In interactive mode the app uses `shared.*` and its own view's params, and ignores the rest. There
@@ -132,7 +141,9 @@ returns the two trees or an error result and never throws. It returns an error w
   This check is needed even when `fromSnapshot` succeeds with type checking on. A snapshot whose
   `$modelType` names a different registered model loads as that other class:
   `fromSnapshot(TraceACaseState, …)` given Correlations state returns a `CorrelationsState`.
-  `typeCheck`, or an `instanceof` check, catches it;
+  `typeCheck`, or an `instanceof` check, catches it, and so does putting the tree in its slot
+  under `AppState`'s root, which throws a type error. This was reported as
+  [mobx-keystone #590](https://github.com/xaviergonz/mobx-keystone/issues/590);
 - has an unknown `$modelType`;
 - has a `version` other than the model's.
 

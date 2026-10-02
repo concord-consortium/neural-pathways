@@ -1,46 +1,55 @@
-import { getGlobalConfig, getRootStore, Model, model, ModelAutoTypeCheckingMode, tProp, types } from "mobx-keystone";
+import {
+  getGlobalConfig, getRootStore, Model, model, modelAction, ModelAutoTypeCheckingMode, runUnprotected, tProp, types,
+  undoMiddleware,
+} from "mobx-keystone";
 import { AppState } from "./app-state";
 import { VIEWS } from "../views";
 import { SharedState } from "../../core/state/shared-state";
 
-// Test-only model: the real view models arrive with their view stories.
+// Test-only models: the real view models arrive with their view stories.
 @model("test/AppStateCounter")
-class Counter extends Model({ count: tProp(types.number, 0) }) {}
+class Counter extends Model({ count: tProp(types.number, 0) }) {
+  @modelAction
+  increment() {
+    this.count++;
+  }
+}
+
+@model("test/AppStateOther")
+class Other extends Model({}) {}
 
 // A registry with two views sharing one model, like Correlations and Correlations Part 2, and a
 // view that keeps no state.
-const testViews: Record<string, { stateModel?: typeof Counter }> = {
-  "first": { stateModel: Counter },
-  "second": { stateModel: Counter },
-  "stateless": {},
-};
-const lookupTestView = (viewId: string) => testViews[viewId];
+const testViews = [
+  { id: "first", stateModel: Counter },
+  { id: "second", stateModel: Counter },
+  { id: "stateless" },
+];
 
 describe("AppState", () => {
   it("turns on type checking in every environment, production included", () => {
     expect(getGlobalConfig().modelAutoTypeChecking).toBe(ModelAutoTypeCheckingMode.AlwaysOn);
   });
 
-  it("creates the shared state as a root store", () => {
-    const appState = new AppState();
+  it("holds the shared state and every view's state under one root store", () => {
+    const appState = new AppState(testViews);
     expect(appState.shared).toBeInstanceOf(SharedState);
-    expect(getRootStore(appState.shared)).toBe(appState.shared);
+    expect(getRootStore(appState.shared)).toBe(appState.root);
+    expect(getRootStore(appState.getViewState("first")!)).toBe(appState.root);
   });
 
-  it("creates a view's state from its registry model on first use, as a root store", () => {
-    const state = new AppState(lookupTestView).getViewState("first");
-    expect(state).toBeInstanceOf(Counter);
-    expect(getRootStore(state!)).toBe(state);
+  it("creates each view's state from its registry model", () => {
+    expect(new AppState(testViews).getViewState("first")).toBeInstanceOf(Counter);
   });
 
   it("returns the same state on later calls, so switching views keeps it", () => {
-    const appState = new AppState(lookupTestView);
+    const appState = new AppState(testViews);
     const first = appState.getViewState("first");
     expect(appState.getViewState("first")).toBe(first);
   });
 
   it("gives two views that share a model separate states", () => {
-    const appState = new AppState(lookupTestView);
+    const appState = new AppState(testViews);
     const first = appState.getViewState("first");
     const second = appState.getViewState("second");
     expect(second).toBeInstanceOf(Counter);
@@ -48,15 +57,23 @@ describe("AppState", () => {
   });
 
   it("gives no view state to a view without a state model", () => {
-    expect(new AppState(lookupTestView).getViewState("stateless")).toBeUndefined();
+    expect(new AppState(testViews).getViewState("stateless")).toBeUndefined();
   });
 
-  it("gives every view the same shared state", () => {
-    const appState = new AppState(lookupTestView);
-    const shared = appState.shared;
-    appState.getViewState("first");
-    appState.getViewState("stateless");
-    expect(appState.shared).toBe(shared);
+  it("only lets a view's slot hold its own model", () => {
+    const appState = new AppState(testViews);
+    expect(() => runUnprotected(() => {
+      appState.root.views.first = new Other({});
+    })).toThrow();
+  });
+
+  it("lets one undo manager on the root record a change in any view", () => {
+    const appState = new AppState(testViews);
+    const undoManager = undoMiddleware(appState.root);
+    (appState.getViewState("second") as Counter).increment();
+    expect(undoManager.undoLevels).toBe(1);
+    undoManager.undo();
+    expect((appState.getViewState("second") as Counter).count).toBe(0);
   });
 
   it("resolves every registered view to a state of its model, or to none", () => {
