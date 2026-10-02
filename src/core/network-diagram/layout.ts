@@ -17,9 +17,9 @@ export interface NetworkLayout {
   radius: number;
   /** The baseline of the column captions. */
   captionY: number;
-  /** Each column's centre x. */
+  /** Each column's center x. */
   columnX: number[];
-  /** [column][row]: node centres, top to bottom. */
+  /** [column][row]: node centers, top to bottom. */
   nodes: Point[][];
   /** One per node in the last column, top to bottom. */
   pills: Box[];
@@ -27,7 +27,7 @@ export interface NetworkLayout {
 
 export const MIN_WIDTH = 380;
 export const MIN_HEIGHT = 300;
-/** The most space between neighbouring nodes. A taller panel centres the diagram, not stretches it. */
+/** The most space between neighboring nodes. A taller panel centers the diagram, not stretches it. */
 const STEP_MAX = 30;
 /** Room above the first node for the captions, and below the last. */
 const TOP = 44;
@@ -81,7 +81,7 @@ export function layoutNetwork(columnSizes: readonly number[], width: number, hei
   return { width: W, height: H, radius, captionY: 20 + yShift, columnX, nodes, pills };
 }
 
-/** n node centres, centred between top and bottom, at most maxStep apart. */
+/** n node centers, centered between top and bottom, at most maxStep apart. */
 function rowYs(n: number, top: number, bottom: number, maxStep: number): number[] {
   const middle = (top + bottom) / 2;
   if (n === 1) {
