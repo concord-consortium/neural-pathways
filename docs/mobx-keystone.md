@@ -77,4 +77,4 @@ open.
 
 Switching to MST later would mean rewriting a handful of small models and stripping `$modelType`
 from saved student state when it is loaded. The version fields, and the migration pass planned for
-when the saved shape first changes, don't depend on keystone.
+when the saved form first changes, don't depend on keystone.

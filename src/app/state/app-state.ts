@@ -40,8 +40,7 @@ function appStateModelFor(views: readonly ViewWithState[]) {
  * The student app's state: the shared tree and every view's tree, as children of one root, so a
  * student action that changes a view and the shared state can later be one undo step. Held for
  * the life of the page, so switching views in the standalone app keeps each view's state. The
- * root is never saved as a whole: in the Activity Player each interactive will save its view tree
- * and the shared tree. See docs/view-state.md.
+ * root is never saved as a whole. See docs/view-state.md.
  */
 export class AppState {
   readonly root: AppStateModel;

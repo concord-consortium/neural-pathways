@@ -12,7 +12,7 @@ and MobX 7.0.5, and by reading keystone's `undoMiddleware.ts`.
   begins, and the step is written when that action finishes. Actions called from inside it join
   the same step.
 - **A synchronous MobX `reaction` set off by an action joins that action's step,** even without a
-  group. In the test, a reaction on the query corrected the conversation, and one undo restored
+  group. In the script, a reaction on the query corrected the conversation, and one undo restored
   both. This depends on MobX running reactions before keystone closes the step. When undo is
   added, pin it with a test.
 - **A `@modelFlow` (keystone's async action) is one step for the whole flow.** Changes made by
@@ -23,7 +23,7 @@ and MobX 7.0.5, and by reading keystone's `undoMiddleware.ts`.
 - **`withoutUndo(fn)` is a synchronous flag.** Changes made while it is set are dropped: they are
   never recorded, so undo never reverses them.
 - **`undo()` and `redo()` apply their patches with recording off.** Reactions the patches set off
-  run afterwards and *are* recorded. A new step also clears the redo stack.
+  run afterward and *are* recorded. A new step also clears the redo stack.
 - **Attached state.** An undo manager can take `attachedState: { save, restore }`. It saves a
   value before and after each step and restores it on undo or redo. It is meant for state
   outside the model, such as a cursor position.
@@ -33,11 +33,11 @@ and MobX 7.0.5, and by reading keystone's `undoMiddleware.ts`.
 
 ## The conversation correction
 
-A view that shows a conversation calls `shared.ensureValidConversation(filteredIds)` when its
-filtered list changes. If the list no longer includes the current conversation, the first one is
-written back. The behavior we want from undo: after a student changes the query and the
-conversation is corrected as a result, one undo restores both the old query and the old
-conversation.
+In the target design (draft PR #29), a view that shows a conversation calls
+`shared.ensureValidConversation(filteredIds)` when its filtered list changes. If the list no
+longer includes the current conversation, the first one is written back. The behavior we want
+from undo: after a student changes the query and the conversation is corrected as a result, one
+undo restores both the old query and the old conversation.
 
 Starting from query unset and conversation `c2`, the student sets a narrower query that doesn't
 include `c2`:
@@ -72,15 +72,15 @@ However many times the student presses undo, nothing changes.
    - **Synchronous filtering:** `setQueryAndCorrect(query)` computes the filtered list itself and
      calls `ensureValidConversation`. The models get the filter engine through a keystone context.
    - **Asynchronous filtering, as a `@modelFlow`:** set the query, `yield* _await(...)` the
-     filter, then correct. A flow is one undo step, so undo restores both. The test found two
+     filter, then correct. A flow is one undo step, so undo restores both. The script found two
      catches:
      - **Undo order goes wrong.** The flow's step is written when the flow *finishes*. A
        change the student makes while filtering runs, such as the speed, lands before it in the
        undo history. The first undo then reverses the query instead of the more recent change.
      - **Overlapping flows corrupt the history.** When a second query starts before the first
        filter finishes, both flows record patches for `query`, and they finish in the opposite
-       order from how they started. After undoing twice, the test showed `query=narrow`; it should
-       have been back to no query at all.
+       order from how they started. After undoing twice, the script showed `query=narrow`; it
+       should have been back to no query at all.
 
      This would work only if query changes never overlap, for example with the filter bar
      disabled until filtering finishes.
@@ -98,7 +98,7 @@ However many times the student presses undo, nothing changes.
    timing. Never call it from inside an outer `action` or `runInAction`.
 3. **Skip recording the correction, and restore the conversation with attached state.** Record
    the correction with `withoutUndo`, and have attached state save and restore `conversationId`.
-   It worked in the test, but it bends a feature meant for state outside the model. It also
+   It worked in the script, but it bends a feature meant for state outside the model. It also
    needs every undo manager that can change the list to carry the same attached state.
 
 `withoutUndo` on its own is not an option: undoing the query leaves the corrected conversation
@@ -140,8 +140,8 @@ behind, and the student's original conversation is lost.
    a shared change made later in another.
 6. **Initial state shouldn't be undoable.** None of these should become undo steps:
    - corrections when a view first renders;
-   - loading saved interactive state (NPW-43);
-   - applying URL params (NPW-45);
+   - loading saved interactive state;
+   - applying URL params;
    - reading the previous interactive's shared state.
 
    Start the undo manager after loading, or call `clearUndo()` once the initial corrections have
@@ -160,7 +160,7 @@ behind, and the student's original conversation is lost.
    `commissioned` list. If it also clears the view's selected chips, it is another action that
    changes both trees (item 5).
 10. **Saved undo history.** If the undo store is saved with an interactive's state, its patches
-   are in the saved shape of the version they were recorded under. Migrations would then have to
+   are in the saved form of the version they were recorded under. Migrations would then have to
    migrate patches too. CLUE hit this: it had to keep a removed property so old history could
    replay. Undo also can't cross interactives in the Activity Player: each interactive has its own
    history, so a change made in an earlier interactive can't be undone from a later one.

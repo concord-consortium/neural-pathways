@@ -17,9 +17,8 @@ life of the page:
 - **Never saved whole:** the root is runtime only. What is saved is a view's tree and the shared
   tree, each as its own snapshot.
 
-`index.tsx` creates the `AppState` once, outside React, because its constructor registers a root
-store and StrictMode would run a `useState` initializer twice. In the Activity Player (AP), each
-interactive will save `{ view, shared }`: its own view tree and the shared tree (NPW-43).
+`index.tsx` creates the `AppState` once, outside React; its comment explains why. In the Activity
+Player (AP), each interactive will save `{ view, shared }`: its own view tree and the shared tree.
 
 ## How the state arrives
 
@@ -33,8 +32,9 @@ list that target and the story each piece is expected to arrive with.
 To give a view its state:
 
 1. Create its model in `src/core/state/`, with `version: 1` and a new `npw/<Name>State`
-   `$modelType`. Declare every saved field with `tProp`.
-2. Add a saved-shape fixture in `src/core/state/__fixtures__/` and a test that loads it and saves
+   `$modelType`. Declare every saved field with `tProp`. Import `./setup` first, as
+   `shared-state.ts` does.
+2. Add a saved-form fixture in `src/core/state/__fixtures__/` and a test that loads it and saves
    it back unchanged. Copy the pattern from `shared-state.test.ts`.
 3. Set `stateModel` on the view's entry in `VIEWS` (`src/app/views.ts`).
 4. In the view, read the state with `useViewState(Model)`, and the shared state with
@@ -54,8 +54,8 @@ It has only its `version` so far. The planned fields:
 
 | Field | Meaning | Arrives with |
 |---|---|---|
-| `conversationId` | The current conversation, in every view that shows one. Also pane 1 of Investigate Unknown Pathway. | Trace a Case (NPW-32) |
-| `query` | The filter query every view uses. Unset: no query has been set. `""`: the student cleared it. | The filter (NPW-35) |
+| `conversationId` | The current conversation, in every view that shows one. Also pane 1 of Investigate Unknown Pathway. | Trace a Case |
+| `query` | The filter query every view uses. Unset: no query has been set. `""`: the student cleared it. | The filter |
 | `commissioned` | Attribute keys the student commissioned in Investigate Unknown Pathway, in order, at most 2. Correlations Part 2 reads them. | Investigate Unknown Pathway |
 
 ## Each view's state
@@ -72,8 +72,8 @@ None is in place yet. The target:
 | Investigate Unknown Pathway | `npw/InvestigateUnknownPathwayState` | The chips selected on each pane; pane 2's conversation |
 | Correlations Part 2 | `npw/CorrelationsState` | The same as Correlations, in its own tree |
 
-The three views with an Animate toggle share the `animate` and `speed` props and an `Animated`
-interface, so one set of controls can drive any of them.
+In the target, the three views with an Animate toggle share the `animate` and `speed` props and
+an `Animated` interface, so one set of controls can drive any of them.
 
 ## Deliberately not kept
 
@@ -102,21 +102,24 @@ the stages it has completed, but not one in progress.
   URL param loader needs.
 - **No snapshot processors that change the shape.** The saved form is exactly the keystone
   snapshot, so recorded patches match what is stored.
-- **Type checking is on everywhere, production included.** `src/app/state/app-state.ts` sets
-  `modelAutoTypeChecking` to `AlwaysOn`. Every load and write is checked against the types,
-  including values inside arrays, records and objects, and refinements such as "a step from 0 to
-  4". A bad value throws where it is written, so it never reaches saved student state. The
-  trees are small, so the cost is negligible.
+- **Type checking is on everywhere, production included.** `src/core/state/setup.ts` sets
+  `modelAutoTypeChecking` to `AlwaysOn`, and every model file imports it, so any code that uses the
+  models gets it. Every load and write is checked against the types, including values inside
+  arrays, records and objects, and refinements such as "a step from 0 to 4". A bad value throws
+  where it is written, so it never reaches saved student state. The trees are small, so the cost
+  is negligible.
 
-  Keystone's default, `DevModeOnly`, skips most of these checks in production, and they would load
-  bad data silently: `commissioned: [5]`, `stepsByConversation: { "…": "3" }`, or `pane2: {}`
-  (which loads without `selectedAttributes`, so the first change to it crashes). Code that uses
-  these models outside the student app must turn the setting on itself.
+  Keystone's default, `DevModeOnly`, would turn these checks off in every browser build, the dev
+  server included, not only in production. keystone decides it is in dev mode with
+  `typeof process !== "undefined"`, and webpack 5 doesn't define `process` in browser bundles.
+  With the checks off, bad data loads silently: `commissioned: [5]`,
+  `stepsByConversation: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`, so
+  the first change to it crashes).
 
 ## Where initial state comes from
 
-This is not built yet. The URL params are NPW-45, and AP save/load and the previous interactive
-are NPW-43. For each field, highest first:
+This is not built yet: neither the URL param loader nor AP save/load, which brings the previous
+interactive's shared tree. For each field, highest first:
 
 1. **This interactive's saved state.** If it exists, that tree is used whole.
 2. **A URL param** for the field.
@@ -158,5 +161,5 @@ Keystone behaves in three more ways the loader has to allow for:
   on load.
 
 That version check is where a migration pass would go. Simply starting fresh after an error
-would overwrite the student's unreadable work on the first save, so NPW-43 has to decide what an
-interactive does instead.
+would overwrite the student's unreadable work on the first save, so AP save/load has to decide
+what an interactive does instead.
