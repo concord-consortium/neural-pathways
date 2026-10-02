@@ -65,7 +65,7 @@ describe("layoutNetwork", () => {
     expect(layout.height).toBe(MIN_HEIGHT);
   });
 
-  it("spaces nodes 30 apart at most and centres the diagram in a tall space", () => {
+  it("spaces nodes 30 apart at most and centers the diagram in a tall space", () => {
     const layout = layoutNetwork(SIZES, 537, 1000);
     const first = layout.nodes[0];
     expect(first[1].y - first[0].y).toBeCloseTo(30);

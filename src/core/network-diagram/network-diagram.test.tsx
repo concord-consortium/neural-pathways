@@ -55,7 +55,7 @@ describe("NetworkDiagram", () => {
     expect(screen.getAllByTestId(/^edge-far-/)).toHaveLength(140);
   });
 
-  it("colours and bands the near half by activation and the far half by activation × weight", () => {
+  it("colors and bands the near half by activation and the far half by activation × weight", () => {
     renderDiagram(fullScene(SIZES));
     const activation = waitPass.layers[1][2];
     const contribution = activation * toyNetwork.layers[2].weights[3][2];
@@ -67,7 +67,7 @@ describe("NetworkDiagram", () => {
     expect(far).toHaveAttribute("stroke-width", String(magnitudeBand(contribution, scales.edgeThresholds[1]) + 1));
   });
 
-  it("uses both colours across a full scene", () => {
+  it("uses both colors across a full scene", () => {
     renderDiagram(fullScene(SIZES));
     const strokes = screen.getAllByTestId(/^edge-/).map(edge => edge.getAttribute("stroke"));
     expect(strokes).toContain(POSITIVE_COLOR);
@@ -97,7 +97,7 @@ describe("NetworkDiagram", () => {
     expect(numberAttr("edge-near-0-3-5", "stroke-dashoffset")).toBeCloseTo(half / 2);
   });
 
-  it("fills each gauge from the centre by the node's value", () => {
+  it("fills each gauge from the center by the node's value", () => {
     renderDiagram(fullScene(SIZES));
     const negative = waitPass.layers[1][0];
     const positive = waitPass.layers[1][1];

@@ -192,7 +192,7 @@ interface StaticLayerProps {
   lastColumn: number;
 }
 
-/** The grey scaffold. Drawn signal halves lie on top and cover it. */
+/** The gray scaffold. Drawn signal halves lie on top and cover it. */
 const Wires = React.memo(function Wires({ layout, lastColumn }: StaticLayerProps) {
   const { nodes, radius } = layout;
   const lines: React.ReactElement[] = [];

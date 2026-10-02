@@ -27,7 +27,7 @@ function uniformScene(columnSizes: readonly number[], value: 0 | 1): Scene {
   };
 }
 
-/** Nothing drawn: grey wires and empty nodes. */
+/** Nothing drawn: gray wires and empty nodes. */
 export function emptyScene(columnSizes: readonly number[]): Scene {
   return uniformScene(columnSizes, 0);
 }
