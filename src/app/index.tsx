@@ -8,7 +8,8 @@ import "./index.scss";
 const container = document.getElementById("app");
 if (container) {
   // One AppState for the life of the page. It is created here, outside React, because its
-  // constructor registers a root store and StrictMode runs a useState initializer twice.
+  // constructor registers a root store, and StrictMode runs a useState initializer twice, which
+  // would leave a second, unused AppState registered.
   const appState = new AppState();
   const root = createRoot(container);
   // In development StrictMode runs effects twice, which exposes missing cleanup before views add

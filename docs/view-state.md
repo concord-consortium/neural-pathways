@@ -17,9 +17,8 @@ life of the page:
 - **Never saved whole:** the root is runtime only. What is saved is a view's tree and the shared
   tree, each as its own snapshot.
 
-`index.tsx` creates the `AppState` once, outside React, because its constructor registers a root
-store and StrictMode would run a `useState` initializer twice. In the Activity Player (AP), each
-interactive will save `{ view, shared }`: its own view tree and the shared tree (NPW-43).
+`index.tsx` creates the `AppState` once, outside React; its comment explains why. In the Activity
+Player (AP), each interactive will save `{ view, shared }`: its own view tree and the shared tree.
 
 ## Shared state (`npw/SharedState`)
 
@@ -55,16 +54,16 @@ the stages it has completed, but not one in progress.
 - **Store ids, not positions.** Conversations are stored by id and attributes by key. A position
   in a filtered list changes whenever the query changes. Pathway and neuron numbers are fixed by
   the network, so they are stored as numbers.
-- **Keep the conversation valid.** A view that shows a conversation calls
+- **Keep the conversation valid.** A view that shows a conversation is to call
   `shared.ensureValidConversation(filteredIds)` when it first renders and whenever its filtered
   list changes. If the saved conversation isn't in the list, the first one is written back, so
-  the next view opens on the same case. Pane 2 of Investigate Unknown Pathway calls
+  the next view opens on the same case. Pane 2 of Investigate Unknown Pathway is to call
   `ensureValidPane2Conversation(filteredIds, shared.conversationId)`, which falls back to the
   first conversation pane 1 isn't showing, so the panes open on different cases. An empty list
   leaves the id alone.
 - **`$modelType` names are permanent.** They are stored in saved student data, like view ids.
   Renaming one needs a migration.
-- **Every tree has `version: 1`.** There are no migrations yet. When the saved shape changes,
+- **Every tree has `version: 1`.** There are no migrations yet. When the saved form changes,
   raise the version and add a migration pass that runs on the JSON before it is loaded.
 - **Every saved field is a `tProp`,** so it is type-checked and carries the runtime type info the
   URL param loader needs.
@@ -76,15 +75,18 @@ the stages it has completed, but not one in progress.
   4". A bad value throws where it is written, so it never reaches saved student state. The
   trees are small, so the cost is negligible.
 
-  Keystone's default, `DevModeOnly`, skips most of these checks in production, and they
-  would load bad data silently: `commissioned: [5]`, `stepsByConversation: { "…": "3" }`, or
-  `pane2: {}` (which loads without `selectedAttributes`, so `toggleAttribute` then crashes). Code
-  that uses these models outside the student app must turn the setting on itself.
+  Keystone's default, `DevModeOnly`, would turn these checks off in every browser build, the dev
+  server included, not only in production. keystone decides it is in dev mode with
+  `typeof process !== "undefined"`, and webpack 5 doesn't define `process` in browser bundles.
+  With the checks off, bad data loads silently: `commissioned: [5]`,
+  `stepsByConversation: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`,
+  so `toggleAttribute` then crashes). Code that uses these models outside the student app must
+  turn the setting on itself.
 
 ## Where initial state comes from
 
-This is not built yet. The URL params are NPW-45, and AP save/load and the previous interactive
-are NPW-43. For each field, highest first:
+This is not built yet: neither the URL param loader nor AP save/load, which brings the previous
+interactive's shared tree. For each field, highest first:
 
 1. **This interactive's saved state.** If it exists, that tree is used whole.
 2. **A URL param** for the field.
@@ -126,5 +128,5 @@ Keystone behaves in three more ways the loader has to allow for:
   loads.
 
 That version check is where a migration pass would go. Simply starting fresh after an error
-would overwrite the student's unreadable work on the first save, so NPW-43 has to decide what an
-interactive does instead.
+would overwrite the student's unreadable work on the first save, so AP save/load has to decide
+what an interactive does instead.

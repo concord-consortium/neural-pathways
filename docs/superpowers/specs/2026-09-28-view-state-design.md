@@ -6,7 +6,6 @@ Decide what state each lesson view keeps, before the view stories are built. The
 can then use it without reshaping it. Add the types and a small store for that state.
 
 Jira: [NPW-30](https://concord-consortium.atlassian.net/browse/NPW-30). It blocks
-[NPW-31](https://concord-consortium.atlassian.net/browse/NPW-31) (temporary state controls),
 [NPW-43](https://concord-consortium.atlassian.net/browse/NPW-43) (sharing state between
 interactives in the AP) and [NPW-45](https://concord-consortium.atlassian.net/browse/NPW-45)
 (setting initial state from URL params).
@@ -25,7 +24,7 @@ state in five ways:
 After this work:
 
 - `src/core/state/` holds a mobx-keystone model for the shared state and one for each view's
-  state, with unit tests and saved-shape fixtures.
+  state, with unit tests and saved-form fixtures.
 - The student app holds one state tree per view plus the shared tree, as children of one
   runtime-only root. Switching views keeps each view's state.
 - Views get their state through React context.
@@ -45,7 +44,7 @@ After this work:
 
 | Decision | Choice | Why |
 |---|---|---|
-| State library | **mobx-keystone** 2.2 on MobX 7 | Class models; snapshots, patches, action recording and built-in undo; runtime type checking on load. The comparison with MST and plain MobX is written up in the `ideas` repo (`mobx-keystone-for-serialized-state.md`). |
+| State library | **mobx-keystone** 2.2 on MobX 7 | Class models; snapshots, patches, action recording and built-in undo; runtime type checking on load. Why keystone rather than MST, and its costs, are in `docs/mobx-keystone.md`. |
 | Trees | **Separate trees in both modes:** one per view, plus one shared, as children of one runtime-only root | Matches the AP, where each interactive saves its own state. Save and load work the same way in the standalone app and in the AP. One root lets an action that changes a view's tree and the shared tree be one undo step. |
 | Query and conversation | **Shared** | Moving between views keeps the student on the same filter and the same case. The one exception is Investigate Unknown Pathway's second pane, which keeps its own conversation. |
 | Default queries | **None in code** | Keeps the views free of lesson content. An author who wants a starting query sets it in the interactive's URL (NPW-45). |
@@ -104,9 +103,9 @@ Specific actions beyond the setters:
 - `ensureValidPane2Conversation(filteredIds, pane1ConversationId)`. It behaves like
   `ensureValidConversation`, but falls back to the first conversation that pane 1 isn't showing,
   or to `filteredIds[0]` when that is the only one. The two panes then open on different
-  conversations, as in the prototype, wherever pane 1's conversation sits in the list. (Amended
-  after review. The first version always fell back to `filteredIds[1]`, which put both panes on
-  the same case whenever pane 1 was showing the second one.)
+  conversations, as in the prototype, wherever pane 1's conversation sits in the list. Always
+  falling back to `filteredIds[1]` would put both panes on the same case whenever pane 1 shows
+  the second one.
 
 ### Not kept
 
@@ -134,7 +133,7 @@ An interactive's saved AP state will be `{ view: <view snapshot>, shared: <share
   "$modelType": "npw/TraceACaseState" }
 ```
 
-No model uses a `toSnapshotProcessor` that changes the saved shape. The saved form is exactly the
+No model uses a `toSnapshotProcessor` that changes the saved form. The saved form is exactly the
 keystone snapshot, so recorded patches, and undo history if we add it, match what is stored.
 
 ## Architecture
@@ -145,7 +144,7 @@ src/core/state/
   trace-a-case-state.ts              one file per view model (six files)
   …
   view-state-context.tsx             context + hooks views use
-  *.test.ts, __fixtures__/*.json     unit tests and saved-shape fixtures
+  *.test.ts, __fixtures__/*.json     unit tests and saved-form fixtures
 src/app/state/
   app-state.ts                       holder: shared tree + view trees keyed by view id
   app-state.test.ts
@@ -166,16 +165,15 @@ model, which is never saved itself:
 - One root means a student action that changes a view's tree and the shared tree can be one undo
   step under a single keystone undo manager. Saving is unaffected: an interactive saves its view
   tree and the shared tree as separate snapshots.
-- Both modes use the holder. `index.tsx` creates one for the page, outside React, and passes it
-  to `App`: its constructor registers a root store, and StrictMode would run a `useState`
-  initializer twice. The standalone app reuses it as views switch; interactive mode asks it for
-  its single view. In NPW-43, interactive mode will fill it from saved interactive state instead.
+- Both modes use the holder. `index.tsx` creates one for the page, outside React (its comment
+  says why), and passes it to `App`. The standalone app reuses it as views switch; interactive
+  mode asks it for its single view. In NPW-43, interactive mode will fill it from saved interactive state instead.
 
 **Context.** `view-state-context.tsx` in `core` exports a provider and two hooks:
 
 - `useSharedState()` returns the shared tree.
 - `useViewState(Model)` takes the expected model class, checks the tree with `instanceof`, and
-  returns it with the right type. A view asking for the wrong model fails loudly in development.
+  returns it with the right type. A view asking for the wrong model throws.
 
 `ViewContent` in `src/app/` wraps each view component in the provider, passing the trees from
 the holder. Views import only from `core`, and `app` supplies the values, so the import boundary
@@ -215,10 +213,9 @@ an error. Simply starting fresh would overwrite the student's unreadable work on
 - The standalone app keeps state in memory only. A reload is a fresh start, as in the prototype.
 - Keystone type-checks every load and write in every environment. `app-state.ts` sets
   `modelAutoTypeChecking` to `AlwaysOn`, so a view that sets a wrong-typed value throws, in
-  production too. (Amended after review. The first version relied on keystone's default, which
-  checks only in development.)
-- `useViewState` with the wrong model class throws, with a message naming the view id and both
-  classes.
+  production too. keystone's default would check nothing in a browser build.
+- `useViewState` with the wrong model class throws, with a message naming the view id, the
+  tree's `$modelType` and the requested class.
 
 ## Testing
 
@@ -228,7 +225,7 @@ Unit tests (Jest), in `src/core/state/` and `src/app/state/`:
   - A fresh instance has the documented defaults.
   - `fromSnapshot(getSnapshot(x))` round-trips.
   - A snapshot with a wrong-typed field is rejected on load.
-- **Saved-shape fixtures:** one JSON file per model in its version 1 form, committed to
+- **Saved-form fixtures:** one JSON file per model in its version 1 form, committed to
   `__fixtures__/`. Each test loads the fixture and checks that `getSnapshot` gives back the same
   JSON. This is persisted student data, so the fixtures catch accidental changes to its shape.
 - **`SharedState`:**
@@ -251,12 +248,12 @@ Unit tests (Jest), in `src/core/state/` and `src/app/state/`:
 - **Context:** a test component that uses `useViewState` and `useSharedState` gets the trees
   from the provider. `useViewState` throws when asked for the wrong model class.
 
-No Playwright changes: nothing visible changes. NPW-31 adds the temporary controls and a
-Playwright test that state survives switching views.
+No Playwright changes: nothing visible changes. The Playwright check that state survives
+switching views comes with NPW-32.
 
 ## Docs
 
-- **`docs/view-state.md`**, the reference doc the ticket asks for:
+- **`docs/view-state.md`**, the reference doc:
   - for each view, what it keeps, what it shares, and what is deliberately not kept;
   - the conversation-validity rule;
   - the version fields and the permanent `$modelType` names;
@@ -272,7 +269,7 @@ Playwright test that state survives switching views.
 - AP save/load, the previous interactive's shared state, and `loadInteractiveState` (NPW-43).
 - Migrations, which are deferred. The version fields are the hook for them.
 - Undo/redo.
-- UI bound to the state (NPW-31, then each view's story).
+- UI bound to the state, which comes with each view's story.
 - Persisting the standalone app's state across reloads.
 
 ## Risks

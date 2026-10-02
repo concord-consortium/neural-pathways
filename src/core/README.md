@@ -30,7 +30,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `datasets/dataset-definition.ts`: what a dataset is, and attribute-key validation.
 - `datasets/alien3-dataset.ts`: the lesson's dataset, `alien3Dataset`.
 - `state/`: the mobx-keystone models for the shared state and each view's state, and the context
-  views use to reach them. What each view keeps, and the rules for changing a saved shape, are in
+  views use to reach them. What each view keeps, and the rules for changing a saved form, are in
   `docs/view-state.md`.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and
