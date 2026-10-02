@@ -5,7 +5,12 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const os = require('os');
+
+// Keep class names when minifying, so `SomeClass.name` still reads "SomeClass" in production,
+// as in error messages. src/test/minify.test.ts checks these options.
+const terserOptions = { keep_classnames: true };
 
 // DEPLOY_PATH is set by the s3-deploy-action its value will be:
 // `branch/[branch-name]/` or `version/[tag-name]/`
@@ -52,6 +57,9 @@ module.exports = (env, argv) => {
       filename: 'assets/[name].[contenthash].js',
     },
     performance: { hints: false },
+    optimization: {
+      minimizer: [new TerserPlugin({ terserOptions })],
+    },
     module: {
       rules: [
         {
@@ -191,3 +199,5 @@ module.exports = (env, argv) => {
     ]
   };
 };
+
+module.exports.terserOptions = terserOptions;
