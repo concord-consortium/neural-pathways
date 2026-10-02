@@ -1,5 +1,5 @@
 /**
- * Colours for signed values: orange positive, blue negative. They are the darkest steps of the
+ * Colors for signed values: orange positive, blue negative. They are the darkest steps of the
  * prototype's FILL_POS and FILL_NEG ramps. The full ramps will come when something shades by
  * level. colors.scss holds the same values for stylesheets.
  */

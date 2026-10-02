@@ -1,6 +1,6 @@
 @use "./colors" as colors;
 
-// A lesson panel: a white card with a grey header strip, from the demo prototype's .nnm-panel.
+// A lesson panel: a white card with a gray header strip, from the demo prototype's .nnm-panel.
 @mixin panel {
   background: #fff;
   border: 1px solid colors.$rule;
