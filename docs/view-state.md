@@ -50,11 +50,11 @@ throws.
 
 ## Shared state (`npw/SharedState`)
 
-It has only its `version` so far. The planned fields:
+It has `version` and `conversationId` so far. Its fields:
 
 | Field | Meaning | Arrives with |
 |---|---|---|
-| `conversationId` | The current conversation, in every view that shows one. Also pane 1 of Investigate Unknown Pathway. | Trace a Case |
+| `conversationId` | The current conversation, in every view that shows one. Also pane 1 of Investigate Unknown Pathway. A view that shows one calls `ensureValidConversation` when its list arrives or changes. | In place |
 | `query` | The filter query every view uses. Unset: no query has been set. `""`: the student cleared it. | The filter |
 | `commissioned` | Attribute keys the student commissioned in Investigate Unknown Pathway, in order, at most 2. Correlations Part 2 reads them. | Investigate Unknown Pathway |
 

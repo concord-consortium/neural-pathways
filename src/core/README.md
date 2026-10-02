@@ -32,6 +32,12 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `state/`: the mobx-keystone models for the shared state and each view's state, and the context
   views use to reach them. What each view keeps, and the rules for changing a saved form, are in
   `docs/view-state.md`.
+- `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
+  it between views.
+- `conversation-card/`: the minimal conversation card. The full card will build on it.
+- `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
+  words. Items are plain data, so these are functions that take the text.
+- `colors.ts`, `colors.scss`, `panel.scss`: the lesson's colors and the panel look.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and
 files that use this code (the explorer's search, Codings dialog, regression panel and item panel,

@@ -1,0 +1,28 @@
+// The lesson's colors, from the demo prototype's tokens. Keep $positive and $negative in step
+// with colors.ts.
+
+// Signed values.
+$positive: #A84A2C;
+$negative: #1F4E8F;
+
+// The two classes. The text shades are darker so they pass contrast on white and on the soft fill.
+$approach: #D9722E;
+$approach-soft: #FAE6D6;
+$approach-text: #A15522;
+$wait: #3A72BE;
+$wait-soft: #DCE7F7;
+$wait-text: #3568AD;
+
+// Ink, rules and surfaces.
+$ink: #1E242C;
+$ink-2: #58616F;
+$ink-3: #6A727C;
+$rule: #CCD3DD;
+$rule-soft: #E4E9F0;
+$surface: #F4F6FA;
+
+// The network diagram's neutrals.
+$wire: #909090;
+$node-outline: #6E7580;
+
+$mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
