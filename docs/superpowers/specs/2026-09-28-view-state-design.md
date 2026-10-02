@@ -26,8 +26,8 @@ After this work:
 
 - `src/core/state/` holds a mobx-keystone model for the shared state and one for each view's
   state, with unit tests and saved-shape fixtures.
-- The student app holds one state tree per view plus the shared tree. Switching views keeps each
-  view's state.
+- The student app holds one state tree per view plus the shared tree, as children of one
+  runtime-only root. Switching views keeps each view's state.
 - Views get their state through React context.
 - `docs/view-state.md` documents what each view keeps. It also records the load precedence and
   URL param format that NPW-43 and NPW-45 will implement.
@@ -38,7 +38,7 @@ After this work:
 |---|---|
 | **View state** | The state one view keeps. In the AP it becomes that interactive's saved state. |
 | **Shared state** | The state every view reads and writes: the query, the current conversation, the commissioned codings. |
-| **Tree** | One mobx-keystone root. Each view's state is a tree, and the shared state is another tree. |
+| **Tree** | One saved piece of state. Each view's state is a tree, and the shared state is another tree. In the app they are children of one runtime-only root. |
 | **Snapshot** | The JSON form of a tree, from `getSnapshot`. It is what gets saved. |
 
 ## Decisions
@@ -46,7 +46,7 @@ After this work:
 | Decision | Choice | Why |
 |---|---|---|
 | State library | **mobx-keystone** 2.2 on MobX 7 | Class models; snapshots, patches, action recording and built-in undo; runtime type checking on load. The comparison with MST and plain MobX is written up in the `ideas` repo (`mobx-keystone-for-serialized-state.md`). |
-| Trees | **Separate trees in both modes:** one per view, plus one shared | Matches the AP, where each interactive saves its own state. Save and load work the same way in the standalone app and in the AP. |
+| Trees | **Separate trees in both modes:** one per view, plus one shared, as children of one runtime-only root | Matches the AP, where each interactive saves its own state. Save and load work the same way in the standalone app and in the AP. One root lets an action that changes a view's tree and the shared tree be one undo step. |
 | Query and conversation | **Shared** | Moving between views keeps the student on the same filter and the same case. The one exception is Investigate Unknown Pathway's second pane, which keeps its own conversation. |
 | Default queries | **None in code** | Keeps the views free of lesson content. An author who wants a starting query sets it in the interactive's URL (NPW-45). |
 | Showing a conversation | **Write the first matching one back if the saved id doesn't match the filter** | The next interactive opens on the same case. |
@@ -155,13 +155,17 @@ src/app/state/
 `stateModel` field holding the view's model class. Adding a view without a state model is then a
 type error.
 
-**The holder** (`AppState`, in `src/app/state/`) is a plain class that is never serialized
-itself:
+**The holder** (`AppState`, in `src/app/state/`) is a plain class around a runtime-only root
+model, which is never saved itself:
 
-- It creates the shared tree at construction.
-- `getViewState(viewId)` creates that view's tree on first use, from type defaults, and returns
-  the same instance after that.
-- Each tree is registered as a root store (`registerRootStore`).
+- At construction it creates the root, holding the shared tree and a tree for every view, from
+  type defaults. The root is registered as the one root store (`registerRootStore`).
+- The root's `views` type is built from `VIEWS`, with one typed prop per view id, so each id can
+  hold only a tree of its own model. Adding a view model needs no other change.
+- `getViewState(viewId)` returns that view's tree, the same instance every time.
+- One root means a student action that changes a view's tree and the shared tree can be one undo
+  step under a single keystone undo manager. Saving is unaffected: an interactive saves its view
+  tree and the shared tree as separate snapshots.
 - Both modes use the holder. `index.tsx` creates one for the page, outside React, and passes it
   to `App`: its constructor registers a root store, and StrictMode would run a `useState`
   initializer twice. The standalone app reuses it as views switch; interactive mode asks it for
@@ -195,7 +199,7 @@ URL param names start with the tree id, which is the view id, and use dots for n
 `investigate-unknown-pathway.pane2.conversationId=…`. The params apply only when a tree is
 first created:
 
-- **Standalone app:** the shared tree at startup, and each view's tree on its first visit.
+- **Standalone app:** at startup, when every tree is created.
 - **Interactive mode:** only when it has no saved state.
 
 In interactive mode the app uses `shared.*` and its own view's params, and ignores the rest.
@@ -238,9 +242,11 @@ Unit tests (Jest), in `src/core/state/` and `src/app/state/`:
   - `ensureValidPane2Conversation` falls back to the first conversation pane 1 isn't showing, or
     to the only one.
 - **`AppState`:**
-  - The first `getViewState` creates a tree of the view's model type.
-  - A second call returns the same instance.
-  - Every `VIEWS` entry resolves to a tree.
+  - The shared tree and every view's tree are under one root store.
+  - Each view's tree is of the view's model type, and a later call returns the same instance.
+  - Commissioning a coding and selecting its chip, grouped, undo as one step.
+  - Saved trees load into their slots, and another view's tree is rejected from a view's slot.
+  - Change patches name the tree they changed.
   - The shared tree is the same instance across views.
 - **Context:** a test component that uses `useViewState` and `useSharedState` gets the trees
   from the provider. `useViewState` throws when asked for the wrong model class.

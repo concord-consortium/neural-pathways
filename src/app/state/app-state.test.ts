@@ -1,25 +1,30 @@
-import { getGlobalConfig, getRootStore, ModelAutoTypeCheckingMode } from "mobx-keystone";
+import {
+  fromSnapshot, getGlobalConfig, getRootStore, ModelAutoTypeCheckingMode, onPatches, Patch, runUnprotected,
+  undoMiddleware,
+} from "mobx-keystone";
 import { AppState } from "./app-state";
 import { VIEWS } from "../views";
 import { SharedState } from "../../core/state/shared-state";
 import { TraceACaseState } from "../../core/state/trace-a-case-state";
 import { CorrelationsState } from "../../core/state/correlations-state";
+import { InvestigateUnknownPathwayState } from "../../core/state/investigate-unknown-pathway-state";
+import { savedJson } from "../../core/state/test-helpers";
+import traceFixture from "../../core/state/__fixtures__/trace-a-case-state.v1.json";
+import correlationsFixture from "../../core/state/__fixtures__/correlations-state.v1.json";
+import sharedFixture from "../../core/state/__fixtures__/shared-state.v1.json";
 
 describe("AppState", () => {
   it("turns on type checking in every environment, production included", () => {
     expect(getGlobalConfig().modelAutoTypeChecking).toBe(ModelAutoTypeCheckingMode.AlwaysOn);
   });
 
-  it("creates the shared state as a root store", () => {
+  it("holds the shared state and every view's state under one root store", () => {
     const appState = new AppState();
     expect(appState.shared).toBeInstanceOf(SharedState);
-    expect(getRootStore(appState.shared)).toBe(appState.shared);
-  });
-
-  it("creates a view's state from its registry model on first use", () => {
-    const state = new AppState().getViewState("trace-a-case");
-    expect(state).toBeInstanceOf(TraceACaseState);
-    expect(getRootStore(state)).toBe(state);
+    expect(getRootStore(appState.shared)).toBe(appState.root);
+    for (const view of VIEWS) {
+      expect(getRootStore(appState.getViewState(view.id))).toBe(appState.root);
+    }
   });
 
   it("returns the same state on later calls, so switching views keeps it", () => {
@@ -59,5 +64,57 @@ describe("AppState", () => {
 
   it("throws for an unknown view id", () => {
     expect(() => new AppState().getViewState("nope")).toThrow(`Unknown view "nope"`);
+  });
+
+  it("undoes a change to a view and the shared state as one step", () => {
+    const appState = new AppState();
+    const iup = appState.getViewState("investigate-unknown-pathway") as InvestigateUnknownPathwayState;
+    const undoManager = undoMiddleware(appState.root);
+    // Commissioning a coding and selecting its chip, as one student action
+    undoManager.withGroup(() => {
+      appState.shared.commission("age");
+      iup.toggleAttribute(1, "age");
+    });
+    expect(undoManager.undoLevels).toBe(1);
+    undoManager.undo();
+    expect(appState.shared.commissioned).toEqual([]);
+    expect(iup.pane1.selectedAttributes).toEqual([]);
+  });
+
+  it("saves a view's tree and the shared tree in their saved forms", () => {
+    const appState = new AppState();
+    expect(savedJson(appState.getViewState("trace-a-case"))).toEqual(savedJson(new TraceACaseState({})));
+    expect(savedJson(appState.shared)).toEqual(savedJson(new SharedState({})));
+  });
+
+  it("reports each change with a path that names its tree", () => {
+    const appState = new AppState();
+    const paths: Patch["path"][] = [];
+    onPatches(appState.root, patches => paths.push(...patches.map(patch => patch.path)));
+    (appState.getViewState("trace-a-case") as TraceACaseState).setSpeed(0);
+    appState.shared.setQuery("x");
+    expect(paths).toEqual([["views", "trace-a-case", "speed"], ["shared", "query"]]);
+  });
+
+  it("accepts saved trees loaded into their slots", () => {
+    const appState = new AppState();
+    const loaded = fromSnapshot(TraceACaseState, traceFixture as any);
+    runUnprotected(() => {
+      appState.root.views["trace-a-case"] = loaded;
+      appState.root.shared = fromSnapshot(SharedState, sharedFixture as any);
+    });
+    expect(appState.getViewState("trace-a-case")).toBe(loaded);
+    expect(getRootStore(loaded)).toBe(appState.root);
+    expect(savedJson(appState.shared)).toEqual(sharedFixture);
+  });
+
+  it("rejects another view's saved tree in a view's slot", () => {
+    const appState = new AppState();
+    // fromSnapshot goes by the snapshot's $modelType, so this returns a CorrelationsState
+    const wrong = fromSnapshot(TraceACaseState, correlationsFixture as any);
+    expect(wrong).toBeInstanceOf(CorrelationsState);
+    expect(() => runUnprotected(() => {
+      appState.root.views["trace-a-case"] = wrong;
+    })).toThrow();
   });
 });

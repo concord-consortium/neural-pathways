@@ -27,8 +27,9 @@ and MobX 7.0.5, and by reading keystone's `undoMiddleware.ts`.
 - **Attached state.** An undo manager can take `attachedState: { save, restore }`. It saves a
   value before and after each step and restores it on undo or redo. It is meant for state
   outside the model, such as a cursor position.
-- **One manager covers one tree.** `undoMiddleware(root)` records only changes under `root`, and a
-  group belongs to one manager.
+- **One manager covers one subtree.** `undoMiddleware(subtreeRoot)` records only changes under
+  that node, and a group belongs to one manager. The app's state has one root, with every view's
+  tree and the shared tree as children, so one manager on it covers all of them.
 
 ## The conversation correction
 
@@ -121,18 +122,21 @@ behind, and the student's original conversation is lost.
 4. **Typing in the filter bar.** If every keystroke sets the query, every keystroke is an undo
    step and starts a filter. Decide when a typed query counts as set, for example on Enter, on
    blur or after a pause, so that one undo reverses one query.
-5. **Separate trees versus one undo history.** Each view's state and the shared state are
-   separate roots, and a keystone undo manager covers one root. A student action that changes
-   both trees can't be one undo step unless we choose one of these:
-   - one undo manager over a common root, which would change the tree design;
-   - coordinated managers that are always undone together;
-   - our own undo built on `onPatches` across all the roots.
-
-   Examples of actions that change both trees:
+5. **One undo history across the trees.** Some student actions change both a view's tree and the
+   shared tree:
    - stepping a conversation after navigating to it;
    - commissioning a coding (shared) and selecting its chip (view).
 
-   Decide this before building undo.
+   Each must be one undo step. The trees are children of one runtime-only root in `AppState`, so
+   one undo manager on that root records both changes in a single step, as long as they run in
+   one action or one `withGroup`. `app-state.test.ts` checks this with commissioning a coding and
+   selecting its chip.
+
+   In the standalone app this makes undo one history across all views: an undo in one view can
+   reverse an earlier change made in another. In the Activity Player each interactive has one
+   view, so the history covers only that view and the shared tree. Separate per-view histories
+   would be worse, because every view writes to the shared tree: undoing in one view could revert
+   a shared change made later in another.
 6. **Initial state shouldn't be undoable.** None of these should become undo steps:
    - corrections when a view first renders;
    - loading saved interactive state (NPW-43);
@@ -140,7 +144,8 @@ behind, and the student's original conversation is lost.
    - reading the previous interactive's shared state.
 
    Start the undo manager after loading, or call `clearUndo()` once the initial corrections have
-   run.
+   run. Under the one root, loading a saved tree replaces a child of the root, which is itself a
+   recorded change, so the order matters.
 7. **Extract Pathways writes its progress in stages as an animation runs.** Each write from a
    timer is its own step. Decide whether an extraction can be undone at all. If it can, run it
    as a `@modelFlow` or group it with `withGroupFlow` or `createGroup`.
