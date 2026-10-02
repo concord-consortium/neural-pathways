@@ -1,3 +1,4 @@
+import { conversationWords } from "../conversation-text";
 import { Network } from "./network";
 
 export interface ForwardPass {
@@ -9,7 +10,7 @@ export interface ForwardPass {
 
 /** Runs `text` through the network. A word counts once however often it appears. */
 export function forward(network: Network, text: string): ForwardPass {
-  const words = new Set(text.split(/\s+/));
+  const words = new Set(conversationWords(text));
   const input = network.vocabulary.map(word => (words.has(word) ? 1 : 0));
   const layers: number[][] = [];
   let previous: number[] = input;
