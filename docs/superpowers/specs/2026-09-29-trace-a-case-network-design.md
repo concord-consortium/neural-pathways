@@ -24,7 +24,7 @@ The work is built on one branch. How it splits into PRs is decided once the code
 | How the steps animate | A pure function of time. `sceneAt(…, step, t)` computes what is drawn at any moment. The view runs a `requestAnimationFrame` clock and re-renders. | Jumps, Reset and reduced motion just set `t`, with no timers to cancel. Mid-step states can be tested in jsdom. NPW-38's speed control becomes a multiplier on `t`. |
 | The diagram's interface | A stateless SVG component drawing a `Scene`: gauge fill per node, drawn fraction per edge group, the weight captions, and the answer. | Extract Pathways and Investigate Pathways build their own scenes. They don't inherit Trace a Case's steps. |
 | Step 1 | The input gauges fill one by one, top to bottom, 55 ms apart (the prototype's `fillInputs`, line 15350). | The word flights are out of scope, and this keeps Step 1 visibly a step. |
-| Colours | Only the two sign colours and the output-pill tokens. The five-step `FILL_POS`/`FILL_NEG` ramp and `level()` are deferred. | Trace a Case draws only the darkest step of each ramp (`paintSignal`, `setNodeLevel`); `actColour` is vestigial here. Comments on NPW-37, NPW-39, NPW-26 and NPW-40 record where the ramp is needed. |
+| Colors | Only the two sign colors and the output-pill tokens. The five-step `FILL_POS`/`FILL_NEG` ramp and `level()` are deferred. | Trace a Case draws only the darkest step of each ramp (`paintSignal`, `setNodeLevel`); `actColour` is vestigial here. Comments on NPW-37, NPW-39, NPW-26 and NPW-40 record where the ramp is needed. |
 | Where the vocabulary lives | With the network weights in `src/core/network/`. | It exists only in `scripts/`, which core may not import. The weights are meaningless without its order. |
 | Step progress | React state in the view, not saved. Changing conversation resets it to 0. | `TraceACaseState` (steps for each conversation, Animate, speed) arrives with NPW-23. |
 | Conversation text | One paragraph of words, as in the prototype. The line breaks between turns are dropped. | NPW-36 owns how the full card looks. |
@@ -137,10 +137,10 @@ node's y, the shared radius, and the output pill boxes. It follows the prototype
 - **Area and spacing:**
   - the SVG is at least 380 × 300;
   - `top = 44`, `bot = H − 14`, with the slack split evenly;
-  - nodes are at most 30 px apart, centred in their column.
+  - nodes are at most 30 px apart, centered in their column.
 - **Radius:** `R = clamp(floor(min(30, (bot − top)/9)/2) − 3, 5, 12)`.
 - **Output column:** a wider step, `R·2 + 8 + 30`.
-- **Captions:** 12 px, centred at y = 20.
+- **Captions:** 12 px, centered at y = 20.
 - **Where it differs:** the prototype sized the side gutters from measured text widths. This
   layout uses fixed gutters for the caption and pill-label widths, because jsdom can't measure
   text.
@@ -155,21 +155,21 @@ This is one SVG with no state, no timers and no store access. It fills its conta
 `useElementSize` (a ResizeObserver hook in core, with a default size where ResizeObserver doesn't
 exist). From back to front:
 
-1. **Scaffold wires:** grey (`#909090`, 0.5 px), running from each source node's right edge to the
+1. **Scaffold wires:** gray (`#909090`, 0.5 px), running from each source node's right edge to the
    target's left edge. They stay drawn: an edge half is at least 1 px wide along the same line,
    so a drawn half covers its wire. The prototype hid them instead.
 2. **Edge halves** (`paintSignal`, lines 12542–12554). The dash offset comes from `edgeDraw` of
    the edge's source unit.
-   - **Near half** (source to midpoint): coloured by the sign of the source activation, banded by
+   - **Near half** (source to midpoint): colored by the sign of the source activation, banded by
      its magnitude.
-   - **Far half** (midpoint to target): coloured by the sign of activation × weight, banded by its
+   - **Far half** (midpoint to target): colored by the sign of activation × weight, banded by its
      magnitude.
-   - **Colours:** positive `#A84A2C`, negative `#1F4E8F`.
+   - **Colors:** positive `#A84A2C`, negative `#1F4E8F`.
 3. **Nodes** (`setNodeLevel`, lines 11383–11396). Each is a white disc, a gauge bar clipped to the
    circle, and an outline (`#6E7580`, 1 px).
-   - **The gauge** grows from the centre, up for positive values and down for negative, to a
+   - **The gauge** grows from the center, up for positive values and down for negative, to a
      height of `R · min(1, |v|) · nodeFill`.
-   - It is filled with the sign colour and hidden below 0.35 px.
+   - It is filled with the sign color and hidden below 0.35 px.
    - **The value** `v` is the activation, or `logit / logitScale` for outputs.
 4. **Output pills** (lines 12091–12143, CSS 2405–2434).
    - **Order:** Approach on top (`OUT_ORDER = [1, 0]`).
@@ -184,16 +184,16 @@ exist). From back to front:
    is true.
 
 **Rendering cost.** The wires, captions, discs and outlines depend only on the network and the
-size, so they are memoised. A frame re-renders only the edges, gauges, pills and weight captions.
+size, so they are memoized. A frame re-renders only the edges, gauges, pills and weight captions.
 
 **Accessibility.**
 - The SVG has `role="img"` and an `aria-label` ("Network diagram", and once `answer` is 1, "…
   predicts Approach").
 - Node hover, the pinned readout and per-node tooltips are out of scope (NPW-23).
 
-### Colours: `src/core/colors.ts` and `src/core/colors.scss`
+### Colors: `src/core/colors.ts` and `src/core/colors.scss`
 
-- **The sign colours:** `POSITIVE = "#A84A2C"` and `NEGATIVE = "#1F4E8F"`.
+- **The sign colors:** `POSITIVE = "#A84A2C"` and `NEGATIVE = "#1F4E8F"`.
 - **The class tokens:** approach `#D9722E`/`#FAE6D6` and wait `#3A72BE`/`#DCE7F7`.
 - **The neutrals the diagram uses:** wire, node outline, and ink.
 - The SCSS file mirrors them as variables for stylesheets.
@@ -312,7 +312,7 @@ version:
 <ConversationCard conversation={item} position={i} total={n} onPrev={…} onNext={…} />
 ```
 
-- **Header:** "Conversation", the count "i / N" (1-based), and ◀ ▶ buttons labelled "Previous
+- **Header:** "Conversation", the count "i / N" (1-based), and ◀ ▶ buttons labeled "Previous
   conversation" and "Next conversation".
 - **At the ends:** the buttons get `aria-disabled` and do nothing. The list doesn't wrap.
 - **Body:** the words as one paragraph, split on whitespace and joined with spaces, as in the
@@ -364,7 +364,7 @@ It is an `observer`.
   everything stays inside the SVG, and the radius stays within 5–12.
 - **`network-diagram.test.tsx`:**
   - `emptyScene` draws wires and empty nodes only;
-  - `fullScene` gives each edge half the expected colour and width;
+  - `fullScene` gives each edge half the expected color and width;
   - gauge heights and directions follow the values;
   - the pill states follow `answer`;
   - the `aria-label` names the prediction once `answer` is 1.
