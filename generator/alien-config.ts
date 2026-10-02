@@ -63,21 +63,9 @@ export const fourPathwayConfig: AlienConfig = {
 };
 
 /**
- * Pathway weight scales, solved numerically for the 55/35/10 variance split, the
- * same way FOUR_SCALE was and for the same reason: the word-selection tilt is
- * itself proportional to the weight, so variance rises faster than scale^2 and
- * there is no closed form.
- *
- * The solver is damped fixed-point iteration on the realized shares, not a
- * search over the whole pipeline. `buildCorpus(config, createRng(config.seed))`
- * alone yields `scoreSd`, and pathway p's realized share is
- * `scoreSd[p]^2 / sum(scoreSd^2)`, so an iteration only ever calls that one
- * function, which is what keeps the solve fast. Each step multiplies `scale[p]`
- * by `(target[p] / realized[p]) ** (1 / damping)` and then renormalizes so
- * `scale[0]` stays `1.0` — only the ratios between scales matter, because
- * `scoreSd` scales linearly with a global multiplier and the realized shares
- * are invariant under one. A damping of 2.5 oscillated instead of settling;
- * 3 converged in six iterations, to within 0.06 percentage points of target.
+ * Pathway weight scales, solved numerically for the 55/35/10 variance split, as
+ * FOUR_SCALE was (see above). The offline iteration that found them is described
+ * in docs/superpowers/specs/2026-08-07-three-pathway-alien-dataset-design.md.
  */
 const THREE_SCALE = [1.0, 0.8946, 0.6306];
 const threeGroup = groupBuilder(THREE_SCALE);

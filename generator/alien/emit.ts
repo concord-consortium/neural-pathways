@@ -14,18 +14,18 @@ const CLS = "[CLS]";
 const SEP = "[SEP]";
 const ID_LENGTH = 12;
 
-/** The shape index.json actually has on disk. Mirrors S3Index but keeps the wire's `reviews` key. */
+// The on-disk shapes, which keep the wire's `reviews` key (see S3Index in
+// src/core/types/s3-data.ts).
+
 export interface IndexWire {
   metadata: S3Index["metadata"];
   reviews: S3Item[];
 }
 
-/** The shape a SHAP bucket file actually has on disk. Mirrors S3ShapBucket's items as `reviews`. */
 export interface ShapBucketWire {
   reviews: S3ShapItem[];
 }
 
-/** The shape an activations bucket file actually has on disk. Mirrors ActivationBucket's items as `reviews`. */
 export interface ActivationBucketWire {
   reviews: { id: string; activations: number[] }[];
 }
@@ -78,8 +78,8 @@ function attributeDefinitions(config: AlienConfig): AttributeDefinition[] {
 /**
  * Each pathway's summed squared loadings over the neuron count, the definition
  * the yelp fits use. By construction this equals targetVarianceShares times
- * explainedVarianceTotal. The word-sum split the SCALE constants were tuned for
- * still prints in the summary; it is no longer what the app reports.
+ * explainedVarianceTotal. The summary also prints the word-sum split the SCALE
+ * constants were tuned for; the app reports this loading-based split.
  */
 function explainedVariancePerPathway(loadings: number[][], neuronCount: number): number[] {
   return loadings.map(row => row.reduce((sum, value) => sum + value * value, 0) / neuronCount);

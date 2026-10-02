@@ -138,8 +138,9 @@ module.exports = (env, argv) => {
       warningsFilter: /export .* was not found in/,
     },
     plugins: [
-      // Lint while developing only. Production builds are linted by `npm run lint:build`, which
-      // `npm run build` runs first, so linting again here would report every warning twice.
+      // Lint while developing only. `npm run build` runs `lint:build` before webpack (and CI's
+      // deploy build relies on build_test having done that), so linting here too would report
+      // every warning twice.
       ...(devMode ? [new ESLintPlugin({
         extensions: ['ts', 'tsx', 'js', 'jsx'],
       })] : []),

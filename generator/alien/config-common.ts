@@ -40,8 +40,8 @@ export const WORD_GROUPS: WordGroup[] = [
 
 /**
  * Builds one pathway's words: each carries zero weight in every other pathway,
- * and the ten weights are symmetric under negation. That symmetry is what makes
- * the pathway scores uncorrelated — see self-check 8.
+ * and the ten weights are symmetric under negation, as checkVocabulary
+ * (config-validation.ts) requires and explains.
  */
 export function groupBuilder(scale: number[]) {
   return function group(pathway: number, words: WordGroup): VocabularyWord[] {
@@ -352,10 +352,10 @@ export const FILLER_FRAGMENTS: string[] = [
 
 export const THRESHOLDS: Thresholds = {
   correlationTolerance: 0.02,
-  // Judges every decoy against every pathway — 24 correlations in the
+  // Judges every decoy against every pathway — 20 correlations in the
   // four-pathway dataset, 18 in the three-pathway one — each with a standard
-  // error near 0.035. The largest of that many lands around 0.09 on a typical
-  // reseed, so a threshold of 0.08 would fail half the time on data that is
+  // error near 0.035. The largest of that many is typically around 0.075, so a
+  // threshold of 0.08 would fail about a third of reseeds on data that is
   // entirely fine.
   decoyMax: 0.15,
   pathwayOrthogonalityMax: 0.12,

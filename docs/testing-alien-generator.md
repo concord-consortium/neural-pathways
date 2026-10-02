@@ -54,7 +54,7 @@ It writes:
   file per two-hex-character prefix of the conversation id.
 
 `npm run build` runs this generator too, as one step of
-`npm-run-all lint:build generate:alien build:webpack`. `dist/alien-data/` and
+`npm-run-all lint:build lint:boundary generate:alien build:webpack`. `dist/alien-data/` and
 `dist/alien-data-3/` are both excluded from `CleanWebpackPlugin`'s clean patterns
 (`webpack.config.js`), so a webpack build does not delete either — the data is
 meant to persist across builds that don't touch it.
@@ -143,14 +143,14 @@ Block by block:
 - **Pathway x pathway correlation** — the 4x4 correlation matrix between the
   raw pathway scores. Healthy: a `1.000` diagonal and small off-diagonal values
   (here, all under 0.03 in magnitude) — the pathways are supposed to be
-  independent constructs. Self-check 8 (`pathways-are-orthogonal`) is this
+  independent constructs. The `pathways-are-orthogonal` self-check is this
   same matrix judged against a threshold.
 - **Attributes table** — one row per coded attribute. Covered in detail in
   section 3.
 - **Classification block** — the bias mechanics: the solved logistic parameters,
   the target's positive rate, the model's error rate split by the (hidden) bias
-  attribute, and the two correlations self-checks 5 and 6 judge. Healthy: the
-  "requested -> achieved" pairs are close (here, 20.0% vs 19.6% and 3.0% vs
+  attribute, and the two correlations that `truth-is-unbiased` and
+  `bias-is-detectable` judge. Healthy: the "requested -> achieved" pairs are close (here, 20.0% vs 19.6% and 3.0% vs
   2.9%), and `corr(model_correct, bias)` is clearly non-zero while
   `corr(target, bias)` is close to zero — the model's mistakes track the hidden
   attribute even though the ground truth doesn't.
@@ -212,7 +212,7 @@ three, since they aren't tuned to correlate with anything):
   bins preserves much more information than cutting it into two, so its
   ceiling is far higher regardless: **0.937**.
 
-`achieved-correlations` (self-check 3) fails if any attribute's achieved value
+`achieved-correlations` fails if any attribute's achieved value
 drifts too far from its requested one; `solveAttribute` (in
 `generator/alien/attributes.ts`) itself throws before that if you request a
 `targetR` above the ceiling — see section 8.
@@ -315,7 +315,7 @@ attribute into the truth: `targetAt` in `generator/alien/outcomes.ts` computes
 only — `biasValues` never appears in it — and `config-validation.ts`'s
 `checkBias` already refuses a config where the bias attribute's `pathway`
 equals `truthPathway`. So a real failure here almost always traces back to
-`pathways-are-orthogonal` (self-check 8) breaking first: if the bias
+`pathways-are-orthogonal` breaking first: if the bias
 attribute's own pathway becomes correlated with `truthPathway` through the
 vocabulary weights, that correlation leaks into `corr(target, bias)` even
 though nothing in `solveOutcomes` intended it to. Look at the
@@ -369,7 +369,7 @@ exercise 2) before it ever reaches this check.
 ### fa-recovers-pathways
 
 Measures whether a fresh factor-analysis refit on the sampled 14-neuron activations
-(`generator/alien/activations.ts`, a dependency-free port of scikit-learn's algorithm —
+(`generator/alien/factor-analysis.ts`, a dependency-free port of scikit-learn's algorithm —
 see `docs/alien-activations.md`) recovers each authored pathway as its own factor, in
 authored order, with score correlation ≥ 0.94 and loading cosine ≥ 0.97. A failure
 means that particular draw of loadings and noise made the authored structure too
@@ -463,8 +463,9 @@ with every score correlation and loading cosine below the 0.94/0.97 thresholds
 (see the `fa-recovers-pathways` subsection in section 5). `npm run generate:alien`
 therefore exits 1 at this seed. Read together with section 4: the shipped seed
 20260803 clears factor-analysis recovery comfortably (r 0.96–0.99), but that
-margin is evidently not guaranteed at an arbitrary seed the way the other eight
-checks' margins are — `seed: 42` is a genuine counterexample, not a flaky test.
+margin is not guaranteed at an arbitrary seed — `seed: 42` is a genuine
+counterexample, not a flaky test. The other eight checks have wider margins, but
+they are not guaranteed at every seed either; a reseed can occasionally fail one.
 This is worth keeping in mind, not something to "fix" by editing the config.
 
 Put the seed back: change `fourPathwayConfig`'s `seed` back to `20260803` and rerun

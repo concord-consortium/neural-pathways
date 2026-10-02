@@ -1,15 +1,14 @@
 # core
 
 Reviewed code shared by the student app (`src/app/`), the lesson views (`src/views/`) and the
-dataset generator (`generator/`): data loading, types, math, generic charts.
+dataset generator (`generator/`): data types, data loading, dataset definitions and math.
 
 ## Rules
 
 - Every line under `src/app/`, `src/views/`, `src/core/` and `generator/` is reviewed. Code
   enters these folders only through a story's PR. The generator is reviewed because it writes
   the data students see.
-- `core` imports only from `core` and packages. It never imports `app`, `views`, `lab` or
-  `generator`.
+- `core` imports only from `core` and packages.
 - `generator` imports only from `generator`, `core` and packages.
 - Nothing student-facing imports from `src/lab/` or `scripts/`, which are unreviewed, or from
   anything else outside `app`, `views` and `core`. ESLint (`import/no-restricted-paths`) enforces
