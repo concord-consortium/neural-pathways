@@ -1,3 +1,4 @@
+@use "../../core/colors" as colors;
 @use "../../core/panel";
 
 .trace-a-case {
@@ -8,23 +9,33 @@
   container-type: inline-size;
 }
 
-// The conversation card on the left and the network on the right, as in the prototype.
+// Two columns, each a toolbar over a panel, as in the prototype: the filter over the
+// conversation card, the steps over the network. The toolbars share a row, so the two panels
+// start on the same line. The filter's cell stays empty until the filter is built.
 .trace-a-case__layout {
   display: grid;
   grid-template-columns: 447px minmax(400px, 1fr);
-  grid-template-areas: "case network";
+  grid-template-areas:
+    ".    steps"
+    "case network";
   align-items: start;
   gap: 9px 10px;
 }
 
-// Too narrow for both columns: stack them.
+// Too narrow for both columns: stack them, keeping the steps above the network.
 @container (width < 857px) {
   .trace-a-case__layout {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "case"
+      "steps"
       "network";
   }
+}
+
+.trace-a-case__steps {
+  grid-area: steps;
+  min-width: 0;
 }
 
 .trace-a-case__case {
@@ -47,4 +58,47 @@
   height: 440px;
   margin: 0 auto;
   padding: 8px 0;
+}
+
+.step-row {
+  display: flex;
+  gap: 6px;
+}
+
+.step-row__step,
+.step-row__reset {
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 2px solid colors.$rule;
+  border-radius: 5px;
+  background: #fff;
+  color: colors.$ink-2;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover:not([aria-disabled="true"]):not([aria-pressed="true"]) {
+    background: colors.$surface;
+  }
+
+  &:focus-visible {
+    outline: 2px solid colors.$wait;
+    outline-offset: 1px;
+  }
+}
+
+.step-row__step[aria-pressed="true"] {
+  border-color: colors.$ink;
+  background: colors.$ink;
+  color: #fff;
+}
+
+.step-row__reset[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: default;
 }

@@ -6,15 +6,16 @@ import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
 import { toyNetwork } from "../../core/network/toy-network";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
-import { fullScene } from "../../core/network-diagram/scene";
 import { validConversationId } from "../../core/state/conversation";
 import { useSharedState } from "../../core/state/view-state-context";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
+import { StepRow } from "./step-row";
+import { useStepPlayer } from "./use-step-player";
 import "./trace-a-case.scss";
 
-/** The whole pass, drawn at once. There are no steps yet to build it up a layer at a time. */
-const FULL_SCENE = fullScene(toyNetwork.layers.map(layer => layer.biases.length));
+/** Units in each drawn layer. Stable, as useStepPlayer requires. */
+const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
 
 /** Follow one conversation through the network, a layer at a time. */
 export const TraceACase: React.FC = observer(function TraceACase() {
@@ -43,6 +44,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const scales = useMemo(() => networkScales(toyNetwork, passes), [passes]);
   // Shown even before the store's correction lands, so an invalid id never reaches the screen.
   const currentId = validConversationId(shared.conversationId, ids);
+  const player = useStepPlayer(COLUMN_SIZES, currentId);
 
   const position = currentId === undefined ? -1 : ids.indexOf(currentId);
   if (position < 0) {
@@ -52,6 +54,9 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
 
   return (
     <div className="trace-a-case__layout">
+      <div className="trace-a-case__steps">
+        <StepRow shownStep={player.shownStep} onStep={player.play} onReset={player.reset} />
+      </div>
       <div className="trace-a-case__case">
         <ConversationCard conversation={index.items[position]} position={position} total={ids.length}
           onPrev={() => goTo(position - 1)} onNext={() => goTo(position + 1)} />
@@ -60,7 +65,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
         <h2 className="trace-a-case__network-head">The Network</h2>
         <div className="trace-a-case__diagram">
           <NetworkDiagram network={toyNetwork} pass={passes[position]} scales={scales}
-            outputLabels={alien3Dataset.classificationLabels} scene={FULL_SCENE} />
+            outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
         </div>
       </section>
     </div>
