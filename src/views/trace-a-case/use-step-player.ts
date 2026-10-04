@@ -1,6 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Scene } from "../../core/network-diagram/scene";
 import { RunningStep, sceneAt, Step, stepDuration } from "./step-timeline";
+
+/** One conversation's progress through the steps, kept by the view. */
+export interface StepProgress {
+  /** The conversation. A step still playing is dropped when it changes. */
+  key: string | undefined;
+  /** Steps completed, 0–4. */
+  stepsDone: number;
+  /** Saves this conversation's steps done. */
+  setStepsDone: (stepsDone: number) => void;
+}
 
 export interface StepPlayer {
   /** Steps completed, 0–4. */
@@ -13,11 +23,10 @@ export interface StepPlayer {
   reset: () => void;
 }
 
-interface PlayerState {
-  /** The conversation this progress belongs to. */
+interface Playing {
+  /** The conversation the step is playing for. */
   key: string | undefined;
-  stepsDone: number;
-  running?: RunningStep;
+  running: RunningStep;
 }
 
 function prefersReducedMotion(): boolean {
@@ -25,13 +34,20 @@ function prefersReducedMotion(): boolean {
 }
 
 /**
- * Plays Trace a Case's steps on a requestAnimationFrame clock. Progress isn't saved: it starts
- * over when `resetKey` (the conversation) changes, and a step still playing is dropped when the
- * view unmounts. `columnSizes` must be a stable array.
+ * Plays Trace a Case's steps on a requestAnimationFrame clock. The steps done are the view's to
+ * keep: a step saves the step before when it starts and itself when it ends, so a step still
+ * playing is never saved. Changing conversation, or unmounting, drops a step that is playing.
+ * `columnSizes` must be a stable array.
  */
-export function useStepPlayer(columnSizes: readonly number[], resetKey: string | undefined): StepPlayer {
-  const [state, setState] = useState<PlayerState>({ key: resetKey, stepsDone: 0 });
+export function useStepPlayer(columnSizes: readonly number[], progress: StepProgress): StepPlayer {
+  const { key, stepsDone, setStepsDone } = progress;
+  const [playing, setPlaying] = useState<Playing | undefined>(undefined);
   const frame = useRef<number | undefined>(undefined);
+  // The latest setter, so the callbacks below needn't change when the view passes a new one.
+  const setStepsDoneRef = useRef(setStepsDone);
+  useLayoutEffect(() => {
+    setStepsDoneRef.current = setStepsDone;
+  });
 
   const stop = useCallback(() => {
     if (frame.current !== undefined) {
@@ -40,43 +56,49 @@ export function useStepPlayer(columnSizes: readonly number[], resetKey: string |
     }
   }, []);
 
-  // Stop a playing step when the conversation changes and when the view unmounts.
-  useEffect(() => stop, [resetKey, stop]);
+  // Drop a playing step when the conversation changes and when the view unmounts, so coming back
+  // to the conversation doesn't bring it back half played. A layout effect, so no frame of the old
+  // conversation's step can run, and save, after the change is committed.
+  useLayoutEffect(() => () => {
+    stop();
+    setPlaying(undefined);
+  }, [key, stop]);
 
   const play = useCallback((step: Step) => {
     stop();
+    const save = setStepsDoneRef.current;
     if (prefersReducedMotion()) {
-      setState({ key: resetKey, stepsDone: step });
+      setPlaying(undefined);
+      save(step);
       return;
     }
     const duration = stepDuration(step, columnSizes);
-    setState({ key: resetKey, stepsDone: step - 1, running: { step, t: 0 } });
+    save(step - 1);
+    setPlaying({ key, running: { step, t: 0 } });
     let start: number | undefined;
     const tick = (now: number) => {
       start ??= now;
       const t = now - start;
       if (t >= duration) {
         frame.current = undefined;
-        setState({ key: resetKey, stepsDone: step });
+        setPlaying(undefined);
+        save(step);
         return;
       }
-      setState({ key: resetKey, stepsDone: step - 1, running: { step, t } });
+      setPlaying({ key, running: { step, t } });
       frame.current = requestAnimationFrame(tick);
     };
     frame.current = requestAnimationFrame(tick);
-  }, [columnSizes, resetKey, stop]);
+  }, [columnSizes, key, stop]);
 
   const reset = useCallback(() => {
     stop();
-    setState({ key: resetKey, stepsDone: 0 });
-  }, [resetKey, stop]);
+    setPlaying(undefined);
+    setStepsDoneRef.current(0);
+  }, [stop]);
 
-  // Progress belongs to one conversation: discard it when the conversation changes, so returning
-  // to an earlier one starts over rather than bringing its old progress back.
-  if (state.key !== resetKey) {
-    setState({ key: resetKey, stepsDone: 0 });
-  }
-  const { stepsDone, running } = state.key === resetKey ? state : { stepsDone: 0, running: undefined };
+  // Until the effect above drops it, don't draw another conversation's step over this one.
+  const running = playing !== undefined && playing.key === key ? playing.running : undefined;
   const scene = useMemo(() => sceneAt(columnSizes, stepsDone, running), [columnSizes, stepsDone, running]);
   return { stepsDone, shownStep: running?.step ?? stepsDone, scene, play, reset };
 }

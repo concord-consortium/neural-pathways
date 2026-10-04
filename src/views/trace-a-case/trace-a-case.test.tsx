@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import { SharedState } from "../../core/state/shared-state";
+import { TraceACaseState } from "../../core/state/trace-a-case-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { clearDatasetIndexCache } from "../../core/use-dataset-index";
@@ -27,16 +28,16 @@ const items = [0, 6, 1].map(i => fixture.conversations[i]).map(c => item(c.id, c
 const ids = items.map(i => i.id);
 const index: S3Index = { metadata: { fa_fits: {}, review_sets: {} }, items };
 
-function viewWith(shared: SharedState) {
+function viewWith(shared: SharedState, state = new TraceACaseState({})) {
   return (
-    <ViewStateProvider viewId="trace-a-case" view={undefined} shared={shared}>
+    <ViewStateProvider viewId="trace-a-case" view={state} shared={shared}>
       <TraceACase />
     </ViewStateProvider>
   );
 }
 
-function showView(shared = new SharedState({})) {
-  render(viewWith(shared));
+function showView(shared = new SharedState({}), state = new TraceACaseState({})) {
+  render(viewWith(shared, state));
   return shared;
 }
 
@@ -160,7 +161,7 @@ describe("TraceACase", () => {
     expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("starts the steps over when the conversation changes", async () => {
+  it("starts a conversation not stepped yet with nothing done", async () => {
     setReducedMotion();
     showView();
     await screen.findByText("1 / 3");
@@ -169,5 +170,33 @@ describe("TraceACase", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
     expect(screen.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("brings a conversation's steps back when returning to it", async () => {
+    setReducedMotion();
+    showView();
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
+    expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
+  });
+
+  it("keeps the steps done for each conversation in the view's state", async () => {
+    setReducedMotion();
+    const state = new TraceACaseState({});
+    showView(new SharedState({}), state);
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("button", { name: "Step 3" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Step 1" }));
+    expect(state.stepsByConversation).toEqual({ [ids[0]]: 3, [ids[1]]: 1 });
+  });
+
+  it("opens a conversation at the steps saved for it", async () => {
+    showView(new SharedState({}), new TraceACaseState({ stepsByConversation: { [ids[0]]: 2 } }));
+    await screen.findByText("1 / 3");
+    expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-pressed", "true");
   });
 });

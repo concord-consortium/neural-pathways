@@ -6,7 +6,8 @@ import { indexPasses } from "../../core/network/index-passes";
 import { toyNetwork } from "../../core/network/toy-network";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
 import { validConversationId } from "../../core/state/conversation";
-import { useSharedState } from "../../core/state/view-state-context";
+import { TraceACaseState } from "../../core/state/trace-a-case-state";
+import { useSharedState, useViewState } from "../../core/state/view-state-context";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { StepRow } from "./step-row";
@@ -40,12 +41,21 @@ export const TraceACase: React.FC = observer(function TraceACase() {
 
 const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3Index }) {
   const shared = useSharedState();
+  const state = useViewState(TraceACaseState);
   const ids = useMemo(() => index.items.map(item => item.id), [index]);
   const { passes, scales } = indexPasses(toyNetwork, index);
   const networkHeadId = useId();
   // Shown even before the store's correction lands, so an invalid id never reaches the screen.
   const currentId = validConversationId(shared.conversationId, ids);
-  const player = useStepPlayer(COLUMN_SIZES, currentId);
+  const player = useStepPlayer(COLUMN_SIZES, {
+    key: currentId,
+    stepsDone: currentId === undefined ? 0 : state.stepsDone(currentId),
+    setStepsDone: stepsDone => {
+      if (currentId !== undefined) {
+        state.setStepsDone(currentId, stepsDone);
+      }
+    },
+  });
 
   const position = currentId === undefined ? -1 : ids.indexOf(currentId);
   if (position < 0) {

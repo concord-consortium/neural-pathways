@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { App } from "./app";
 import { AppState } from "../state/app-state";
 
-// A registry with a counting view and a view without state, since no real view has a model yet.
+// A registry with a counting view and a view without state, so the test needn't load a real view's data.
 jest.mock("../views", () => {
   const { decoratedModel, Model, modelAction, tProp, types } = require("mobx-keystone");
   const { observer } = require("mobx-react-lite");
