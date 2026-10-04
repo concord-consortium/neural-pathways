@@ -18,13 +18,13 @@ export interface RunningStep {
 /** Step 1: input node i starts filling at i × FILL_GAP ms. */
 const FILL_GAP = 55;
 /** How long a gauge takes to ease to its new level. */
-const FILL_DURATION = 180;
+export const FILL_DURATION = 180;
 const UNIT_FIRST = 900;
 const UNIT_DECAY = 0.76;
 const UNIT_MIN = 150;
 /** After the last fan unit, the answer waits this long, then pops over ANSWER_DURATION. */
-const ANSWER_DELAY = 60;
-const ANSWER_DURATION = 460;
+export const ANSWER_DELAY = 60;
+export const ANSWER_DURATION = 460;
 const edgeEase = cubicBezier(0.3, 0.05, 0.4, 1);
 
 /** How long unit k of a fan takes: each unit is quicker than the one before, down to a floor. */
