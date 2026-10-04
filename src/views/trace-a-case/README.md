@@ -17,7 +17,7 @@ Next come the network diagram and Steps 1–4. After those, the view still needs
 - the label chip, observation notes and attribute icons;
 - node hover and the pinned readout;
 - Step 1's word flights;
-- Animate and speed;
+- the Animate and speed controls;
 - saved step progress for each conversation (`TraceACaseState`);
 - the activation legend;
 - About.
