@@ -26,7 +26,7 @@ The work is built on one branch. How it splits into PRs is decided once the code
 | Step 1 | The input gauges fill one by one, top to bottom, 55 ms apart (the prototype's `fillInputs`, line 15350). | The word flights are out of scope, and this keeps Step 1 visibly a step. |
 | Colors | Only the two sign colors and the output-pill tokens. The five-step `FILL_POS`/`FILL_NEG` ramp and `level()` are deferred. | Trace a Case draws only the darkest step of each ramp (`paintSignal`, `setNodeLevel`); `actColour` is vestigial here. Comments on NPW-37, NPW-39, NPW-26 and NPW-40 record where the ramp is needed. |
 | Where the vocabulary lives | With the network weights in `src/core/network/`. | It exists only in `scripts/`, which core may not import. The weights are meaningless without its order. |
-| Step progress | React state in the view, not saved. Changing conversation resets it to 0. | `TraceACaseState` (steps for each conversation, Animate, speed) arrives with NPW-23. |
+| Step progress | Kept for each conversation in the view's own state, `npw/TraceACaseState`, as steps done by conversation id. A step still playing isn't kept. Animate and speed join the model with NPW-38. | Returning to a conversation, or to Trace a Case from another view, keeps the steps it reached. The model was already designed in NPW-30, and this is the first view with its own state, so it sets the pattern for the others. Brought forward from NPW-23. |
 | Conversation text | One paragraph of words, as in the prototype. The line breaks between turns are dropped. | NPW-36 owns how the full card looks. |
 | Loading the index | A core hook backed by a module-level promise cache. | NPW-29 left "a hook or shared cache" to the first view that needs one. Switching views must not refetch. |
 | Top-level page in CI | Not added. The release rehearsal stays manual. | The check would add a production build to every CI run, and this kind of breakage is rare. |
@@ -228,19 +228,29 @@ function sceneAt(columnSizes, stepsDone: number, running?: { step: number; t: nu
 - **Step 4 only:** 60 ms after the fan ends, `answer` runs from 0 to 1 over 460 ms
   (`revealAnswer`, `d1a-pillpop`).
 
-### `use-step-player.ts`
+### `step-player.ts`
 
-The hook keeps `{ stepsDone, running?: { step, startedAt } }` in React state and returns
-`{ stepsDone, shownStep, scene, play(step), reset() }`.
+`StepPlayer` is a MobX class for one conversation,
+`new StepPlayer(columnSizes, state, conversationId)`, that reads and saves that conversation's
+steps done in the view's `TraceACaseState` (see below). The view reads `stepsDone`, `shownStep`
+and `scene` from it inside its `observer`. The only thing the player holds is the step that is
+playing, `{ step, t }`, as an observable, and only while it plays. Its tests call it directly,
+with no React.
 
-- **`play(n)`:** jumps to `stepsDone = n − 1`, then runs step *n* on a `requestAnimationFrame`
-  clock. When `t` reaches `stepDuration(n)`, `stepsDone = n`. Pressing a step replays it; the
-  buttons work as jump-to states, as in the prototype.
-- **`reset()`:** sets `stepsDone = 0` and stops anything playing.
-- **Reduced motion:** under `prefers-reduced-motion: reduce`, `play(n)` sets `stepsDone = n`
-  immediately.
-- **Changing conversation** resets to 0. The view keys the player on the conversation id.
-- **Unmounting** (switching views) cancels the frame loop. Nothing mid-step is kept.
+- **`play(n)`:** saves `n − 1`, then runs step *n* on a `requestAnimationFrame` clock. When `t`
+  reaches `stepDuration(n)`, it saves `n`. A step still playing is never saved. Pressing a step
+  replays it; the buttons work as jump-to states, as in the prototype.
+- **`reset()`:** saves 0 and stops anything playing.
+- **Reduced motion:** under `prefers-reduced-motion: reduce`, `play(n)` saves `n` immediately.
+- **`stop()`** drops a step that is playing. The clock runs only while a step plays, so this is
+  all the cleanup there is, and the player can play again afterward.
+- **Changing conversation:** the view makes a player for the conversation it shows (`useMemo` on
+  the id), and a new one when it changes. A layout effect stops the old player, so no frame of
+  its step can run, and save, after the change is committed. The new player shows its
+  conversation's saved steps, so coming back to a conversation shows what was saved for it, and a
+  step cut short comes back as the step before it.
+- **Unmounting** (switching views) stops the player the same way. The saved steps stay in the
+  view's state, so they are there on coming back.
 
 ### The step row
 
@@ -290,6 +300,21 @@ These come over from `NPW-30-view-state` (draft PR #29):
 
 `query` and `commissioned` stay on the target branch until NPW-35 and NPW-27.
 
+### `TraceACaseState`
+
+Trace a Case is the first view with its own state, following the steps in
+`docs/view-state.md`. Only Trace a Case uses it, so the model,
+`src/views/trace-a-case/trace-a-case-state.ts`, lives in the view's folder with its test and
+fixture. It comes over from the draft in PR #29 with only the steps:
+
+- `version: 1`, `$modelType` `npw/TraceACaseState`;
+- `stepsByConversation`: a record of steps done, 0 to 4, by conversation id, defaulting to `{}`.
+  A conversation set back to 0 is removed, so the saved form lists only conversations stepped;
+- `stepsDone(id)`, which is 0 for a conversation not stepped yet, and `setStepsDone(id, n)`.
+
+The draft's `animate` and `speed` come with NPW-38. Adding them with defaults is not a new
+version. A fixture, `trace-a-case-state.v1.json`, has two conversations' steps.
+
 ### Keeping the conversation valid
 
 `docs/undo.md` warns against correcting the conversation in a React `useEffect`, so the
@@ -334,7 +359,8 @@ It is an `observer`.
   - `forward(toyNetwork, text)` for all 800 conversations;
   - `networkScales`.
 - **The diagram** then gets the current conversation's pass and the step player's scene.
-- **`VIEWS`:** no `stateModel` yet.
+- **The steps** come from `useViewState(TraceACaseState)` for the current conversation.
+- **`VIEWS`:** Trace a Case's `stateModel` is `TraceACaseState`.
 
 ## Testing
 
@@ -379,13 +405,16 @@ It is an `observer`.
   - the gauges before and after a unit ends;
   - Step 4's answer;
   - `sceneAt(…, 4)` equals `fullScene`.
-- **`use-step-player` and the step row** (RTL with Jest fake timers, which fake
-  `requestAnimationFrame`):
+- **`StepPlayer`** (plain calls with Jest fake timers, which fake `requestAnimationFrame`; no
+  React) **and the step row** (RTL):
   - Step 2 from nothing fills the inputs at once, then animates to completion;
   - Reset clears the scene;
   - reduced motion makes a step instant;
-  - changing conversation resets;
-  - unmounting stops the clock.
+  - only the step before is saved while a step plays, and the step once it ends;
+  - `stop()` cancels the clock and leaves the step before saved, and the player plays again
+    afterward;
+  - a player for a conversation not stepped yet starts with nothing done, and a new player for a
+    conversation shows its saved steps, with a step cut short as the step before it.
 
 **Data and state**
 
@@ -396,6 +425,9 @@ It is an `observer`.
   - `onLoaded` runs on each mount, and not after unmount;
   - a retry after an error.
 - **`conversation.test.ts` and `shared-state.test.ts`,** as brought over.
+- **`trace-a-case-state.test.ts`:** the fixture loads and saves back unchanged; another version
+  and a step count outside 0 to 4 are rejected; setting a conversation's steps leaves the others
+  alone, and setting them to 0 removes the conversation.
 - **`conversation-card.test.tsx`:** the count, prev/next callbacks, and `aria-disabled` at both
   ends.
 
@@ -405,7 +437,9 @@ It is an `observer`.
   - loading, then "1 / 800";
   - next moves the shared `conversationId`;
   - a saved `conversationId` opens on that conversation;
-  - an unknown id falls back to the first.
+  - an unknown id falls back to the first;
+  - each conversation's steps are kept in `TraceACaseState` and come back on returning to it;
+  - changing conversation mid-step drops the step, leaving the step before saved.
 - **`src/app/components/app.test.tsx`:** mocks the data loader, as the lab explorer tests do.
   Its assertions change if the view's heading changes.
 
@@ -414,7 +448,7 @@ It is an `observer`.
 - **Loading:** Trace a Case loads and shows "1 / 800". Next shows "2 / 800".
 - **Answer:** Step 4 ends with one output pill revealed.
 - **State across views** (moved from NPW-31): go to conversation 3, switch to another view, come
-  back, and it still shows "3 / 800".
+  back, and it still shows "3 / 800". Steps done on two conversations are still there too.
 - **`playwright/app.test.ts`:** update its Trace a Case heading assertions to match the view.
 
 ### Manual, once, before the PR
@@ -427,7 +461,8 @@ It is an `observer`.
 
 - **`docs/view-state.md`:**
   - the shared-state table gains `conversationId` as built;
-  - the "only its `version` so far" sentence changes to match.
+  - the "only its `version` so far" sentence changes to match;
+  - the view-state table shows `TraceACaseState` in place, with only its steps.
 - **`src/core/README.md`, "What's here":** add `network/`, `network-diagram/`,
   `conversation-card/`, `colors`, `use-dataset-index` and `use-element-size`.
 - **`src/views/trace-a-case/`:** a short README naming what's here and what NPW-23 adds.
@@ -441,6 +476,5 @@ Each of these is in NPW-23 or a shared story:
 - node hover and the pinned readout;
 - Step 1's word flights;
 - Animate and speed (NPW-38);
-- saved step progress for each conversation (`TraceACaseState`);
 - the activation legend;
 - About (NPW-44).
