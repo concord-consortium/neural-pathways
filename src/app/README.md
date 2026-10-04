@@ -33,8 +33,9 @@ around it.
 1. Create `src/views/<view-id>/<view-id>.tsx` exporting the view component. See
    `src/views/README.md` for what a view may import.
 2. Add it to `VIEWS` in `views.ts`, at its place in the lesson order.
-3. If the view keeps state, create its state model in `src/core/state/` and set `stateModel` in
-   its `VIEWS` entry. See "How the state arrives" in `docs/view-state.md`.
+3. If the view keeps state, create its state model in the view's folder, or in `src/core/state/`
+   if another view uses it too, and set `stateModel` in its `VIEWS` entry. See "How the state
+   arrives" in `docs/view-state.md`.
 4. Update the expected id list in `views.test.ts` and the nav link count in
    `playwright/app.test.ts`.
 

@@ -29,9 +29,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `data-url.ts`: `dataUrl`. Every fetched data URL goes through it; see the comment there.
 - `datasets/dataset-definition.ts`: what a dataset is, and attribute-key validation.
 - `datasets/alien3-dataset.ts`: the lesson's dataset, `alien3Dataset`.
-- `state/`: the mobx-keystone models for the shared state and each view's state, and the context
-  views use to reach them. What each view keeps, and the rules for changing a saved form, are in
-  `docs/view-state.md`.
+- `state/`: the mobx-keystone model for the shared state, any model more than one view uses, the
+  setup every model imports, and the context views use to reach their state. A model only one
+  view uses lives in that view's folder. What each view keeps, and the rules for changing a saved
+  form, are in `docs/view-state.md`.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and
 files that use this code (the explorer's search, Codings dialog, regression panel and item panel,

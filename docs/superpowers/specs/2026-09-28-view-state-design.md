@@ -38,8 +38,9 @@ state in five ways:
 
 After this work:
 
-- `src/core/state/` holds a mobx-keystone model for the shared state and one for each view's
-  state, with unit tests and saved-form fixtures.
+- `src/core/state/` holds the mobx-keystone model for the shared state, and the setup and context
+  every view uses. Each view's model lives in that view's folder, unless more than one view uses
+  it. Every model has unit tests and a saved-form fixture.
 - The student app holds one state tree per view plus the shared tree, as children of one
   runtime-only root. Switching views keeps each view's state.
 - Views get their state through React context.
@@ -157,14 +158,22 @@ keystone snapshot, so recorded patches, and undo history if we add it, match wha
 src/core/state/
   setup.ts                           AlwaysOn type checking and Set polyfills
   shared-state.ts                    SharedState model
-  trace-a-case-state.ts              one file per view model (six files)
-  …
+  correlations-state.ts              a model more than one view uses (Correlations and Part 2)
   view-state-context.tsx             context + hooks views use
   *.test.ts, __fixtures__/*.json     unit tests and saved-form fixtures
+src/views/<view-id>/
+  <view-id>-state.ts                 a model only this view uses, e.g. trace-a-case-state.ts
+  *.test.ts, __fixtures__/*.json     its unit test and saved-form fixture
 src/app/state/
   app-state.ts                       holder: shared tree + view trees keyed by view id
   app-state.test.ts
 ```
+
+**Where a model lives** follows the rule for `src/core/`: it holds code more than one view uses.
+A model only one view uses sits in that view's folder, beside the code that reads it, so a reader
+of the view finds its saved form there. The app registers it in `VIEWS`, and the app may import
+from views. `docs/view-state.md` keeps the table of every view's model, so the full list of what
+is saved stays in one place.
 
 **The registry names each view's model.** `ViewDef` in `src/app/views.ts` gains a
 `stateModel` field holding the view's model class. It is optional: a view that keeps no state
@@ -237,7 +246,7 @@ an error. Simply starting fresh would overwrite the student's unreadable work on
 
 ## Testing
 
-Unit tests (Jest), in `src/core/state/` and `src/app/state/`:
+Unit tests (Jest), in `src/core/state/` and `src/app/state/`, and beside each view's model:
 
 - **Each model:**
   - A fresh instance has the documented defaults.
@@ -278,8 +287,9 @@ survives switching views (`view-switch.test.tsx`). The Playwright check comes wi
   - the load precedence and URL param format;
   - the planned `loadInteractiveState` contract.
 - **`src/core/README.md`:** a short pointer to `src/core/state/` and the reference doc.
-- **`src/app/README.md`:** the "Adding a view" steps add "create its state model in
-  `src/core/state/` and set `stateModel` in `views.ts`".
+- **`src/app/README.md`:** the "Adding a view" steps add "create its state model in the view's
+  folder, or in `src/core/state/` if another view uses it too, and set `stateModel` in
+  `views.ts`".
 
 ## Out of scope
 

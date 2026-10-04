@@ -5,8 +5,8 @@ deliberately not kept, and how state is saved and loaded. The design and its rea
 `docs/superpowers/specs/2026-09-28-view-state-design.md`. Undo isn't built. What it would need
 from this state, and the places that would have to change, are in [undo.md](undo.md).
 
-The state is held in [mobx-keystone](https://mobx-keystone.js.org) models in `src/core/state/`.
-Each view's state is its own tree, and the shared state is one more tree. The student app keeps
+The state is held in [mobx-keystone](https://mobx-keystone.js.org) models. Each view's state is
+its own tree, and the shared state is one more tree. The student app keeps
 all of them as children of one root, in an `AppState` (`src/app/state/app-state.ts`), for the
 life of the page:
 - **One root:** a student action that changes a view's state and the shared state can then be one
@@ -29,13 +29,21 @@ builds the UI using it, so it can be reviewed against that UI. The complete targ
 from it, and change the model if the UI turns out to need something different. The tables below
 list that target and the story each piece is expected to arrive with.
 
+Where the models live follows the rule for `src/core/`: it holds what more than one view uses.
+
+- **`src/core/state/`:** the shared state's model, the setup every model imports, the context and
+  hooks views use, and any model or piece of one that more than one view uses. Correlations and
+  Correlations Part 2 share one model, so theirs goes here.
+- **The view's own folder:** a model only that view uses, beside the code that reads it, with its
+  test and fixture.
+
 To give a view its state:
 
-1. Create its model in `src/core/state/`, with `version: 1` and a new `npw/<Name>State`
-   `$modelType`. Declare every saved field with `tProp`. Import `./setup` first, as
-   `shared-state.ts` does.
-2. Add a saved-form fixture in `src/core/state/__fixtures__/` and a test that loads it and saves
-   it back unchanged. Copy the pattern from `shared-state.test.ts`.
+1. Create its model, with `version: 1` and a new `npw/<Name>State` `$modelType`, in the place the
+   list above gives. Declare every saved field with `tProp`. Import `src/core/state/setup.ts`
+   first, as `shared-state.ts` does.
+2. Add a saved-form fixture in a `__fixtures__/` folder beside the model, and a test that loads it
+   and saves it back unchanged. Copy the pattern from `shared-state.test.ts`.
 3. Set `stateModel` on the view's entry in `VIEWS` (`src/app/views.ts`).
 4. In the view, read the state with `useViewState(Model)`, and the shared state with
    `useSharedState()`. Both come from `src/core/state/view-state-context.tsx`. Wrap every
