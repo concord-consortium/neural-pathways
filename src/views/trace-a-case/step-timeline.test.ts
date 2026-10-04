@@ -1,5 +1,7 @@
 import { emptyScene, fullScene } from "../../core/network-diagram/scene";
-import { sceneAt, stepDuration, unitDuration } from "./step-timeline";
+import {
+  ANSWER_DELAY, ANSWER_DURATION, FILL_DURATION, sceneAt, stepDuration, unitDuration,
+} from "./step-timeline";
 
 const SIZES = [10, 8, 6, 2];
 
@@ -48,8 +50,9 @@ describe("sceneAt", () => {
   });
 
   it("plays a fan one source unit at a time", () => {
-    // Step 3's fan runs from Hidden 1's 8 units; unit 2 runs from 1584 to 2103.84 ms.
-    const scene = sceneAt(SIZES, 2, { step: 3, t: 1843.92 });
+    // Step 3's fan runs from Hidden 1's 8 units. Stop halfway through unit 2.
+    const unit2Start = unitDuration(0) + unitDuration(1);
+    const scene = sceneAt(SIZES, 2, { step: 3, t: unit2Start + unitDuration(2) / 2 });
     expect(scene.edgeDraw[0].every(x => x === 1)).toBe(true);
     expect(scene.edgeDraw[1][0]).toBe(1);
     expect(scene.edgeDraw[1][1]).toBe(1);
@@ -61,21 +64,24 @@ describe("sceneAt", () => {
   });
 
   it("raises the target gauges a unit's share as each unit lands", () => {
-    // Step 2: unit 0 ends at 900 ms and its share eases in over 180 ms.
-    expect(sceneAt(SIZES, 1, { step: 2, t: 900 }).nodeFill[1][0]).toBe(0);
-    expect(sceneAt(SIZES, 1, { step: 2, t: 990 }).nodeFill[1][0]).toBeGreaterThan(0);
-    expect(sceneAt(SIZES, 1, { step: 2, t: 1080 }).nodeFill[1][0]).toBeCloseTo(0.1);
+    // Step 2's fan has 10 units, so each that lands adds a tenth.
+    const unit0End = unitDuration(0);
+    expect(sceneAt(SIZES, 1, { step: 2, t: unit0End }).nodeFill[1][0]).toBe(0);
+    expect(sceneAt(SIZES, 1, { step: 2, t: unit0End + FILL_DURATION / 2 }).nodeFill[1][0]).toBeGreaterThan(0);
+    expect(sceneAt(SIZES, 1, { step: 2, t: unit0End + FILL_DURATION }).nodeFill[1][0]).toBeCloseTo(0.1);
   });
 
   it("shows a gap's weight caption halfway through its first unit", () => {
-    expect(sceneAt(SIZES, 1, { step: 2, t: 449 }).weightLabel[0]).toBe(false);
-    expect(sceneAt(SIZES, 1, { step: 2, t: 450 }).weightLabel[0]).toBe(true);
+    const halfway = unitDuration(0) / 2;
+    expect(sceneAt(SIZES, 1, { step: 2, t: halfway - 1 }).weightLabel[0]).toBe(false);
+    expect(sceneAt(SIZES, 1, { step: 2, t: halfway }).weightLabel[0]).toBe(true);
   });
 
   it("reveals the answer at the end of Step 4", () => {
-    const fanEnd = stepDuration(4, SIZES) - 520;
-    expect(sceneAt(SIZES, 3, { step: 4, t: fanEnd + 60 }).answer).toBe(0);
-    const midway = sceneAt(SIZES, 3, { step: 4, t: fanEnd + 290 }).answer;
+    const popStart = stepDuration(4, SIZES) - ANSWER_DURATION;
+    expect(sceneAt(SIZES, 3, { step: 4, t: popStart - ANSWER_DELAY }).answer).toBe(0);
+    expect(sceneAt(SIZES, 3, { step: 4, t: popStart }).answer).toBe(0);
+    const midway = sceneAt(SIZES, 3, { step: 4, t: popStart + ANSWER_DURATION / 2 }).answer;
     expect(midway).toBeGreaterThan(0);
     expect(midway).toBeLessThan(1);
     expect(sceneAt(SIZES, 3, { step: 4, t: stepDuration(4, SIZES) }).answer).toBe(1);
