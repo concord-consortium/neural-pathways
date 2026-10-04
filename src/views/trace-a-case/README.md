@@ -15,10 +15,11 @@ The lesson's first view: follow one conversation through the network, a layer at
   `TraceACaseState`, so they survive moving between conversations and switching views. A step
   still playing isn't kept.
 - `step-row.tsx`: the Step 1–4 and Reset buttons.
+- `trace-a-case-state.ts`: the view's saved state, `TraceACaseState`: the steps done for each
+  conversation. Only this view uses it, so it lives here rather than in `src/core/state/`.
 
 The network, the diagram, the conversation card and the data loading live in `src/core/`, where
-Extract Pathways and Investigate Pathways can use them. So does the view's state model,
-`src/core/state/trace-a-case-state.ts`, as `docs/view-state.md` asks.
+Extract Pathways and Investigate Pathways can use them.
 
 ## Still to come
 

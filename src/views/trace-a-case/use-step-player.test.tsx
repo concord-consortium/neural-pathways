@@ -2,7 +2,7 @@ import React from "react";
 import { act, render } from "@testing-library/react";
 import { observer } from "mobx-react-lite";
 import { emptyScene } from "../../core/network-diagram/scene";
-import { TraceACaseState } from "../../core/state/trace-a-case-state";
+import { TraceACaseState } from "./trace-a-case-state";
 import { sceneAt } from "./step-timeline";
 import { StepPlayer, useStepPlayer } from "./use-step-player";
 

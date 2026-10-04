@@ -1,6 +1,6 @@
 import { fromSnapshot } from "mobx-keystone";
 import { TraceACaseState } from "./trace-a-case-state";
-import { savedJson } from "./test-helpers";
+import { savedJson } from "../../core/state/test-helpers";
 import fixture from "./__fixtures__/trace-a-case-state.v1.json";
 
 const empty = { version: 1, stepsByConversation: {}, $modelType: "npw/TraceACaseState" };

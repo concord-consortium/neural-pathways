@@ -6,7 +6,7 @@ import { indexPasses } from "../../core/network/index-passes";
 import { toyNetwork } from "../../core/network/toy-network";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
 import { validConversationId } from "../../core/state/conversation";
-import { TraceACaseState } from "../../core/state/trace-a-case-state";
+import { TraceACaseState } from "./trace-a-case-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";

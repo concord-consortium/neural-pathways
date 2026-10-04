@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Scene } from "../../core/network-diagram/scene";
-import { TraceACaseState } from "../../core/state/trace-a-case-state";
+import { TraceACaseState } from "./trace-a-case-state";
 import { RunningStep, sceneAt, Step, stepDuration } from "./step-timeline";
 
 export interface StepPlayer {
