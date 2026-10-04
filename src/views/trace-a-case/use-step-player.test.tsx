@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { act, renderHook } from "@testing-library/react";
+import React from "react";
+import { act, render } from "@testing-library/react";
+import { observer } from "mobx-react-lite";
 import { emptyScene } from "../../core/network-diagram/scene";
+import { TraceACaseState } from "../../core/state/trace-a-case-state";
 import { sceneAt } from "./step-timeline";
-import { useStepPlayer } from "./use-step-player";
+import { StepPlayer, useStepPlayer } from "./use-step-player";
 
 const SIZES = [10, 8, 6, 2];
 
@@ -14,18 +16,22 @@ function setReducedMotion(reduce: boolean) {
   });
 }
 
-/** The player, over progress kept for each conversation the way the view keeps it. `saved` shows what was written. */
+/** The player over a real TraceACaseState, inside an observer as the view runs it. */
 function renderPlayer(conversationId = "a") {
-  const saved: Record<string, number> = {};
-  const view = renderHook(({ key }) => {
-    const [progress, setProgress] = useState<Record<string, number>>({});
-    const setStepsDone = (stepsDone: number) => {
-      saved[key] = stepsDone;
-      setProgress(previous => ({ ...previous, [key]: stepsDone }));
-    };
-    return useStepPlayer(SIZES, { key, stepsDone: progress[key] ?? 0, setStepsDone });
-  }, { initialProps: { key: conversationId } });
-  return { ...view, saved };
+  const state = new TraceACaseState({});
+  const result = { current: undefined as unknown as StepPlayer };
+  const Probe = observer(function Probe({ id }: { id: string }) {
+    result.current = useStepPlayer(SIZES, state, id);
+    return null;
+  });
+  const view = render(<Probe id={conversationId} />);
+  return {
+    result,
+    rerender: ({ key }: { key: string }) => view.rerender(<Probe id={key} />),
+    unmount: view.unmount,
+    /** The steps saved, by conversation. */
+    saved: () => ({ ...state.stepsByConversation }),
+  };
 }
 
 describe("useStepPlayer", () => {
@@ -108,11 +114,11 @@ describe("useStepPlayer", () => {
   it("saves the step before while a step plays, and the step only once it ends", () => {
     const { result, saved } = renderPlayer("a");
     act(() => result.current.play(2));
-    expect(saved).toEqual({ a: 1 });
+    expect(saved()).toEqual({ a: 1 });
     act(() => jest.advanceTimersByTime(1000));
-    expect(saved).toEqual({ a: 1 });
+    expect(saved()).toEqual({ a: 1 });
     act(() => jest.advanceTimersByTime(3000));
-    expect(saved).toEqual({ a: 2 });
+    expect(saved()).toEqual({ a: 2 });
   });
 
   it("saves no steps done on reset", () => {
@@ -120,7 +126,7 @@ describe("useStepPlayer", () => {
     const { result, saved } = renderPlayer("a");
     act(() => result.current.play(3));
     act(() => result.current.reset());
-    expect(saved).toEqual({ a: 0 });
+    expect(saved()).toEqual({});
   });
 
   it("starts a conversation not stepped yet with nothing done", () => {
@@ -142,7 +148,7 @@ describe("useStepPlayer", () => {
     act(() => jest.advanceTimersByTime(5000));
     expect(result.current.stepsDone).toBe(0);
     expect(result.current.scene).toEqual(emptyScene(SIZES));
-    expect(saved).toEqual({ a: 1 });
+    expect(saved()).toEqual({ a: 1 });
   });
 
   it("brings a conversation's progress back when returning to it", () => {
@@ -175,6 +181,6 @@ describe("useStepPlayer", () => {
     act(() => result.current.play(2));
     unmount();
     expect(jest.getTimerCount()).toBe(0);
-    expect(saved).toEqual({ a: 1 });
+    expect(saved()).toEqual({ a: 1 });
   });
 });

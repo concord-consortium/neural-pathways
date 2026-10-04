@@ -47,15 +47,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const networkHeadId = useId();
   // Shown even before the store's correction lands, so an invalid id never reaches the screen.
   const currentId = validConversationId(shared.conversationId, ids);
-  const player = useStepPlayer(COLUMN_SIZES, {
-    key: currentId,
-    stepsDone: currentId === undefined ? 0 : state.stepsDone(currentId),
-    setStepsDone: stepsDone => {
-      if (currentId !== undefined) {
-        state.setStepsDone(currentId, stepsDone);
-      }
-    },
-  });
+  const player = useStepPlayer(COLUMN_SIZES, state, currentId);
 
   const position = currentId === undefined ? -1 : ids.indexOf(currentId);
   if (position < 0) {
