@@ -68,7 +68,8 @@ It has `version` and `conversationId` so far. Its fields:
 
 ## Each view's state
 
-None is in place yet. The target:
+Trace a Case's is in place, with only its steps done for each conversation so far: Animate and
+speed arrive with their controls. The others are not built yet. The target:
 
 | View | Model | Keeps |
 |---|---|---|
