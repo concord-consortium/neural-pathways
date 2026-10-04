@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import { SharedState } from "../../core/state/shared-state";
@@ -146,6 +146,25 @@ describe("TraceACase", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
     fireEvent.click(screen.getByRole("button", { name: "Step 1" }));
     expect(state.stepsByConversation).toEqual({ [ids[0]]: 3, [ids[1]]: 1 });
+  });
+
+  it("drops a step that is playing when the conversation changes, keeping the step before", async () => {
+    const state = new TraceACaseState({});
+    showView(new SharedState({}), state);
+    await screen.findByText("1 / 3");
+    jest.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
+      act(() => jest.advanceTimersByTime(500));
+      fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
+      expect(jest.getTimerCount()).toBe(0);
+      act(() => jest.advanceTimersByTime(5000));
+      expect(state.stepsByConversation).toEqual({ [ids[0]]: 1 });
+      fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
+      expect(screen.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-pressed", "true");
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("opens a conversation at the steps saved for it", async () => {

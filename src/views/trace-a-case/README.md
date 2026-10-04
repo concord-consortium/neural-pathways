@@ -9,12 +9,13 @@ The lesson's first view: follow one conversation through the network, a layer at
 - `step-timeline.ts`: what Steps 1–4 draw at any moment, as a pure function of time, at the
   prototype's "Med" speed. Step 1 fills the inputs one by one; Steps 2–4 play the fan into the next
   layer one source unit at a time; Step 4 ends with the answer.
-- `step-player.ts`: `StepPlayer`, a MobX class that plays a step on a `requestAnimationFrame` clock
-  and gives the view the scene to draw for a conversation. Pressing a step jumps to the state
-  before it and plays it. Reset clears everything. Under `prefers-reduced-motion` a step jumps
-  straight to its end. The steps done are kept for each conversation in the view's state,
-  `TraceACaseState`, so they survive moving between conversations and switching views. A step
-  still playing isn't kept, and changing conversation drops it. Its tests need no React.
+- `step-player.ts`: `StepPlayer`, a MobX class for one conversation that plays a step on a
+  `requestAnimationFrame` clock and gives the view the scene to draw. The view makes a player for
+  the conversation it shows, and a new one when the conversation changes, stopping the old one.
+  Pressing a step jumps to the state before it and plays it. Reset clears everything. Under
+  `prefers-reduced-motion` a step jumps straight to its end. The steps done are kept for each
+  conversation in the view's state, `TraceACaseState`, so they survive moving between
+  conversations and switching views. A step still playing isn't kept. Its tests need no React.
 - `step-row.tsx`: the Step 1–4 and Reset buttons.
 - `trace-a-case-state.ts`: the view's saved state, `TraceACaseState`: the steps done for each
   conversation. Only this view uses it, so it lives here rather than in `src/core/state/`.
