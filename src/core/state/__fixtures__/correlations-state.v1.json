@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "mode": "graphs",
+  "openDetail": { "kind": "cell", "attribute": "group_size", "pathway": 3 },
+  "$modelType": "npw/CorrelationsState"
+}
