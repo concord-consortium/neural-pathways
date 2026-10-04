@@ -38,6 +38,18 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `network/`: the network types, the toy network Trace a Case uses until there is one built from
   the real alien3 activations (`toy-network.ts`), the forward pass, and the scales the diagram
   draws against (`network-scales.ts`).
+
+  Three words name the same thing, each from its own side:
+  - **unit:** one element of a layer, in the network's math (`forward.ts`, and the `[source unit]`
+    index of a `Scene`'s `edgeDraw`). This is the textbook term, and the one Keras uses.
+  - **node:** that unit's circle in the diagram (`network-diagram/`), with its gauge. A node's
+    drawn row and its unit index can differ: `unitAt` in `network-diagram.tsx` maps one to the
+    other.
+  - **neuron:** what the lesson, the students and the activation analysis call it. It is the
+    usual word in interpretability work, which studies what each one responds to, and the word
+    the docs in `doc/` and `docs/` use.
+
+  Use the word for the side you are on, and "neuron" in anything a student sees.
 - `network-diagram/`: the shared network diagram. A view says what to show as a `Scene`, and
   `NetworkDiagram` draws it. `layout.ts` is its geometry; `easing.ts` has the timing curves.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
