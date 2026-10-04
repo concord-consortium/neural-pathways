@@ -1,4 +1,4 @@
-import React, { useCallback, useId, useMemo } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
@@ -11,10 +11,10 @@ import { useSharedState, useViewState } from "../../core/state/view-state-contex
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { StepRow } from "./step-row";
-import { useStepPlayer } from "./use-step-player";
+import { StepPlayer } from "./step-player";
 import "./trace-a-case.scss";
 
-/** Units in each drawn layer. Stable, as useStepPlayer requires. */
+/** Units in each drawn layer. Fixed, as StepPlayer requires. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
 
 /** Follow one conversation through the network, a layer at a time. */
@@ -47,18 +47,22 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const networkHeadId = useId();
   // Shown even before the store's correction lands, so an invalid id never reaches the screen.
   const currentId = validConversationId(shared.conversationId, ids);
-  const player = useStepPlayer(COLUMN_SIZES, state, currentId);
+  // One player for the view. It holds nothing between steps, so stopping it on unmount is enough.
+  const [player] = useState(() => new StepPlayer(COLUMN_SIZES, state, shared));
+  useEffect(() => () => player.stop(), [player]);
 
   const position = currentId === undefined ? -1 : ids.indexOf(currentId);
   if (position < 0) {
     return <p>No conversations.</p>;
   }
+  const id = ids[position];
   const goTo = (to: number) => shared.setConversationId(ids[to]);
 
   return (
     <div className="trace-a-case__layout">
       <div className="trace-a-case__steps">
-        <StepRow shownStep={player.shownStep} onStep={player.play} onReset={player.reset} />
+        <StepRow shownStep={player.shownStep(id)} onStep={step => player.play(id, step)}
+          onReset={() => player.reset(id)} />
       </div>
       <div className="trace-a-case__case">
         <ConversationCard conversation={index.items[position]} position={position} total={ids.length}
@@ -68,7 +72,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
         <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
         <div className="trace-a-case__diagram">
           <NetworkDiagram network={toyNetwork} pass={passes[position]} scales={scales}
-            outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+            outputLabels={alien3Dataset.classificationLabels} scene={player.scene(id)} />
         </div>
       </section>
     </div>
