@@ -22,9 +22,10 @@ Player (AP), each interactive will save `{ view, shared }`: its own view tree an
 
 ## How the state arrives
 
-The framework is in place: `SharedState`, `AppState`, and the context views use. No view has a
-state model yet. Each view's model, and each shared field, arrives with the story that first
-builds the UI using it, so it can be reviewed against that UI. The complete target is kept in draft
+The framework is in place: `SharedState`, `AppState`, and the context views use. Trace a Case is
+the first view with a state model. Each view's model, and each shared field, arrives with the
+story that first builds the UI using it, so it can be reviewed against that UI. The complete
+target is kept in draft
 [PR #29](https://github.com/concord-consortium/neural-pathways/pull/29). Bring a view's model over
 from it, and change the model if the UI turns out to need something different. The tables below
 list that target and the story each piece is expected to arrive with.
