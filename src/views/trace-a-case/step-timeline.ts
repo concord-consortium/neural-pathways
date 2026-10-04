@@ -6,8 +6,8 @@ import { emptyScene, Scene } from "../../core/network-diagram/scene";
  * (neural-net-maker index.html: fillInputs, runFan, revealAnswer). Step s fills column s − 1;
  * steps 2–4 first play the fan of edges into it, one source unit at a time.
  */
-export type Step = 1 | 2 | 3 | 4;
-export const STEPS: readonly Step[] = [1, 2, 3, 4];
+export const STEPS = [1, 2, 3, 4] as const;
+export type Step = (typeof STEPS)[number];
 
 export interface RunningStep {
   step: Step;
