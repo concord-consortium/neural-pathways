@@ -149,13 +149,12 @@ are no built-in default queries. An author who wants an interactive to open on a
 Saved interactive state will be loaded through one function, `loadInteractiveState(json)`, which
 returns the two trees or an error result and never throws. It returns an error when the JSON:
 
-- fails `typeCheck` against the expected model, as in `typeCheck(types.model(TraceACaseState), view)`.
-  This check is needed even when `fromSnapshot` succeeds with type checking on. A snapshot whose
-  `$modelType` names a different registered model loads as that other class:
-  `fromSnapshot(TraceACaseState, …)` given Correlations state returns a `CorrelationsState`.
-  `typeCheck`, or an `instanceof` check, catches it, and so does putting the tree in its slot
-  under `AppState`'s root, which throws a type error. This was reported as
-  [mobx-keystone #590](https://github.com/xaviergonz/mobx-keystone/issues/590);
+- doesn't load with `fromSnapshot(Model, json)`, which throws:
+  - a `TypeCheckError` for a wrong-typed value, since type checking is always on;
+  - a `SnapshotTypeMismatchError` for the saved state of a different model, such as Correlations
+    state loaded as `TraceACaseState`. Before mobx-keystone 2.3.0 this returned the other model
+    instead ([mobx-keystone #590](https://github.com/xaviergonz/mobx-keystone/issues/590)).
+    `shared-state.test.ts` checks it;
 - has an unknown `$modelType`;
 - has a `version` other than the model's.
 

@@ -60,7 +60,7 @@ After this work:
 
 | Decision | Choice | Why |
 |---|---|---|
-| State library | **mobx-keystone** 2.2 on MobX 7 | Class models; snapshots, patches, action recording and built-in undo; runtime type checking on load. Why keystone rather than MST, and its costs, are in `docs/mobx-keystone.md`. |
+| State library | **mobx-keystone** 2.3 on MobX 7 | Class models; snapshots, patches, action recording and built-in undo; runtime type checking on load. Why keystone rather than MST, and its costs, are in `docs/mobx-keystone.md`. |
 | Trees | **Separate trees in both modes:** one per view, plus one shared, as children of one runtime-only root | Matches the AP, where each interactive saves its own state. Save and load work the same way in the standalone app and in the AP. One root lets an action that changes a view's tree and the shared tree be one undo step. |
 | Query and conversation | **Shared** | Moving between views keeps the student on the same filter and the same case. The one exception is Investigate Unknown Pathway's second pane, which keeps its own conversation. |
 | Default queries | **None in code** | Keeps the views free of lesson content. An author who wants a starting query sets it in the interactive's URL (NPW-45). |
@@ -205,7 +205,7 @@ model, which is never saved itself:
 the holder. Views import only from `core`, and `app` supplies the values, so the import boundary
 from NPW-22 is kept.
 
-**Dependencies:** `mobx` ^7, `mobx-keystone` ^2.2, `mobx-react-lite` ^5.1, and `core-js` for the
+**Dependencies:** `mobx` ^7, `mobx-keystone` ^2.3, `mobx-react-lite` ^5.1, and `core-js` for the
 newer `Set` methods that keystone's types declare. In `tsconfig.json`, `experimentalDecorators` is
 removed and `lib` adds `esnext.collection`. Jest compiles with the same tsconfig through `ts-jest`.
 
