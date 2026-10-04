@@ -1,6 +1,6 @@
 import React from "react";
 import type { AnyModel, ModelClass } from "mobx-keystone";
-import { TraceACaseState } from "../core/state/trace-a-case-state";
+import { TraceACaseState } from "../views/trace-a-case/trace-a-case-state";
 import { TraceACase } from "../views/trace-a-case/trace-a-case";
 import { ExtractPathways } from "../views/extract-pathways/extract-pathways";
 import { InvestigatePathways } from "../views/investigate-pathways/investigate-pathways";

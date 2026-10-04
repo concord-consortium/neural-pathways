@@ -1,4 +1,4 @@
-import "./setup";
+import "../../core/state/setup";
 import { Model, model, modelAction, tProp, types } from "mobx-keystone";
 
 /** How many of Trace a Case's four steps are done: none to all. */
