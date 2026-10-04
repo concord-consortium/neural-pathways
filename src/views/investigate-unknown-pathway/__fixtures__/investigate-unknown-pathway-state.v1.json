@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "pane1": { "selectedAttributes": ["group_size", "young_present"] },
+  "pane2": { "conversationId": "e41c9f22", "selectedAttributes": ["near_water"] },
+  "$modelType": "npw/InvestigateUnknownPathwayState"
+}
