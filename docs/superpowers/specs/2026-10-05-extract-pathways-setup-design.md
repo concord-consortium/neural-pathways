@@ -34,7 +34,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 | Press rules in this story | Trace a Case's: any enabled button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but disabled. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
 | `extracted` | Renamed `setupDone`. | It means "Setup has been done". "Extract Pathways" is a later step, so the old name would mislead. Nothing has shipped. |
 | Collect a Conversation's network animation | All three of the prototype's versions: a replay of Trace a Case's steps for the first conversation, a swap for the next two, and a quick swap after that. | The replay ties the deck back to Trace a Case. The slower swaps make each new conversation visible before they turn into shorthand. |
-| The end of a collection | The diagram and lifted column come back to full strength once the column lands. | The prototype leaves them dimmed until the next press, but rebuilds them at full strength when you return (`restoreRun`, lines 14746–14778). A pure `sceneAt(done)` needs the two to match. |
+| The end of a collection | Everything but the hidden neurons, and the lifted column, stay dimmed once the column lands, until the next collection starts. Coming back to the view shows the same. | As in the prototype (`collectOne` and `flyColumn`, lines 15161–15215). The prototype rebuilds a returned-to screen at full strength (`restoreRun`, lines 14746–14778), but a pure `sceneAt(done)` must match the end of the run that reached it, so here it comes back as it was left. |
 | Which conversations | The first ten in dataset order. Extract Pathways doesn't read or change the shared conversation. | The prototype does the same (`cases`, line 10622, with `idx` 0). The view has no conversation panel. |
 | The canvas | One SVG as wide as the panel, never narrower than 995 drawing units: the network in a 537-wide middle, the deck in the left strip, the lifted column in the right. | Before Setup the strips are just empty. This replaces the prototype's widen-and-shift (`widenForLift`, lines 13371–13411). 995 is the prototype's width at its 537 cap plus its two 229 strips, which the 20-column deck needs once NPW-48 adds it. |
 | The activation legend | Left out. | It's in NPW-24's scope, and NPW-23 adds the same key to Trace a Case. |
@@ -135,13 +135,14 @@ Case keeps only its button list and the timeline wrapper.
 ```ts
 interface Scene {
   // …as now
-  /** Opacity, 0–1. `hidden`: the two hidden layers' nodes. `rest`: everything else. */
-  dim: { rest: number; hidden: number };
+  /** The opacity, 0–1, of everything but the hidden layers' nodes, which stay at full strength. */
+  dim: number;
 }
 ```
 
-- `rest` covers the wires, edges, input and output nodes, pills, captions and labels.
-- `emptyScene` and `fullScene` set both to 1. Trace a Case never changes them.
+- `dim` covers the wires, edges, input and output nodes, pills, captions and labels. The prototype
+  never dims the hidden neurons while Extract Pathways runs (`dimRest`, and `dimAll`, line 15280).
+- `emptyScene` and `fullScene` set it to 1. Trace a Case never changes it.
 - As in the prototype's `dimRest` (lines 13467–13478), opacity is set on each group of lines and
   labels, and on each node.
 
@@ -308,7 +309,8 @@ Pure functions in `setup-timeline.ts` and `collect-timeline.ts`, joined into the
 - **`done = 0`:** the blank network.
 - **`done = 1`:** the network plus the empty lifted column and its label.
 - **`done = 1 + k`:** the network showing conversation *k* in full, with its answer and all three
-  weight captions; "Conversation *k*"; the lifted column; and deck columns 1 to *k*.
+  weight captions; "Conversation *k*"; the lifted column; and deck columns 1 to *k*. Everything
+  but the hidden neurons, and the lifted column, are dimmed to 0.5, as the last flight left them.
 
 A run draws `sceneAt(from)` changed by its timeline at `t`. Its last frame equals `sceneAt(to)`.
 
@@ -318,14 +320,17 @@ From lines 15428–15436.
 
 | ms | What happens |
 |---|---|
-| 0–350 | `dim.rest` eases to 0.5 |
+| 0–350 | `dim` eases to 0.5 |
 | 550 | The 14 copies fly from the hidden neurons to the lifted column (see [Flights](#flights-flightts)) |
-| 2,976–3,296 | `dim.rest` eases back to 1, and "Hidden Layer Neurons" fades in |
+| 2,976–3,296 | `dim` eases back to 1, and "Hidden Layer Neurons" fades in |
 | 3,416 | End |
 
 ### Collect a Conversation (*s* → *s* + 1)
 
-This collects conversation *n* = *s*. It is the network part, a hold, then the flight.
+This collects conversation *n* = *s*. It is the network part, a hold, then the flight. The replay
+starts on the full-strength network Setup leaves. Every later collection starts with a 320 ms undim
+(`undim`): `dim` and the lifted column's opacity ease back to 1, and its network part starts when
+that ends.
 
 **Replay (*n* = 1)**, from `collectOne` and `runSteps` (lines 15161–15199 and 15365–15384):
 
@@ -359,12 +364,9 @@ as in the prototype, where `setNodeLevel` has no transition.
 
 | ms | What happens |
 |---|---|
-| 0–350 | `dim.rest`, `dim.hidden` and the lifted column's opacity ease to 0.5 |
+| 0–350 | `dim` and the lifted column's opacity ease to 0.5. The hidden neurons stay at full strength (`dimAll`) |
 | 550 | The 14 copies fly from the hidden neurons to deck column *n*, filled with this conversation's gauges and shrinking to the deck's radius |
-| 2,716–3,036 | Everything eases back to full strength |
-
-The prototype starts a swap with a 320 ms undim. That undim is now at the end of the flight
-instead, so a swap starts straight away.
+| 2,716 | End. The network and the lifted column stay dimmed until the next collection's undim |
 
 ## Testing
 
@@ -393,7 +395,7 @@ instead, so a swap starts straight away.
 **The diagram**
 
 - `network-diagram.test.tsx` keeps passing.
-- `dim`: `rest` and `hidden` reach the right elements, and both default to 1.
+- `dim`: it reaches everything but the hidden layers' nodes, and defaults to 1.
 - `pass-steps.test.ts`, the moved timeline tests.
 
 **Extract Pathways**

@@ -23,9 +23,9 @@ function renderDrawing(scene: Scene) {
   );
 }
 
-function dimmed(rest: number, hidden: number): Scene {
+function dimmed(dim: number): Scene {
   const scene = fullScene(SIZES);
-  scene.dim = { rest, hidden };
+  scene.dim = dim;
   return scene;
 }
 
@@ -39,8 +39,8 @@ describe("NetworkDrawing", () => {
     expect(screen.getByTestId("edge-near-0-0-0").closest("g")).not.toHaveAttribute("opacity");
   });
 
-  it("dims everything but the hidden layers' nodes by dim.rest", () => {
-    renderDrawing(dimmed(0.5, 1));
+  it("dims everything but the hidden layers' nodes", () => {
+    renderDrawing(dimmed(0.5));
     expect(screen.getByTestId("node-0-0")).toHaveAttribute("opacity", "0.5");
     expect(screen.getByTestId("node-3-0")).toHaveAttribute("opacity", "0.5");
     expect(screen.getByTestId("gauge-3-0")).toHaveAttribute("opacity", "0.5");
@@ -62,22 +62,14 @@ describe("NetworkDrawing", () => {
     const { rerender } = renderDrawing(fullScene(SIZES));
     expect(screen.getByTestId("node-0-0")).not.toHaveAttribute("opacity");
     expect(screen.getByTestId("node-1-0")).not.toHaveAttribute("opacity");
-    const dimScene = dimmed(0.5, 0.25);
     rerender(
       <svg>
         <NetworkDrawing network={toyNetwork} layout={layout} pass={passes[0]} scales={scales}
-          outputLabels={LABELS} scene={dimScene} />
+          outputLabels={LABELS} scene={dimmed(0.5)} />
       </svg>,
     );
     expect(screen.getByTestId("node-0-0")).toHaveAttribute("opacity", "0.5");
-    expect(screen.getByTestId("node-1-0")).toHaveAttribute("opacity", "0.25");
+    expect(screen.getByTestId("node-1-0")).not.toHaveAttribute("opacity");
     expect(screen.getByTestId("node-3-0")).toHaveAttribute("opacity", "0.5");
-  });
-
-  it("dims the hidden layers' nodes by dim.hidden", () => {
-    renderDrawing(dimmed(0.5, 0.5));
-    expect(screen.getByTestId("node-1-0")).toHaveAttribute("opacity", "0.5");
-    expect(screen.getByTestId("node-2-5")).toHaveAttribute("opacity", "0.5");
-    expect(screen.getByTestId("gauge-1-0")).toHaveAttribute("opacity", "0.5");
   });
 });

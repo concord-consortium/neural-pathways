@@ -22,7 +22,7 @@ describe("scenes", () => {
   });
 
   it("draws both scenes at full strength", () => {
-    expect(emptyScene(sizes).dim).toEqual({ rest: 1, hidden: 1 });
-    expect(fullScene(sizes).dim).toEqual({ rest: 1, hidden: 1 });
+    expect(emptyScene(sizes).dim).toBe(1);
+    expect(fullScene(sizes).dim).toBe(1);
   });
 });
