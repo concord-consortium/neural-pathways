@@ -59,6 +59,11 @@ describe("ExtractDrawing", () => {
     expect(placeOf(copies[0])).toEqual({ x: geometry.lifted.x, y: geometry.lifted.ys[0] });
   });
 
+  it("describes the plain network while the lifted column is still flying", () => {
+    renderDrawing(setupSceneAt(SIZES, 1000));
+    expect(screen.getByRole("img", { name: "The network." })).toBeInTheDocument();
+  });
+
   it("starts a lifted copy on its hidden neuron", () => {
     renderDrawing(setupSceneAt(SIZES, 550));
     // eslint-disable-next-line testing-library/no-node-access -- copies are groups with only a test id

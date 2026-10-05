@@ -69,7 +69,9 @@ It has `version` and `conversationId` so far. Its fields:
 
 ## Each view's state
 
-Trace a Case's is in place, with only the marker each conversation rests at so far, and Extract Pathways' with its first two stages. Animate and speed arrive with their controls. The others are not built yet. The target:
+Trace a Case's is in place, with only the marker each conversation rests at so far, and Extract
+Pathways' with its first two stages. Animate and speed arrive with their controls. The others are
+not built yet. The target:
 
 | View | Model | Keeps |
 |---|---|---|

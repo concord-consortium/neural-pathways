@@ -29,12 +29,12 @@ function hiddenValues(pass: ForwardPass): number[] {
   return pass.layers.slice(1, -1).flat();
 }
 
-/** What the drawing shows, for screen readers. Columns still in flight aren't counted. */
+/** What the drawing shows, for screen readers. The lifted column and the deck columns still in flight aren't counted. */
 export function describeScene(scene: ExtractScene, hidden: number): string {
-  if (!scene.lifted) {
+  const landed = flightDuration(hidden);
+  if (!scene.lifted || scene.lifted.flight < landed) {
     return "The network.";
   }
-  const landed = flightDuration(hidden);
   const collected = scene.deck.filter(column => column.flight >= landed).length;
   const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
   if (collected === 0) {

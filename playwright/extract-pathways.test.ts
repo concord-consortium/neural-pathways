@@ -9,7 +9,7 @@ async function open(page: Page, reducedMotion: "reduce" | "no-preference" = "red
   await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
 }
 
-test("Setup animates the hidden neurons out of the network", async ({ page }) => {
+test("Setup lifts the hidden neurons out of the network, animated", async ({ page }) => {
   await open(page, "no-preference");
   await page.getByRole("button", { name: "Setup" }).click();
   await expect(page.getByRole("img", { name: LIFTED })).toBeVisible({ timeout: 10_000 });

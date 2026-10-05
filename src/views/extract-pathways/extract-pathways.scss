@@ -10,7 +10,8 @@
 // The steps sit centered above the full-width panel, as in the prototype.
 .extract-pathways__steps {
   display: flex;
-  justify-content: center;
+  // `safe` keeps the first button reachable by scrolling when the row is wider than the panel.
+  justify-content: safe center;
   min-width: 0;
   overflow-x: auto;
 }
