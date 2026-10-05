@@ -1,0 +1,221 @@
+import { clamp01 } from "../../core/network-diagram/easing";
+import {
+  ANSWER_DURATION, edgeDrawAt, sceneAt as passSceneAt, Step, stepDuration, STEPS,
+} from "../../core/network-diagram/pass-steps";
+import { fullScene, Scene } from "../../core/network-diagram/scene";
+import { ExtractScene, hiddenCount, restScene } from "./extract-scene";
+import { flightDuration } from "./flight";
+import { DIM, DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
+
+// The prototype's collectOne, runSteps, setConversation and flyColumn (neural-net-maker
+// index.html), at Med.
+
+/** How a collection runs its conversation through the network. */
+export type CollectVersion = "replay" | "swap" | "quick";
+
+/** "Conversation n" drops in and settles over this long; the quick swap's is 0.7 of it. */
+const BOUNCE_MS = 520;
+const QUICK_BOUNCE_MS = Math.round(BOUNCE_MS * 0.7);
+
+// Replay: Step 1 at its own speed, then the fans faster, as a reminder of Trace a Case.
+const REPLAY_START = 540;
+const REPLAY_FAN_SPEED = 0.26;
+const STEP_GAP = 110;
+const STEPS_REST = 700;
+
+// Swap: drain a layer at a time, hold on the blank network, refill a layer at a time.
+const DRAIN_GAP = 12;
+const DRAIN_LAYER_GAP = 60;
+const CLEAR_DELAY = 20;
+const EMPTY_HOLD = 420;
+const REFILL_GAP_SLOW = 30;
+const SWEEP_DELAY = 30;
+const SWEEP_MS = 360;
+const SWAP_TAIL = 60;
+
+// Quick swap: everything clears at once, then refills quickly with the lines snapped in.
+const REFILL_GAP = 16;
+const SNAP_DELAY = 20;
+const QUICK_TAIL = 40;
+
+/** After a swap, before the flight. */
+const NEXT_HOLD = 550;
+
+export function collectVersion(n: number): CollectVersion {
+  return n === 1 ? "replay" : n <= 3 ? "swap" : "quick";
+}
+
+interface StepSlot {
+  step: Step;
+  start: number;
+  duration: number;
+  speed: number;
+}
+
+function replaySlots(columnSizes: readonly number[]): StepSlot[] {
+  const slots: StepSlot[] = [];
+  let at = REPLAY_START;
+  for (const step of STEPS) {
+    const speed = step === 1 ? 1 : REPLAY_FAN_SPEED;
+    const duration = stepDuration(step, columnSizes) * speed;
+    slots.push({ step, start: at, duration, speed });
+    at += duration + STEP_GAP;
+  }
+  return slots;
+}
+
+function replayNetwork(columnSizes: readonly number[], t: number): Scene {
+  let done = 0;
+  for (const slot of replaySlots(columnSizes)) {
+    if (t < slot.start) {
+      break;
+    }
+    if (t < slot.start + slot.duration) {
+      return passSceneAt(columnSizes, done, { step: slot.step, t: (t - slot.start) / slot.speed });
+    }
+    done = slot.step;
+  }
+  return passSceneAt(columnSizes, done);
+}
+
+interface SwapPlan {
+  /** [layer][unit]: when each gauge empties. */
+  drainAt: number[][];
+  /** [gap]: when the lines leaving each layer clear. */
+  clearAt: number[];
+  /** When the network is blank and takes the new conversation. */
+  blank: number;
+  /** [layer][unit]: when each gauge fills again. */
+  fillAt: number[][];
+  /** [gap]: when the lines leaving each layer start to sweep in. */
+  sweepAt: number[];
+  answerAt: number;
+  end: number;
+}
+
+function swapPlan(columnSizes: readonly number[]): SwapPlan {
+  let at = 0;
+  const drainAt: number[][] = [];
+  const clearAt: number[] = [];
+  for (const n of columnSizes) {
+    drainAt.push(Array.from({ length: n }, (_, i) => at + i * DRAIN_GAP));
+    at += (n - 1) * DRAIN_GAP;
+    clearAt.push(at + CLEAR_DELAY);
+    at += DRAIN_LAYER_GAP;
+  }
+  const blank = at;
+  at += EMPTY_HOLD;
+  const fillAt: number[][] = [];
+  const sweepAt: number[] = [];
+  for (const n of columnSizes) {
+    fillAt.push(Array.from({ length: n }, (_, i) => at + i * REFILL_GAP_SLOW));
+    at += (n - 1) * REFILL_GAP_SLOW;
+    sweepAt.push(at + SWEEP_DELAY);
+    at += SWEEP_MS;
+  }
+  return { drainAt, clearAt, blank, fillAt, sweepAt, answerAt: at, end: at + SWAP_TAIL };
+}
+
+function swapNetwork(columnSizes: readonly number[], plan: SwapPlan, t: number): Scene {
+  const scene = fullScene(columnSizes);
+  if (t < plan.blank) {
+    scene.nodeFill = plan.drainAt.map(times => times.map(at => (t >= at ? 0 : 1)));
+    scene.edgeDraw = scene.edgeDraw.map((gap, g) => gap.map(() => (t >= plan.clearAt[g] ? 0 : 1)));
+    return scene;
+  }
+  scene.nodeFill = plan.fillAt.map(times => times.map(at => (t >= at ? 1 : 0)));
+  scene.edgeDraw = scene.edgeDraw.map((gap, g) => (
+    gap.map(() => edgeDrawAt(clamp01((t - plan.sweepAt[g]) / SWEEP_MS)))
+  ));
+  scene.answer = clamp01((t - plan.answerAt) / ANSWER_DURATION);
+  return scene;
+}
+
+interface QuickPlan {
+  fillAt: number[][];
+  snapAt: number[];
+  end: number;
+}
+
+function quickPlan(columnSizes: readonly number[]): QuickPlan {
+  let at = 0;
+  const fillAt: number[][] = [];
+  const snapAt: number[] = [];
+  for (const n of columnSizes) {
+    fillAt.push(Array.from({ length: n }, (_, i) => at + i * REFILL_GAP));
+    at += (n - 1) * REFILL_GAP;
+    snapAt.push(at + SNAP_DELAY);
+    at += REFILL_GAP;
+  }
+  return { fillAt, snapAt, end: at + QUICK_TAIL };
+}
+
+function quickNetwork(columnSizes: readonly number[], plan: QuickPlan, t: number): Scene {
+  const scene = fullScene(columnSizes);
+  scene.nodeFill = plan.fillAt.map(times => times.map(at => (t >= at ? 1 : 0)));
+  scene.edgeDraw = scene.edgeDraw.map((gap, g) => gap.map(() => (t >= plan.snapAt[g] ? 1 : 0)));
+  scene.answer = t >= plan.end ? 1 : 0;
+  return scene;
+}
+
+/** When the flight's dim begins: after the network part and its hold. */
+function flightStart(columnSizes: readonly number[], n: number): number {
+  switch (collectVersion(n)) {
+    case "replay": {
+      const last = replaySlots(columnSizes)[STEPS.length - 1];
+      return last.start + last.duration + STEP_GAP + STEPS_REST;
+    }
+    case "swap":
+      return swapPlan(columnSizes).end + NEXT_HOLD;
+    case "quick":
+      return quickPlan(columnSizes).end + NEXT_HOLD;
+  }
+}
+
+export function collectDuration(columnSizes: readonly number[], n: number): number {
+  return flightStart(columnSizes, n) + DIM_MS + DIM_HOLD + flightDuration(hiddenCount(columnSizes)) + UNDIM_MS;
+}
+
+/**
+ * Collecting conversation `n`, `t` ms in: the network runs it (a replay of the pass steps for the
+ * first, a swap for the next two, a quick swap after), then dims while copies of its hidden
+ * neurons fly into deck column n, then comes back to full strength.
+ */
+export function collectSceneAt(columnSizes: readonly number[], n: number, t: number): ExtractScene {
+  const scene = restScene(columnSizes, n);
+  switch (collectVersion(n)) {
+    case "replay":
+      scene.network = replayNetwork(columnSizes, t);
+      scene.shown = n;
+      scene.label = { n, bounce: clamp01(t / BOUNCE_MS) };
+      break;
+    case "swap": {
+      const plan = swapPlan(columnSizes);
+      scene.network = swapNetwork(columnSizes, plan, t);
+      if (t >= plan.blank) {
+        scene.shown = n;
+        scene.label = { n, bounce: clamp01((t - plan.blank) / BOUNCE_MS) };
+      }
+      break;
+    }
+    case "quick":
+      scene.network = quickNetwork(columnSizes, quickPlan(columnSizes), t);
+      scene.shown = n;
+      scene.label = { n, bounce: clamp01(t / QUICK_BOUNCE_MS) };
+      break;
+  }
+
+  const dimAt = flightStart(columnSizes, n);
+  const flyAt = dimAt + DIM_MS + DIM_HOLD;
+  const landed = flightDuration(hiddenCount(columnSizes));
+  const undimAt = flyAt + landed;
+  const strength = t < undimAt ? easeBetween(1, DIM, t, dimAt, DIM_MS) : easeBetween(DIM, 1, t, undimAt, UNDIM_MS);
+  scene.network.dim = { rest: strength, hidden: strength };
+  if (scene.lifted) {
+    scene.lifted = { ...scene.lifted, opacity: strength };
+  }
+  if (t >= flyAt) {
+    scene.deck.push({ conversation: n, flight: Math.min(t - flyAt, landed) });
+  }
+  return scene;
+}
