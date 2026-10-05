@@ -1,0 +1,57 @@
+import { test } from "./lib/base-url";
+import { expect, Page } from "@playwright/test";
+
+const LIFTED = "The network, with its 14 hidden neurons lifted out.";
+
+async function open(page: Page, reducedMotion: "reduce" | "no-preference" = "reduce") {
+  await page.emulateMedia({ reducedMotion });
+  await page.goto("/#view=extract-pathways");
+  await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
+}
+
+test("Setup animates the hidden neurons out of the network", async ({ page }) => {
+  await open(page, "no-preference");
+  await page.getByRole("button", { name: "Setup" }).click();
+  await expect(page.getByRole("img", { name: LIFTED })).toBeVisible({ timeout: 10_000 });
+});
+
+test("three collections give three deck columns", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Setup" }).click();
+  const collect = page.getByRole("button", { name: "Collect a Conversation" });
+  for (let i = 0; i < 3; i++) {
+    await collect.click();
+  }
+  await expect(page.getByRole("img", { name: /and 3 conversations collected\.$/ })).toBeVisible();
+  await expect(page.getByText("Conversation 3")).toBeVisible();
+});
+
+test("the stage survives switching views", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Collect a Conversation" }).click();
+  await page.getByRole("button", { name: "Collect a Conversation" }).click();
+  const nav = page.getByRole("navigation", { name: "Views" });
+  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await expect(page.getByText("1 / 800")).toBeVisible();
+  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await expect(page.getByRole("img", { name: /and 2 conversations collected\.$/ })).toBeVisible();
+});
+
+test("Collect a Conversation stops after ten", async ({ page }) => {
+  await open(page);
+  const collect = page.getByRole("button", { name: "Collect a Conversation" });
+  for (let i = 0; i < 10; i++) {
+    await collect.click();
+  }
+  await expect(collect).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Collect All Conversations" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Extract Pathways" })).toBeDisabled();
+});
+
+test("Reset clears everything", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Collect a Conversation" }).click();
+  await page.getByRole("button", { name: "Reset" }).click();
+  await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
+});
