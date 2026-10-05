@@ -1,19 +1,16 @@
-import React, { useId, useMemo } from "react";
+import React, { useId } from "react";
 import { Network } from "../network/network";
 import { ForwardPass, predictedClass } from "../network/forward";
 import { magnitudeBand, NetworkScales } from "../network/network-scales";
 import { signColor } from "../colors";
-import { useElementSize } from "../use-element-size";
 import { clamp01, cubicBezier } from "./easing";
-import { layoutNetwork, NetworkLayout, PILL_GAP } from "./layout";
+import { NetworkLayout, PILL_GAP } from "./layout";
 import { Scene } from "./scene";
 import "./network-diagram.scss";
 
 export const COLUMN_CAPTIONS = ["Input Layer", "Hidden Layer 1", "Hidden Layer 2", "Output Layer"];
 /** Output units top to bottom: Approach (class 1) above Wait (class 0), as in the prototype. */
 export const OUTPUT_ORDER = [1, 0];
-/** The size drawn until the container reports its own. */
-export const DIAGRAM_DEFAULT_SIZE = { width: 537, height: 420 };
 /** Stroke widths for the thin, mid and thick bands. */
 const EDGE_WIDTHS = [1, 2, 3];
 /** The winning pill grows by this much on every side. */
@@ -42,12 +39,15 @@ function unitAt(column: number, row: number, lastColumn: number): number {
   return column === lastColumn ? OUTPUT_ORDER[row] : row;
 }
 
-function capitalize(word: string): string {
-  return word.charAt(0).toUpperCase() + word.slice(1);
+/** An opacity attribute, left off at full strength. */
+function opacity(value: number): number | undefined {
+  return value >= 1 ? undefined : value;
 }
 
-interface NetworkDiagramProps {
+
+export interface NetworkDrawingProps {
   network: Network;
+  layout: NetworkLayout;
   pass: ForwardPass;
   scales: NetworkScales;
   /** Class labels by class index, such as alien3Dataset.classificationLabels. */
@@ -56,19 +56,21 @@ interface NetworkDiagramProps {
 }
 
 /**
- * One conversation's pass through the network, drawn as far as `scene` says. Stateless: views
- * decide what is drawn and animate by passing new scenes. Shared by Trace a Case, Extract
- * Pathways and Investigate Pathways.
+ * One conversation's pass through the network as an SVG group, laid out by `layout` and drawn as
+ * far as `scene` says. NetworkDiagram sizes it and wraps it in an SVG of its own; a view that draws
+ * more around the network places it in its own SVG. Stateless: views animate it by passing new
+ * scenes.
  */
-export const NetworkDiagram: React.FC<NetworkDiagramProps> = ({ network, pass, scales, outputLabels, scene }) => {
-  const [hostRef, size] = useElementSize<HTMLDivElement>(DIAGRAM_DEFAULT_SIZE);
-  const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
-  const layout = useMemo(
-    () => layoutNetwork(columnSizes, size.width, size.height), [columnSizes, size.width, size.height]);
+export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
+  { network, layout, pass, scales, outputLabels, scene },
+) => {
   const clipPrefix = `network-clip-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const lastColumn = columnSizes.length - 1;
+  const lastColumn = layout.nodes.length - 1;
   const { radius } = layout;
   const winner = predictedClass(pass);
+  const { rest, hidden } = scene.dim;
+  /** The hidden layers' nodes take `hidden`; the input and output nodes take `rest`. */
+  const columnOpacity = (column: number) => (column > 0 && column < lastColumn ? hidden : rest);
 
   const nodeValue = (column: number, unit: number) =>
     column === lastColumn ? pass.layers[column][unit] / scales.logitScale : pass.layers[column][unit];
@@ -122,44 +124,39 @@ export const NetworkDiagram: React.FC<NetworkDiagramProps> = ({ network, pass, s
       return;
     }
     gauges.push(
-      <rect key={`${c}-${unit}`} data-testid={`gauge-${c}-${unit}`}
+      <rect key={`${c}-${unit}`} data-testid={`gauge-${c}-${unit}`} opacity={opacity(columnOpacity(c))}
         x={node.x - radius} width={radius * 2} y={shown >= 0 ? node.y - height : node.y} height={height}
         fill={signColor(shown)} clipPath={`url(#${clipPrefix}-${c}-${row})`} />,
     );
   }));
 
   const outputNodes = layout.nodes[lastColumn];
-  const answered = scene.answer >= 1;
-  const title = answered
-    ? `Network diagram. The network predicts ${capitalize(outputLabels[winner])}.`
-    : "Network diagram";
 
   return (
-    <div ref={hostRef} className="network-diagram">
-      <svg role="img" aria-label={title} className="network-diagram__svg"
-        width={layout.width} height={layout.height} viewBox={`0 0 ${layout.width} ${layout.height}`}>
-        <g className="network-diagram__pills">
-          {layout.pills.map((box, row) => {
-            const unit = OUTPUT_ORDER[row];
-            const won = scene.answer > 0 && unit === winner;
-            const grow = won ? PILL_GROW : 0;
-            const height = box.height + grow * 2;
-            const classes = ["network-diagram__pill", `network-diagram__pill--${outputLabels[unit]}`];
-            if (won) {
-              classes.push("network-diagram__pill--won");
-            }
-            return (
-              <rect key={unit} data-testid={`pill-${unit}`} className={classes.join(" ")}
-                x={box.x - grow} y={box.y - grow} width={box.width + grow * 2} height={height} rx={height / 2}
-                style={won ? { transform: `scale(${popScale(scene.answer)})` } : undefined} />
-            );
-          })}
-        </g>
-        <Wires layout={layout} lastColumn={lastColumn} />
-        <g className="network-diagram__edges">{edges}</g>
-        <Discs layout={layout} clipPrefix={clipPrefix} />
-        <g className="network-diagram__gauges">{gauges}</g>
-        <Outlines layout={layout} lastColumn={lastColumn} />
+    <g className="network-drawing">
+      <g className="network-diagram__pills" opacity={opacity(rest)}>
+        {layout.pills.map((box, row) => {
+          const unit = OUTPUT_ORDER[row];
+          const won = scene.answer > 0 && unit === winner;
+          const grow = won ? PILL_GROW : 0;
+          const height = box.height + grow * 2;
+          const classes = ["network-diagram__pill", `network-diagram__pill--${outputLabels[unit]}`];
+          if (won) {
+            classes.push("network-diagram__pill--won");
+          }
+          return (
+            <rect key={unit} data-testid={`pill-${unit}`} className={classes.join(" ")}
+              x={box.x - grow} y={box.y - grow} width={box.width + grow * 2} height={height} rx={height / 2}
+              style={won ? { transform: `scale(${popScale(scene.answer)})` } : undefined} />
+          );
+        })}
+      </g>
+      <Wires layout={layout} lastColumn={lastColumn} opacity={opacity(rest)} />
+      <g className="network-diagram__edges" opacity={opacity(rest)}>{edges}</g>
+      <Discs layout={layout} clipPrefix={clipPrefix} columnOpacity={columnOpacity} rest={rest} hidden={hidden} />
+      <g className="network-diagram__gauges">{gauges}</g>
+      <Outlines layout={layout} lastColumn={lastColumn} columnOpacity={columnOpacity} rest={rest} hidden={hidden} />
+      <g className="network-diagram__labels" opacity={opacity(rest)}>
         {outputNodes.map((node, row) => {
           const unit = OUTPUT_ORDER[row];
           const box = layout.pills[row];
@@ -182,18 +179,19 @@ export const NetworkDiagram: React.FC<NetworkDiagramProps> = ({ network, pass, s
             × weight
           </text>
         ))}
-      </svg>
-    </div>
+      </g>
+    </g>
   );
 };
 
-interface StaticLayerProps {
+interface WiresProps {
   layout: NetworkLayout;
   lastColumn: number;
+  opacity: number | undefined;
 }
 
 /** The gray scaffold. Drawn signal halves lie on top and cover it. */
-const Wires = React.memo(function Wires({ layout, lastColumn }: StaticLayerProps) {
+const Wires = React.memo(function Wires({ layout, lastColumn, opacity: groupOpacity }: WiresProps) {
   const { nodes, radius } = layout;
   const lines: React.ReactElement[] = [];
   for (let gap = 0; gap < nodes.length - 1; gap++) {
@@ -204,11 +202,24 @@ const Wires = React.memo(function Wires({ layout, lastColumn }: StaticLayerProps
       );
     }));
   }
-  return <g className="network-diagram__wires">{lines}</g>;
+  return <g className="network-diagram__wires" opacity={groupOpacity}>{lines}</g>;
 });
 
+interface NodeLayerProps {
+  layout: NetworkLayout;
+  columnOpacity: (column: number) => number;
+  /** Compared by React.memo in place of columnOpacity, which is a new function each render. */
+  rest: number;
+  hidden: number;
+}
+
+const sameNodeLayer = <P extends NodeLayerProps>(a: P, b: P) =>
+  (Object.keys(a) as (keyof P)[]).every(key => key === "columnOpacity" || a[key] === b[key]);
+
 /** White discs that hide the edges behind each node, and the clip paths for the gauges. */
-const Discs = React.memo(function Discs({ layout, clipPrefix }: { layout: NetworkLayout; clipPrefix: string }) {
+const Discs = React.memo(function Discs(
+  { layout, clipPrefix, columnOpacity }: NodeLayerProps & { clipPrefix: string },
+) {
   const clips: React.ReactElement[] = [];
   const discs: React.ReactElement[] = [];
   layout.nodes.forEach((column, c) => column.forEach((node, row) => {
@@ -217,7 +228,9 @@ const Discs = React.memo(function Discs({ layout, clipPrefix }: { layout: Networ
         <circle cx={node.x} cy={node.y} r={layout.radius} />
       </clipPath>,
     );
-    discs.push(<circle key={`${c}-${row}`} cx={node.x} cy={node.y} r={layout.radius} />);
+    discs.push(
+      <circle key={`${c}-${row}`} cx={node.x} cy={node.y} r={layout.radius} opacity={opacity(columnOpacity(c))} />,
+    );
   }));
   return (
     <>
@@ -225,26 +238,29 @@ const Discs = React.memo(function Discs({ layout, clipPrefix }: { layout: Networ
       <g className="network-diagram__discs">{discs}</g>
     </>
   );
-});
+}, sameNodeLayer);
 
 /** Node outlines, drawn over the gauges so the edge stays crisp, and the column captions. */
-const Outlines = React.memo(function Outlines({ layout, lastColumn }: StaticLayerProps) {
+const Outlines = React.memo(function Outlines(
+  { layout, lastColumn, columnOpacity, rest }: NodeLayerProps & { lastColumn: number },
+) {
   const outlines: React.ReactElement[] = [];
   layout.nodes.forEach((column, c) => column.forEach((node, row) => {
     const unit = unitAt(c, row, lastColumn);
     outlines.push(
       <circle key={`${c}-${unit}`} data-testid={`node-${c}-${unit}`} className="network-diagram__node"
-        cx={node.x} cy={node.y} r={layout.radius} />,
+        cx={node.x} cy={node.y} r={layout.radius} opacity={opacity(columnOpacity(c))} />,
     );
   }));
   return (
     <>
       <g className="network-diagram__nodes">{outlines}</g>
       {layout.columnX.map((x, c) => (
-        <text key={c} x={x} y={layout.captionY} textAnchor="middle" className="network-diagram__caption">
+        <text key={c} x={x} y={layout.captionY} textAnchor="middle" className="network-diagram__caption"
+          opacity={opacity(rest)}>
           {COLUMN_CAPTIONS[c]}
         </text>
       ))}
     </>
   );
-});
+}, sameNodeLayer);
