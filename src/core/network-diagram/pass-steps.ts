@@ -1,10 +1,12 @@
-import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
-import { emptyScene, Scene } from "../../core/network-diagram/scene";
+import { clamp01, cubicBezier, ease } from "./easing";
+import { emptyScene, Scene } from "./scene";
 
 /**
- * Trace a Case's four steps as a function of time, at the prototype's "Med" speed
- * (neural-net-maker index.html: fillInputs, runFan, revealAnswer). Step s fills column s − 1;
- * steps 2–4 first play the fan of edges into it, one source unit at a time.
+ * The four steps of one conversation's pass through the network, as a function of time, at the
+ * prototype's "Med" speed (neural-net-maker index.html: fillInputs, runFan, revealAnswer). Step s
+ * fills column s − 1; steps 2–4 first play the fan of edges into it, one source unit at a time.
+ * Trace a Case plays them as its steps, and Extract Pathways replays them for its first
+ * conversation.
  */
 export const STEPS = [1, 2, 3, 4] as const;
 export type Step = (typeof STEPS)[number];

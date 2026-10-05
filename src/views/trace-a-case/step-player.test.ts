@@ -1,5 +1,5 @@
 import { emptyScene } from "../../core/network-diagram/scene";
-import { sceneAt } from "./step-timeline";
+import { sceneAt } from "../../core/network-diagram/pass-steps";
 import { StepPlayer } from "./step-player";
 import { TraceACaseState } from "./trace-a-case-state";
 

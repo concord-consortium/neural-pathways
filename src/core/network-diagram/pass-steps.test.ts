@@ -1,7 +1,7 @@
-import { emptyScene, fullScene } from "../../core/network-diagram/scene";
+import { emptyScene, fullScene } from "./scene";
 import {
   ANSWER_DELAY, ANSWER_DURATION, FILL_DURATION, sceneAt, stepDuration, unitDuration,
-} from "./step-timeline";
+} from "./pass-steps";
 
 const SIZES = [10, 8, 6, 2];
 

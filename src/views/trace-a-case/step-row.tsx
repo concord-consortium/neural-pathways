@@ -1,5 +1,5 @@
 import React from "react";
-import { Step, STEPS } from "./step-timeline";
+import { Step, STEPS } from "../../core/network-diagram/pass-steps";
 
 interface StepRowProps {
   /** The step shown as pressed, or 0 for none. */

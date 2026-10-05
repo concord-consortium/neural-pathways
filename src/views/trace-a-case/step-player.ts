@@ -1,6 +1,6 @@
 import { action, computed, observableRef } from "mobx";
 import { Scene } from "../../core/network-diagram/scene";
-import { RunningStep, sceneAt, Step, stepDuration } from "./step-timeline";
+import { RunningStep, sceneAt, Step, stepDuration } from "../../core/network-diagram/pass-steps";
 import { TraceACaseState } from "./trace-a-case-state";
 
 function prefersReducedMotion(): boolean {
