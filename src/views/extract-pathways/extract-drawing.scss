@@ -1,0 +1,36 @@
+@use "../../core/colors" as colors;
+
+.extract-drawing {
+  width: 100%;
+}
+
+// Laid out at least MIN_CANVAS_WIDTH wide; a narrower panel scales the whole canvas down.
+.extract-drawing__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.extract-drawing__label {
+  font-family: "Lato", sans-serif;
+  font-size: 14px;
+  fill: colors.$ink;
+  pointer-events: none;
+}
+
+// Scaled about its own center while it bounces in, so it grows in place.
+.extract-drawing__conversation {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.extract-drawing__disc {
+  fill: #fff;
+}
+
+.extract-drawing__ring {
+  fill: none;
+  stroke: colors.$node-outline;
+  stroke-width: 1;
+}
