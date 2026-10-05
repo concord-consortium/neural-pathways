@@ -1,9 +1,11 @@
-import { emptyScene } from "../../core/network-diagram/scene";
+import { emptyScene, Scene } from "../../core/network-diagram/scene";
 import { sceneAt } from "../../core/network-diagram/pass-steps";
-import { StepPlayer } from "./step-player";
+import { StepPlayer } from "../../core/steps/step-player";
+import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
 import { TraceACaseState } from "./trace-a-case-state";
 
 const SIZES = [10, 8, 6, 2];
+const timeline = traceTimeline(SIZES);
 
 function setReducedMotion(reduce: boolean) {
   Object.defineProperty(window, "matchMedia", {
@@ -16,13 +18,36 @@ function setReducedMotion(reduce: boolean) {
 /** Players over one TraceACaseState, made for a conversation as the view makes them. */
 function makeState() {
   const state = new TraceACaseState({});
-  const playerFor = (conversationId: string) => new StepPlayer(SIZES, state, conversationId);
+  const playerFor = (conversationId: string) => new StepPlayer(timeline, traceProgress(state, conversationId));
   /** The steps saved, by conversation. */
   const saved = () => ({ ...state.stepsByConversation });
   return { playerFor, saved };
 }
 
-describe("StepPlayer", () => {
+/** Presses Step `step` as the step row does. */
+function press(player: StepPlayer<Scene>, step: number) {
+  const button = TRACE_BUTTONS[step - 1];
+  const run = button.run(player.done)!;
+  player.play(button.key, run.from, run.to);
+}
+
+describe("TRACE_BUTTONS", () => {
+  it("are Step 1 to Step 4, each playing from the step before it", () => {
+    expect(TRACE_BUTTONS.map(b => b.label)).toEqual(["Step 1", "Step 2", "Step 3", "Step 4"]);
+    for (const done of [0, 2, 4]) {
+      expect(TRACE_BUTTONS.map(b => b.run(done))).toEqual([
+        { from: 0, to: 1 }, { from: 1, to: 2 }, { from: 2, to: 3 }, { from: 3, to: 4 },
+      ]);
+    }
+  });
+
+  it("show the last step done as pressed", () => {
+    expect(TRACE_BUTTONS.map(b => b.showsDone?.(3))).toEqual([false, false, true, false]);
+    expect(TRACE_BUTTONS.map(b => b.showsDone?.(0))).toEqual([false, false, false, false]);
+  });
+});
+
+describe("Trace a Case's steps on the step player", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     setReducedMotion(false);
@@ -35,16 +60,14 @@ describe("StepPlayer", () => {
 
   it("starts with nothing done", () => {
     const player = makeState().playerFor("a");
-    expect(player.stepsDone).toBe(0);
-    expect(player.shownStep).toBe(0);
+    expect(player.done).toBe(0);
     expect(player.scene).toEqual(emptyScene(SIZES));
   });
 
   it("jumps to the step before, then plays the step", () => {
     const player = makeState().playerFor("a");
-    player.play(2);
-    expect(player.stepsDone).toBe(1);
-    expect(player.shownStep).toBe(2);
+    press(player, 2);
+    expect(player.done).toBe(1);
     expect(player.scene.nodeFill[0].every(x => x === 1)).toBe(true);
     expect(player.scene.edgeDraw[0].every(x => x === 0)).toBe(true);
 
@@ -53,56 +76,15 @@ describe("StepPlayer", () => {
     expect(player.scene.edgeDraw[0][9]).toBe(0);
 
     jest.advanceTimersByTime(3000);
-    expect(player.stepsDone).toBe(2);
-    expect(player.shownStep).toBe(2);
+    expect(player.done).toBe(2);
     expect(player.scene).toEqual(sceneAt(SIZES, 2));
-    expect(jest.getTimerCount()).toBe(0);
-  });
-
-  it("replays a step when it is pressed again", () => {
-    const player = makeState().playerFor("a");
-    player.play(2);
-    jest.advanceTimersByTime(4000);
-    player.play(2);
-    expect(player.stepsDone).toBe(1);
-    expect(player.shownStep).toBe(2);
-  });
-
-  it("a new step replaces the one playing", () => {
-    const player = makeState().playerFor("a");
-    player.play(3);
-    jest.advanceTimersByTime(500);
-    player.play(2);
-    expect(jest.getTimerCount()).toBe(1);
-    jest.advanceTimersByTime(4000);
-    expect(player.stepsDone).toBe(2);
-    expect(player.scene).toEqual(sceneAt(SIZES, 2));
-  });
-
-  it("resets to nothing and stops a step that is playing", () => {
-    const player = makeState().playerFor("a");
-    player.play(3);
-    jest.advanceTimersByTime(500);
-    player.reset();
-    expect(player.stepsDone).toBe(0);
-    expect(player.shownStep).toBe(0);
-    jest.advanceTimersByTime(5000);
-    expect(player.scene).toEqual(emptyScene(SIZES));
-  });
-
-  it("jumps straight to the end of a step under reduced motion", () => {
-    setReducedMotion(true);
-    const player = makeState().playerFor("a");
-    player.play(3);
-    expect(player.stepsDone).toBe(3);
-    expect(player.scene).toEqual(sceneAt(SIZES, 3));
     expect(jest.getTimerCount()).toBe(0);
   });
 
   it("saves the step before while a step plays, and the step only once it ends", () => {
     const { playerFor, saved } = makeState();
     const player = playerFor("a");
-    player.play(2);
+    press(player, 2);
     expect(saved()).toEqual({ a: 1 });
     jest.advanceTimersByTime(1000);
     expect(saved()).toEqual({ a: 1 });
@@ -114,52 +96,38 @@ describe("StepPlayer", () => {
     setReducedMotion(true);
     const { playerFor, saved } = makeState();
     const player = playerFor("a");
-    player.play(3);
+    press(player, 3);
     player.reset();
     expect(saved()).toEqual({});
-  });
-
-  it("stop() cancels the clock and leaves the step before saved, and the player still plays after", () => {
-    const { playerFor, saved } = makeState();
-    const player = playerFor("a");
-    player.play(2);
-    player.stop();
-    expect(jest.getTimerCount()).toBe(0);
-    expect(saved()).toEqual({ a: 1 });
-    expect(player.shownStep).toBe(1);
-    player.play(2);
-    jest.advanceTimersByTime(4000);
-    expect(saved()).toEqual({ a: 2 });
   });
 
   it("a player for a conversation not stepped yet starts with nothing done", () => {
     setReducedMotion(true);
     const { playerFor } = makeState();
-    playerFor("a").play(4);
+    press(playerFor("a"), 4);
     const other = playerFor("b");
-    expect(other.stepsDone).toBe(0);
+    expect(other.done).toBe(0);
     expect(other.scene).toEqual(emptyScene(SIZES));
   });
 
   it("a new player for a conversation shows the steps saved for it", () => {
     setReducedMotion(true);
     const { playerFor } = makeState();
-    playerFor("a").play(4);
+    press(playerFor("a"), 4);
     const again = playerFor("a");
-    expect(again.stepsDone).toBe(4);
-    expect(again.shownStep).toBe(4);
+    expect(again.done).toBe(4);
     expect(again.scene).toEqual(sceneAt(SIZES, 4));
   });
 
   it("a step cut short comes back as the step before it, not playing", () => {
     const { playerFor } = makeState();
     const first = playerFor("a");
-    first.play(2);
+    press(first, 2);
     jest.advanceTimersByTime(500);
     first.stop();
     const again = playerFor("a");
-    expect(again.stepsDone).toBe(1);
-    expect(again.shownStep).toBe(1);
+    expect(again.done).toBe(1);
+    expect(again.running).toBeUndefined();
     expect(again.scene).toEqual(sceneAt(SIZES, 1));
     expect(jest.getTimerCount()).toBe(0);
   });

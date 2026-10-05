@@ -11,12 +11,14 @@ import { TraceACaseState } from "./trace-a-case-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
-import { StepRow } from "./step-row";
-import { StepPlayer } from "./step-player";
+import { StepPlayer } from "../../core/steps/step-player";
+import { StepRow } from "../../core/steps/step-row";
+import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
 import "./trace-a-case.scss";
 
-/** Units in each drawn layer. Fixed, as StepPlayer requires. */
+/** Units in each drawn layer. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
+const TIMELINE = traceTimeline(COLUMN_SIZES);
 
 /** Follow one conversation through the network, a layer at a time. */
 export const TraceACase: React.FC = observer(function TraceACase() {
@@ -48,7 +50,8 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const currentId = validConversationId(shared.conversationId, ids);
   // A player for the conversation shown, and a new one when it changes.
   const player = useMemo(
-    () => (currentId === undefined ? undefined : new StepPlayer(COLUMN_SIZES, state, currentId)), [state, currentId]);
+    () => (currentId === undefined ? undefined : new StepPlayer(TIMELINE, traceProgress(state, currentId))),
+    [state, currentId]);
   // Stop the old player when the conversation changes or the view unmounts. A layout effect, so no
   // frame of its step can run, and save, after the change is committed.
   useLayoutEffect(() => () => player?.stop(), [player]);
@@ -62,7 +65,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   return (
     <div className="trace-a-case__layout">
       <div className="trace-a-case__steps">
-        <StepRow shownStep={player.shownStep} onStep={step => player.play(step)} onReset={() => player.reset()} />
+        <StepRow player={player} buttons={TRACE_BUTTONS} />
       </div>
       <div className="trace-a-case__case">
         <ConversationCard conversation={index.items[position]} position={position} total={ids.length}

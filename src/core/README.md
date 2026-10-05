@@ -51,7 +51,15 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 
   Use the word for the side you are on, and "neuron" in anything a student sees.
 - `network-diagram/`: the shared network diagram. A view says what to show as a `Scene`, and
-  `NetworkDiagram` draws it. `layout.ts` is its geometry; `easing.ts` has the timing curves.
+  `NetworkDiagram` draws it at the size of its container. `NetworkDrawing` is the same drawing as
+  an SVG group, for a view that draws more around the network. `layout.ts` is its geometry;
+  `easing.ts` has the timing curves; `pass-steps.ts` is the four steps of a conversation's pass
+  through the network as a function of time, which Trace a Case plays and Extract Pathways
+  replays.
+- `steps/`: the step system views share. `StepPlayer` plays a view's timeline on a
+  `requestAnimationFrame` clock and keeps its steps done wherever the view says. A view lists its
+  buttons as `StepButton`s, each saying what it plays from the steps done, and `StepRow` draws
+  them with Reset.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words. Items are plain data, so these are functions that take the text.
