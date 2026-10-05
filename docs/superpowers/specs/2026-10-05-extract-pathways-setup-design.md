@@ -169,8 +169,8 @@ export class ExtractPathwaysState extends Model({
   /** How many conversations have been collected into the deck. */
   collected: tProp(countType, 0),
 }) {
-  @modelAction setSetupDone(done: boolean): void;
-  @modelAction setCollected(n: number): void;
+  /** One action sets both fields, so the saved pair is never half updated. */
+  @modelAction setProgress(setupDone: boolean, collected: number): void;
 }
 ```
 

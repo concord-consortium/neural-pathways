@@ -44,7 +44,6 @@ function opacity(value: number): number | undefined {
   return value >= 1 ? undefined : value;
 }
 
-
 export interface NetworkDrawingProps {
   network: Network;
   layout: NetworkLayout;

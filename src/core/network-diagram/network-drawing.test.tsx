@@ -1,4 +1,3 @@
-/* eslint-disable testing-library/no-node-access -- group opacity sits on a parent <g> with no role or test id */
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { NetworkDrawing } from "./network-drawing";
@@ -36,6 +35,7 @@ describe("NetworkDrawing", () => {
     expect(screen.getByTestId("node-0-0")).not.toHaveAttribute("opacity");
     expect(screen.getByTestId("node-1-0")).not.toHaveAttribute("opacity");
     expect(screen.getByTestId("gauge-1-0")).not.toHaveAttribute("opacity");
+    // eslint-disable-next-line testing-library/no-node-access -- opacity is on a parent <g> with no role or id
     expect(screen.getByTestId("edge-near-0-0-0").closest("g")).not.toHaveAttribute("opacity");
   });
 
@@ -44,14 +44,34 @@ describe("NetworkDrawing", () => {
     expect(screen.getByTestId("node-0-0")).toHaveAttribute("opacity", "0.5");
     expect(screen.getByTestId("node-3-0")).toHaveAttribute("opacity", "0.5");
     expect(screen.getByTestId("gauge-3-0")).toHaveAttribute("opacity", "0.5");
+    // eslint-disable-next-line testing-library/no-node-access -- opacity is on a parent <g> with no role or id
     expect(screen.getByTestId("wire-0-0-0").closest("g")).toHaveAttribute("opacity", "0.5");
+    // eslint-disable-next-line testing-library/no-node-access -- opacity is on a parent <g> with no role or id
     expect(screen.getByTestId("edge-near-0-0-0").closest("g")).toHaveAttribute("opacity", "0.5");
+    // eslint-disable-next-line testing-library/no-node-access -- opacity is on a parent <g> with no role or id
     expect(screen.getByTestId("pill-0").closest("g")).toHaveAttribute("opacity", "0.5");
     expect(screen.getByText("Hidden Layer 1")).toHaveAttribute("opacity", "0.5");
+    // eslint-disable-next-line testing-library/no-node-access -- opacity is on a parent <g> with no role or id
     expect(screen.getByText("WAIT").closest("g")).toHaveAttribute("opacity", "0.5");
     expect(screen.getByTestId("node-1-0")).not.toHaveAttribute("opacity");
     expect(screen.getByTestId("node-2-5")).not.toHaveAttribute("opacity");
     expect(screen.getByTestId("gauge-1-0")).not.toHaveAttribute("opacity");
+  });
+
+  it("updates node opacity when the same drawing rerenders with a new scene", () => {
+    const { rerender } = renderDrawing(fullScene(SIZES));
+    expect(screen.getByTestId("node-0-0")).not.toHaveAttribute("opacity");
+    expect(screen.getByTestId("node-1-0")).not.toHaveAttribute("opacity");
+    const dimScene = dimmed(0.5, 0.25);
+    rerender(
+      <svg>
+        <NetworkDrawing network={toyNetwork} layout={layout} pass={passes[0]} scales={scales}
+          outputLabels={LABELS} scene={dimScene} />
+      </svg>,
+    );
+    expect(screen.getByTestId("node-0-0")).toHaveAttribute("opacity", "0.5");
+    expect(screen.getByTestId("node-1-0")).toHaveAttribute("opacity", "0.25");
+    expect(screen.getByTestId("node-3-0")).toHaveAttribute("opacity", "0.5");
   });
 
   it("dims the hidden layers' nodes by dim.hidden", () => {
@@ -61,4 +81,3 @@ describe("NetworkDrawing", () => {
     expect(screen.getByTestId("gauge-1-0")).toHaveAttribute("opacity", "0.5");
   });
 });
-/* eslint-enable testing-library/no-node-access */
