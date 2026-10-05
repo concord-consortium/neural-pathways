@@ -1,0 +1,28 @@
+@use "../../core/panel";
+
+.extract-pathways {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-bottom: 16px;
+}
+
+// The steps sit centered above the full-width panel, as in the prototype.
+.extract-pathways__steps {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.extract-pathways__network {
+  @include panel.panel;
+}
+
+.extract-pathways__network-head {
+  @include panel.panel-head;
+}
+
+.extract-pathways__drawing {
+  padding: 8px 0;
+}
