@@ -9,11 +9,11 @@ describe("Setup", () => {
   });
 
   it("dims everything but the hidden neurons over the first 350 ms", () => {
-    expect(setupSceneAt(SIZES, 0).network.dim).toEqual({ rest: 1, hidden: 1 });
-    const partway = setupSceneAt(SIZES, 175).network.dim.rest;
+    expect(setupSceneAt(SIZES, 0).network.dim).toBe(1);
+    const partway = setupSceneAt(SIZES, 175).network.dim;
     expect(partway).toBeGreaterThan(0.5);
     expect(partway).toBeLessThan(1);
-    expect(setupSceneAt(SIZES, 350).network.dim).toEqual({ rest: 0.5, hidden: 1 });
+    expect(setupSceneAt(SIZES, 350).network.dim).toBe(0.5);
   });
 
   it("lifts the copies out at 550 ms", () => {
@@ -24,10 +24,10 @@ describe("Setup", () => {
   });
 
   it("brings the network back and fades the label in from 2,976 ms", () => {
-    expect(setupSceneAt(SIZES, 2975).network.dim.rest).toBe(0.5);
+    expect(setupSceneAt(SIZES, 2975).network.dim).toBe(0.5);
     const midway = setupSceneAt(SIZES, 2976 + 160);
-    expect(midway.network.dim.rest).toBeGreaterThan(0.5);
-    expect(midway.network.dim.rest).toBeLessThan(1);
+    expect(midway.network.dim).toBeGreaterThan(0.5);
+    expect(midway.network.dim).toBeLessThan(1);
     expect(midway.lifted?.labelOpacity).toBeGreaterThan(0);
     expect(midway.lifted?.labelOpacity).toBeLessThan(1);
   });

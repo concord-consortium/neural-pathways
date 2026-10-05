@@ -29,7 +29,10 @@ function hiddenValues(pass: ForwardPass): number[] {
   return pass.layers.slice(1, -1).flat();
 }
 
-/** What the drawing shows, for screen readers. The lifted column and the deck columns still in flight aren't counted. */
+/**
+ * What the drawing shows, for screen readers. The lifted column and the deck columns still in
+ * flight aren't counted.
+ */
 export function describeScene(scene: ExtractScene, hidden: number): string {
   const landed = flightDuration(hidden);
   if (!scene.lifted || scene.lifted.flight < landed) {
@@ -130,15 +133,18 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({ network, passes,
             scene={scene.network} />
         </g>
         {scene.lifted && (
-          <g data-testid="lifted-column" opacity={scene.lifted.opacity < 1 ? scene.lifted.opacity : undefined}>
+          <g data-testid="lifted-column">
+            {/* The label names the column and isn't dimmed with it, as in the prototype. */}
             <text x={lifted.x} y={LABEL_Y} textAnchor="middle" className="extract-drawing__label"
               opacity={scene.lifted.labelOpacity}>
               Hidden Layer Neurons
             </text>
-            {liftedFlights.map((_, k) => (
-              <Copy key={k} index={k} placed={placeCopy(liftedFlights, k, scene.lifted!.flight)} r={lifted.r}
-                name={names[k]} />
-            ))}
+            <g data-testid="lifted-copies" opacity={scene.lifted.opacity < 1 ? scene.lifted.opacity : undefined}>
+              {liftedFlights.map((_, k) => (
+                <Copy key={k} index={k} placed={placeCopy(liftedFlights, k, scene.lifted!.flight)} r={lifted.r}
+                  name={names[k]} />
+              ))}
+            </g>
           </g>
         )}
         {scene.deck.map((column, c) => {

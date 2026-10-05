@@ -3,9 +3,9 @@ import {
   ANSWER_DURATION, edgeDrawAt, sceneAt as passSceneAt, Step, stepDuration, STEPS,
 } from "../../core/network-diagram/pass-steps";
 import { fullScene, Scene } from "../../core/network-diagram/scene";
-import { ExtractScene, hiddenCount, restScene } from "./extract-scene";
+import { DIM, ExtractScene, hiddenCount, restScene } from "./extract-scene";
 import { flightDuration } from "./flight";
-import { DIM, DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
+import { DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
 
 // The prototype's collectOne, runSteps, setConversation and flyColumn (neural-net-maker
 // index.html), at Med.
@@ -158,6 +158,15 @@ function quickNetwork(columnSizes: readonly number[], plan: QuickPlan, t: number
   return scene;
 }
 
+/**
+ * When the network part begins. The first conversation follows Setup, which leaves the network at
+ * full strength. Every later one first brings back the network and lifted column the last flight
+ * dimmed.
+ */
+function networkStart(n: number): number {
+  return n === 1 ? 0 : UNDIM_MS;
+}
+
 /** When the flight's dim begins: after the network part and its hold. */
 function flightStart(columnSizes: readonly number[], n: number): number {
   switch (collectVersion(n)) {
@@ -166,51 +175,57 @@ function flightStart(columnSizes: readonly number[], n: number): number {
       return last.start + last.duration + STEP_GAP + STEPS_REST;
     }
     case "swap":
-      return swapPlan(columnSizes).end + NEXT_HOLD;
+      return networkStart(n) + swapPlan(columnSizes).end + NEXT_HOLD;
     case "quick":
-      return quickPlan(columnSizes).end + NEXT_HOLD;
+      return networkStart(n) + quickPlan(columnSizes).end + NEXT_HOLD;
   }
 }
 
 export function collectDuration(columnSizes: readonly number[], n: number): number {
-  return flightStart(columnSizes, n) + DIM_MS + DIM_HOLD + flightDuration(hiddenCount(columnSizes)) + UNDIM_MS;
+  return flightStart(columnSizes, n) + DIM_MS + DIM_HOLD + flightDuration(hiddenCount(columnSizes));
 }
 
 /**
- * Collecting conversation `n`, `t` ms in: the network runs it (a replay of the pass steps for the
- * first, a swap for the next two, a quick swap after), then dims while copies of its hidden
- * neurons fly into deck column n, then comes back to full strength.
+ * Collecting conversation `n`, `t` ms in. After the first, it starts by bringing back the network
+ * and lifted column the last flight dimmed. Then the network runs the conversation (a replay of the
+ * pass steps for the first, a swap for the next two, a quick swap after). Then everything but the
+ * hidden neurons dims, the lifted column with it, while copies of the hidden neurons fly into deck
+ * column n. They stay dimmed until the next collection, as in the prototype.
  */
 export function collectSceneAt(columnSizes: readonly number[], n: number, t: number): ExtractScene {
   const scene = restScene(columnSizes, n);
-  switch (collectVersion(n)) {
-    case "replay":
-      scene.network = replayNetwork(columnSizes, t);
-      scene.shown = n;
-      scene.label = { n, bounce: clamp01(t / BOUNCE_MS) };
-      break;
-    case "swap": {
-      const plan = swapPlan(columnSizes);
-      scene.network = swapNetwork(columnSizes, plan, t);
-      if (t >= plan.blank) {
+  const local = t - networkStart(n);
+  if (local >= 0) {
+    switch (collectVersion(n)) {
+      case "replay":
+        scene.network = replayNetwork(columnSizes, local);
         scene.shown = n;
-        scene.label = { n, bounce: clamp01((t - plan.blank) / BOUNCE_MS) };
+        scene.label = { n, bounce: clamp01(local / BOUNCE_MS) };
+        break;
+      case "swap": {
+        const plan = swapPlan(columnSizes);
+        scene.network = swapNetwork(columnSizes, plan, local);
+        if (local >= plan.blank) {
+          scene.shown = n;
+          scene.label = { n, bounce: clamp01((local - plan.blank) / BOUNCE_MS) };
+        }
+        break;
       }
-      break;
+      case "quick":
+        scene.network = quickNetwork(columnSizes, quickPlan(columnSizes), local);
+        scene.shown = n;
+        scene.label = { n, bounce: clamp01(local / QUICK_BOUNCE_MS) };
+        break;
     }
-    case "quick":
-      scene.network = quickNetwork(columnSizes, quickPlan(columnSizes), t);
-      scene.shown = n;
-      scene.label = { n, bounce: clamp01(t / QUICK_BOUNCE_MS) };
-      break;
   }
 
   const dimAt = flightStart(columnSizes, n);
   const flyAt = dimAt + DIM_MS + DIM_HOLD;
   const landed = flightDuration(hiddenCount(columnSizes));
-  const undimAt = flyAt + landed;
-  const strength = t < undimAt ? easeBetween(1, DIM, t, dimAt, DIM_MS) : easeBetween(DIM, 1, t, undimAt, UNDIM_MS);
-  scene.network.dim = { rest: strength, hidden: strength };
+  const strength = t < networkStart(n)
+    ? easeBetween(DIM, 1, t, 0, UNDIM_MS)
+    : easeBetween(1, DIM, t, dimAt, DIM_MS);
+  scene.network.dim = strength;
   if (scene.lifted) {
     scene.lifted = { ...scene.lifted, opacity: strength };
   }

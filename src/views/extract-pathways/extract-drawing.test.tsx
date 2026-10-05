@@ -100,11 +100,13 @@ describe("ExtractDrawing", () => {
       .toBeCloseTo(geometry.network.radius * Math.min(1, Math.abs(values[k])));
   });
 
-  it("dims the lifted column with its opacity", () => {
+  it("dims the lifted column's copies with its opacity, but not its label", () => {
     const scene = restScene(SIZES, 1);
     scene.lifted = { ...scene.lifted!, opacity: 0.5 };
     renderDrawing(scene);
-    expect(screen.getByTestId("lifted-column")).toHaveAttribute("opacity", "0.5");
+    expect(screen.getByTestId("lifted-copies")).toHaveAttribute("opacity", "0.5");
+    expect(screen.getByTestId("lifted-column")).not.toHaveAttribute("opacity");
+    expect(screen.getByText("Hidden Layer Neurons")).toHaveAttribute("opacity", "1");
   });
 
   it("bounces the conversation label in, and leaves it still once it lands", () => {

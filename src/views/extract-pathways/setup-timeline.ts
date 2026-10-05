@@ -1,10 +1,8 @@
 import { clamp01, ease } from "../../core/network-diagram/easing";
-import { ExtractScene, hiddenCount, restScene } from "./extract-scene";
+import { DIM, ExtractScene, hiddenCount, restScene } from "./extract-scene";
 import { flightDuration } from "./flight";
 
 // The prototype's runExtract, EX_STAGE0_ONLY branch (neural-net-maker index.html), at Med.
-/** What the network drops to while copies fly out of it. */
-export const DIM = 0.5;
 export const DIM_MS = 350;
 /** A beat between the dim and the flight. */
 export const DIM_HOLD = 200;
@@ -33,7 +31,7 @@ export function setupSceneAt(columnSizes: readonly number[], t: number): Extract
   const flightStart = DIM_MS + DIM_HOLD;
   const landed = flightDuration(hiddenCount(columnSizes));
   const undimAt = flightStart + landed + LABEL_WAIT;
-  scene.network.dim.rest = t < undimAt
+  scene.network.dim = t < undimAt
     ? easeBetween(1, DIM, t, 0, DIM_MS)
     : easeBetween(DIM, 1, t, undimAt, UNDIM_MS);
   if (t >= flightStart) {
