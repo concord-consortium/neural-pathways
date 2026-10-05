@@ -20,4 +20,9 @@ describe("scenes", () => {
     expect(scene.weightLabel).toEqual([true, true, true]);
     expect(scene.answer).toBe(1);
   });
+
+  it("draws both scenes at full strength", () => {
+    expect(emptyScene(sizes).dim).toEqual({ rest: 1, hidden: 1 });
+    expect(fullScene(sizes).dim).toEqual({ rest: 1, hidden: 1 });
+  });
 });
