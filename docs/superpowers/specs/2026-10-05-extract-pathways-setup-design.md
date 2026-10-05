@@ -108,7 +108,7 @@ interface StepButton {
 - It renders the buttons in order, then Reset, in a `role="group"` labeled "Steps".
 - A press calls `player.play(key, from, to)` with that button's run.
 - Pressed buttons have `aria-pressed="true"`. Disabled buttons have `disabled`.
-- Reset is `aria-disabled` at `done === 0`, and stays in the tab order.
+- Reset is `aria-disabled` while nothing is done or running, and stays in the tab order.
 - The step-row styles move here, to `step-row.scss`, from `trace-a-case.scss`.
 
 ### Trace a Case on the shared system
@@ -142,7 +142,8 @@ interface Scene {
 
 - `rest` covers the wires, edges, input and output nodes, pills, captions and labels.
 - `emptyScene` and `fullScene` set both to 1. Trace a Case never changes them.
-- As in the prototype's `dimRest` (lines 13467–13478), opacity is set on each element.
+- As in the prototype's `dimRest` (lines 13467–13478), opacity is set on each group of lines and
+  labels, and on each node.
 
 ### `NetworkDrawing` and `NetworkDiagram`
 
@@ -189,7 +190,7 @@ export class ExtractPathwaysState extends Model({
 | Button | `run(done)` |
 |---|---|
 | Setup | `{ from: 0, to: 1 }` |
-| Collect a Conversation | `{ from: s, to: s + 1 }` where `s = max(done, 1)`; undefined once 10 are collected (`done >= 11`) |
+| Collect a Conversation | `{ from: s, to: s + 1 }` where `s = max(done, 1)`; undefined once `n` are collected, where `n` is the smaller of 10 and the conversations loaded |
 | Collect All Conversations | always undefined (NPW-48) |
 | Extract Pathways | always undefined (NPW-48) |
 
@@ -202,7 +203,9 @@ The rules that follow from this:
 - Collect a Conversation during a collection drops the conversation in flight and collects it
   again.
 - Setup always starts over.
-- Reset is unavailable until something is done.
+- Collect a Conversation stops at the smaller of 10 and the conversations loaded. A saved count
+  reads clamped to that.
+- Reset is unavailable while nothing is done or running.
 
 ### Data
 
@@ -241,16 +244,16 @@ interface ExtractScene {
   shown: number | undefined;
   /** "Conversation n" and its bounce, 0–1. */
   label: { n: number; bounce: number } | undefined;
-  lifted: {
-    /** The 14 copies' flights, 0–1. */
-    flight: number[];
-    opacity: number;
-    labelOpacity: number;
-  };
+  /** The lifted column; undefined before Setup lifts it. */
+  lifted: { flight: number; opacity: number; labelOpacity: number } | undefined;
   /** One entry per deck column, in order. */
-  deck: { conversation: number; flight: number[] }[];
+  deck: { conversation: number; flight: number }[];
 }
 ```
+
+Each `flight` is the milliseconds since that column's copies left the hidden neurons. Each copy's
+timing depends on its distance, which only the drawing knows, so the drawing works out each copy's
+progress from this.
 
 When `shown` is undefined, the network is drawn with the first pass. Nothing is filled, so the
 values don't show.
