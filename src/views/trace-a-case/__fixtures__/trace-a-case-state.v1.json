@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "stepsByConversation": { "361e65b1002a": 3, "7b117e548ba4": 1 },
+  "animate": false,
+  "speed": 2,
+  "$modelType": "npw/TraceACaseState"
+}
