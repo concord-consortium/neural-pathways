@@ -172,6 +172,8 @@ function networkStart(n: number): number {
 function flightStart(columnSizes: readonly number[], n: number): number {
   switch (collectVersion(n)) {
     case "replay": {
+      // The gap follows the last phase too, before the rest: the prototype's runSteps waits
+      // STEP_GAP after every step, then rests once there are none left.
       const last = replaySlots(columnSizes)[PHASES.length - 1];
       return last.start + last.duration + PHASE_GAP + PHASES_REST;
     }
