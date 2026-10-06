@@ -1,4 +1,5 @@
 import { emptyScene, fullScene, Scene } from "../../core/network-diagram/scene";
+import { Marker } from "../../core/steps/step-player";
 import { flightDuration } from "./flight";
 
 /**
@@ -27,13 +28,13 @@ export function hiddenCount(columnSizes: readonly number[]): number {
 }
 
 /**
- * The scene with `done` steps done and nothing running: the blank network; then the lifted
+ * The scene resting at `marker`, with nothing running: the blank network; then the lifted
  * column; then the last conversation collected in full, under its label, with the deck. Once a
  * conversation is collected, the hidden neurons stay spotlit, and the lifted column's copies faded,
  * as its flight left them, until the next collection brings them back.
  */
-export function restScene(columnSizes: readonly number[], done: number): ExtractScene {
-  const collected = Math.max(0, done - 1);
+export function restScene(columnSizes: readonly number[], marker: Marker): ExtractScene {
+  const collected = Math.max(0, marker - 1);
   const landed = flightDuration(hiddenCount(columnSizes));
   const spotlight = collected > 0 ? SPOTLIGHT : 0;
   const network = collected > 0 ? fullScene(columnSizes) : emptyScene(columnSizes);
@@ -42,7 +43,7 @@ export function restScene(columnSizes: readonly number[], done: number): Extract
     network,
     shown: collected > 0 ? collected : undefined,
     label: collected > 0 ? { n: collected, bounce: 1 } : undefined,
-    lifted: done >= 1 ? { flight: landed, opacity: 1 - spotlight, labelOpacity: 1 } : undefined,
+    lifted: marker >= 1 ? { flight: landed, opacity: 1 - spotlight, labelOpacity: 1 } : undefined,
     deck: Array.from({ length: collected }, (_, c) => ({ conversation: c + 1, flight: landed })),
   };
 }

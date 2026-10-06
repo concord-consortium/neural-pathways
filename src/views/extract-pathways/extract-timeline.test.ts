@@ -8,9 +8,9 @@ const timeline = extractTimeline(SIZES);
 
 describe("extractTimeline", () => {
   it("times a run to 1 as Setup, and a run to n + 1 as collecting conversation n", () => {
-    expect(timeline.duration(0, 1)).toBe(setupDuration(SIZES));
-    expect(timeline.duration(1, 2)).toBe(collectDuration(SIZES, 1));
-    expect(timeline.duration(4, 5)).toBe(collectDuration(SIZES, 4));
+    expect(timeline.duration({ from: 0, to: 1 })).toBe(setupDuration(SIZES));
+    expect(timeline.duration({ from: 1, to: 2 })).toBe(collectDuration(SIZES, 1));
+    expect(timeline.duration({ from: 4, to: 5 })).toBe(collectDuration(SIZES, 4));
   });
 
   it("draws the scene at rest when nothing runs", () => {

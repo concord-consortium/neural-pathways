@@ -1,20 +1,21 @@
 import { StepButton } from "../../core/steps/step-buttons";
-import { StepProgress } from "../../core/steps/step-player";
+import { Marker, StepProgress } from "../../core/steps/step-player";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 
 /** The most conversations Collect a Conversation gathers one at a time, as in the prototype. */
 export const MAX_COLLECTED = 10;
 
 /**
- * Steps done: 0 for nothing, 1 once Setup is done, and one more for each conversation collected.
- * `limit` is how many can be collected; a saved count above it reads as the limit.
+ * The marker, from Setup and the count kept in the state: 0 at the start, 1 once Setup is done, and
+ * one more for each conversation collected. `limit` is how many can be collected; a saved count
+ * above it reads as the limit.
  */
 export function extractProgress(state: ExtractPathwaysState, limit: number): StepProgress {
   return {
-    get done() {
+    get marker() {
       return state.setupDone ? 1 + Math.min(state.collected, limit) : 0;
     },
-    setDone: (n: number) => state.setProgress(n >= 1, Math.max(0, n - 1)),
+    setMarker: (marker: Marker) => state.setProgress(marker >= 1, Math.max(0, marker - 1)),
   };
 }
 
@@ -24,16 +25,16 @@ export function extractProgress(state: ExtractPathwaysState, limit: number): Ste
  */
 export function extractButtons(limit: number): readonly StepButton[] {
   return [
-    { key: "setup", label: "Setup", run: () => ({ from: 0, to: 1 }) },
+    { key: "setup", label: "Setup", segmentToPlayWhenAt: () => ({ from: 0, to: 1 }) },
     {
       key: "collect",
       label: "Collect a Conversation",
-      run: done => {
-        const from = Math.max(done, 1);
+      segmentToPlayWhenAt: marker => {
+        const from = Math.max(marker, 1);
         return from - 1 < limit ? { from, to: from + 1 } : undefined;
       },
     },
-    { key: "collect-all", label: "Collect All Conversations", run: () => undefined },
-    { key: "extract", label: "Extract Pathways", run: () => undefined },
+    { key: "collect-all", label: "Collect All Conversations", segmentToPlayWhenAt: () => undefined },
+    { key: "extract", label: "Extract Pathways", segmentToPlayWhenAt: () => undefined },
   ];
 }

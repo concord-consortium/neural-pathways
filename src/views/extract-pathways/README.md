@@ -9,12 +9,13 @@ activations of conversations run through it, one column of the deck each.
   one full-width panel holding the drawing. There is no filter and no conversation panel.
 - `extract-pathways-state.ts`: the view's saved state, `ExtractPathwaysState`: whether Setup is
   done, and how many conversations are collected. A step still playing isn't kept.
-- `extract-steps.ts`: the buttons and the steps done, on the shared step system in
-  `src/core/steps/`. Steps done count 1 for Setup and one more for each conversation collected.
+- `extract-steps.ts`: the buttons and the marker, on the shared step system in
+  `src/core/steps/`. The marker is 1 once Setup is done and one more for each conversation
+  collected; the state keeps Setup and the count rather than the marker.
   Setup always starts over; Collect a Conversation collects the next of the first ten, in dataset
   order, jumping Setup to its end if it isn't done.
 - `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `extract-timeline.ts`: what the
-  view draws at any moment, as pure functions of the steps done and the time into a step, at the
+  view draws at any moment, as pure functions of the marker and the time into a segment, at the
   prototype's "Med" speed. The first conversation replays Trace a Case's pass steps, faster; the
   next two drain and refill the network a layer at a time; the rest refill it quickly.
 - `extract-geometry.ts`, `flight.ts`, `extract-drawing.tsx`: the canvas. The network sits in the
