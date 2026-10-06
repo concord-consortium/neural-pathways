@@ -63,10 +63,10 @@ export function placeCopy(flights: readonly Flight[], k: number, t: number): Pla
     offsetY = dy;
     scale = grow;
   } else if (t < end) {
-    const p = (t - start) / duration;
-    offsetX = dx + (overX - dx) * easeX(p);
-    offsetY = dy + (overY - dy) * easeY(p);
-    scale = grow + (1 - grow) * easeY(p);
+    const flightProgress = (t - start) / duration;
+    offsetX = dx + (overX - dx) * easeX(flightProgress);
+    offsetY = dy + (overY - dy) * easeY(flightProgress);
+    scale = grow + (1 - grow) * easeY(flightProgress);
   } else {
     const settled = settleEase(Math.min(1, (t - end) / SETTLE_MS));
     offsetX = overX * (1 - settled);
