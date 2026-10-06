@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AttributeDefinition } from "../types/attributes";
 import "./filter-help.scss";
 
@@ -59,6 +59,16 @@ export const FilterHelp: React.FC<FilterHelpProps> = ({ fields, attributes }) =>
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dialogId = useId();
 
+  // Back to the ⓘ button when focus was in the help, or nowhere. Left alone when the student is
+  // typing in the box.
+  const close = useCallback(() => {
+    const focused = document.activeElement;
+    setOpen(false);
+    if (!focused || focused === document.body || rootRef.current?.contains(focused)) {
+      buttonRef.current?.focus();
+    }
+  }, []);
+
   useEffect(() => {
     if (!open) {
       return;
@@ -68,34 +78,42 @@ export const FilterHelp: React.FC<FilterHelpProps> = ({ fields, attributes }) =>
         setOpen(false);
       }
     };
+    // Wherever focus is: opening the help doesn't move it. Caught before it reaches the box, so the
+    // first Escape closes the help and keeps the draft.
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        close();
+      }
+    };
     document.addEventListener("mousedown", onMouseDown);
-    return () => document.removeEventListener("mousedown", onMouseDown);
-  }, [open]);
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("keydown", onKeyDown, true);
+    };
+  }, [open, close]);
 
-  const close = () => {
-    setOpen(false);
-    buttonRef.current?.focus();
-  };
+  // A press on either button leaves focus where it was, so pressing ⓘ while typing keeps the
+  // caret in the box. Safari wouldn't focus the button anyway, and the box would lose focus.
+  const keepFocus = (event: React.MouseEvent) => event.preventDefault();
 
   return (
-    <div className="filter-help" ref={rootRef}
-      onKeyDown={event => {
-        if (open && event.key === "Escape") {
-          event.stopPropagation();
-          close();
-        }
-      }}>
+    <div className="filter-help" ref={rootRef}>
       <button ref={buttonRef} type="button" className="filter-help__button"
         aria-label="Show what you can filter on" aria-expanded={open}
-        aria-controls={open ? dialogId : undefined} onClick={() => setOpen(!open)}>
+        aria-controls={open ? dialogId : undefined} onMouseDown={keepFocus} onClick={() => setOpen(!open)}>
         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
           <circle cx="10" cy="5.5" r="1.6" />
           <rect x="8.6" y="8.5" width="2.8" height="7.5" rx="1" />
         </svg>
       </button>
       {open &&
-        <div id={dialogId} className="filter-help__dialog" role="dialog" aria-label="What you can filter on">
-          <button type="button" className="filter-help__close" aria-label="Close" onClick={close}>
+        // Focusable, so a click inside it keeps focus in the bar rather than committing the query.
+        <div id={dialogId} className="filter-help__dialog" role="dialog" aria-label="What you can filter on"
+          tabIndex={-1}>
+          <button type="button" className="filter-help__close" aria-label="Close" onMouseDown={keepFocus}
+            onClick={close}>
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
               <path d="M5 5 L15 15 M15 5 L5 15" />
             </svg>

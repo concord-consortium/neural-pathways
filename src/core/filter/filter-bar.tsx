@@ -11,7 +11,7 @@ export interface FilterBarProps {
   fields: readonly string[];
   attributes: readonly AttributeDefinition[];
   onTextChange: (text: string) => void;
-  /** Called on Enter and on blur. */
+  /** Called on Enter, and when focus leaves the bar. */
   onCommit: () => void;
   /** Called on Escape. */
   onDiscard: () => void;
@@ -33,13 +33,19 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const countId = `${id}-count`;
   const hasError = "error" in status;
   return (
-    <div className={`filter-bar${hasError ? " filter-bar--error" : ""}`}>
+    // Committed when focus leaves the bar, not just the box: checking the help mid-query mustn't
+    // store a half-typed query.
+    <div className={`filter-bar${hasError ? " filter-bar--error" : ""}`}
+      onBlur={event => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          onCommit();
+        }
+      }}>
       <label className="filter-bar__label" htmlFor={inputId}>Filter</label>
       <input id={inputId} className="filter-bar__input" type="text" value={text}
         placeholder="Example: model_correct:0" autoComplete="off" spellCheck={false}
         aria-invalid={hasError} aria-describedby={countId}
         onChange={event => onTextChange(event.target.value)}
-        onBlur={onCommit}
         onKeyDown={event => {
           if (event.key === "Enter") {
             onCommit();

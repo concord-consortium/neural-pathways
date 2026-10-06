@@ -52,7 +52,10 @@ Checked on 2026-10-06 with throwaway scripts.
   are ANDed.
 - A bare word matches every string field. `wait` matched a record whose `target_label` was `wait`.
 - `bogus:1` parses and matches nothing.
-- `not yandor` and `yandor or sooma` treat the lowercase word as a search word and match nothing.
+- `not yandor` and `yandor or sooma` treat the lowercase word as a search word. A bare word is a
+  substring match, so on the real data this narrows rather than failing: `or` is inside 700 of the
+  800 conversations, and `yandor or sooma` gives 210, the same as `yandor sooma` (`yandor OR sooma`
+  gives 560). Found in the final review, 2026-10-06.
 - `(model_correct:0`, `a AND`, `NOT` and `AND` throw `Error: Found no parsings.`
 - `model_correct:0)` and `OR yandor` throw a `SyntaxError` with `offset`, `line` and `column`.
 - `pathway_1:>abc` parses, then `filter` throws `TypeError: Expected a number.`
@@ -138,6 +141,7 @@ doesn't list them.
 |---|---|
 | A field not in `fields`, including a hidden attribute | `Unknown field: bogus` |
 | A comparison without a number | `pathway_1:> needs a number` (the field and operator typed) |
+| A word given to a number field (`n`, an attribute, a pathway), such as `model_correct:no` | `model_correct needs a number`. Without it the query matches nothing: the records hold 0 and 1, not the value labels. |
 | liqe's `Found no parsings.`: a trailing `AND`, an unclosed `(`, a lone `NOT` | `Incomplete query` |
 | liqe's `SyntaxError` | `Can't read the query at column 16` (liqe's `column`) |
 | Anything else liqe throws | its message |
@@ -197,7 +201,10 @@ interface FilterBarProps {
   - `autocomplete="off"`, `spellcheck="false"`;
   - `aria-invalid` when `status` is an error;
   - `aria-describedby` pointing at the count.
-- Enter and blur call `onCommit`. Escape calls `onDiscard`.
+- Enter calls `onCommit`, and so does focus leaving the bar. Moving focus within the bar, to the
+  ⓘ button or into the help, doesn't commit, so checking the help mid-query doesn't store a
+  half-typed query. The ⓘ and × buttons don't take focus on mousedown, and the help is focusable.
+  Escape calls `onDiscard`, unless the help is open.
 - The count, `aria-live="polite"`:
   - `800` when every conversation matches;
   - `64 of 800`, or `0 of 800`;
@@ -212,8 +219,9 @@ The ticket's "static help pane", as a popover:
 
 - Opened from an ⓘ button in the bar's tail, with `aria-label="Show what you can filter on"` and
   `aria-expanded`.
-- The popover is `role="dialog"`. It closes on the ⓘ button again, an × button, Escape, or a
-  mousedown outside it. Escape and × return focus to the ⓘ button.
+- The popover is `role="dialog"`. It closes on the ⓘ button again, an × button, Escape wherever
+  focus is, or a mousedown outside it. While it is open, the first Escape only closes it. Escape and
+  × return focus to the ⓘ button, unless focus is in the box, where it stays.
 - **Fields:** a table built from `fields`:
   - `n`: Position among all 800.
   - `id`: The conversation's id.

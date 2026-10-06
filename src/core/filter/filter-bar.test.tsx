@@ -77,6 +77,35 @@ describe("FilterBar", () => {
     expect(props.onCommit).toHaveBeenCalledTimes(2);
   });
 
+  it("commits when focus leaves the bar", () => {
+    const props = showBar();
+    input().focus();
+    input().blur();
+    expect(props.onCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it("doesn't commit when focus moves from the box to the help button", () => {
+    const props = showBar();
+    input().focus();
+    helpButton().focus();
+    expect(props.onCommit).not.toHaveBeenCalled();
+  });
+
+  it("keeps focus in the box when the help button is pressed", () => {
+    showBar();
+    // false: the mousedown's default, moving focus, was prevented.
+    expect(fireEvent.mouseDown(helpButton())).toBe(false);
+  });
+
+  it("doesn't commit when focus moves into the open help", () => {
+    const props = showBar();
+    fireEvent.click(helpButton());
+    input().focus();
+    screen.getByRole("dialog").focus();
+    expect(screen.getByRole("dialog")).toHaveFocus();
+    expect(props.onCommit).not.toHaveBeenCalled();
+  });
+
   it("discards on Escape", () => {
     const props = showBar();
     fireEvent.keyDown(input(), { key: "Escape" });
@@ -149,6 +178,23 @@ describe("FilterBar", () => {
       fireEvent.click(helpButton());
       fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
       expect(props.onDiscard).not.toHaveBeenCalled();
+    });
+
+    it("closes on Escape when the help button was clicked and focus stayed on the page", () => {
+      showBar();
+      fireEvent.click(helpButton());
+      fireEvent.keyDown(document.body, { key: "Escape" });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("closes first on Escape in the box, keeping the draft and the caret", () => {
+      const props = showBar();
+      input().focus();
+      fireEvent.click(helpButton());
+      fireEvent.keyDown(input(), { key: "Escape" });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(props.onDiscard).not.toHaveBeenCalled();
+      expect(input()).toHaveFocus();
     });
   });
 });
