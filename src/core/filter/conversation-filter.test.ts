@@ -113,6 +113,17 @@ describe("run", () => {
     expect(matches("pathway_1:>abc")).toEqual({ error: "pathway_1:> needs a number" });
   });
 
+  it("reports a word given to a number field, rather than matching nothing", () => {
+    expect(matches("model_correct:no")).toEqual({ error: "model_correct needs a number" });
+    expect(matches("prediction:approach")).toEqual({ error: "prediction needs a number" });
+    expect(matches("n:abc")).toEqual({ error: "n needs a number" });
+  });
+
+  it("still matches words in the text fields", () => {
+    expect(matches("id:aaa")).toEqual({ ids: ["aaa111"] });
+    expect(matches("text:yandor")).toEqual({ ids: ["aaa111", "bbb222", "ddd444"] });
+  });
+
   it("reports an incomplete query", () => {
     expect(matches("(model_correct:0")).toEqual({ error: "Incomplete query" });
     expect(matches("yandor AND")).toEqual({ error: "Incomplete query" });

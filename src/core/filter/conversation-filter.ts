@@ -77,12 +77,18 @@ function toRecord(
   return record;
 }
 
+interface QueryFields {
+  all: ReadonlySet<string>;
+  /** The fields that hold numbers: `n`, the attributes and the pathways. */
+  numbers: ReadonlySet<string>;
+}
+
 /**
  * Sends bare words to the text, and rejects what liqe would accept without complaint: a field the
- * records don't have, which would match nothing, and a comparison with no number, which liqe only
- * rejects once filtering runs.
+ * records don't have, and a word given to a number field, which would both match nothing, and a
+ * comparison with no number, which liqe only rejects once filtering runs.
  */
-function checkQuery(ast: ParserAst, fields: ReadonlySet<string>): ParserAst {
+function checkQuery(ast: ParserAst, fields: QueryFields): ParserAst {
   switch (ast.type) {
     case "EmptyExpression":
       return ast;
@@ -97,14 +103,19 @@ function checkQuery(ast: ParserAst, fields: ReadonlySet<string>): ParserAst {
       const field: FieldToken = ast.field.type === "ImplicitField"
         ? { type: "Field", name: "text", path: ["text"], quoted: false, location: ast.location }
         : ast.field;
-      if (!fields.has(field.name)) {
+      if (!fields.all.has(field.name)) {
         throw new QueryError(`Unknown field: ${field.name}`);
       }
       // liqe leaves `operator` off a bare word, though its type says otherwise.
       const operator = ast.operator?.operator ?? ":";
-      const isNumber = ast.expression.type === "LiteralExpression" && typeof ast.expression.value === "number";
+      const { expression } = ast;
+      const isNumber = expression.type === "LiteralExpression" && typeof expression.value === "number";
       if (operator !== ":" && !isNumber) {
         throw new QueryError(`${field.name}${operator} needs a number`);
+      }
+      // `model_correct:no` would quietly match nothing: the records hold 0 and 1, not the labels.
+      if (fields.numbers.has(field.name) && expression.type === "LiteralExpression" && !isNumber) {
+        throw new QueryError(`${field.name} needs a number`);
       }
       return { ...ast, field };
     }
@@ -132,7 +143,10 @@ export function createConversationFilter(
 ): ConversationFilter {
   const fit = onlyFit(datasetIndex);
   const fields = ["n", "id", "text", "target_label", ...attributes.map(a => a.key), ...pathwayFields(fit)];
-  const fieldSet = new Set(fields);
+  const queryFields: QueryFields = {
+    all: new Set(fields),
+    numbers: new Set(["n", ...attributes.map(a => a.key), ...pathwayFields(fit)]),
+  };
   const records = datasetIndex.items.map((item, i) => toRecord(item, i, dataset, attributes, fit));
   const allIds = datasetIndex.items.map(item => item.id);
 
@@ -146,7 +160,7 @@ export function createConversationFilter(
       }
       let matched: readonly FilterRecord[];
       try {
-        matched = liqeFilter(checkQuery(parse(query), fieldSet) as LiqeQuery, records);
+        matched = liqeFilter(checkQuery(parse(query), queryFields) as LiqeQuery, records);
       } catch (error) {
         return { error: errorMessage(error) };
       }
