@@ -132,16 +132,22 @@ Nothing it does changes.
   steps done, so the state keeps the marker itself: `stepsByConversation`, `stepsDone` and
   `setStepsDone` are renamed `markerByConversation`, `marker` and `setMarker`. Nothing has shipped. As now, the view
   makes a player for that conversation and a new one when it changes.
-- **Timeline:** `duration` and `sceneAt` wrap the pass steps (below), with `run.to` as the step.
+- **Timeline:** `duration` and `sceneAt` wrap the forward pass's phases (below), with `run.to` as
+  the phase: Step *k* plays phase *k*.
 
 ## The network diagram: changes in `src/core/network-diagram/`
 
-### `pass-steps.ts`
+### `forward-pass-phases.ts`
 
-What Trace a Case's `step-timeline.ts` holds now moves here unchanged, so Extract Pathways' replay
-can use it: `STEPS`, `Step`, `unitDuration`, `stepDuration`, `sceneAt`, `applyStep` and their
-constants. That is the input fill, the three fans and the answer. Its tests move with it. Trace a
-Case keeps only its button list and the timeline wrapper.
+What Trace a Case's `step-timeline.ts` holds now moves here, so Extract Pathways' replay can use
+it: `PHASES`, `Phase`, `RunningPhase`, `unitDuration`, `phaseDuration`, `sceneAt`, `applyPhase`
+and their constants. That is the input fill, the three fans and the answer. Its tests move with
+it. Trace a Case keeps only its button list and the timeline wrapper.
+
+- They were called steps, and are renamed phases of the forward pass, the ML name for running one
+  input through the network. A third term keeps them apart from the step buttons and the
+  timeline's markers: Trace a Case's Step *k* plays phase *k*, but Extract Pathways' first
+  collection plays all four phases within one segment.
 
 ### `Scene.hiddenLayerSpotlight`
 
@@ -355,8 +361,8 @@ its network part starts when that ends.
 
 - "Conversation 1" bounces in over 520 ms with `cubic-bezier(.34,1.56,.64,1)`, the opacity over
   the first 45%.
-- At 540 ms, Step 1 of the pass steps plays at its normal speed. Steps 2–4 follow at 0.26 of their
-  normal durations, with 110 ms between steps.
+- At 540 ms, phase 1 of the forward pass plays at its normal speed. Phases 2–4 follow at 0.26 of
+  their normal durations, with 110 ms between phases.
 - A 700 ms rest follows the answer.
 
 **Swap (*n* = 2–3)**, about 3,080 ms, from `setConversation` (lines 15120–15147):
@@ -417,7 +423,7 @@ as in the prototype, where `setNodeLevel` has no transition.
 - `network-diagram.test.tsx` keeps passing.
 - `hiddenLayerSpotlight`: it fades everything but the hidden layers' nodes to 1 − its strength,
   and defaults to 0.
-- `pass-steps.test.ts`, the moved timeline tests.
+- `forward-pass-phases.test.ts`, the moved timeline tests.
 
 **Extract Pathways**
 
@@ -471,7 +477,7 @@ Two PRs, stacked on `NPW-32-3-steps`, so the shared system is reviewed before th
 it. Moves go in commits of their own, apart from edits, so git shows them as renames.
 
 1. **The shared step system and the diagram split** (about 20 files): `src/core/steps/`, Trace a
-   Case moved onto it, `pass-steps.ts`, `Scene.hiddenLayerSpotlight` and `NetworkDrawing`. Nothing
+   Case moved onto it, `forward-pass-phases.ts`, `Scene.hiddenLayerSpotlight` and `NetworkDrawing`. Nothing
    a user sees changes.
 2. **The Extract Pathways view** (about 22 files): state, buttons, drawing, flights, timelines,
    tests and docs.

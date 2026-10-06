@@ -53,9 +53,9 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `network-diagram/`: the shared network diagram. A view says what to show as a `Scene`, and
   `NetworkDiagram` draws it at the size of its container. `NetworkDrawing` is the same drawing as
   an SVG group, for a view that draws more around the network. `layout.ts` is its geometry;
-  `easing.ts` has the timing curves; `pass-steps.ts` is the four steps of a conversation's pass
-  through the network as a function of time, which Trace a Case plays and Extract Pathways will
-  replay.
+  `easing.ts` has the timing curves; `forward-pass-phases.ts` is the four phases of a
+  conversation's forward pass through the network as a function of time, which Trace a Case plays
+  as its steps and Extract Pathways will replay.
 - `steps/`: the step system views share. A view's timeline rests at markers, points where the
   scene is still and progress is saved, and plays segments between them. `StepPlayer` plays the
   segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. A view

@@ -2,22 +2,22 @@ import { clamp01, cubicBezier, ease } from "./easing";
 import { emptyScene, Scene } from "./scene";
 
 /**
- * The four steps of one conversation's pass through the network, as a function of time, at the
- * prototype's "Med" speed (neural-net-maker index.html: fillInputs, runFan, revealAnswer). Step s
- * fills column s − 1; steps 2–4 first play the fan of edges into it, one source unit at a time.
- * Trace a Case plays them as its steps, and Extract Pathways will replay them for its first
- * conversation.
+ * The four phases of one conversation's forward pass through the network, as a function of time,
+ * at the prototype's "Med" speed (neural-net-maker index.html: fillInputs, runFan, revealAnswer).
+ * Phase p fills column p − 1; phases 2–4 first play the fan of edges into it, one source unit at a
+ * time. Trace a Case plays each phase as one of its steps, and Extract Pathways will replay all
+ * four within one segment for its first conversation.
  */
-export const STEPS = [1, 2, 3, 4] as const;
-export type Step = (typeof STEPS)[number];
+export const PHASES = [1, 2, 3, 4] as const;
+export type Phase = (typeof PHASES)[number];
 
-export interface RunningStep {
-  step: Step;
-  /** Milliseconds since the step started. */
+export interface RunningPhase {
+  phase: Phase;
+  /** Milliseconds since the phase started. */
   t: number;
 }
 
-/** Step 1: input node i starts filling at i × FILL_GAP ms. */
+/** Phase 1: input node i starts filling at i × FILL_GAP ms. */
 const FILL_GAP = 55;
 /** How long a gauge takes to ease to its new level. */
 export const FILL_DURATION = 180;
@@ -34,7 +34,7 @@ export function unitDuration(k: number): number {
   return Math.max(UNIT_MIN, UNIT_FIRST * UNIT_DECAY ** k);
 }
 
-/** When each of a fan's n units ends, in ms from the start of the step. */
+/** When each of a fan's n units ends, in ms from the start of the phase. */
 function unitEnds(n: number): number[] {
   const ends: number[] = [];
   let end = 0;
@@ -49,34 +49,34 @@ function progress(t: number, start: number, duration: number): number {
   return clamp01((t - start) / duration);
 }
 
-export function stepDuration(step: Step, columnSizes: readonly number[]): number {
-  if (step === 1) {
+export function phaseDuration(phase: Phase, columnSizes: readonly number[]): number {
+  if (phase === 1) {
     return (columnSizes[0] - 1) * FILL_GAP + FILL_DURATION;
   }
-  const ends = unitEnds(columnSizes[step - 2]);
-  const settle = step === columnSizes.length ? ANSWER_DELAY + ANSWER_DURATION : FILL_DURATION;
+  const ends = unitEnds(columnSizes[phase - 2]);
+  const settle = phase === columnSizes.length ? ANSWER_DELAY + ANSWER_DURATION : FILL_DURATION;
   return ends[ends.length - 1] + settle;
 }
 
-/** The scene with `stepsDone` steps complete and `running` part way. */
-export function sceneAt(columnSizes: readonly number[], stepsDone: number, running?: RunningStep): Scene {
+/** The scene with `phasesDone` phases complete and `running` part way. */
+export function sceneAt(columnSizes: readonly number[], phasesDone: number, running?: RunningPhase): Scene {
   const scene = emptyScene(columnSizes);
-  for (let step = 1; step <= stepsDone; step++) {
-    applyStep(scene, columnSizes, step as Step, Infinity);
+  for (let phase = 1; phase <= phasesDone; phase++) {
+    applyPhase(scene, columnSizes, phase as Phase, Infinity);
   }
   if (running) {
-    applyStep(scene, columnSizes, running.step, running.t);
+    applyPhase(scene, columnSizes, running.phase, running.t);
   }
   return scene;
 }
 
-function applyStep(scene: Scene, columnSizes: readonly number[], step: Step, t: number) {
-  if (step === 1) {
+function applyPhase(scene: Scene, columnSizes: readonly number[], phase: Phase, t: number) {
+  if (phase === 1) {
     scene.nodeFill[0] = scene.nodeFill[0].map((_, i) => ease(progress(t, i * FILL_GAP, FILL_DURATION)));
     return;
   }
-  const gap = step - 2;
-  const target = step - 1;
+  const gap = phase - 2;
+  const target = phase - 1;
   const ends = unitEnds(columnSizes[gap]);
   scene.edgeDraw[gap] = ends.map((end, k) => {
     const p = progress(t, end - unitDuration(k), unitDuration(k));
