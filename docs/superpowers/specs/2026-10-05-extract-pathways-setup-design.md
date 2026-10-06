@@ -396,7 +396,7 @@ as in the prototype, where `setNodeLevel` has no transition.
 - **`step-player.test.ts`** (moved from Trace a Case and made generic; plain calls with fake
   timers):
   - `play` saves `from`, runs, then saves `to`;
-  - a press during a run drops it and keeps `from`;
+  - a press during a run drops it, so its `to` is never saved;
   - reduced motion saves `to` straight away;
   - `stop()` cancels the clock, and the player plays again afterward;
   - `reset()` saves 0.

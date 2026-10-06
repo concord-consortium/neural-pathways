@@ -70,16 +70,17 @@ describe("StepPlayer", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("drops a run when another is pressed, keeping the first run's `from`", () => {
+  it("drops a run when another is pressed: the first's `to` is never saved", () => {
     const progress = new Progress();
     const player = new StepPlayer(timeline, progress);
     player.play("a", { from: 0, to: 3 });
     jest.advanceTimersByTime(1000);
     player.play("b", { from: 1, to: 2 });
-    expect(progress.marker).toBe(1);
     expect(player.running?.button).toBe("b");
     expect(jest.getTimerCount()).toBe(1);
-    jest.advanceTimersByTime(1100);
+    // Past where `a` would have ended, 3000 ms after it started.
+    jest.advanceTimersByTime(2500);
+    expect(player.running).toBeUndefined();
     expect(progress.marker).toBe(2);
   });
 
