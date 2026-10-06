@@ -17,7 +17,8 @@ export interface Scene {
   answer: number;
   /**
    * The opacity, 0–1, of everything but the hidden layers' nodes (every column but the first and
-   * last), which stay at full strength. Extract Pathways dims the network around its hidden neurons.
+   * last), which stay at full strength. Extract Pathways will dim the network around its hidden
+   * neurons.
    */
   dim: number;
 }

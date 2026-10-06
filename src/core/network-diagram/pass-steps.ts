@@ -5,7 +5,7 @@ import { emptyScene, Scene } from "./scene";
  * The four steps of one conversation's pass through the network, as a function of time, at the
  * prototype's "Med" speed (neural-net-maker index.html: fillInputs, runFan, revealAnswer). Step s
  * fills column s − 1; steps 2–4 first play the fan of edges into it, one source unit at a time.
- * Trace a Case plays them as its steps, and Extract Pathways replays them for its first
+ * Trace a Case plays them as its steps, and Extract Pathways will replay them for its first
  * conversation.
  */
 export const STEPS = [1, 2, 3, 4] as const;
