@@ -10,25 +10,26 @@ interface StepRowProps {
 }
 
 /**
- * A view's step buttons, then Reset. A button plays the run it gives for the steps done; one that
- * gives none is disabled, unless it is the one running, which replays its run. A button shows as pressed while its run
- * plays, or, while nothing runs, when it says it shows the steps done. Reset is unavailable
- * (aria-disabled) while nothing is done or running, and stays in the tab order.
+ * A view's step buttons, then Reset. A button plays the segment it gives for the marker the timeline
+ * rests at; one that gives none is disabled, unless it is the one running, which replays its run. A
+ * button shows as pressed while its run plays, or, while nothing runs, when it says to at the
+ * marker. Reset is unavailable (aria-disabled) at the start with nothing running, and stays in the
+ * tab order.
  */
 export const StepRow = observer(function StepRow({ player, buttons }: StepRowProps) {
-  const { done, running } = player;
-  const nothingShown = done === 0 && !running;
+  const { marker, running } = player;
+  const nothingShown = marker === 0 && !running;
   return (
     <div className="step-row" role="group" aria-label="Steps">
       {buttons.map(button => {
         const isRunning = running?.button === button.key;
-        const run = button.run(done) ?? (isRunning ? running : undefined);
-        const pressed = isRunning || (!running && !!button.showsDone?.(done));
+        const segment = button.segmentToPlayWhenAt(marker) ?? (isRunning ? running : undefined);
+        const pressed = isRunning || (!running && !!button.showAsPressedWhenAt?.(marker));
         return (
           <button key={button.key} type="button" className="step-row__step"
             aria-pressed={pressed}
-            disabled={!run}
-            onClick={run && (() => player.play(button.key, run.from, run.to))}>
+            disabled={!segment}
+            onClick={segment && (() => player.play(button.key, segment))}>
             {button.label}
           </button>
         );

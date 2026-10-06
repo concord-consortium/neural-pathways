@@ -1,26 +1,26 @@
 import { action, makeObservable, observable } from "mobx";
-import { Run, StepPlayer, StepProgress, StepTimeline } from "./step-player";
+import { Marker, Run, StepPlayer, StepProgress, StepTimeline } from "./step-player";
 
 interface TestScene {
-  done: number;
+  marker: Marker;
   run?: Run;
 }
 
-/** A run takes a second for each step it covers. */
+/** A segment takes a second for each marker it moves on. */
 const timeline: StepTimeline<TestScene> = {
-  duration: (from, to) => (to - from) * 1000,
-  sceneAt: (done, run) => (run ? { done, run } : { done }),
+  duration: ({ from, to }) => (to - from) * 1000,
+  sceneAt: (marker, run) => (run ? { marker, run } : { marker }),
 };
 
 class Progress implements StepProgress {
-  done = 0;
+  marker = 0;
 
   constructor() {
-    makeObservable(this, { done: observable, setDone: action });
+    makeObservable(this, { marker: observable, setMarker: action });
   }
 
-  setDone(n: number) {
-    this.done = n;
+  setMarker(marker: Marker) {
+    this.marker = marker;
   }
 }
 
@@ -45,49 +45,49 @@ describe("StepPlayer", () => {
 
   it("starts at the progress saved, with nothing running", () => {
     const progress = new Progress();
-    progress.setDone(2);
+    progress.setMarker(2);
     const player = new StepPlayer(timeline, progress);
-    expect(player.done).toBe(2);
+    expect(player.marker).toBe(2);
     expect(player.running).toBeUndefined();
-    expect(player.scene).toEqual({ done: 2 });
+    expect(player.scene).toEqual({ marker: 2 });
   });
 
   it("saves `from`, plays the run, then saves `to`", () => {
     const progress = new Progress();
     const player = new StepPlayer(timeline, progress);
-    player.play("b", 1, 2);
-    expect(progress.done).toBe(1);
+    player.play("b", { from: 1, to: 2 });
+    expect(progress.marker).toBe(1);
     expect(player.running).toEqual({ button: "b", from: 1, to: 2, t: 0 });
     jest.advanceTimersByTime(500);
     expect(player.running?.t).toBeGreaterThan(400);
     expect(player.running?.t).toBeLessThan(500);
-    expect(player.scene).toEqual({ done: 1, run: player.running });
-    expect(progress.done).toBe(1);
+    expect(player.scene).toEqual({ marker: 1, run: player.running });
+    expect(progress.marker).toBe(1);
     jest.advanceTimersByTime(600);
     expect(player.running).toBeUndefined();
-    expect(progress.done).toBe(2);
-    expect(player.scene).toEqual({ done: 2 });
+    expect(progress.marker).toBe(2);
+    expect(player.scene).toEqual({ marker: 2 });
     expect(jest.getTimerCount()).toBe(0);
   });
 
   it("drops a run when another is pressed, keeping the first run's `from`", () => {
     const progress = new Progress();
     const player = new StepPlayer(timeline, progress);
-    player.play("a", 0, 3);
+    player.play("a", { from: 0, to: 3 });
     jest.advanceTimersByTime(1000);
-    player.play("b", 1, 2);
-    expect(progress.done).toBe(1);
+    player.play("b", { from: 1, to: 2 });
+    expect(progress.marker).toBe(1);
     expect(player.running?.button).toBe("b");
     expect(jest.getTimerCount()).toBe(1);
     jest.advanceTimersByTime(1100);
-    expect(progress.done).toBe(2);
+    expect(progress.marker).toBe(2);
   });
 
   it("restarts a run when its button is pressed again", () => {
     const player = new StepPlayer(timeline, new Progress());
-    player.play("a", 1, 2);
+    player.play("a", { from: 1, to: 2 });
     jest.advanceTimersByTime(500);
-    player.play("a", 1, 2);
+    player.play("a", { from: 1, to: 2 });
     expect(player.running).toEqual({ button: "a", from: 1, to: 2, t: 0 });
   });
 
@@ -95,8 +95,8 @@ describe("StepPlayer", () => {
     setReducedMotion(true);
     const progress = new Progress();
     const player = new StepPlayer(timeline, progress);
-    player.play("a", 0, 3);
-    expect(progress.done).toBe(3);
+    player.play("a", { from: 0, to: 3 });
+    expect(progress.marker).toBe(3);
     expect(player.running).toBeUndefined();
     expect(jest.getTimerCount()).toBe(0);
   });
@@ -104,25 +104,25 @@ describe("StepPlayer", () => {
   it("stop() cancels the clock and keeps `from`, and the player plays again afterward", () => {
     const progress = new Progress();
     const player = new StepPlayer(timeline, progress);
-    player.play("a", 1, 2);
+    player.play("a", { from: 1, to: 2 });
     player.stop();
     expect(jest.getTimerCount()).toBe(0);
-    expect(progress.done).toBe(1);
+    expect(progress.marker).toBe(1);
     expect(player.running).toBeUndefined();
-    player.play("a", 1, 2);
+    player.play("a", { from: 1, to: 2 });
     jest.advanceTimersByTime(1100);
-    expect(progress.done).toBe(2);
+    expect(progress.marker).toBe(2);
   });
 
   it("reset() stops a run and saves 0", () => {
     const progress = new Progress();
     const player = new StepPlayer(timeline, progress);
-    player.play("a", 2, 3);
+    player.play("a", { from: 2, to: 3 });
     jest.advanceTimersByTime(200);
     player.reset();
-    expect(progress.done).toBe(0);
+    expect(progress.marker).toBe(0);
     expect(player.running).toBeUndefined();
     jest.advanceTimersByTime(2000);
-    expect(progress.done).toBe(0);
+    expect(progress.marker).toBe(0);
   });
 });

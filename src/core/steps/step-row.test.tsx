@@ -2,36 +2,45 @@ import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { action, makeObservable, observable } from "mobx";
 import { StepButton } from "./step-buttons";
-import { StepPlayer, StepProgress, StepTimeline } from "./step-player";
+import { Marker, StepPlayer, StepProgress, StepTimeline } from "./step-player";
 import { StepRow } from "./step-row";
 
 const timeline: StepTimeline<number> = {
-  duration: (from, to) => (to - from) * 1000,
-  sceneAt: done => done,
+  duration: ({ from, to }) => (to - from) * 1000,
+  sceneAt: marker => marker,
 };
 
 class Progress implements StepProgress {
-  done = 0;
+  marker = 0;
 
-  constructor(done = 0) {
-    this.done = done;
-    makeObservable(this, { done: observable, setDone: action });
+  constructor(marker = 0) {
+    this.marker = marker;
+    makeObservable(this, { marker: observable, setMarker: action });
   }
 
-  setDone(n: number) {
-    this.done = n;
+  setMarker(marker: Marker) {
+    this.marker = marker;
   }
 }
 
-/** One: always from 0 to 1, pressed when 1 is done. Next: one more, up to 3. Later: always disabled. */
+/** One: always from 0 to 1, pressed at 1. Next: on one marker, up to 3. Later: always disabled. */
 const BUTTONS: StepButton[] = [
-  { key: "one", label: "One", run: () => ({ from: 0, to: 1 }), showsDone: done => done === 1 },
-  { key: "next", label: "Next", run: done => (done < 3 ? { from: done, to: done + 1 } : undefined) },
-  { key: "later", label: "Later", run: () => undefined },
+  {
+    key: "one",
+    label: "One",
+    segmentToPlayWhenAt: () => ({ from: 0, to: 1 }),
+    showAsPressedWhenAt: marker => marker === 1,
+  },
+  {
+    key: "next",
+    label: "Next",
+    segmentToPlayWhenAt: marker => (marker < 3 ? { from: marker, to: marker + 1 } : undefined),
+  },
+  { key: "later", label: "Later", segmentToPlayWhenAt: () => undefined },
 ];
 
-function renderRow(done = 0, buttons = BUTTONS) {
-  const player = new StepPlayer(timeline, new Progress(done));
+function renderRow(marker = 0, buttons = BUTTONS) {
+  const player = new StepPlayer(timeline, new Progress(marker));
   render(<StepRow player={player} buttons={buttons} />);
   return player;
 }
@@ -59,7 +68,7 @@ describe("StepRow", () => {
       .toEqual(["One", "Next", "Later", "Reset"]);
   });
 
-  it("disables a button with no run, and makes Reset unavailable while nothing is done", () => {
+  it("disables a button with no segment, and makes Reset unavailable at the start", () => {
     renderRow();
     expect(button("Later")).toBeDisabled();
     expect(button("Next")).toBeEnabled();
@@ -67,7 +76,7 @@ describe("StepRow", () => {
     expect(button("Reset")).toBeEnabled();
   });
 
-  it("presses the button that shows the steps done while nothing runs", () => {
+  it("presses the button that says to at the marker while nothing runs", () => {
     renderRow(1);
     expect(button("One")).toHaveAttribute("aria-pressed", "true");
     expect(button("Next")).toHaveAttribute("aria-pressed", "false");
@@ -79,19 +88,19 @@ describe("StepRow", () => {
     const player = renderRow(1);
     const play = jest.spyOn(player, "play");
     fireEvent.click(button("Next"));
-    expect(play).toHaveBeenCalledWith("next", 1, 2);
+    expect(play).toHaveBeenCalledWith("next", { from: 1, to: 2 });
     expect(button("Next")).toHaveAttribute("aria-pressed", "true");
     expect(button("One")).toHaveAttribute("aria-pressed", "false");
     act(() => jest.advanceTimersByTime(1100));
     expect(button("Next")).toHaveAttribute("aria-pressed", "false");
-    expect(player.done).toBe(2);
+    expect(player.marker).toBe(2);
   });
 
   it("never disables the button that is running, and pressing it replays its run", () => {
     const jumpAhead: StepButton = {
       key: "jump",
       label: "Jump",
-      run: done => (done === 0 ? { from: 1, to: 2 } : undefined),
+      segmentToPlayWhenAt: marker => (marker === 0 ? { from: 1, to: 2 } : undefined),
     };
     // eslint-disable-next-line testing-library/render-result-naming-convention -- renderRow returns StepPlayer
     const player = renderRow(0, [jumpAhead]);
@@ -100,7 +109,7 @@ describe("StepRow", () => {
     expect(button("Jump")).toHaveAttribute("aria-pressed", "true");
     const play = jest.spyOn(player, "play");
     fireEvent.click(button("Jump"));
-    expect(play).toHaveBeenCalledWith("jump", 1, 2);
+    expect(play).toHaveBeenCalledWith("jump", expect.objectContaining({ from: 1, to: 2 }));
   });
 
   it("makes Reset available while the first step runs, and resets", () => {
@@ -109,7 +118,7 @@ describe("StepRow", () => {
     fireEvent.click(button("One"));
     expect(button("Reset")).toHaveAttribute("aria-disabled", "false");
     fireEvent.click(button("Reset"));
-    expect(player.done).toBe(0);
+    expect(player.marker).toBe(0);
     expect(player.running).toBeUndefined();
   });
 

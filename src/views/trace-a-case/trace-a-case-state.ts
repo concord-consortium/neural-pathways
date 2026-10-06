@@ -1,8 +1,8 @@
 import "../../core/state/setup";
 import { Model, model, modelAction, tProp, types } from "mobx-keystone";
 
-/** How many of Trace a Case's four steps are done: none to all. */
-const stepsDoneType = types.refinement(types.integer, n => n >= 0 && n <= 4, "steps done, 0 to 4");
+/** A marker on Trace a Case's timeline: how many of the pass's four steps are done, none to all. */
+const markerType = types.refinement(types.integer, n => n >= 0 && n <= 4, "marker, 0 to 4");
 
 /**
  * Trace a Case's own state. The current conversation is in SharedState. Animate and speed arrive
@@ -14,21 +14,21 @@ const stepsDoneType = types.refinement(types.integer, n => n >= 0 && n <= 4, "st
 export class TraceACaseState extends Model({
   version: tProp(types.literal(1), 1),
   /**
-   * Steps done for each conversation, by conversation id. A step still playing isn't counted, and
-   * a conversation with none done isn't stored.
+   * The marker each conversation rests at, by conversation id. A step still playing isn't counted,
+   * and a conversation at the start isn't stored.
    */
-  stepsByConversation: tProp(types.record(stepsDoneType), () => ({})),
+  markerByConversation: tProp(types.record(markerType), () => ({})),
 }) {
-  stepsDone(conversationId: string): number {
-    return this.stepsByConversation[conversationId] ?? 0;
+  marker(conversationId: string): number {
+    return this.markerByConversation[conversationId] ?? 0;
   }
 
   @modelAction
-  setStepsDone(conversationId: string, stepsDone: number) {
-    if (stepsDone === 0) {
-      delete this.stepsByConversation[conversationId];
+  setMarker(conversationId: string, marker: number) {
+    if (marker === 0) {
+      delete this.markerByConversation[conversationId];
     } else {
-      this.stepsByConversation[conversationId] = stepsDone;
+      this.markerByConversation[conversationId] = marker;
     }
   }
 }

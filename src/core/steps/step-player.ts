@@ -1,26 +1,33 @@
 import { action, computed, observableRef } from "mobx";
 
-/** A step playing: the button that started it, the steps done it runs from and to, and its time. */
-export interface Run {
+/** A point on a view's timeline where the scene rests and progress is saved. 0 is the start. */
+export type Marker = number;
+
+/** The animation between two markers. */
+export interface Segment {
+  from: Marker;
+  to: Marker;
+}
+
+/** A segment playing: the button that started it, and its time. */
+export interface Run extends Segment {
   button: string;
-  from: number;
-  to: number;
   /** Milliseconds since it started. */
   t: number;
 }
 
-/** What a view's steps draw. Pure: the same steps done and run always give the same scene. */
+/** What a view's steps draw. Pure: the same marker and run always give the same scene. */
 export interface StepTimeline<S> {
-  /** How long a run from `from` steps done to `to` takes, in milliseconds. */
-  duration(from: number, to: number): number;
-  /** The scene with `done` steps done, and `run` part way when one is playing. */
-  sceneAt(done: number, run?: Run): S;
+  /** How long `segment` takes to play, in milliseconds. */
+  duration(segment: Segment): number;
+  /** The scene resting at `marker`, with `run` part way when one is playing. */
+  sceneAt(marker: Marker, run?: Run): S;
 }
 
-/** Where a view keeps its steps done. Reads must be observable, such as a mobx-keystone model's. */
+/** Where a view keeps its marker. Reads must be observable, such as a mobx-keystone model's. */
 export interface StepProgress {
-  readonly done: number;
-  setDone(n: number): void;
+  readonly marker: Marker;
+  setMarker(marker: Marker): void;
 }
 
 function prefersReducedMotion(): boolean {
@@ -28,8 +35,8 @@ function prefersReducedMotion(): boolean {
 }
 
 /**
- * Plays a view's steps on a requestAnimationFrame clock and keeps its steps done in `progress`. A
- * run saves the steps done it starts from when it starts, and those it ends at when it ends, so a
+ * Plays a view's segments on a requestAnimationFrame clock and keeps its marker in `progress`. A
+ * run saves the marker it starts from when it starts, and the one it ends at when it ends, so a
  * run still playing is never saved. Pressing anything during a run drops it.
  *
  * Only the run playing is held here, and the clock runs only while it plays, so `stop()` is all the
@@ -45,8 +52,8 @@ export class StepPlayer<S> {
     private readonly progress: StepProgress,
   ) {}
 
-  get done(): number {
-    return this.progress.done;
+  get marker(): Marker {
+    return this.progress.marker;
   }
 
   get running(): Run | undefined {
@@ -55,27 +62,28 @@ export class StepPlayer<S> {
 
   @computed
   get scene(): S {
-    return this.timeline.sceneAt(this.progress.done, this.run);
+    return this.timeline.sceneAt(this.progress.marker, this.run);
   }
 
-  /** Jumps to `from` steps done, then plays to `to`. Under reduced motion, jumps straight to `to`. */
+  /** Jumps to `segment.from`, then plays to `segment.to`. Under reduced motion, jumps straight to `to`. */
   @action
-  play(button: string, from: number, to: number) {
+  play(button: string, segment: Segment) {
+    const { from, to } = segment;
     this.stop();
     if (prefersReducedMotion()) {
-      this.progress.setDone(to);
+      this.progress.setMarker(to);
       return;
     }
-    this.progress.setDone(from);
+    this.progress.setMarker(from);
     this.run = { button, from, to, t: 0 };
-    const duration = this.timeline.duration(from, to);
+    const duration = this.timeline.duration(segment);
     let start: number | undefined;
     const tick = action((now: number) => {
       start ??= now;
       const t = now - start;
       if (t >= duration) {
         this.stop();
-        this.progress.setDone(to);
+        this.progress.setMarker(to);
         return;
       }
       this.run = { button, from, to, t };
@@ -87,10 +95,10 @@ export class StepPlayer<S> {
   @action
   reset() {
     this.stop();
-    this.progress.setDone(0);
+    this.progress.setMarker(0);
   }
 
-  /** Drops a run that is playing. The steps done stay at its `from`. */
+  /** Drops a run that is playing. The marker stays at its `from`. */
   @action
   stop() {
     if (this.frame !== undefined) {

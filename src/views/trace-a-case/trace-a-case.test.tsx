@@ -145,7 +145,7 @@ describe("TraceACase", () => {
     fireEvent.click(screen.getByRole("button", { name: "Step 3" }));
     fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
     fireEvent.click(screen.getByRole("button", { name: "Step 1" }));
-    expect(state.stepsByConversation).toEqual({ [ids[0]]: 3, [ids[1]]: 1 });
+    expect(state.markerByConversation).toEqual({ [ids[0]]: 3, [ids[1]]: 1 });
   });
 
   it("drops a step that is playing when the conversation changes, keeping the step before", async () => {
@@ -159,7 +159,7 @@ describe("TraceACase", () => {
       fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
       expect(jest.getTimerCount()).toBe(0);
       act(() => jest.advanceTimersByTime(5000));
-      expect(state.stepsByConversation).toEqual({ [ids[0]]: 1 });
+      expect(state.markerByConversation).toEqual({ [ids[0]]: 1 });
       fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
       expect(screen.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-pressed", "true");
     } finally {
@@ -168,7 +168,7 @@ describe("TraceACase", () => {
   });
 
   it("opens a conversation at the steps saved for it", async () => {
-    showView(new SharedState({}), new TraceACaseState({ stepsByConversation: { [ids[0]]: 2 } }));
+    showView(new SharedState({}), new TraceACaseState({ markerByConversation: { [ids[0]]: 2 } }));
     await screen.findByText("1 / 3");
     expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-pressed", "true");
   });

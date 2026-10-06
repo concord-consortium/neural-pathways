@@ -29,12 +29,13 @@ The work is two stacked PRs (see [PRs](#prs)).
 |---|---|---|
 | Animate, speed and About | Not in this story. The steps always animate, at the prototype's Med timings. | NPW-38 and NPW-44 aren't built yet, and NPW-48 comes before them. NPW-24 adds both, and the activation legend, to the view. |
 | The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 promoted choreography to core once a second view needed it, and this is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
-| Button rules | Each button is a function from the progress so far to the run it plays, or to nothing when it is disabled. Core derives disabled and pressed from that. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
-| Progress | One count of completed steps. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
+| Button rules | Each button is a function from the marker the timeline rests at to the segment it plays, or to nothing when it is disabled. Core derives disabled and pressed from that. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
+| Progress | One marker: a point on the view's timeline where the scene rests and progress is saved. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
+| Markers and segments | The timeline's resting points are markers, and the animation between two is a segment, as in Lottie (`playSegments`) and After Effects. "Step" stays with the buttons and the row. | A button isn't a step of the timeline: Collect a Conversation plays a different segment each press, and Collect All will play across many. Trace a Case's Step *k* happens to play the segment to marker *k*. "Keyframe" would suggest in-betweens filled in for us, and `network-drawing.tsx` already uses it for the pill's pop. |
 | Press rules in this story | Trace a Case's: any enabled button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but disabled. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
 | `extracted` | Renamed `setupDone`. | It means "Setup has been done". "Extract Pathways" is a later step, so the old name would mislead. Nothing has shipped. |
 | Collect a Conversation's network animation | All three of the prototype's versions: a replay of Trace a Case's steps for the first conversation, a swap for the next two, and a quick swap after that. | The replay ties the deck back to Trace a Case. The slower swaps make each new conversation visible before they turn into shorthand. |
-| The end of a collection | Everything but the hidden neurons, and the lifted column, stay dimmed once the column lands, until the next collection starts. Coming back to the view shows the same. | As in the prototype (`collectOne` and `flyColumn`, lines 15161–15215). The prototype rebuilds a returned-to screen at full strength (`restoreRun`, lines 14746–14778), but a pure `sceneAt(done)` must match the end of the run that reached it, so here it comes back as it was left. |
+| The end of a collection | Everything but the hidden neurons, and the lifted column, stay dimmed once the column lands, until the next collection starts. Coming back to the view shows the same. | As in the prototype (`collectOne` and `flyColumn`, lines 15161–15215). The prototype rebuilds a returned-to screen at full strength (`restoreRun`, lines 14746–14778), but a pure `sceneAt(marker)` must match the end of the run that reached it, so here it comes back as it was left. |
 | Which conversations | The first ten in dataset order. Extract Pathways doesn't read or change the shared conversation. | The prototype does the same (`cases`, line 10622, with `idx` 0). The view has no conversation panel. |
 | The canvas | One SVG as wide as the panel, never narrower than 995 drawing units: the network in a 537-wide middle, the deck in the left strip, the lifted column in the right. | Before Setup the strips are just empty. This replaces the prototype's widen-and-shift (`widenForLift`, lines 13371–13411). 995 is the prototype's width at its 537 cap plus its two 229 strips, which the 20-column deck needs once NPW-48 adds it. |
 | The activation legend | Left out. | It's in NPW-24's scope, and NPW-23 adds the same key to Trace a Case. |
@@ -46,37 +47,43 @@ The work is two stacked PRs (see [PRs](#prs)).
 Trace a Case's `StepPlayer`, made generic. It knows nothing about networks or state models.
 
 ```ts
-interface Run {
+/** A point on a view's timeline where the scene rests and progress is saved. 0 is the start. */
+type Marker = number;
+/** The animation between two markers. */
+interface Segment {
+  from: Marker;
+  to: Marker;
+}
+/** A segment playing. */
+interface Run extends Segment {
   /** The key of the button that started it. */
   button: string;
-  from: number;
-  to: number;
   /** Milliseconds since it started. */
   t: number;
 }
 interface StepTimeline<S> {
-  duration(from: number, to: number): number;
+  duration(segment: Segment): number;
   /** Pure. S is whatever the view draws. */
-  sceneAt(done: number, run?: Run): S;
+  sceneAt(marker: Marker, run?: Run): S;
 }
 interface StepProgress {
-  readonly done: number;
-  setDone(n: number): void;
+  readonly marker: Marker;
+  setMarker(marker: Marker): void;
 }
 
 class StepPlayer<S> {
   constructor(timeline: StepTimeline<S>, progress: StepProgress);
-  get done(): number;
+  get marker(): Marker;
   get running(): Run | undefined;
   get scene(): S;                                     // @computed
-  play(button: string, from: number, to: number): void;
+  play(button: string, segment: Segment): void;
   reset(): void;
   stop(): void;
 }
 ```
 
 - **`play`:** stops any run, saves `from`, then runs the requestAnimationFrame clock. At
-  `t >= duration(from, to)` it stops and saves `to`. A run in progress is never saved.
+  `t >= duration(segment)` it stops and saves `to`. A run in progress is never saved.
 - **Reduced motion:** `play` saves `to` straight away.
 - **`reset`:** stops and saves 0.
 - **`stop`:** cancels the clock and drops the run. Progress keeps `from`. The player can play
@@ -90,34 +97,37 @@ class StepPlayer<S> {
 interface StepButton {
   key: string;
   label: string;
-  /** The run this button plays from `done`, or undefined when it is disabled. */
-  run(done: number): { from: number; to: number } | undefined;
-  /** Whether it shows as pressed while nothing runs. */
-  showsDone?(done: number): boolean;
+  /** The segment this button plays when the timeline rests at `marker`, or undefined when it is disabled. */
+  segmentToPlayWhenAt(marker: Marker): Segment | undefined;
+  /** Whether it shows as pressed while nothing plays. */
+  showAsPressedWhenAt?(marker: Marker): boolean;
 }
 ```
 
 - **Pressed:** the button whose run is playing. When nothing runs, the button whose
-  `showsDone(done)` is true.
-- **Disabled:** `run(done)` is undefined. The running button is never disabled.
+  `showAsPressedWhenAt(marker)` is true.
+- **Disabled:** `segmentToPlayWhenAt(marker)` is undefined. The running button is never disabled:
+  when it gives no segment, pressing it replays its run.
 
 ### `step-row.tsx`
 
 `<StepRow player buttons />`, an `observer`.
 
 - It renders the buttons in order, then Reset, in a `role="group"` labeled "Steps".
-- A press calls `player.play(key, from, to)` with that button's run.
+- A press calls `player.play(key, segment)` with that button's segment.
 - Pressed buttons have `aria-pressed="true"`. Disabled buttons have `disabled`.
-- Reset is `aria-disabled` while nothing is done or running, and stays in the tab order.
+- Reset is `aria-disabled` at marker 0 with nothing running, and stays in the tab order.
 - The step-row styles move here, to `step-row.scss`, from `trace-a-case.scss`.
 
 ### Trace a Case on the shared system
 
 Nothing it does changes.
 
-- **Buttons:** `Step 1` to `Step 4`. Step *k* has `run: () => ({ from: k − 1, to: k })` and
-  `showsDone: d => d === k`.
-- **Progress:** an adapter wraps `TraceACaseState` for the conversation shown. As now, the view
+- **Buttons:** `Step 1` to `Step 4`. Step *k* has `segmentToPlayWhenAt: () => ({ from: k − 1, to: k })`
+  and `showAsPressedWhenAt: m => m === k`.
+- **Progress:** an adapter wraps `TraceACaseState` for the conversation shown. Marker *k* is *k*
+  steps done, so the state keeps the marker itself: `stepsByConversation`, `stepsDone` and
+  `setStepsDone` are renamed `markerByConversation`, `marker` and `setMarker`. Nothing has shipped. As now, the view
   makes a player for that conversation and a new one when it changes.
 - **Timeline:** `duration` and `sceneAt` wrap the pass steps (below), with `run.to` as the step.
 
@@ -184,21 +194,24 @@ export class ExtractPathwaysState extends Model({
 
 **Progress adapter.**
 
-- `done = setupDone ? 1 + collected : 0`.
-- `setDone(n)` sets `setupDone = n >= 1` and `collected = max(0, n − 1)`. So Reset and Setup both
+- `marker = setupDone ? 1 + collected : 0`.
+- `setMarker(m)` sets `setupDone = m >= 1` and `collected = max(0, m − 1)`. So Reset and Setup both
   clear the deck.
+- Unlike Trace a Case, the state keeps the stages, not the marker. The collect limit depends on how
+  many conversations are loaded, so once NPW-48 adds markers after the collections, a stored marker
+  would mean different things for different datasets.
 - A saved state with `collected > 0` but `setupDone` false reads as 0.
 
 ### The buttons: `EXTRACT_BUTTONS`
 
-| Button | `run(done)` |
+| Button | `segmentToPlayWhenAt(marker)` |
 |---|---|
 | Setup | `{ from: 0, to: 1 }` |
-| Collect a Conversation | `{ from: s, to: s + 1 }` where `s = max(done, 1)`; undefined once `n` are collected, where `n` is the smaller of 10 and the conversations loaded |
+| Collect a Conversation | `{ from: s, to: s + 1 }` where `s = max(marker, 1)`; undefined once `n` are collected, where `n` is the smaller of 10 and the conversations loaded |
 | Collect All Conversations | always undefined (NPW-48) |
 | Extract Pathways | always undefined (NPW-48) |
 
-None has `showsDone`. As in the prototype, a button shows as pressed only while it runs
+None has `showAsPressedWhenAt`. As in the prototype, a button shows as pressed only while it runs
 (`syncExRow`, lines 10888–10918).
 
 The rules that follow from this:
@@ -209,7 +222,7 @@ The rules that follow from this:
 - Setup always starts over.
 - Collect a Conversation stops at the smaller of 10 and the conversations loaded. A saved count
   reads clamped to that.
-- Reset is unavailable while nothing is done or running.
+- Reset is unavailable at marker 0 with nothing running.
 
 ### Data
 
@@ -307,11 +320,11 @@ Pure functions from flight progress to position and radius, matching `flyInto` (
 Pure functions in `setup-timeline.ts` and `collect-timeline.ts`, joined into the view's
 `StepTimeline<ExtractScene>`. Timings are the prototype's Med values.
 
-### At rest: `sceneAt(done)`
+### At rest: `sceneAt(marker)`
 
-- **`done = 0`:** the blank network.
-- **`done = 1`:** the network plus the empty lifted column and its label.
-- **`done = 1 + k`:** the network showing conversation *k* in full, with its answer and all three
+- **Marker 0:** the blank network.
+- **Marker 1:** the network plus the empty lifted column and its label.
+- **Marker 1 + k:** the network showing conversation *k* in full, with its answer and all three
   weight captions; "Conversation *k*"; the lifted column; and deck columns 1 to *k*. Everything
   but the hidden neurons, and the lifted column, are dimmed to 0.5, as the last flight left them.
 
@@ -385,15 +398,16 @@ as in the prototype, where `setNodeLevel` has no transition.
   - `stop()` cancels the clock, and the player plays again afterward;
   - `reset()` saves 0.
 - **`step-row.test.tsx`** (RTL):
-  - pressed comes from the running button, or from `showsDone` when idle;
-  - a button is disabled when `run(done)` is undefined, but never while it runs;
+  - pressed comes from the running button, or from `showAsPressedWhenAt` when idle;
+  - a button is disabled when `segmentToPlayWhenAt(marker)` is undefined, but never while it runs,
+    and pressing it then replays its run;
   - Reset is `aria-disabled` at 0 and stays focusable;
-  - a press calls `play` with that button's run.
+  - a press calls `play` with that button's segment.
 
 **Trace a Case**
 
 - Its view, timeline and player tests keep passing, which shows the move changed no behavior.
-- Its button list: `run` and `showsDone` for each step.
+- Its button list: `segmentToPlayWhenAt` and `showAsPressedWhenAt` for each step.
 
 **The diagram**
 
@@ -406,7 +420,7 @@ as in the prototype, where `setNodeLevel` has no transition.
 
 - **State:** the v1 fixture loads and saves back unchanged. A bad version or a negative count is
   rejected.
-- **Progress adapter:** `done` to `setupDone` and `collected` and back, including a saved state
+- **Progress adapter:** the marker to `setupDone` and `collected` and back, including a saved state
   with `collected > 0` but `setupDone` false.
 - **Buttons:** `run` for each button at 0, 1, 5 and 11. Collect a Conversation is disabled at 11,
   and the last two are always disabled.

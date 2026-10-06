@@ -56,10 +56,11 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   `easing.ts` has the timing curves; `pass-steps.ts` is the four steps of a conversation's pass
   through the network as a function of time, which Trace a Case plays and Extract Pathways will
   replay.
-- `steps/`: the step system views share. `StepPlayer` plays a view's timeline on a
-  `requestAnimationFrame` clock and keeps its steps done wherever the view says. A view lists its
-  buttons as `StepButton`s, each saying what it plays from the steps done, and `StepRow` draws
-  them with Reset.
+- `steps/`: the step system views share. A view's timeline rests at markers, points where the
+  scene is still and progress is saved, and plays segments between them. `StepPlayer` plays the
+  segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. A view
+  lists its buttons as `StepButton`s, each saying which segment it plays when the timeline rests
+  at a marker, and `StepRow` draws them with Reset.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words. Items are plain data, so these are functions that take the text.

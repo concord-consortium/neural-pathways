@@ -69,12 +69,12 @@ It has `version` and `conversationId` so far. Its fields:
 
 ## Each view's state
 
-Trace a Case's is in place, with only its steps done for each conversation so far: Animate and
+Trace a Case's is in place, with only the marker each conversation rests at so far: Animate and
 speed arrive with their controls. The others are not built yet. The target:
 
 | View | Model | Keeps |
 |---|---|---|
-| Trace a Case | `npw/TraceACaseState` | Steps done for each conversation, by id; Animate on/off; speed (0 slow, 1 normal, 2 fast) |
+| Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id; Animate on/off; speed (0 slow, 1 normal, 2 fast) |
 | Extract Pathways | `npw/ExtractPathwaysState` | Animate; speed; the extraction stages completed (`extracted`, `collected`, `cubeDone`, `pathwaysDone`) |
 | Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
 | Prediction Chain | `npw/PredictionChainState` | The step each conversation is on (0 to 4), by id; Animate; speed |
@@ -123,7 +123,7 @@ the stages it has completed, but not one in progress.
   server included, not only in production. keystone decides it is in dev mode with
   `typeof process !== "undefined"`, and webpack 5 doesn't define `process` in browser bundles.
   With the checks off, bad data loads silently: `commissioned: [5]`,
-  `stepsByConversation: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`, so
+  `markerByConversation: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`, so
   the first change to it crashes).
 
 ## Where initial state comes from
