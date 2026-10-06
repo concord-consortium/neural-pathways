@@ -47,3 +47,51 @@ test("the conversation survives switching views", async ({ page }) => {
   await nav.getByRole("link", { name: "Trace a Case" }).click();
   await expect(page.getByText("3 / 800", { exact: true })).toBeVisible();
 });
+
+test("the filter narrows the conversations Trace a Case steps through", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800")).toBeVisible();
+  const filter = page.getByRole("textbox", { name: "Filter" });
+  await filter.fill("model_correct:0");
+  await expect(page.getByText("64 of 800")).toBeVisible();
+  await expect(page.getByText("1 / 64")).toBeVisible();
+  await page.getByRole("button", { name: "Next conversation" }).click();
+  await expect(page.getByText("2 / 64")).toBeVisible();
+});
+
+test("a finished query is kept when switching views", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800")).toBeVisible();
+  await page.getByRole("textbox", { name: "Filter" }).fill("model_correct:0");
+  const nav = page.getByRole("navigation", { name: "Views" });
+  await nav.getByRole("link", { name: "Correlations", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
+  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await expect(page.getByText("1 / 64")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Filter" })).toHaveValue("model_correct:0");
+});
+
+test("a half-typed query is kept when switching views", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800")).toBeVisible();
+  await page.getByRole("textbox", { name: "Filter" }).fill("(model_correct:0");
+  await expect(page.getByText("Incomplete query")).toBeVisible();
+  const nav = page.getByRole("navigation", { name: "Views" });
+  await nav.getByRole("link", { name: "Correlations", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
+  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await expect(page.getByRole("textbox", { name: "Filter" })).toHaveValue("(model_correct:0");
+  await expect(page.getByText("Incomplete query")).toBeVisible();
+  await expect(page.getByText("1 / 800")).toBeVisible();
+});
+
+test("the filter's help lists what a query can use", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Show what you can filter on" }).click();
+  const help = page.getByRole("dialog", { name: "What you can filter on" });
+  await expect(help).toContainText("model_correct");
+  await expect(help).toContainText("pathway_3");
+  await expect(help).not.toContainText("resource_stressed");
+  await page.keyboard.press("Escape");
+  await expect(help).toBeHidden();
+});
