@@ -97,7 +97,10 @@ class StepPlayer<S> {
 interface StepButton {
   key: string;
   label: string;
-  /** The segment this button plays when the timeline rests at `marker`, or undefined when it is disabled. */
+  /**
+   * The segment this button plays when the timeline rests at `marker`, or undefined if it should be
+   * disabled at this marker.
+   */
   segmentToPlayWhenAt(marker: Marker): Segment | undefined;
   /** Whether it shows as pressed while nothing plays. */
   showAsPressedWhenAt?(marker: Marker): boolean;
