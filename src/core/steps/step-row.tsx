@@ -11,7 +11,7 @@ interface StepRowProps {
 
 /**
  * A view's step buttons, then Reset. A button plays the run it gives for the steps done; one that
- * gives none is disabled, unless it is the one running. A button shows as pressed while its run
+ * gives none is disabled, unless it is the one running, which replays its run. A button shows as pressed while its run
  * plays, or, while nothing runs, when it says it shows the steps done. Reset is unavailable
  * (aria-disabled) while nothing is done or running, and stays in the tab order.
  */
@@ -22,12 +22,12 @@ export const StepRow = observer(function StepRow({ player, buttons }: StepRowPro
     <div className="step-row" role="group" aria-label="Steps">
       {buttons.map(button => {
         const isRunning = running?.button === button.key;
-        const run = button.run(done);
+        const run = button.run(done) ?? (isRunning ? running : undefined);
         const pressed = isRunning || (!running && !!button.showsDone?.(done));
         return (
           <button key={button.key} type="button" className="step-row__step"
             aria-pressed={pressed}
-            disabled={!run && !isRunning}
+            disabled={!run}
             onClick={run && (() => player.play(button.key, run.from, run.to))}>
             {button.label}
           </button>

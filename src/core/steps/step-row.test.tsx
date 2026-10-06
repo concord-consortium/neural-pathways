@@ -87,16 +87,20 @@ describe("StepRow", () => {
     expect(player.done).toBe(2);
   });
 
-  it("never disables the button that is running", () => {
+  it("never disables the button that is running, and pressing it replays its run", () => {
     const jumpAhead: StepButton = {
       key: "jump",
       label: "Jump",
       run: done => (done === 0 ? { from: 1, to: 2 } : undefined),
     };
-    renderRow(0, [jumpAhead]);
+    // eslint-disable-next-line testing-library/render-result-naming-convention -- renderRow returns StepPlayer
+    const player = renderRow(0, [jumpAhead]);
     fireEvent.click(button("Jump"));
     expect(button("Jump")).toBeEnabled();
     expect(button("Jump")).toHaveAttribute("aria-pressed", "true");
+    const play = jest.spyOn(player, "play");
+    fireEvent.click(button("Jump"));
+    expect(play).toHaveBeenCalledWith("jump", 1, 2);
   });
 
   it("makes Reset available while the first step runs, and resets", () => {
