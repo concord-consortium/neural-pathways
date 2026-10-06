@@ -27,13 +27,13 @@ describe("collectSceneAt", () => {
     expect(collectSceneAt(SIZES, n, collectDuration(SIZES, n))).toEqual(restScene(SIZES, n + 1));
   });
 
-  it("starts the replay with the label bouncing in over a blank network at full strength", () => {
+  it("starts the replay with the label bouncing in over a blank network with no spotlight", () => {
     const scene = collectSceneAt(SIZES, 1, 260);
     expect(scene.shown).toBe(1);
     expect(scene.label?.n).toBe(1);
     expect(scene.label?.bounce).toBeCloseTo(0.5);
     expect(scene.network.nodeFill[0].every(x => x === 0)).toBe(true);
-    expect(scene.network.dim).toBe(1);
+    expect(scene.network.hiddenLayerSpotlight).toBe(0);
   });
 
   it("fills the inputs at their normal speed, from 540 ms", () => {
@@ -48,16 +48,16 @@ describe("collectSceneAt", () => {
     expect(scene.network.edgeDraw[0][1]).toBeLessThan(1);
   });
 
-  it("brings back the network and the lifted column the last flight dimmed, before a later conversation", () => {
+  it("lifts the spotlight the last flight left, and brings back the lifted column, before a later conversation", () => {
     const start = collectSceneAt(SIZES, 2, 0);
-    expect(start.network.dim).toBe(0.5);
+    expect(start.network.hiddenLayerSpotlight).toBe(0.5);
     expect(start.lifted?.opacity).toBe(0.5);
     expect(start.shown).toBe(1);
-    const partway = collectSceneAt(SIZES, 2, UNDIM / 2).network.dim;
-    expect(partway).toBeGreaterThan(0.5);
-    expect(partway).toBeLessThan(1);
+    const partway = collectSceneAt(SIZES, 2, UNDIM / 2).network.hiddenLayerSpotlight;
+    expect(partway).toBeGreaterThan(0);
+    expect(partway).toBeLessThan(0.5);
     const undimmed = collectSceneAt(SIZES, 2, UNDIM);
-    expect(undimmed.network.dim).toBe(1);
+    expect(undimmed.network.hiddenLayerSpotlight).toBe(0);
     expect(undimmed.lifted?.opacity).toBe(1);
   });
 
@@ -104,17 +104,17 @@ describe("collectSceneAt", () => {
     expect(collectSceneAt(SIZES, 4, QUICK_DONE).network.answer).toBe(1);
   });
 
-  it("dims all but the hidden neurons, and the lifted column, for the flight, and leaves them dimmed", () => {
+  it("spotlights the hidden neurons and dims the lifted column for the flight, and leaves them so", () => {
     const flightStart = QUICK_DONE + 550;
-    expect(collectSceneAt(SIZES, 4, flightStart).network.dim).toBe(1);
-    expect(collectSceneAt(SIZES, 4, flightStart + 350).network.dim).toBe(0.5);
+    expect(collectSceneAt(SIZES, 4, flightStart).network.hiddenLayerSpotlight).toBe(0);
+    expect(collectSceneAt(SIZES, 4, flightStart + 350).network.hiddenLayerSpotlight).toBe(0.5);
     expect(collectSceneAt(SIZES, 4, flightStart + 350).lifted?.opacity).toBe(0.5);
     expect(collectSceneAt(SIZES, 4, flightStart + 549).deck).toHaveLength(3);
     const flying = collectSceneAt(SIZES, 4, flightStart + 1000).deck;
     expect(flying).toHaveLength(4);
     expect(flying[3]).toEqual({ conversation: 4, flight: 450 });
     const end = collectSceneAt(SIZES, 4, collectDuration(SIZES, 4));
-    expect(end.network.dim).toBe(0.5);
+    expect(end.network.hiddenLayerSpotlight).toBe(0.5);
     expect(end.lifted?.opacity).toBe(0.5);
   });
 });

@@ -1,5 +1,5 @@
 import { clamp01, ease } from "../../core/network-diagram/easing";
-import { DIM, ExtractScene, hiddenCount, restScene } from "./extract-scene";
+import { ExtractScene, hiddenCount, restScene, SPOTLIGHT } from "./extract-scene";
 import { flightDuration } from "./flight";
 
 // The prototype's runExtract, EX_STAGE0_ONLY branch (neural-net-maker index.html), at Med.
@@ -23,17 +23,17 @@ export function setupDuration(columnSizes: readonly number[]): number {
 }
 
 /**
- * Setup, `t` ms in: everything but the hidden neurons dims, copies of them fly into the
- * lifted column, then the network comes back and the column's label fades in.
+ * Setup, `t` ms in: a spotlight falls on the hidden neurons, copies of them fly into the lifted
+ * column, then the spotlight lifts and the column's label fades in.
  */
 export function setupSceneAt(columnSizes: readonly number[], t: number): ExtractScene {
   const scene = restScene(columnSizes, 0);
   const flightStart = DIM_MS + DIM_HOLD;
   const landed = flightDuration(hiddenCount(columnSizes));
   const undimAt = flightStart + landed + LABEL_WAIT;
-  scene.network.dim = t < undimAt
-    ? easeBetween(1, DIM, t, 0, DIM_MS)
-    : easeBetween(DIM, 1, t, undimAt, UNDIM_MS);
+  scene.network.hiddenLayerSpotlight = t < undimAt
+    ? easeBetween(0, SPOTLIGHT, t, 0, DIM_MS)
+    : easeBetween(SPOTLIGHT, 0, t, undimAt, UNDIM_MS);
   if (t >= flightStart) {
     scene.lifted = {
       flight: Math.min(t - flightStart, landed),

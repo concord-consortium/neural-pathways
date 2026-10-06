@@ -3,7 +3,7 @@ import {
   ANSWER_DURATION, edgeDrawAt, sceneAt as passSceneAt, Step, stepDuration, STEPS,
 } from "../../core/network-diagram/pass-steps";
 import { fullScene, Scene } from "../../core/network-diagram/scene";
-import { DIM, ExtractScene, hiddenCount, restScene } from "./extract-scene";
+import { ExtractScene, hiddenCount, restScene, SPOTLIGHT } from "./extract-scene";
 import { flightDuration } from "./flight";
 import { DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
 
@@ -159,9 +159,9 @@ function quickNetwork(columnSizes: readonly number[], plan: QuickPlan, t: number
 }
 
 /**
- * When the network part begins. The first conversation follows Setup, which leaves the network at
- * full strength. Every later one first brings back the network and lifted column the last flight
- * dimmed.
+ * When the network part begins. The first conversation follows Setup, which leaves no spotlight on
+ * the network. Every later one first lifts the spotlight the last flight left, bringing the lifted
+ * column back with it.
  */
 function networkStart(n: number): number {
   return n === 1 ? 0 : UNDIM_MS;
@@ -186,11 +186,11 @@ export function collectDuration(columnSizes: readonly number[], n: number): numb
 }
 
 /**
- * Collecting conversation `n`, `t` ms in. After the first, it starts by bringing back the network
- * and lifted column the last flight dimmed. Then the network runs the conversation (a replay of the
- * pass steps for the first, a swap for the next two, a quick swap after). Then everything but the
- * hidden neurons dims, the lifted column with it, while copies of the hidden neurons fly into deck
- * column n. They stay dimmed until the next collection, as in the prototype.
+ * Collecting conversation `n`, `t` ms in. After the first, it starts by lifting the spotlight the
+ * last flight left. Then the network runs the conversation (a replay of the pass steps for the
+ * first, a swap for the next two, a quick swap after). Then a spotlight falls on the hidden neurons,
+ * fading the rest of the network and the lifted column's copies, while copies of the hidden neurons
+ * fly into deck column n. It stays until the next collection, as in the prototype.
  */
 export function collectSceneAt(columnSizes: readonly number[], n: number, t: number): ExtractScene {
   const scene = restScene(columnSizes, n);
@@ -222,12 +222,12 @@ export function collectSceneAt(columnSizes: readonly number[], n: number, t: num
   const dimAt = flightStart(columnSizes, n);
   const flyAt = dimAt + DIM_MS + DIM_HOLD;
   const landed = flightDuration(hiddenCount(columnSizes));
-  const strength = t < networkStart(n)
-    ? easeBetween(DIM, 1, t, 0, UNDIM_MS)
-    : easeBetween(1, DIM, t, dimAt, DIM_MS);
-  scene.network.dim = strength;
+  const spotlight = t < networkStart(n)
+    ? easeBetween(SPOTLIGHT, 0, t, 0, UNDIM_MS)
+    : easeBetween(0, SPOTLIGHT, t, dimAt, DIM_MS);
+  scene.network.hiddenLayerSpotlight = spotlight;
   if (scene.lifted) {
-    scene.lifted = { ...scene.lifted, opacity: strength };
+    scene.lifted = { ...scene.lifted, opacity: 1 - spotlight };
   }
   if (t >= flyAt) {
     scene.deck.push({ conversation: n, flight: Math.min(t - flyAt, landed) });
