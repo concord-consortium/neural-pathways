@@ -39,7 +39,7 @@ const BUTTONS: StepButton[] = [
   { key: "later", label: "Later", segmentToPlayWhenAt: () => undefined },
 ];
 
-function renderRow(marker = 0, buttons = BUTTONS) {
+function showRow(marker = 0, buttons = BUTTONS) {
   const player = new StepPlayer(timeline, new Progress(marker));
   render(<StepRow player={player} buttons={buttons} />);
   return player;
@@ -61,7 +61,7 @@ describe("StepRow", () => {
   });
 
   it("shows the buttons in order, then Reset, in a group named Steps", () => {
-    renderRow();
+    showRow();
     const group = screen.getByRole("group", { name: "Steps" });
     // eslint-disable-next-line testing-library/no-node-access -- need to verify order
     expect(Array.from(group.querySelectorAll("button")).map(b => b.textContent))
@@ -69,7 +69,7 @@ describe("StepRow", () => {
   });
 
   it("disables a button with no segment, and makes Reset unavailable at the start", () => {
-    renderRow();
+    showRow();
     expect(button("Later")).toBeDisabled();
     expect(button("Next")).toBeEnabled();
     expect(button("Reset")).toHaveAttribute("aria-disabled", "true");
@@ -77,15 +77,14 @@ describe("StepRow", () => {
   });
 
   it("presses the button that says to at the marker while nothing runs", () => {
-    renderRow(1);
+    showRow(1);
     expect(button("One")).toHaveAttribute("aria-pressed", "true");
     expect(button("Next")).toHaveAttribute("aria-pressed", "false");
     expect(button("Reset")).toHaveAttribute("aria-disabled", "false");
   });
 
   it("plays a button's run when it is pressed, and presses it while it runs", () => {
-    // eslint-disable-next-line testing-library/render-result-naming-convention -- renderRow returns StepPlayer
-    const player = renderRow(1);
+    const player = showRow(1);
     const play = jest.spyOn(player, "play");
     fireEvent.click(button("Next"));
     expect(play).toHaveBeenCalledWith("next", { from: 1, to: 2 });
@@ -102,8 +101,7 @@ describe("StepRow", () => {
       label: "Jump",
       segmentToPlayWhenAt: marker => (marker === 0 ? { from: 1, to: 2 } : undefined),
     };
-    // eslint-disable-next-line testing-library/render-result-naming-convention -- renderRow returns StepPlayer
-    const player = renderRow(0, [jumpAhead]);
+    const player = showRow(0, [jumpAhead]);
     fireEvent.click(button("Jump"));
     expect(button("Jump")).toBeEnabled();
     expect(button("Jump")).toHaveAttribute("aria-pressed", "true");
@@ -113,8 +111,7 @@ describe("StepRow", () => {
   });
 
   it("makes Reset available while the first step runs, and resets", () => {
-    // eslint-disable-next-line testing-library/render-result-naming-convention -- renderRow returns StepPlayer
-    const player = renderRow();
+    const player = showRow();
     fireEvent.click(button("One"));
     expect(button("Reset")).toHaveAttribute("aria-disabled", "false");
     fireEvent.click(button("Reset"));
@@ -123,8 +120,7 @@ describe("StepRow", () => {
   });
 
   it("does nothing when Reset is unavailable", () => {
-    // eslint-disable-next-line testing-library/render-result-naming-convention -- renderRow returns StepPlayer
-    const player = renderRow();
+    const player = showRow();
     const reset = jest.spyOn(player, "reset");
     fireEvent.click(button("Reset"));
     expect(reset).not.toHaveBeenCalled();
