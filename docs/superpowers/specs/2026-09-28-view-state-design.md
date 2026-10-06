@@ -240,7 +240,7 @@ an error. Simply starting fresh would overwrite the student's unreadable work on
 - The standalone app keeps state in memory only. A reload is a fresh start, as in the prototype.
 - Keystone type-checks every load and write in every environment. `src/core/state/setup.ts`
   sets `modelAutoTypeChecking` to `AlwaysOn`, so a view that sets a wrong-typed value throws, in
-  production too. keystone's default would check nothing in a browser build.
+  production too. keystone's default, `DevModeOnly`, checks only in development builds.
 - `useViewState` with the wrong model class throws, with a message naming the view id, the
   tree's `$modelType` and the requested class.
 
@@ -266,12 +266,12 @@ Unit tests (Jest), in `src/core/state/` and `src/app/state/`, and beside each vi
   - `ensureValidPane2Conversation` falls back to the first conversation pane 1 isn't showing, or
     to the only one.
 - **`AppState`:**
-  - The shared tree and every view's tree are under one root store.
+  - The shared tree and every view's tree are under one root store, so every view gets the same
+    shared tree.
   - Each view's tree is of the view's model type, and a later call returns the same instance.
   - A view's slot rejects a tree of another model.
   - One undo manager on the root records a change in any view.
   - Every `VIEWS` entry resolves to a tree of its model, or to none.
-  - The shared tree is the same instance across views.
 - **Context:** a test component that uses `useViewState` and `useSharedState` gets the trees
   from the provider. `useViewState` throws when asked for the wrong model class.
 

@@ -117,10 +117,9 @@ the stages it has completed, but not one in progress.
   where it is written, so it never reaches saved student state. The trees are small, so the cost
   is negligible.
 
-  Keystone's default, `DevModeOnly`, would turn these checks off in every browser build, the dev
-  server included, not only in production. keystone decides it is in dev mode with
-  `typeof process !== "undefined"`, and webpack 5 doesn't define `process` in browser bundles.
-  With the checks off, bad data loads silently: `commissioned: [5]`,
+  Keystone's default, `DevModeOnly`, would turn these checks off in production builds, which is
+  where saved student state is loaded. With the checks off, bad data loads silently:
+  `commissioned: [5]`,
   `stepsByConversation: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`, so
   the first change to it crashes).
 

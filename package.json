@@ -132,7 +132,7 @@
     "core-js": "^3.50.0",
     "liqe": "^3.8.5",
     "mobx": "^7.0.5",
-    "mobx-keystone": "^2.3.0",
+    "mobx-keystone": "^2.3.1",
     "mobx-react-lite": "^5.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
