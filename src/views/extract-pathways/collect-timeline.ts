@@ -12,21 +12,28 @@ import { DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
 // from setConversation, and the flight from flyColumn. src/views/README.md says where the
 // prototype is.
 
-/** How a collection runs its conversation through the network. */
+/**
+ * How a collection runs its conversation through the network:
+ * - `replay`: plays the forward pass's phases, phase 1 at its own speed and the fans faster than in
+ *   Trace a Case, which it recalls.
+ * - `swap`: drains the network a full layer at a time, holds it blank, then refills it with the new
+ *   conversation a full layer at a time, so each new one is seen arriving.
+ * - `quick`: clears everything at once and refills quickly with the lines snapped in, once the
+ *   swap's point has been made.
+ */
 export type CollectVersion = "replay" | "swap" | "quick";
 
 /** "Conversation n" drops in and settles over this long; the quick swap's is 0.7 of it. */
 const BOUNCE_MS = 520;
 const QUICK_BOUNCE_MS = Math.round(BOUNCE_MS * 0.7);
 
-// Replay: the forward pass's phase 1 at its own speed, then the fans faster, as a reminder of
-// Trace a Case.
+// Replay.
 const REPLAY_START = 540;
 const REPLAY_FAN_SPEED = 0.26;
 const PHASE_GAP = 110;
 const PHASES_REST = 700;
 
-// Swap: drain a layer at a time, hold on the blank network, refill a layer at a time.
+// Swap.
 const DRAIN_GAP = 12;
 const DRAIN_LAYER_GAP = 60;
 const CLEAR_DELAY = 20;
@@ -36,7 +43,7 @@ const SWEEP_DELAY = 30;
 const SWEEP_MS = 360;
 const SWAP_TAIL = 60;
 
-// Quick swap: everything clears at once, then refills quickly with the lines snapped in.
+// Quick swap.
 const REFILL_GAP = 16;
 const SNAP_DELAY = 20;
 const QUICK_TAIL = 40;
@@ -44,6 +51,7 @@ const QUICK_TAIL = 40;
 /** After a swap, before the flight. */
 const NEXT_HOLD = 550;
 
+/** Conversation 1 replays the pass, 2 and 3 swap, and the rest take the quick swap. */
 export function collectVersion(n: number): CollectVersion {
   return n === 1 ? "replay" : n <= 3 ? "swap" : "quick";
 }
@@ -192,10 +200,10 @@ export function collectDuration(columnSizes: readonly number[], n: number): numb
 
 /**
  * Collecting conversation `n`, `t` ms in. After the first, it starts by lifting the spotlight the
- * last flight left. Then the network runs the conversation (a replay of the forward pass's phases
- * for the first, a swap for the next two, a quick swap after). Then a spotlight falls on the hidden neurons,
- * fading the rest of the network and the lifted column's copies, while copies of the hidden neurons
- * fly into deck column n. It stays until the next collection, as in the prototype.
+ * last flight left. Then the network runs the conversation (see `CollectVersion`). Then a spotlight
+ * falls on the hidden neurons, fading the rest of the network and the lifted column's copies, while
+ * copies of the hidden neurons fly into deck column n. It stays until the next collection, as in
+ * the prototype.
  */
 export function collectSceneAt(columnSizes: readonly number[], n: number, t: number): ExtractScene {
   const scene = restScene(columnSizes, n);
