@@ -1,4 +1,5 @@
 import "./setup";
+import { action, observable } from "mobx";
 import { Model, model, modelAction, tProp, types } from "mobx-keystone";
 import { validConversationId } from "./conversation";
 
@@ -12,9 +13,39 @@ import { validConversationId } from "./conversation";
 @model("npw/SharedState")
 export class SharedState extends Model({
   version: tProp(types.literal(1), 1),
+  /** The filter query every view uses. Unset: no query has been set. "": the student cleared it. */
+  query: tProp(types.maybe(types.string)),
   /** The current conversation, in every view that shows one. Unset until a view first loads its conversations. */
   conversationId: tProp(types.maybe(types.string)),
 }) {
+  /**
+   * The filter bar's text while it differs from `query`; unset otherwise. Volatile: it is never
+   * saved and never an undo step. It lets a half-typed query survive switching views, but not a
+   * reload.
+   */
+  @observable accessor queryDraft: string | undefined = undefined;
+
+  @action
+  setQueryDraft(text: string) {
+    this.queryDraft = text === (this.query ?? "") ? undefined : text;
+  }
+
+  @action
+  discardQueryDraft() {
+    this.queryDraft = undefined;
+  }
+
+  /**
+   * Stores a query the student has finished typing, and corrects the conversation against its
+   * matches. One action, so one undo can reverse both; see docs/undo.md.
+   */
+  @modelAction
+  setQueryAndCorrect(query: string, ids: readonly string[]) {
+    this.query = query;
+    this.queryDraft = undefined;
+    this.ensureValidConversation(ids);
+  }
+
   @modelAction
   setConversationId(conversationId: string | undefined) {
     this.conversationId = conversationId;
