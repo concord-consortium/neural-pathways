@@ -44,9 +44,12 @@ function opacity(value: number): number | undefined {
   return value >= 1 ? undefined : value;
 }
 
-/** A node's opacity: the hidden layers' nodes stay at full strength; the input and output nodes take `dim`. */
-function nodeOpacity(column: number, lastColumn: number, dim: number): number | undefined {
-  return column > 0 && column < lastColumn ? undefined : opacity(dim);
+/**
+ * A node's opacity: the hidden layers' nodes stay at full strength; the input and output nodes take
+ * `surroundOpacity`.
+ */
+function nodeOpacity(column: number, lastColumn: number, surroundOpacity: number): number | undefined {
+  return column > 0 && column < lastColumn ? undefined : opacity(surroundOpacity);
 }
 
 export interface NetworkDrawingProps {
@@ -72,7 +75,8 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
   const lastColumn = layout.nodes.length - 1;
   const { radius } = layout;
   const winner = predictedClass(pass);
-  const { dim } = scene;
+  /** What everything but the hidden layers' nodes fades to under the spotlight. */
+  const surroundOpacity = 1 - scene.hiddenLayerSpotlight;
 
   const nodeValue = (column: number, unit: number) =>
     column === lastColumn ? pass.layers[column][unit] / scales.logitScale : pass.layers[column][unit];
@@ -126,7 +130,8 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
       return;
     }
     gauges.push(
-      <rect key={`${c}-${unit}`} data-testid={`gauge-${c}-${unit}`} opacity={nodeOpacity(c, lastColumn, dim)}
+      <rect key={`${c}-${unit}`} data-testid={`gauge-${c}-${unit}`}
+        opacity={nodeOpacity(c, lastColumn, surroundOpacity)}
         x={node.x - radius} width={radius * 2} y={shown >= 0 ? node.y - height : node.y} height={height}
         fill={signColor(shown)} clipPath={`url(#${clipPrefix}-${c}-${row})`} />,
     );
@@ -136,7 +141,7 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
 
   return (
     <g className="network-drawing">
-      <g className="network-diagram__pills" opacity={opacity(dim)}>
+      <g className="network-diagram__pills" opacity={opacity(surroundOpacity)}>
         {layout.pills.map((box, row) => {
           const unit = OUTPUT_ORDER[row];
           const won = scene.answer > 0 && unit === winner;
@@ -153,12 +158,12 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
           );
         })}
       </g>
-      <Wires layout={layout} lastColumn={lastColumn} opacity={opacity(dim)} />
-      <g className="network-diagram__edges" opacity={opacity(dim)}>{edges}</g>
-      <Discs layout={layout} clipPrefix={clipPrefix} dim={dim} />
+      <Wires layout={layout} lastColumn={lastColumn} opacity={opacity(surroundOpacity)} />
+      <g className="network-diagram__edges" opacity={opacity(surroundOpacity)}>{edges}</g>
+      <Discs layout={layout} clipPrefix={clipPrefix} surroundOpacity={surroundOpacity} />
       <g className="network-diagram__gauges">{gauges}</g>
-      <Outlines layout={layout} dim={dim} />
-      <g className="network-diagram__labels" opacity={opacity(dim)}>
+      <Outlines layout={layout} surroundOpacity={surroundOpacity} />
+      <g className="network-diagram__labels" opacity={opacity(surroundOpacity)}>
         {outputNodes.map((node, row) => {
           const unit = OUTPUT_ORDER[row];
           const box = layout.pills[row];
@@ -209,11 +214,13 @@ const Wires = React.memo(function Wires({ layout, lastColumn, opacity: groupOpac
 
 interface NodeLayerProps {
   layout: NetworkLayout;
-  dim: number;
+  surroundOpacity: number;
 }
 
 /** White discs that hide the edges behind each node, and the clip paths for the gauges. */
-const Discs = React.memo(function Discs({ layout, clipPrefix, dim }: NodeLayerProps & { clipPrefix: string }) {
+const Discs = React.memo(function Discs(
+  { layout, clipPrefix, surroundOpacity }: NodeLayerProps & { clipPrefix: string },
+) {
   const lastColumn = layout.nodes.length - 1;
   const clips: React.ReactElement[] = [];
   const discs: React.ReactElement[] = [];
@@ -225,7 +232,7 @@ const Discs = React.memo(function Discs({ layout, clipPrefix, dim }: NodeLayerPr
     );
     discs.push(
       <circle key={`${c}-${row}`} cx={node.x} cy={node.y} r={layout.radius}
-        opacity={nodeOpacity(c, lastColumn, dim)} />,
+        opacity={nodeOpacity(c, lastColumn, surroundOpacity)} />,
     );
   }));
   return (
@@ -237,14 +244,14 @@ const Discs = React.memo(function Discs({ layout, clipPrefix, dim }: NodeLayerPr
 });
 
 /** Node outlines, drawn over the gauges so the edge stays crisp, and the column captions. */
-const Outlines = React.memo(function Outlines({ layout, dim }: NodeLayerProps) {
+const Outlines = React.memo(function Outlines({ layout, surroundOpacity }: NodeLayerProps) {
   const lastColumn = layout.nodes.length - 1;
   const outlines: React.ReactElement[] = [];
   layout.nodes.forEach((column, c) => column.forEach((node, row) => {
     const unit = unitAt(c, row, lastColumn);
     outlines.push(
       <circle key={`${c}-${unit}`} data-testid={`node-${c}-${unit}`} className="network-diagram__node"
-        cx={node.x} cy={node.y} r={layout.radius} opacity={nodeOpacity(c, lastColumn, dim)} />,
+        cx={node.x} cy={node.y} r={layout.radius} opacity={nodeOpacity(c, lastColumn, surroundOpacity)} />,
     );
   }));
   return (
@@ -252,7 +259,7 @@ const Outlines = React.memo(function Outlines({ layout, dim }: NodeLayerProps) {
       <g className="network-diagram__nodes">{outlines}</g>
       {layout.columnX.map((x, c) => (
         <text key={c} x={x} y={layout.captionY} textAnchor="middle" className="network-diagram__caption"
-          opacity={opacity(dim)}>
+          opacity={opacity(surroundOpacity)}>
           {COLUMN_CAPTIONS[c]}
         </text>
       ))}

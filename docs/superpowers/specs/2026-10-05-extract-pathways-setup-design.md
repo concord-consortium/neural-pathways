@@ -130,19 +130,22 @@ can use it: `STEPS`, `Step`, `unitDuration`, `stepDuration`, `sceneAt`, `applySt
 constants. That is the input fill, the three fans and the answer. Its tests move with it. Trace a
 Case keeps only its button list and the timeline wrapper.
 
-### `Scene.dim`
+### `Scene.hiddenLayerSpotlight`
 
 ```ts
 interface Scene {
   // …as now
-  /** The opacity, 0–1, of everything but the hidden layers' nodes, which stay at full strength. */
-  dim: number;
+  /** How strongly the hidden layers' nodes are picked out, 0–1. The rest fades to 1 − this. */
+  hiddenLayerSpotlight: number;
 }
 ```
 
-- `dim` covers the wires, edges, input and output nodes, pills, captions and labels. The prototype
-  never dims the hidden neurons while Extract Pathways runs (`dimRest`, and `dimAll`, line 15280).
-- `emptyScene` and `fullScene` set it to 1. Trace a Case never changes it.
+- The name says what the effect is: the hidden layers stay lit while the rest of the network
+  fades. It holds the effect's strength, so 0 draws the network normally.
+- What fades covers the wires, edges, input and output nodes, pills, captions and labels. The
+  hidden layers' nodes stay at full strength; the prototype never dims the hidden neurons while
+  Extract Pathways runs (`dimRest`, and `dimAll`, line 15280).
+- `emptyScene` and `fullScene` set it to 0. Trace a Case never changes it.
 - As in the prototype's `dimRest` (lines 13467–13478), opacity is set on each group of lines and
   labels, and on each node.
 
@@ -239,7 +242,7 @@ It draws an `ExtractScene`:
 
 ```ts
 interface ExtractScene {
-  /** Fills, edges, the answer and dim. */
+  /** Fills, edges, the answer and the hidden-layer spotlight. */
   network: Scene;
   /** Which conversation's pass the network shows, 1-based; undefined before any. */
   shown: number | undefined;
@@ -320,17 +323,17 @@ From lines 15428–15436.
 
 | ms | What happens |
 |---|---|
-| 0–350 | `dim` eases to 0.5 |
+| 0–350 | `hiddenLayerSpotlight` eases to 0.5 |
 | 550 | The 14 copies fly from the hidden neurons to the lifted column (see [Flights](#flights-flightts)) |
-| 2,976–3,296 | `dim` eases back to 1, and "Hidden Layer Neurons" fades in |
+| 2,976–3,296 | `hiddenLayerSpotlight` eases back to 0, and "Hidden Layer Neurons" fades in |
 | 3,416 | End |
 
 ### Collect a Conversation (*s* → *s* + 1)
 
 This collects conversation *n* = *s*. It is the network part, a hold, then the flight. The replay
 starts on the full-strength network Setup leaves. Every later collection starts with a 320 ms undim
-(`undim`): `dim` and the lifted column's opacity ease back to 1, and its network part starts when
-that ends.
+(`undim`): `hiddenLayerSpotlight` eases back to 0 and the lifted column's opacity back to 1, and
+its network part starts when that ends.
 
 **Replay (*n* = 1)**, from `collectOne` and `runSteps` (lines 15161–15199 and 15365–15384):
 
@@ -364,7 +367,7 @@ as in the prototype, where `setNodeLevel` has no transition.
 
 | ms | What happens |
 |---|---|
-| 0–350 | `dim` and the lifted column's opacity ease to 0.5. The hidden neurons stay at full strength (`dimAll`) |
+| 0–350 | `hiddenLayerSpotlight` eases to 0.5, and the lifted column's opacity to 0.5. The hidden neurons stay at full strength (`dimAll`) |
 | 550 | The 14 copies fly from the hidden neurons to deck column *n*, filled with this conversation's gauges and shrinking to the deck's radius |
 | 2,716 | End. The network and the lifted column stay dimmed until the next collection's undim |
 
@@ -395,7 +398,8 @@ as in the prototype, where `setNodeLevel` has no transition.
 **The diagram**
 
 - `network-diagram.test.tsx` keeps passing.
-- `dim`: it reaches everything but the hidden layers' nodes, and defaults to 1.
+- `hiddenLayerSpotlight`: it fades everything but the hidden layers' nodes to 1 − its strength,
+  and defaults to 0.
 - `pass-steps.test.ts`, the moved timeline tests.
 
 **Extract Pathways**
@@ -409,7 +413,7 @@ as in the prototype, where `setNodeLevel` has no transition.
 - **`flight.ts`:** the start and end positions and radius, the overshoot point, and landing order
   top to bottom.
 - **Timelines:**
-  - Setup's duration, and its scene at the dim, mid-flight and the end;
+  - Setup's duration, and its scene as the spotlight rises, mid-flight and at the end;
   - the version chosen for each *n*: replay for 1, swap for 2–3, quick swap for 4–10;
   - a swap shows the old conversation before the blank and the new one after;
   - every run's last frame equals `sceneAt(to)`.
@@ -450,8 +454,8 @@ Two PRs, stacked on `NPW-32-3-steps`, so the shared system is reviewed before th
 it. Moves go in commits of their own, apart from edits, so git shows them as renames.
 
 1. **The shared step system and the diagram split** (about 20 files): `src/core/steps/`, Trace a
-   Case moved onto it, `pass-steps.ts`, `Scene.dim` and `NetworkDrawing`. Nothing a user sees
-   changes.
+   Case moved onto it, `pass-steps.ts`, `Scene.hiddenLayerSpotlight` and `NetworkDrawing`. Nothing
+   a user sees changes.
 2. **The Extract Pathways view** (about 22 files): state, buttons, drawing, flights, timelines,
    tests and docs.
 

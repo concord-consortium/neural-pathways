@@ -16,11 +16,12 @@ export interface Scene {
   /** 0: the answer is hidden. Between 0 and 1: the winning pill's pop. 1: revealed. */
   answer: number;
   /**
-   * The opacity, 0–1, of everything but the hidden layers' nodes (every column but the first and
-   * last), which stay at full strength. Extract Pathways will dim the network around its hidden
-   * neurons.
+   * How strongly the hidden layers' nodes (every column but the first and last) are picked out,
+   * 0–1. Everything else fades to an opacity of 1 − this; the hidden layers' nodes stay at full
+   * strength. 0 draws the whole network normally. Extract Pathways will spotlight the hidden
+   * neurons as it lifts them out.
    */
-  dim: number;
+  hiddenLayerSpotlight: number;
 }
 
 function uniformScene(columnSizes: readonly number[], value: 0 | 1): Scene {
@@ -30,7 +31,7 @@ function uniformScene(columnSizes: readonly number[], value: 0 | 1): Scene {
     edgeDraw: gaps.map(n => new Array<number>(n).fill(value)),
     weightLabel: gaps.map(() => value === 1),
     answer: value,
-    dim: 1,
+    hiddenLayerSpotlight: 0,
   };
 }
 

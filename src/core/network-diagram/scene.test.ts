@@ -21,8 +21,8 @@ describe("scenes", () => {
     expect(scene.answer).toBe(1);
   });
 
-  it("draws both scenes at full strength", () => {
-    expect(emptyScene(sizes).dim).toBe(1);
-    expect(fullScene(sizes).dim).toBe(1);
+  it("draws both scenes without a spotlight on the hidden layers", () => {
+    expect(emptyScene(sizes).hiddenLayerSpotlight).toBe(0);
+    expect(fullScene(sizes).hiddenLayerSpotlight).toBe(0);
   });
 });

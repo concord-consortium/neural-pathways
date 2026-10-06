@@ -23,9 +23,9 @@ function renderDrawing(scene: Scene) {
   );
 }
 
-function dimmed(dim: number): Scene {
+function spotlit(strength: number): Scene {
   const scene = fullScene(SIZES);
-  scene.dim = dim;
+  scene.hiddenLayerSpotlight = strength;
   return scene;
 }
 
@@ -39,8 +39,8 @@ describe("NetworkDrawing", () => {
     expect(screen.getByTestId("edge-near-0-0-0").closest("g")).not.toHaveAttribute("opacity");
   });
 
-  it("dims everything but the hidden layers' nodes", () => {
-    renderDrawing(dimmed(0.5));
+  it("fades everything but the hidden layers' nodes by the spotlight's strength", () => {
+    renderDrawing(spotlit(0.5));
     expect(screen.getByTestId("node-0-0")).toHaveAttribute("opacity", "0.5");
     expect(screen.getByTestId("node-3-0")).toHaveAttribute("opacity", "0.5");
     expect(screen.getByTestId("gauge-3-0")).toHaveAttribute("opacity", "0.5");
@@ -65,11 +65,11 @@ describe("NetworkDrawing", () => {
     rerender(
       <svg>
         <NetworkDrawing network={toyNetwork} layout={layout} pass={passes[0]} scales={scales}
-          outputLabels={LABELS} scene={dimmed(0.5)} />
+          outputLabels={LABELS} scene={spotlit(0.25)} />
       </svg>,
     );
-    expect(screen.getByTestId("node-0-0")).toHaveAttribute("opacity", "0.5");
+    expect(screen.getByTestId("node-0-0")).toHaveAttribute("opacity", "0.75");
     expect(screen.getByTestId("node-1-0")).not.toHaveAttribute("opacity");
-    expect(screen.getByTestId("node-3-0")).toHaveAttribute("opacity", "0.5");
+    expect(screen.getByTestId("node-3-0")).toHaveAttribute("opacity", "0.75");
   });
 });
