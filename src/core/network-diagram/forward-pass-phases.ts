@@ -11,6 +11,15 @@ import { emptyScene, Scene } from "./scene";
 export const PHASES = [1, 2, 3, 4] as const;
 export type Phase = (typeof PHASES)[number];
 
+/** Phase `n`. Throws for a number that isn't a phase, since asking for one is a bug. */
+export function toPhase(n: number): Phase {
+  const phase = PHASES.find(p => p === n);
+  if (phase === undefined) {
+    throw new RangeError(`There is no phase ${n}`);
+  }
+  return phase;
+}
+
 export interface RunningPhase {
   phase: Phase;
   /** Milliseconds since the phase started. */
@@ -61,8 +70,11 @@ export function phaseDuration(phase: Phase, columnSizes: readonly number[]): num
 /** The scene with `phasesDone` phases complete and `running` part way. */
 export function sceneAt(columnSizes: readonly number[], phasesDone: number, running?: RunningPhase): Scene {
   const scene = emptyScene(columnSizes);
-  for (let phase = 1; phase <= phasesDone; phase++) {
-    applyPhase(scene, columnSizes, phase as Phase, Infinity);
+  for (const phase of PHASES) {
+    if (phase > phasesDone) {
+      break;
+    }
+    applyPhase(scene, columnSizes, phase, Infinity);
   }
   if (running) {
     applyPhase(scene, columnSizes, running.phase, running.t);

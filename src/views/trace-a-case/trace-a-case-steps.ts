@@ -1,4 +1,4 @@
-import { Phase, phaseDuration, PHASES, sceneAt } from "../../core/network-diagram/forward-pass-phases";
+import { phaseDuration, PHASES, sceneAt, toPhase } from "../../core/network-diagram/forward-pass-phases";
 import { Scene } from "../../core/network-diagram/scene";
 import { StepButton } from "../../core/steps/step-buttons";
 import { Marker, StepProgress, StepTimeline } from "../../core/steps/step-player";
@@ -21,8 +21,8 @@ export const TRACE_BUTTONS: readonly StepButton[] = PHASES.map(phase => ({
  */
 export function traceTimeline(columnSizes: readonly number[]): StepTimeline<Scene> {
   return {
-    duration: ({ to }) => phaseDuration(to as Phase, columnSizes),
-    sceneAt: (marker, run) => sceneAt(columnSizes, marker, run && { phase: run.to as Phase, t: run.t }),
+    duration: ({ to }) => phaseDuration(toPhase(to), columnSizes),
+    sceneAt: (marker, run) => sceneAt(columnSizes, marker, run && { phase: toPhase(run.to), t: run.t }),
   };
 }
 

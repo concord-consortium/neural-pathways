@@ -141,7 +141,8 @@ Nothing it does changes.
 
 What Trace a Case's `step-timeline.ts` holds now moves here, so Extract Pathways' replay can use
 it: `PHASES`, `Phase`, `RunningPhase`, `unitDuration`, `phaseDuration`, `sceneAt`, `applyPhase`
-and their constants. That is the input fill, the three fans and the answer. Its tests move with
+and their constants, and a new `toPhase(n)`, which turns a marker into its phase without an `as`
+and throws for a number that isn't one. That is the input fill, the three fans and the answer. Its tests move with
 it. Trace a Case keeps only its button list and the timeline wrapper.
 
 - They were called steps, and are renamed phases of the forward pass, the ML name for running one

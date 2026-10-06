@@ -1,9 +1,19 @@
 import { emptyScene, fullScene } from "./scene";
 import {
-  ANSWER_DELAY, ANSWER_DURATION, FILL_DURATION, sceneAt, phaseDuration, unitDuration,
+  ANSWER_DELAY, ANSWER_DURATION, FILL_DURATION, phaseDuration, sceneAt, toPhase, unitDuration,
 } from "./forward-pass-phases";
 
 const SIZES = [10, 8, 6, 2];
+
+describe("toPhase", () => {
+  it("gives each phase for its number", () => {
+    expect([1, 2, 3, 4].map(toPhase)).toEqual([1, 2, 3, 4]);
+  });
+
+  it.each([0, 5, 1.5])("throws for %p, which isn't a phase", n => {
+    expect(() => toPhase(n)).toThrow(RangeError);
+  });
+});
 
 describe("unitDuration", () => {
   it("shortens each unit of a fan, down to 150 ms", () => {
