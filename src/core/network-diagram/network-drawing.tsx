@@ -160,7 +160,7 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
       </g>
       <Wires layout={layout} lastColumn={lastColumn} opacity={opacity(surroundOpacity)} />
       <g className="network-diagram__edges" opacity={opacity(surroundOpacity)}>{edges}</g>
-      <Discs layout={layout} clipPrefix={clipPrefix} surroundOpacity={surroundOpacity} />
+      <Discs layout={layout} clipPrefix={clipPrefix} />
       <g className="network-diagram__gauges">{gauges}</g>
       <Outlines layout={layout} surroundOpacity={surroundOpacity} />
       <g className="network-diagram__labels" opacity={opacity(surroundOpacity)}>
@@ -212,15 +212,17 @@ const Wires = React.memo(function Wires({ layout, lastColumn, opacity: groupOpac
   return <g className="network-diagram__wires" opacity={groupOpacity}>{lines}</g>;
 });
 
-interface NodeLayerProps {
+interface DiscsProps {
   layout: NetworkLayout;
-  surroundOpacity: number;
+  clipPrefix: string;
 }
 
-/** White discs that hide the edges behind each node, and the clip paths for the gauges. */
-const Discs = React.memo(function Discs(
-  { layout, clipPrefix, surroundOpacity }: NodeLayerProps & { clipPrefix: string },
-) {
+/**
+ * White discs that hide the edges behind each node, and the clip paths for the gauges. The discs
+ * stay opaque under the spotlight, so the wires and edges don't show through a faded node. The
+ * prototype fades them with their nodes, but that lets the lines through.
+ */
+const Discs = React.memo(function Discs({ layout, clipPrefix }: DiscsProps) {
   const lastColumn = layout.nodes.length - 1;
   const clips: React.ReactElement[] = [];
   const discs: React.ReactElement[] = [];
@@ -231,8 +233,8 @@ const Discs = React.memo(function Discs(
       </clipPath>,
     );
     discs.push(
-      <circle key={`${c}-${row}`} cx={node.x} cy={node.y} r={layout.radius}
-        opacity={nodeOpacity(c, lastColumn, surroundOpacity)} />,
+      <circle key={`${c}-${row}`} data-testid={`disc-${c}-${unitAt(c, row, lastColumn)}`}
+        cx={node.x} cy={node.y} r={layout.radius} />,
     );
   }));
   return (
@@ -243,8 +245,13 @@ const Discs = React.memo(function Discs(
   );
 });
 
+interface OutlinesProps {
+  layout: NetworkLayout;
+  surroundOpacity: number;
+}
+
 /** Node outlines, drawn over the gauges so the edge stays crisp, and the column captions. */
-const Outlines = React.memo(function Outlines({ layout, surroundOpacity }: NodeLayerProps) {
+const Outlines = React.memo(function Outlines({ layout, surroundOpacity }: OutlinesProps) {
   const lastColumn = layout.nodes.length - 1;
   const outlines: React.ReactElement[] = [];
   layout.nodes.forEach((column, c) => column.forEach((node, row) => {

@@ -56,6 +56,9 @@ describe("NetworkDrawing", () => {
     expect(screen.getByTestId("node-1-0")).not.toHaveAttribute("opacity");
     expect(screen.getByTestId("node-2-5")).not.toHaveAttribute("opacity");
     expect(screen.getByTestId("gauge-1-0")).not.toHaveAttribute("opacity");
+    // The white discs behind the nodes stay opaque, so the lines don't show through a faded node.
+    expect(screen.getByTestId("disc-0-0")).not.toHaveAttribute("opacity");
+    expect(screen.getByTestId("disc-3-0")).not.toHaveAttribute("opacity");
   });
 
   it("updates node opacity when the same drawing rerenders with a new scene", () => {

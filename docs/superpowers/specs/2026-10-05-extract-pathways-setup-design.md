@@ -168,6 +168,9 @@ interface Scene {
 - `emptyScene` and `fullScene` set it to 0. Trace a Case never changes it.
 - As in the prototype's `dimRest` (lines 13467–13478), opacity is set on each group of lines and
   labels, and on each node.
+- The white discs behind the nodes, which hide the lines behind them, stay opaque. The prototype
+  fades them with their nodes (`X.layer`, line 11884, includes each node's `__disc`), which lets
+  the faded lines show through the faded input and output nodes. That's a bug there, not copied.
 
 ### `NetworkDrawing` and `NetworkDiagram`
 
@@ -363,8 +366,10 @@ its network part starts when that ends.
 - "Conversation 1" bounces in over 520 ms with `cubic-bezier(.34,1.56,.64,1)`, the opacity over
   the first 45%.
 - At 540 ms, phase 1 of the forward pass plays at its normal speed. Phases 2–4 follow at 0.26 of
-  their normal durations, with 110 ms between phases.
-- A 700 ms rest follows the answer.
+  their normal durations. A 110 ms gap follows each phase, the last included: `runSteps` (line
+  15365) waits `STEP_GAP` after every step, then calls itself for the next.
+- A 700 ms rest follows that last gap, so 810 ms pass between the end of the answer and the
+  flight's dim.
 
 **Swap (*n* = 2–3)**, about 3,080 ms, from `setConversation` (lines 15120–15147):
 
