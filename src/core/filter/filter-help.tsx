@@ -10,12 +10,13 @@ interface FilterHelpProps {
 const FIXED_FIELDS: Record<string, string> = {
   n: "Position among all the conversations, from 1",
   id: "The conversation's id",
-  text: "The conversation's words. A bare word searches these too.",
+  text: "The conversation's alien words. A bare word searches these and the observation.",
+  observation: "The observer's notes",
   target_label: "approach or wait",
 };
 
 const OPERATORS: [string, string][] = [
-  ["field:value", "Equals, or contains for text"],
+  ["field:value", "Equals, or contains for words. Capitals don't matter."],
   ["field:>value", "Greater than. Also <, >= and <="],
   ["AND", "Both"],
   ["OR", "Either"],
@@ -28,7 +29,8 @@ const OPERATORS: [string, string][] = [
 const EXAMPLES: [string, string][] = [
   ["model_correct:0", "the ones the model got wrong"],
   ["pathway_1:>2", "a high score on Pathway 1"],
-  ["yandor", "conversations containing that word"],
+  ["yandor", "conversations containing that word, or with it in their notes"],
+  ["observation:\"stores nearby\"", "a phrase in the observer's notes"],
   ["voices_raised:1 AND pathway_1:<0", ""],
   ["NOT near_water:1", ""],
   ["n:127", "conversation 127"],

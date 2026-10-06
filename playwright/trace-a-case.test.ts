@@ -95,3 +95,15 @@ test("the filter's help lists what a query can use", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(help).toBeHidden();
 });
+
+test("the filter searches the observer's notes, ignoring case", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800")).toBeVisible();
+  const filter = page.getByRole("textbox", { name: "Filter" });
+  await filter.fill("observation:\"Stores Nearby\"");
+  await expect(page.getByText("212 of 800")).toBeVisible();
+  await filter.fill("water");
+  await expect(page.getByText("363 of 800")).toBeVisible();
+  await filter.fill("yandor or sooma");
+  await expect(page.getByText("Write OR in capitals")).toBeVisible();
+});

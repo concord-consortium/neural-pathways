@@ -1,6 +1,6 @@
 import {
   filter as liqeFilter, parse, SyntaxError as LiqeSyntaxError,
-  type FieldToken, type LiqeQuery, type ParserAst,
+  type FieldToken, type LiqeQuery, type ParserAst, type TagToken,
 } from "liqe";
 import { alien3Dataset } from "../datasets/alien3-dataset";
 import { DatasetDefinition } from "../datasets/dataset-definition";
@@ -55,8 +55,13 @@ function toRecord(
   attributes: readonly AttributeDefinition[],
   fit: Fit | undefined,
 ): FilterRecord {
-  // The line breaks between turns become spaces, so a quoted phrase can span two turns.
-  const record: FilterRecord = { n: position + 1, id: item.id, text: item.text.replace(/\n/g, " ") };
+  // Lowercase, as every query value is made, so a match ignores case even when quoted: liqe
+  // matches a quoted value case-sensitively. The line breaks between turns become spaces, so a
+  // quoted phrase can span two turns.
+  const record: FilterRecord = { n: position + 1, id: item.id, text: item.text.replace(/\n/g, " ").toLowerCase() };
+  if (item.observation != null) {
+    record.observation = item.observation.toLowerCase();
+  }
   if (item.target_label != null) {
     record.target_label = item.target_label;
   }
@@ -83,11 +88,72 @@ interface QueryFields {
   numbers: ReadonlySet<string>;
 }
 
+/** The fields a bare word searches: the conversation's alien words and the observer's notes. */
+const BARE_WORD_FIELDS = ["text", "observation"];
+
+/** Lowercase words the student most likely meant as operators, which liqe only reads in capitals. */
+const OPERATOR_WORDS = new Set(["and", "or", "not"]);
+
+/** The tag with its value lowercased, to match the lowercased records. */
+function lowercased(tag: TagToken): TagToken {
+  const { expression } = tag;
+  return expression.type === "LiteralExpression" && typeof expression.value === "string"
+    ? { ...tag, expression: { ...expression, value: expression.value.toLowerCase() } }
+    : tag;
+}
+
+function fieldToken(name: string, location: TagToken["location"]): FieldToken {
+  return { type: "Field", name, path: [name], quoted: false, location };
+}
+
 /**
- * Sends bare words to the text, and rejects what liqe would accept without complaint: a field the
- * records don't have, and a word given to a number field, which would both match nothing, and a
- * comparison with no number, which liqe only rejects once filtering runs.
+ * A bare word searches the alien text or the observation. Without a field, liqe would search every
+ * string field, target_label included. An unquoted lowercase and, or or not would quietly become a
+ * word to search for, which matches inside hundreds of notes, so it is an error instead.
  */
+function checkBareWord(tag: TagToken): ParserAst {
+  const { expression } = tag;
+  if (expression.type === "LiteralExpression" && !expression.quoted && typeof expression.value === "string"
+    && OPERATOR_WORDS.has(expression.value.toLowerCase())) {
+    throw new QueryError(`Write ${expression.value.toUpperCase()} in capitals`);
+  }
+  const [left, right] = BARE_WORD_FIELDS.map(name => ({ ...lowercased(tag), field: fieldToken(name, tag.location) }));
+  return {
+    type: "ParenthesizedExpression",
+    location: tag.location,
+    expression: {
+      type: "LogicalExpression",
+      location: tag.location,
+      operator: { type: "BooleanOperator", operator: "OR", location: tag.location },
+      left,
+      right,
+    },
+  };
+}
+
+/**
+ * Rejects what liqe would accept without complaint: a field the records don't have, and a word
+ * given to a number field, which would both match nothing, and a comparison with no number, which
+ * liqe only rejects once filtering runs.
+ */
+function checkFieldTag(tag: TagToken, field: FieldToken, fields: QueryFields): ParserAst {
+  if (!fields.all.has(field.name)) {
+    throw new QueryError(`Unknown field: ${field.name}`);
+  }
+  // liqe leaves `operator` off a bare word, though its type says otherwise.
+  const operator = tag.operator?.operator ?? ":";
+  const { expression } = tag;
+  const isNumber = expression.type === "LiteralExpression" && typeof expression.value === "number";
+  if (operator !== ":" && !isNumber) {
+    throw new QueryError(`${field.name}${operator} needs a number`);
+  }
+  // `model_correct:no` would quietly match nothing: the records hold 0 and 1, not the labels.
+  if (fields.numbers.has(field.name) && expression.type === "LiteralExpression" && !isNumber) {
+    throw new QueryError(`${field.name} needs a number`);
+  }
+  return lowercased(tag);
+}
+
 function checkQuery(ast: ParserAst, fields: QueryFields): ParserAst {
   switch (ast.type) {
     case "EmptyExpression":
@@ -98,27 +164,8 @@ function checkQuery(ast: ParserAst, fields: QueryFields): ParserAst {
       return { ...ast, expression: checkQuery(ast.expression, fields) };
     case "UnaryOperator":
       return { ...ast, operand: checkQuery(ast.operand, fields) };
-    case "Tag": {
-      // Without a field, liqe would search every string field, target_label included.
-      const field: FieldToken = ast.field.type === "ImplicitField"
-        ? { type: "Field", name: "text", path: ["text"], quoted: false, location: ast.location }
-        : ast.field;
-      if (!fields.all.has(field.name)) {
-        throw new QueryError(`Unknown field: ${field.name}`);
-      }
-      // liqe leaves `operator` off a bare word, though its type says otherwise.
-      const operator = ast.operator?.operator ?? ":";
-      const { expression } = ast;
-      const isNumber = expression.type === "LiteralExpression" && typeof expression.value === "number";
-      if (operator !== ":" && !isNumber) {
-        throw new QueryError(`${field.name}${operator} needs a number`);
-      }
-      // `model_correct:no` would quietly match nothing: the records hold 0 and 1, not the labels.
-      if (fields.numbers.has(field.name) && expression.type === "LiteralExpression" && !isNumber) {
-        throw new QueryError(`${field.name} needs a number`);
-      }
-      return { ...ast, field };
-    }
+    case "Tag":
+      return ast.field.type === "ImplicitField" ? checkBareWord(ast) : checkFieldTag(ast, ast.field, fields);
   }
 }
 
@@ -142,7 +189,9 @@ export function createConversationFilter(
   attributes: readonly AttributeDefinition[],
 ): ConversationFilter {
   const fit = onlyFit(datasetIndex);
-  const fields = ["n", "id", "text", "target_label", ...attributes.map(a => a.key), ...pathwayFields(fit)];
+  const fields = [
+    "n", "id", "text", "observation", "target_label", ...attributes.map(a => a.key), ...pathwayFields(fit),
+  ];
   const queryFields: QueryFields = {
     all: new Set(fields),
     numbers: new Set(["n", ...attributes.map(a => a.key), ...pathwayFields(fit)]),

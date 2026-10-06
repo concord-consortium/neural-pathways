@@ -9,7 +9,7 @@ describe("conversationFilterFor", () => {
 
   it("lists the fields in order: the fixed ones, the filterable attributes, then the pathways", () => {
     expect(filter.fields).toEqual([
-      "n", "id", "text", "target_label",
+      "n", "id", "text", "observation", "target_label",
       "target", "prediction", "model_correct", "voices_raised", "group_size",
       "pathway_1", "pathway_2", "pathway_3",
     ]);
@@ -72,10 +72,28 @@ describe("run", () => {
     expect(matches("group_size:>=3")).toEqual({ ids: ["bbb222", "ddd444"] });
   });
 
-  it("matches a bare word in the text and nowhere else", () => {
+  it("matches a bare word in the alien text or the observation, and nowhere else", () => {
     expect(matches("yandor")).toEqual({ ids: ["aaa111", "bbb222", "ddd444"] });
+    expect(matches("water")).toEqual({ ids: ["bbb222"] });
     expect(matches("wait")).toEqual({ ids: [] });
     expect(matches("target_label:wait")).toEqual({ ids: ["aaa111", "ddd444"] });
+  });
+
+  it("searches only the alien text with text:, and only the observation with observation:", () => {
+    expect(matches("text:water")).toEqual({ ids: [] });
+    expect(matches("observation:water")).toEqual({ ids: ["bbb222"] });
+    expect(matches("observation:yandor")).toEqual({ ids: [] });
+  });
+
+  it("applies NOT to a bare word in both the alien text and the observation", () => {
+    expect(matches("NOT water")).toEqual({ ids: ["aaa111", "ccc333", "ddd444"] });
+  });
+
+  it("ignores case, quoted or not", () => {
+    expect(matches("observation:\"stores nearby\"")).toEqual({ ids: ["aaa111"] });
+    expect(matches("\"Stores Nearby\"")).toEqual({ ids: ["aaa111"] });
+    expect(matches("\"YANDOR quissa\"")).toEqual({ ids: ["aaa111"] });
+    expect(matches("WATER")).toEqual({ ids: ["bbb222"] });
   });
 
   it("combines terms with AND, a space, OR, NOT, - and parentheses", () => {
@@ -91,8 +109,16 @@ describe("run", () => {
     expect(matches("chullo OR blikka")).toEqual({ ids: ["aaa111", "ccc333", "ddd444"] });
   });
 
-  it("treats lowercase or as a word to search for", () => {
-    expect(matches("yandor or chullo")).toEqual({ ids: [] });
+  it("asks for capitals when an operator is written in lowercase", () => {
+    expect(matches("yandor or chullo")).toEqual({ error: "Write OR in capitals" });
+    expect(matches("not yandor")).toEqual({ error: "Write NOT in capitals" });
+    expect(matches("yandor And sooma")).toEqual({ error: "Write AND in capitals" });
+  });
+
+  it("searches for an operator word that is quoted or given a field", () => {
+    expect(matches("\"or\"")).toEqual({ ids: ["aaa111", "bbb222", "ccc333", "ddd444"] });
+    // A substring match: "standing".
+    expect(matches("observation:and")).toEqual({ ids: ["bbb222"] });
   });
 
   it("reports a field it doesn't know", () => {

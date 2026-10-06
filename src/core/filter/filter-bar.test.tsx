@@ -12,7 +12,7 @@ function showBar(overrides: Partial<FilterBarProps> = {}) {
   const props: FilterBarProps = {
     text: "",
     status: { matched: 4, total: 4 },
-    fields: ["n", "id", "text", "target_label", "group_size", "model_correct", "pathway_1"],
+    fields: ["n", "id", "text", "observation", "target_label", "group_size", "model_correct", "pathway_1"],
     attributes,
     onTextChange: jest.fn(),
     onCommit: jest.fn(),
@@ -132,9 +132,11 @@ describe("FilterBar", () => {
       showBar();
       fireEvent.click(helpButton());
       const dialog = screen.getByRole("dialog");
-      for (const field of ["n", "id", "text", "target_label", "group_size", "model_correct", "pathway_1"]) {
+      for (const field of ["n", "id", "text", "observation", "target_label", "group_size", "model_correct",
+        "pathway_1"]) {
         expect(dialog).toHaveTextContent(field);
       }
+      expect(dialog).toHaveTextContent("The observer's notes");
       expect(dialog).toHaveTextContent("Group size (1–6)");
       expect(dialog).toHaveTextContent("Model was correct");
       expect(dialog).toHaveTextContent("Score on Pathway 1");
@@ -146,6 +148,7 @@ describe("FilterBar", () => {
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveTextContent("Write AND, OR and NOT in capitals");
       expect(dialog).toHaveTextContent("voices_raised:1 AND pathway_1:<0");
+      expect(dialog).toHaveTextContent("observation:\"stores nearby\"");
     });
 
     it("closes from its close button and returns focus to the help button", () => {

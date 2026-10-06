@@ -29,14 +29,17 @@ Sources:
 
 | Decision | Choice | Why |
 |---|---|---|
-| Query engine | liqe, with a pass over its parsed query that sends bare words to `text`, rejects unknown fields and checks comparison values. | liqe is already a dependency and the explorer uses it. Out of the box, a bare word matches every string field (`wait` matches `target_label:wait`), an unknown field silently matches nothing, and `pathway_1:>abc` throws only when filtering runs. |
+| Query engine | liqe, with a pass over its parsed query that sends bare words to `text` and `observation`, lowercases values, rejects unknown fields and checks comparison values. | liqe is already a dependency and the explorer uses it. Out of the box, a bare word matches every string field (`wait` matches `target_label:wait`), an unknown field silently matches nothing, and `pathway_1:>abc` throws only when filtering runs. |
 | Where the code lives | `src/core/filter/`: one engine file, the bar and help components, and a hook. | Every view but Extract Pathways will filter. The explorer keeps its own copy; its field set is different (fit-specific `pathway_0…`, Yelp fields, pathway prediction). Switching it onto the core engine would change its behavior, so it is not part of this story. |
 | The engine is one file | `conversation-filter.ts` holds both the lesson's records and the liqe handling. | Splitting a generic query layer out for the explorer isn't worth it until the explorer actually switches. |
 | When typed text becomes the query | Filtering is live, as in the explorer: the count, the list and the conversation shown follow every keystroke. The query is stored on Enter or blur. | Stored on every keystroke, partial queries (`m` on the way to `model_correct:0`) would move the stored conversation for good, and every keystroke would be an undo step (`docs/undo.md`, item 4). |
 | The text being typed | Kept in volatile state on `SharedState`, `queryDraft`, while it differs from `query`. Never saved, never an undo step. | A student may switch to another view to look something up while writing a query. Volatile state keeps the draft for the life of the page, and every view's bar shows the same draft. |
 | Correcting the conversation | `setQueryAndCorrect(query, ids)`: the view runs the filter first, then one action stores the query and corrects the conversation. | `docs/undo.md` option 1, the "filter run first" variant. Filtering 800 records is synchronous, so the models don't need the engine through a keystone context. |
 | An unreadable query | The count shows the error. The list falls back to the stored query's matches. An unreadable draft is never stored. | A half-typed query doesn't throw the student back to 800, and nothing unreadable reaches saved state from the bar. |
-| Operators | Uppercase only: `AND`, `OR`, `NOT`, as in Lucene and the explorer. Lowercase are search words. | The text box is for advanced users; the help says so. |
+| Operators | Uppercase only: `AND`, `OR`, `NOT`, as in Lucene and the explorer. An unquoted lowercase `and`, `or` or `not` as a bare word is an error, `Write OR in capitals`; quoted, or after a field, it is searched for. | The text box is for advanced users; the help says so. Searched as a word, a lowercase operator matches inside hundreds of notes and gives a plausible wrong count. |
+| The observer's notes | Searchable: an `observation` field, and bare words search both the alien text and the notes. `text:` or `observation:` searches only one. | Added after the final review. Searching them can lead to the planted bias, which is acceptable: reading the notes is how students are meant to find it. |
+| Case | Ignored everywhere, quoted or not: the records' text and notes, and every query value, are lowercased. | liqe matches a quoted value case-sensitively, and the notes start sentences with capitals. |
+| Substring matching | Kept, for the notes too: `water` also matches "underwater". | Predictable, and consistent with the rest of the filter. Whole-word matching can come later. |
 | Filterable attributes | The ones not marked `hidden` in the data. The four hidden ones (`resource_stressed`, `gestures_repeated`, `young_present`, `carrying_burden`) are unknown fields. | The ticket's open question. The prototype hid only `resource_stressed`, but no other view shows the other three before they are commissioned. The engine takes the list as an input, so NPW-41 only adds the commissioned ones. |
 | No matches | The bar stays and shows "0 of 800". The card's cell says "No conversations match the filter." The steps row and the network are left out. The stored conversation is unchanged. | Loosening the query brings back the same conversation, at the same step. |
 | The help pane | A popover opened from an ⓘ button in the bar. | The prototype's screens without the Options panel do this, and so does the explorer. NPW-42 can point the button at the Options popover on Trace a Case. |
@@ -55,7 +58,7 @@ Checked on 2026-10-06 with throwaway scripts.
 - `not yandor` and `yandor or sooma` treat the lowercase word as a search word. A bare word is a
   substring match, so on the real data this narrows rather than failing: `or` is inside 700 of the
   800 conversations, and `yandor or sooma` gives 210, the same as `yandor sooma` (`yandor OR sooma`
-  gives 560). Found in the final review, 2026-10-06.
+  gives 560). Found in the final review, 2026-10-06. It is now an error (see Decisions).
 - `(model_correct:0`, `a AND`, `NOT` and `AND` throw `Error: Found no parsings.`
 - `model_correct:0)` and `OR yandor` throw a `SyntaxError` with `offset`, `line` and `column`.
 - `pathway_1:>abc` parses, then `filter` throws `TypeError: Expected a number.`
@@ -104,14 +107,15 @@ One flat record per conversation, built once when the filter is created:
 |---|---|
 | `n` | The conversation's position in `datasetIndex.items`, counting from 1. It doesn't shift when the filter narrows the list. |
 | `id` | `item.id` |
-| `text` | `item.text`, with newlines replaced by spaces, so a quoted phrase can span turns |
+| `text` | `item.text`, lowercased, with newlines replaced by spaces, so a quoted phrase can span turns |
+| `observation` | `item.observation`, lowercased: the observer's notes in English |
 | `target_label` | `item.target_label` |
 | each attribute key | `dataset.getAttributeValue(item, key)` |
 | `pathway_1` … `pathway_N` | `item.pathway_scores[fit][k - 1]`, where `fit` is the index's one fit (`alien-fa-3` in alien3) and `N` is its `n_pathways`. Numbered from 1, as in the lesson. |
 
 A `null` value is left out of the record, so it never matches, as in the explorer.
 
-`fields` is `n`, `id`, `text`, `target_label`, then the attribute keys in the order of
+`fields` is `n`, `id`, `text`, `observation`, `target_label`, then the attribute keys in the order of
 `attributes`, then `pathway_1` to `pathway_N`.
 
 `conversationFilterFor` passes `alien3Dataset` and
@@ -126,12 +130,14 @@ key.
 1. A query that is empty or only whitespace matches every conversation.
 2. Parse the query with liqe's `parse`.
 3. Walk the parsed query once:
-   - A tag with an implicit field becomes a tag on `text`.
+   - A tag with an implicit field (a bare word) becomes `(text:word OR observation:word)`. An
+     unquoted `and`, `or` or `not`, in any case, is an error instead.
+   - A string value is lowercased, to match the lowercased records.
    - A field name not in `fields` is an error.
    - A comparison (`:>`, `:<`, `:>=`, `:<=`) whose value isn't a number is an error.
 4. Filter the records with liqe's `filter`, and return the matching ids in dataset order.
 
-Matching is liqe's. On a string field, `field:value` is a case-insensitive substring match. On a
+Matching is liqe's. On a string field, `field:value` is a substring match, and case never matters. On a
 number, it is equality. Quotes, `*` wildcards, `/regex/` and `[a TO b]` ranges also work. The help
 doesn't list them.
 
@@ -141,6 +147,7 @@ doesn't list them.
 |---|---|
 | A field not in `fields`, including a hidden attribute | `Unknown field: bogus` |
 | A comparison without a number | `pathway_1:> needs a number` (the field and operator typed) |
+| An unquoted lowercase operator as a bare word | `Write OR in capitals` (the word, in capitals) |
 | A word given to a number field (`n`, an attribute, a pathway), such as `model_correct:no` | `model_correct needs a number`. Without it the query matches nothing: the records hold 0 and 1, not the value labels. |
 | liqe's `Found no parsings.`: a trailing `AND`, an unclosed `(`, a lone `NOT` | `Incomplete query` |
 | liqe's `SyntaxError` | `Can't read the query at column 16` (liqe's `column`) |
@@ -225,13 +232,15 @@ The ticket's "static help pane", as a popover:
 - **Fields:** a table built from `fields`:
   - `n`: Position among all 800.
   - `id`: The conversation's id.
-  - `text`: The conversation's words. A bare word searches this too.
+  - `text`: The conversation's alien words. A bare word searches these and the observation.
+  - `observation`: The observer's notes.
   - `target_label`: `approach` or `wait`.
   - each attribute: its `label`, with `min`–`max` for an integer attribute.
   - `pathway_k`: Score on Pathway k.
 - **Operators:** `field:value`; `field:>value`, and `<`, `>=`, `<=`; `AND`, `OR`, `NOT`; `-word`;
   `( )`; `"quoted phrase"`. A note says the operators must be uppercase.
-- **Examples:** `model_correct:0`, `pathway_1:>2`, `yandor`, `voices_raised:1 AND pathway_1:<0`,
+- **Examples:** `model_correct:0`, `pathway_1:>2`, `yandor`, `observation:"stores nearby"`,
+  `voices_raised:1 AND pathway_1:<0`,
   `NOT near_water:1`, `n:127`.
 
 ### `use-conversation-filter.ts`
@@ -300,9 +309,11 @@ Called from an `observer` component. It reads `shared.query` and `shared.queryDr
     - an empty or whitespace query matches everything;
     - the ticket's examples (`model_correct:0`, `pathway_1:>2`, a plain word, and combinations
       with `AND`, `OR`, `NOT`, `-` and parentheses);
-    - a bare word matches only `text`: `wait` doesn't match a `target_label` of `wait`;
+    - a bare word matches the alien text or the notes, and nothing else: `wait` doesn't match a
+      `target_label` of `wait`; `text:` and `observation:` search only one;
+    - case is ignored, quoted or not;
     - each error message, including a hidden attribute reported as unknown;
-    - lowercase `or` is a search word;
+    - an unquoted lowercase `or`, `and` or `not` is an error; quoted, or after a field, it is searched for;
     - ids come back in dataset order.
   - `conversationFilterFor` returns the same filter for the same index.
 - **`shared-state.test.ts`:**
