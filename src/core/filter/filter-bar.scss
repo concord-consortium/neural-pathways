@@ -1,0 +1,87 @@
+@use "../colors" as colors;
+
+// From the prototype's filter bar: a white label at the start, a gray box to type in, and a white
+// tail holding the count and the help button.
+.filter-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  box-sizing: border-box;
+  border: 2px solid colors.$rule;
+  border-radius: 7px;
+  background: colors.$surface;
+
+  &:focus-within {
+    border-color: colors.$negative;
+  }
+}
+
+.filter-bar--error,
+.filter-bar--error:focus-within {
+  border-color: colors.$error;
+}
+
+.filter-bar__label {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  align-self: stretch;
+  margin-right: 9px;
+  padding: 0 9px;
+  // The bar's 7px radius less its 2px border, so the white nests in the corner.
+  border-radius: 5px 0 0 5px;
+  background: #fff;
+  color: colors.$ink-2;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.filter-bar__input {
+  flex: 1;
+  align-self: stretch;
+  min-width: 0;
+  padding: 3px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: colors.$ink;
+  font-family: colors.$mono;
+  font-size: 13px;
+
+  &::placeholder {
+    color: #A6AEBA;
+  }
+}
+
+.filter-bar__tail {
+  display: flex;
+  flex-shrink: 1;
+  align-items: center;
+  align-self: stretch;
+  gap: 9px;
+  min-width: 0;
+  max-width: 58%;
+  margin-left: 9px;
+  padding: 0 9px;
+  border-radius: 0 5px 5px 0;
+  background: #fff;
+}
+
+.filter-bar__count {
+  min-width: 0;
+  overflow: hidden;
+  color: colors.$ink-2;
+  font-family: colors.$mono;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  .filter-bar--error & {
+    color: colors.$error;
+  }
+}
