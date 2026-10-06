@@ -1,7 +1,7 @@
 import { clamp01 } from "../../core/network-diagram/easing";
 import {
-  ANSWER_DURATION, edgeDrawAt, sceneAt as passSceneAt, Step, stepDuration, STEPS,
-} from "../../core/network-diagram/pass-steps";
+  ANSWER_DURATION, edgeDrawAt, Phase, phaseDuration, PHASES, sceneAt as passSceneAt,
+} from "../../core/network-diagram/forward-pass-phases";
 import { fullScene, Scene } from "../../core/network-diagram/scene";
 import { ExtractScene, hiddenCount, restScene, SPOTLIGHT } from "./extract-scene";
 import { flightDuration } from "./flight";
@@ -17,11 +17,12 @@ export type CollectVersion = "replay" | "swap" | "quick";
 const BOUNCE_MS = 520;
 const QUICK_BOUNCE_MS = Math.round(BOUNCE_MS * 0.7);
 
-// Replay: Step 1 at its own speed, then the fans faster, as a reminder of Trace a Case.
+// Replay: the forward pass's phase 1 at its own speed, then the fans faster, as a reminder of
+// Trace a Case.
 const REPLAY_START = 540;
 const REPLAY_FAN_SPEED = 0.26;
-const STEP_GAP = 110;
-const STEPS_REST = 700;
+const PHASE_GAP = 110;
+const PHASES_REST = 700;
 
 // Swap: drain a layer at a time, hold on the blank network, refill a layer at a time.
 const DRAIN_GAP = 12;
@@ -45,37 +46,37 @@ export function collectVersion(n: number): CollectVersion {
   return n === 1 ? "replay" : n <= 3 ? "swap" : "quick";
 }
 
-interface StepSlot {
-  step: Step;
+interface PhaseSlot {
+  phase: Phase;
   start: number;
   duration: number;
   speed: number;
 }
 
-function replaySlots(columnSizes: readonly number[]): StepSlot[] {
-  const slots: StepSlot[] = [];
+function replaySlots(columnSizes: readonly number[]): PhaseSlot[] {
+  const slots: PhaseSlot[] = [];
   let at = REPLAY_START;
-  for (const step of STEPS) {
-    const speed = step === 1 ? 1 : REPLAY_FAN_SPEED;
-    const duration = stepDuration(step, columnSizes) * speed;
-    slots.push({ step, start: at, duration, speed });
-    at += duration + STEP_GAP;
+  for (const phase of PHASES) {
+    const speed = phase === 1 ? 1 : REPLAY_FAN_SPEED;
+    const duration = phaseDuration(phase, columnSizes) * speed;
+    slots.push({ phase, start: at, duration, speed });
+    at += duration + PHASE_GAP;
   }
   return slots;
 }
 
 function replayNetwork(columnSizes: readonly number[], t: number): Scene {
-  let done = 0;
+  let phasesDone = 0;
   for (const slot of replaySlots(columnSizes)) {
     if (t < slot.start) {
       break;
     }
     if (t < slot.start + slot.duration) {
-      return passSceneAt(columnSizes, done, { step: slot.step, t: (t - slot.start) / slot.speed });
+      return passSceneAt(columnSizes, phasesDone, { phase: slot.phase, t: (t - slot.start) / slot.speed });
     }
-    done = slot.step;
+    phasesDone = slot.phase;
   }
-  return passSceneAt(columnSizes, done);
+  return passSceneAt(columnSizes, phasesDone);
 }
 
 interface SwapPlan {
@@ -171,8 +172,8 @@ function networkStart(n: number): number {
 function flightStart(columnSizes: readonly number[], n: number): number {
   switch (collectVersion(n)) {
     case "replay": {
-      const last = replaySlots(columnSizes)[STEPS.length - 1];
-      return last.start + last.duration + STEP_GAP + STEPS_REST;
+      const last = replaySlots(columnSizes)[PHASES.length - 1];
+      return last.start + last.duration + PHASE_GAP + PHASES_REST;
     }
     case "swap":
       return networkStart(n) + swapPlan(columnSizes).end + NEXT_HOLD;
@@ -187,8 +188,8 @@ export function collectDuration(columnSizes: readonly number[], n: number): numb
 
 /**
  * Collecting conversation `n`, `t` ms in. After the first, it starts by lifting the spotlight the
- * last flight left. Then the network runs the conversation (a replay of the pass steps for the
- * first, a swap for the next two, a quick swap after). Then a spotlight falls on the hidden neurons,
+ * last flight left. Then the network runs the conversation (a replay of the forward pass's phases
+ * for the first, a swap for the next two, a quick swap after). Then a spotlight falls on the hidden neurons,
  * fading the rest of the network and the lifted column's copies, while copies of the hidden neurons
  * fly into deck column n. It stays until the next collection, as in the prototype.
  */

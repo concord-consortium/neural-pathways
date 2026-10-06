@@ -9,7 +9,7 @@ const BLANK = UNDIM + 504;
 const QUICK_DONE = UNDIM + 456;
 
 describe("collectVersion", () => {
-  it("replays the steps for the first conversation, swaps the next two, then takes the quick swap", () => {
+  it("replays the forward pass for the first conversation, swaps the next two, then takes the quick swap", () => {
     expect([1, 2, 3, 4, 10].map(collectVersion)).toEqual(["replay", "swap", "swap", "quick", "quick"]);
   });
 });
