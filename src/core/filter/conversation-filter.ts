@@ -1,0 +1,179 @@
+import {
+  filter as liqeFilter, parse, SyntaxError as LiqeSyntaxError,
+  type FieldToken, type LiqeQuery, type ParserAst,
+} from "liqe";
+import { alien3Dataset } from "../datasets/alien3-dataset";
+import { DatasetDefinition } from "../datasets/dataset-definition";
+import { AttributeDefinition } from "../types/attributes";
+import { S3Index, S3Item } from "../types/s3-data";
+
+export type FilterResult = { ids: readonly string[] } | { error: string };
+
+/** A filter over one dataset index's conversations. */
+export interface ConversationFilter {
+  /** The field names a query can use, in the order the help lists them. */
+  fields: readonly string[];
+  /** The attributes behind the attribute fields, for the help's labels and ranges. */
+  attributes: readonly AttributeDefinition[];
+  /** Every conversation's id, in dataset order. */
+  allIds: readonly string[];
+  run(query: string): FilterResult;
+}
+
+type FilterRecord = Record<string, string | number>;
+
+/** A problem found in a parsed query. Its message is shown as is. */
+class QueryError extends Error {}
+
+interface Fit {
+  name: string;
+  pathwayCount: number;
+}
+
+/** The index's one fit, or undefined when it has none. The lesson's datasets have one. */
+function onlyFit(datasetIndex: S3Index): Fit | undefined {
+  const names = Object.keys(datasetIndex.metadata.fa_fits);
+  if (names.length > 1) {
+    throw new Error(`Expected at most one fit, found ${names.join(", ")}`);
+  }
+  if (names.length === 0) {
+    return undefined;
+  }
+  return { name: names[0], pathwayCount: datasetIndex.metadata.fa_fits[names[0]].n_pathways };
+}
+
+/** Numbered from 1, as the lesson numbers its pathways. */
+function pathwayFields(fit: Fit | undefined): string[] {
+  return fit ? Array.from({ length: fit.pathwayCount }, (_, i) => `pathway_${i + 1}`) : [];
+}
+
+/** A missing value is left out, so a query never matches on it. */
+function toRecord(
+  item: S3Item,
+  position: number,
+  dataset: DatasetDefinition,
+  attributes: readonly AttributeDefinition[],
+  fit: Fit | undefined,
+): FilterRecord {
+  // The line breaks between turns become spaces, so a quoted phrase can span two turns.
+  const record: FilterRecord = { n: position + 1, id: item.id, text: item.text.replace(/\n/g, " ") };
+  if (item.target_label != null) {
+    record.target_label = item.target_label;
+  }
+  for (const attribute of attributes) {
+    const value = dataset.getAttributeValue(item, attribute.key);
+    if (value != null) {
+      record[attribute.key] = value;
+    }
+  }
+  if (fit) {
+    const scores = item.pathway_scores[fit.name] ?? [];
+    pathwayFields(fit).forEach((field, i) => {
+      if (scores[i] != null) {
+        record[field] = scores[i];
+      }
+    });
+  }
+  return record;
+}
+
+/**
+ * Sends bare words to the text, and rejects what liqe would accept without complaint: a field the
+ * records don't have, which would match nothing, and a comparison with no number, which liqe only
+ * rejects once filtering runs.
+ */
+function checkQuery(ast: ParserAst, fields: ReadonlySet<string>): ParserAst {
+  switch (ast.type) {
+    case "EmptyExpression":
+      return ast;
+    case "LogicalExpression":
+      return { ...ast, left: checkQuery(ast.left, fields), right: checkQuery(ast.right, fields) };
+    case "ParenthesizedExpression":
+      return { ...ast, expression: checkQuery(ast.expression, fields) };
+    case "UnaryOperator":
+      return { ...ast, operand: checkQuery(ast.operand, fields) };
+    case "Tag": {
+      // Without a field, liqe would search every string field, target_label included.
+      const field: FieldToken = ast.field.type === "ImplicitField"
+        ? { type: "Field", name: "text", path: ["text"], quoted: false, location: ast.location }
+        : ast.field;
+      if (!fields.has(field.name)) {
+        throw new QueryError(`Unknown field: ${field.name}`);
+      }
+      // liqe leaves `operator` off a bare word, though its type says otherwise.
+      const operator = ast.operator?.operator ?? ":";
+      const isNumber = ast.expression.type === "LiteralExpression" && typeof ast.expression.value === "number";
+      if (operator !== ":" && !isNumber) {
+        throw new QueryError(`${field.name}${operator} needs a number`);
+      }
+      return { ...ast, field };
+    }
+  }
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof QueryError) {
+    return error.message;
+  }
+  if (error instanceof LiqeSyntaxError) {
+    return `Can't read the query at column ${error.column}`;
+  }
+  if (error instanceof Error) {
+    // A trailing AND, an unclosed parenthesis or a lone NOT.
+    return error.message === "Found no parsings." ? "Incomplete query" : error.message;
+  }
+  return String(error);
+}
+
+export function createConversationFilter(
+  datasetIndex: S3Index,
+  dataset: DatasetDefinition,
+  attributes: readonly AttributeDefinition[],
+): ConversationFilter {
+  const fit = onlyFit(datasetIndex);
+  const fields = ["n", "id", "text", "target_label", ...attributes.map(a => a.key), ...pathwayFields(fit)];
+  const fieldSet = new Set(fields);
+  const records = datasetIndex.items.map((item, i) => toRecord(item, i, dataset, attributes, fit));
+  const allIds = datasetIndex.items.map(item => item.id);
+
+  return {
+    fields,
+    attributes,
+    allIds,
+    run(query) {
+      if (query.trim() === "") {
+        return { ids: allIds };
+      }
+      let matched: readonly FilterRecord[];
+      try {
+        matched = liqeFilter(checkQuery(parse(query), fieldSet) as LiqeQuery, records);
+      } catch (error) {
+        return { error: errorMessage(error) };
+      }
+      // OR's matches come back in no useful order.
+      const matchedSet = new Set(matched);
+      return { ids: allIds.filter((_, i) => matchedSet.has(records[i])) };
+    },
+  };
+}
+
+/** The query's matches, or every conversation when the query can't be read. */
+export function idsFor(filter: ConversationFilter, query: string): readonly string[] {
+  const result = filter.run(query);
+  return "ids" in result ? result.ids : filter.allIds;
+}
+
+// One per index. useDatasetIndex shares one index object per page, so a view's load correction and
+// its body use the same records.
+const filters = new WeakMap<S3Index, ConversationFilter>();
+
+/** The lesson's filter for a loaded alien3 index: every attribute not hidden is filterable. */
+export function conversationFilterFor(datasetIndex: S3Index): ConversationFilter {
+  let filter = filters.get(datasetIndex);
+  if (!filter) {
+    const attributes = alien3Dataset.resolveAttributes(datasetIndex).filter(a => !a.hidden);
+    filter = createConversationFilter(datasetIndex, alien3Dataset, attributes);
+    filters.set(datasetIndex, filter);
+  }
+  return filter;
+}
