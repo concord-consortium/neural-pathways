@@ -19,10 +19,13 @@ export class ExtractPathwaysState extends Model({
   /** How many conversations have been collected into the deck. */
   collected: tProp(countType, 0),
 }) {
-  /** One action, so a step that changes both is one change. */
+  /**
+   * One action, so a step that changes both is one change. The count is set first: it is the one
+   * that can be refused, and a refused count must leave Setup as it was.
+   */
   @modelAction
   setProgress(setupDone: boolean, collected: number) {
-    this.setupDone = setupDone;
     this.collected = collected;
+    this.setupDone = setupDone;
   }
 }

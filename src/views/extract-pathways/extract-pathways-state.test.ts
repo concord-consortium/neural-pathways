@@ -28,9 +28,9 @@ describe("ExtractPathwaysState", () => {
     expect(savedJson(state)).toEqual({ ...empty, setupDone: true, collected: 2 });
   });
 
-  it("refuses a negative count", () => {
+  it("refuses a negative count and leaves Setup as it was", () => {
     const state = new ExtractPathwaysState({});
     expect(() => state.setProgress(true, -1)).toThrow();
-    expect(state.collected).toBe(0);
+    expect(savedJson(state)).toEqual(empty);
   });
 });
