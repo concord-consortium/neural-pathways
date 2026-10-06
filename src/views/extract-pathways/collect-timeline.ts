@@ -207,27 +207,28 @@ export function collectDuration(columnSizes: readonly number[], n: number): numb
  */
 export function collectSceneAt(columnSizes: readonly number[], n: number, t: number): ExtractScene {
   const scene = restScene(columnSizes, n);
-  const local = t - networkStart(n);
-  if (local >= 0) {
+  // Ms since the network began running the conversation; negative while the spotlight lifts.
+  const networkLocalTime = t - networkStart(n);
+  if (networkLocalTime >= 0) {
     switch (collectVersion(n)) {
       case "replay":
-        scene.network = replayNetwork(columnSizes, local);
+        scene.network = replayNetwork(columnSizes, networkLocalTime);
         scene.shown = n;
-        scene.label = { n, bounce: clamp01(local / BOUNCE_MS) };
+        scene.label = { n, bounce: clamp01(networkLocalTime / BOUNCE_MS) };
         break;
       case "swap": {
         const plan = swapPlan(columnSizes);
-        scene.network = swapNetwork(columnSizes, plan, local);
-        if (local >= plan.blank) {
+        scene.network = swapNetwork(columnSizes, plan, networkLocalTime);
+        if (networkLocalTime >= plan.blank) {
           scene.shown = n;
-          scene.label = { n, bounce: clamp01((local - plan.blank) / BOUNCE_MS) };
+          scene.label = { n, bounce: clamp01((networkLocalTime - plan.blank) / BOUNCE_MS) };
         }
         break;
       }
       case "quick":
-        scene.network = quickNetwork(columnSizes, quickPlan(columnSizes), local);
+        scene.network = quickNetwork(columnSizes, quickPlan(columnSizes), networkLocalTime);
         scene.shown = n;
-        scene.label = { n, bounce: clamp01(local / QUICK_BOUNCE_MS) };
+        scene.label = { n, bounce: clamp01(networkLocalTime / QUICK_BOUNCE_MS) };
         break;
     }
   }
