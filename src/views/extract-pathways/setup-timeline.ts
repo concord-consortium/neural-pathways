@@ -2,7 +2,8 @@ import { clamp01, ease } from "../../core/network-diagram/easing";
 import { ExtractScene, hiddenCount, restScene, SPOTLIGHT } from "./extract-scene";
 import { flightDuration } from "./flight";
 
-// The prototype's runExtract, EX_STAGE0_ONLY branch (neural-net-maker index.html), at Med.
+// The timings below are the prototype's, in ms at its "Med" speed, so each can be checked against
+// its source: runExtract's EX_STAGE0_ONLY branch. src/views/README.md says where the prototype is.
 export const DIM_MS = 350;
 /** A beat between the dim and the flight. */
 export const DIM_HOLD = 200;

@@ -1,7 +1,8 @@
 import { cubicBezier } from "../../core/network-diagram/easing";
 import { Point } from "../../core/network-diagram/layout";
 
-// The prototype's flyInto (neural-net-maker index.html), at Med.
+// The timings, distances and curves below are the prototype's, at its "Med" speed, so each can be
+// checked against its source: flyInto. src/views/README.md says where the prototype is.
 export const LIFT_MS = 800;
 /** When the first copy lands, in ms after the flight starts. */
 const FIRST_LANDING = Math.round(LIFT_MS * 1.17);
