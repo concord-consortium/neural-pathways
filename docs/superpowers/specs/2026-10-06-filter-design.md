@@ -138,9 +138,14 @@ key.
 2. Parse the query with liqe's `parse`.
 3. Walk the parsed query once:
    - A tag with an implicit field (a bare word) becomes `(text:word OR observation:word)`.
-   - A string value is lowercased, to match the lowercased records.
-   - A field name not in `fields` is an error.
-   - A comparison (`:>`, `:<`, `:>=`, `:<=`) whose value isn't a number is an error.
+   - A value on a text field, or a bare word, is taken as typed and lowercased, to match the
+     lowercased records.
+   - A field name not in `fields`, a field with no value, and an empty group `()` are errors.
+   - A comparison or range on a text field is an error, and so is a comparison whose value isn't
+     a number.
+   - A word on a number field is an error, and a number on one becomes an exact range.
+
+   The error messages are in the table below.
 4. Filter the records with liqe's `filter`, and return the matching ids in dataset order.
 
 Matching is liqe's. On a string field, `field:value` is a substring match, and case doesn't matter.
