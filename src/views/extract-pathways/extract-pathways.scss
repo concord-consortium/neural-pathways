@@ -7,13 +7,18 @@
   padding-bottom: 16px;
 }
 
-// The steps sit centered above the full-width panel, as in the prototype.
+// The steps sit centered above the full-width panel, as in the prototype, and so do their lines
+// when the row wraps.
 .extract-pathways__steps {
   display: flex;
-  // `safe` keeps the first button reachable by scrolling when the row is wider than the panel.
+  // `safe` keeps the button reachable by scrolling when even one button is wider than the panel.
   justify-content: safe center;
   min-width: 0;
   overflow-x: auto;
+
+  > .step-row {
+    justify-content: center;
+  }
 }
 
 .extract-pathways__network {
