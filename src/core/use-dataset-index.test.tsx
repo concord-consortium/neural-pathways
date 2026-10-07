@@ -29,7 +29,7 @@ interface ProbeProps {
 
 const Probe: React.FC<ProbeProps> = ({ name, dataset = alien3Dataset, onLoaded }) => {
   const state = useDatasetIndex(dataset, { onLoaded });
-  const text = state.status === "error" ? `error: ${state.error.message}`
+  const text = state.status === "error" ? `${state.failed} error: ${state.error.message}`
     : state.status === "ready" ? `ready${state.index === otherIndex ? " (other)" : ""}`
     : state.status;
   return <p>{`${name}: ${text}`}</p>;
@@ -87,7 +87,7 @@ describe("useDatasetIndex", () => {
   it("shows an error, and fetches again on the next mount", async () => {
     mockedFetchIndex.mockRejectedValueOnce(new Error("boom")).mockResolvedValueOnce(index);
     const { unmount: unmountFirst } = render(<Probe name="a" />);
-    expect(await screen.findByText("a: error: boom")).toBeInTheDocument();
+    expect(await screen.findByText("a: load error: boom")).toBeInTheDocument();
     unmountFirst();
     render(<Probe name="b" />);
     expect(await screen.findByText("b: ready")).toBeInTheDocument();
@@ -116,6 +116,52 @@ describe("useDatasetIndex", () => {
     await screen.findByText("a: ready");
     rerender(<Probe name="a" dataset={otherDataset} />);
     expect(screen.getByText("a: ready (other)")).toBeInTheDocument();
+    // Still ready once the effect's cached promise settles.
+    expect(await screen.findByText("a: ready (other)")).toBeInTheDocument();
+  });
+
+  it("calls the latest onLoaded when it changes during a load", async () => {
+    const load = deferred<S3Index>();
+    mockedFetchIndex.mockReturnValue(load.promise);
+    const first = jest.fn();
+    const latest = jest.fn();
+    const { rerender } = render(<Probe name="a" onLoaded={first} />);
+    rerender(<Probe name="a" onLoaded={latest} />);
+    await act(async () => load.resolve(index));
+    expect(first).not.toHaveBeenCalled();
+    expect(latest).toHaveBeenCalledWith(index);
+  });
+
+  it("calls onLoaded again with the new dataset's index", async () => {
+    mockedFetchIndex.mockImplementation(dataset =>
+      Promise.resolve(dataset.id === otherDataset.id ? otherIndex : index));
+    const onLoaded = jest.fn();
+    const { rerender } = render(<Probe name="a" onLoaded={onLoaded} />);
+    await screen.findByText("a: ready");
+    rerender(<Probe name="a" dataset={otherDataset} onLoaded={onLoaded} />);
+    await screen.findByText("a: ready (other)");
+    expect(onLoaded.mock.calls).toEqual([[index], [otherIndex]]);
+  });
+
+  it("ignores a failed load for a dataset it has moved away from", async () => {
+    const first = deferred<S3Index>();
+    let reject!: (error: Error) => void;
+    const failing = new Promise<S3Index>((_, rej) => {
+      reject = rej;
+    });
+    mockedFetchIndex
+      .mockReturnValueOnce(failing)
+      .mockResolvedValueOnce(otherIndex)
+      .mockReturnValueOnce(first.promise);
+    const { rerender } = render(<Probe name="a" />);
+    rerender(<Probe name="a" dataset={otherDataset} />);
+    await screen.findByText("a: ready (other)");
+    await act(async () => reject(new Error("boom")));
+    // Back on the first dataset, it is loading again, not showing the old failure.
+    rerender(<Probe name="a" />);
+    expect(screen.getByText("a: loading")).toBeInTheDocument();
+    await act(async () => first.resolve(index));
+    expect(screen.getByText("a: ready")).toBeInTheDocument();
   });
 
   it("shows an error when onLoaded throws", async () => {
@@ -124,6 +170,6 @@ describe("useDatasetIndex", () => {
       throw new Error("bad list");
     });
     render(<Probe name="a" onLoaded={onLoaded} />);
-    expect(await screen.findByText("a: error: bad list")).toBeInTheDocument();
+    expect(await screen.findByText("a: onLoaded error: bad list")).toBeInTheDocument();
   });
 });

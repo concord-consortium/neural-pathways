@@ -1,5 +1,6 @@
 import {
-  fromSnapshot, getGlobalConfig, getSnapshot, Model, model, ModelAutoTypeCheckingMode, SnapshotTypeMismatchError,
+  fromSnapshot, getGlobalConfig, getSnapshot, Model, model, ModelAutoTypeCheckingMode, onPatches, Patch,
+  SnapshotTypeMismatchError,
 } from "mobx-keystone";
 import { SharedState } from "./shared-state";
 import { savedJson } from "./test-helpers";
@@ -72,6 +73,16 @@ describe("SharedState", () => {
       const state = new SharedState({ conversationId: "7b117e548ba4" });
       state.ensureValidConversation(ids);
       expect(state.conversationId).toBe("7b117e548ba4");
+    });
+
+    it("records a change only when the conversation needs correcting, so a valid one leaves nothing to undo", () => {
+      const state = new SharedState({ conversationId: "7b117e548ba4" });
+      const patches: Patch[] = [];
+      onPatches(state, recorded => patches.push(...recorded));
+      state.ensureValidConversation(ids);
+      expect(patches).toEqual([]);
+      state.ensureValidConversation(["361e65b1002a"]);
+      expect(patches).toEqual([{ op: "replace", path: ["conversationId"], value: "361e65b1002a" }]);
     });
 
     it("keeps the conversation when the list is empty", () => {

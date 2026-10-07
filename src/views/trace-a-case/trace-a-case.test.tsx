@@ -29,12 +29,16 @@ const items = [
 const ids = items.map(i => i.id);
 const index: S3Index = { metadata: { fa_fits: {}, review_sets: {} }, items };
 
-function showView(shared = new SharedState({})) {
-  render(
+function viewWith(shared: SharedState) {
+  return (
     <ViewStateProvider viewId="trace-a-case" view={undefined} shared={shared}>
       <TraceACase />
-    </ViewStateProvider>,
+    </ViewStateProvider>
   );
+}
+
+function showView(shared = new SharedState({})) {
+  render(viewWith(shared));
   return shared;
 }
 
@@ -69,6 +73,17 @@ describe("TraceACase", () => {
     expect(shared.conversationId).toBe(ids[0]);
   });
 
+  it("opens straight on the saved conversation when the conversations are already loaded", async () => {
+    const shared = new SharedState({});
+    const { unmount } = render(viewWith(shared));
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
+    unmount();
+    showView(shared);
+    expect(screen.getByText("2 / 3")).toBeInTheDocument();
+    expect(screen.queryByText("Loading conversations…")).not.toBeInTheDocument();
+  });
+
   it("opens on the saved conversation", async () => {
     showView(new SharedState({ conversationId: ids[2] }));
     expect(await screen.findByText("3 / 3")).toBeInTheDocument();
@@ -84,12 +99,22 @@ describe("TraceACase", () => {
     mockedFetchIndex.mockReset();
     mockedFetchIndex.mockRejectedValue(new Error("offline"));
     showView();
-    expect(await screen.findByRole("alert")).toHaveTextContent("offline");
+    expect(await screen.findByRole("alert")).toHaveTextContent("The conversations could not be loaded: offline");
   });
 
-  it("says so when there are no conversations", async () => {
+  it("says the conversations couldn't be shown when correcting the conversation fails", async () => {
+    const shared = new SharedState({});
+    jest.spyOn(shared, "ensureValidConversation").mockImplementation(() => {
+      throw new Error("bad list");
+    });
+    showView(shared);
+    expect(await screen.findByRole("alert")).toHaveTextContent("The conversations could not be shown: bad list");
+  });
+
+  it("says so when there are no conversations, and leaves the saved conversation alone", async () => {
     mockedFetchIndex.mockResolvedValue({ ...index, items: [] });
-    showView();
+    const shared = showView(new SharedState({ conversationId: ids[1] }));
     expect(await screen.findByText("No conversations.")).toBeInTheDocument();
+    expect(shared.conversationId).toBe(ids[1]);
   });
 });

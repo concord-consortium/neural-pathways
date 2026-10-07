@@ -11,8 +11,8 @@ import "./trace-a-case.scss";
 /** Follow one conversation through the network, a layer at a time. */
 export const TraceACase: React.FC = observer(function TraceACase() {
   const shared = useSharedState();
-  // Correct the shared conversation when the list arrives, not in a render effect: see
-  // docs/undo.md. There is no filter yet, so the list is every conversation.
+  // Correct the shared conversation when the list arrives, not in a useEffect: see docs/undo.md.
+  // There is no filter yet, so the list is every conversation.
   const onLoaded = useCallback(
     (index: S3Index) => shared.ensureValidConversation(index.items.map(item => item.id)), [shared]);
   const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
@@ -22,7 +22,9 @@ export const TraceACase: React.FC = observer(function TraceACase() {
       <h1 className="trace-a-case__title">Trace a Case</h1>
       {indexState.status === "loading" && <p>Loading conversations…</p>}
       {indexState.status === "error" &&
-        <p role="alert">The conversations could not be loaded: {indexState.error.message}</p>}
+        <p role="alert">
+          The conversations could not be {indexState.failed === "load" ? "loaded" : "shown"}: {indexState.error.message}
+        </p>}
       {indexState.status === "ready" && <TraceACaseBody index={indexState.index} />}
     </div>
   );

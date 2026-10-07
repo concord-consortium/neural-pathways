@@ -37,6 +37,8 @@ describe("ConversationCard", () => {
     const { onPrev, onNext } = renderCard(0);
     const prev = screen.getByRole("button", { name: "Previous conversation" });
     expect(prev).toHaveAttribute("aria-disabled", "true");
+    // Not disabled, so it stays in the tab order.
+    expect(prev).toBeEnabled();
     fireEvent.click(prev);
     expect(onPrev).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
@@ -51,5 +53,29 @@ describe("ConversationCard", () => {
     expect(onNext).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
     expect(onPrev).toHaveBeenCalledTimes(1);
+  });
+
+  it("can go both ways from a conversation in the middle", () => {
+    const { onPrev, onNext } = renderCard(1);
+    const prev = screen.getByRole("button", { name: "Previous conversation" });
+    const next = screen.getByRole("button", { name: "Next conversation" });
+    expect(prev).toHaveAttribute("aria-disabled", "false");
+    expect(next).toHaveAttribute("aria-disabled", "false");
+    fireEvent.click(prev);
+    fireEvent.click(next);
+    expect(onPrev).toHaveBeenCalledTimes(1);
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  it("can't go either way when there is only one conversation", () => {
+    const { onPrev, onNext } = renderCard(0, 1);
+    const prev = screen.getByRole("button", { name: "Previous conversation" });
+    const next = screen.getByRole("button", { name: "Next conversation" });
+    expect(prev).toHaveAttribute("aria-disabled", "true");
+    expect(next).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(prev);
+    fireEvent.click(next);
+    expect(onPrev).not.toHaveBeenCalled();
+    expect(onNext).not.toHaveBeenCalled();
   });
 });
