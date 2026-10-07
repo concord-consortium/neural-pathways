@@ -1,5 +1,6 @@
-import { conversationFilterFor, createConversationFilter, idsFor } from "./conversation-filter";
+import { conversationFilterFor, createConversationFilter, FIXED_FIELDS, idsFor } from "./conversation-filter";
 import { alien3Dataset } from "../datasets/alien3-dataset";
+import { RESERVED_FIELD_NAMES } from "../datasets/dataset-definition";
 import { filterTestIndex } from "./__fixtures__/filter-test-index";
 
 const ALL = ["aaa111", "bbb222", "ccc333", "ddd444"];
@@ -13,6 +14,10 @@ describe("conversationFilterFor", () => {
       "target", "prediction", "model_correct", "voices_raised", "group_size",
       "pathway_1", "pathway_2", "pathway_3",
     ]);
+  });
+
+  it("reserves every fixed field, so no attribute can overwrite one", () => {
+    expect(FIXED_FIELDS.filter(field => !RESERVED_FIELD_NAMES.includes(field))).toEqual([]);
   });
 
   it("leaves hidden attributes out", () => {

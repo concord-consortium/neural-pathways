@@ -88,6 +88,9 @@ interface QueryFields {
   numbers: ReadonlySet<string>;
 }
 
+/** The fields every conversation has, before the attributes and pathways. All are in RESERVED_FIELD_NAMES. */
+export const FIXED_FIELDS = ["n", "id", "text", "observation", "target_label"];
+
 /** The fields a bare word searches: the conversation's alien words and the observer's notes. */
 const BARE_WORD_FIELDS = ["text", "observation"];
 
@@ -194,9 +197,7 @@ export function createConversationFilter(
   attributes: readonly AttributeDefinition[],
 ): ConversationFilter {
   const fit = onlyFit(datasetIndex);
-  const fields = [
-    "n", "id", "text", "observation", "target_label", ...attributes.map(a => a.key), ...pathwayFields(fit),
-  ];
+  const fields = [...FIXED_FIELDS, ...attributes.map(a => a.key), ...pathwayFields(fit)];
   const queryFields: QueryFields = {
     all: new Set(fields),
     numbers: new Set(["n", ...attributes.map(a => a.key), ...pathwayFields(fit)]),
