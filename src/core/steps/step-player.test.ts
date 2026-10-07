@@ -84,12 +84,17 @@ describe("StepPlayer", () => {
     expect(progress.marker).toBe(2);
   });
 
-  it("restarts a run when its button is pressed again", () => {
-    const player = new StepPlayer(timeline, new Progress());
+  it("restarts a run when its button is pressed again, with one clock", () => {
+    const progress = new Progress();
+    const player = new StepPlayer(timeline, progress);
     player.play("a", { from: 1, to: 2 });
     jest.advanceTimersByTime(500);
     player.play("a", { from: 1, to: 2 });
     expect(player.running).toEqual({ button: "a", from: 1, to: 2, t: 0 });
+    expect(jest.getTimerCount()).toBe(1);
+    jest.advanceTimersByTime(1100);
+    expect(progress.marker).toBe(2);
+    expect(jest.getTimerCount()).toBe(0);
   });
 
   it("saves `to` straight away under reduced motion", () => {

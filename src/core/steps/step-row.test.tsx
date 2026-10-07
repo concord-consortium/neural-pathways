@@ -73,6 +73,7 @@ describe("StepRow", () => {
     expect(button("Later")).toBeDisabled();
     expect(button("Next")).toBeEnabled();
     expect(button("Reset")).toHaveAttribute("aria-disabled", "true");
+    // Not disabled, so it stays in the tab order.
     expect(button("Reset")).toBeEnabled();
   });
 
