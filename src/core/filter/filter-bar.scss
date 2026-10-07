@@ -1,7 +1,7 @@
 @use "../colors" as colors;
 
 // From the prototype's filter bar: a white label at the start, a gray box to type in, and a white
-// tail holding the count and the help button.
+// tail holding the count and the ⓘ button.
 .filter-bar {
   position: relative;
   display: flex;

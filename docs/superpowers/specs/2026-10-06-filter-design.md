@@ -279,7 +279,8 @@ Called from an `observer` component. It reads `shared.query` and `shared.queryDr
   3. all ids.
 
   Each `run` is memoized by its query string.
-- **Status:** the draft's error, if any; otherwise the stored query's error, if any; otherwise
+- **Status:** a readable draft's count, even when the stored query can't be read; otherwise the
+  draft's error, if there is a draft; otherwise the stored query's error, if any; otherwise
   `{ matched: ids.length, total: allIds.length }`.
 - **`onCommit`:** does nothing without a draft or with an unreadable one. Otherwise
   `shared.setQueryAndCorrect(draft, draftIds)`.

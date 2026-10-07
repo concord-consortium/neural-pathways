@@ -58,9 +58,9 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // Shown even before the store's correction lands, and while a query is being typed, so an id
   // the list doesn't include never reaches the screen.
   const currentId = validConversationId(shared.conversationId, ids);
-  const position = currentId === undefined ? -1 : ids.indexOf(currentId);
+  const listPosition = currentId === undefined ? -1 : ids.indexOf(currentId);
   // No conversation is shown when nothing matches: the empty list leaves the stored id in place.
-  const shownId = position < 0 ? undefined : currentId;
+  const shownId = listPosition < 0 ? undefined : currentId;
   const player = useMemo(
     () => (shownId === undefined ? undefined : new StepPlayer(COLUMN_SIZES, state, shownId)), [state, shownId]);
   // Stop the old player when the conversation changes or the view unmounts. A layout effect, so no
@@ -83,8 +83,8 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const conversation = player && place !== undefined && (
     <>
       <div className="trace-a-case__case">
-        <ConversationCard conversation={index.items[place]} position={position} total={ids.length}
-          onPrev={() => goTo(position - 1)} onNext={() => goTo(position + 1)} />
+        <ConversationCard conversation={index.items[place]} position={listPosition} total={ids.length}
+          onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)} />
       </div>
       <div className="trace-a-case__steps">
         <PlayerStepRow player={player} />

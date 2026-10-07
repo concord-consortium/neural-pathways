@@ -22,9 +22,8 @@ export function useConversationFilter(filter: ConversationFilter): ConversationF
   const stored = useMemo(() => filter.run(query), [filter, query]);
   const drafted = useMemo(() => (draft === undefined ? undefined : filter.run(draft)), [filter, draft]);
 
-  // A readable draft decides the list; otherwise the stored query does. The count, or the error,
-  // describes the same result the list comes from, except that an unreadable draft's error is
-  // shown over the stored query's list.
+  // The count, or the error, describes the result the list comes from, except that an unreadable
+  // draft's error is shown over the stored query's list.
   const shown = drafted && "ids" in drafted ? drafted : stored;
   const ids = "ids" in shown ? shown.ids : filter.allIds;
   const error = drafted && "error" in drafted ? drafted.error : "error" in shown ? shown.error : undefined;

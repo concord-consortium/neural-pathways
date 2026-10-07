@@ -34,7 +34,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const countId = `${id}-count`;
   const hasError = "error" in status;
   return (
-    // Committed when focus leaves the bar, not just the box: checking the help mid-query mustn't
+    // Committed when focus leaves the bar, not just the box: checking the help mid-query must not
     // store a half-typed query. Switching windows commits too, on purpose: in an iframe, focus moving
     // to the host page and the window losing focus can't be reliably told apart.
     <div className={`filter-bar${hasError ? " filter-bar--error" : ""}`}

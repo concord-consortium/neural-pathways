@@ -92,14 +92,14 @@ describe("FilterBar", () => {
     expect(props.onCommit).toHaveBeenCalledTimes(1);
   });
 
-  it("doesn't commit when focus moves from the box to the help button", () => {
+  it("doesn't commit when focus moves from the box to the ⓘ button", () => {
     const props = showBar();
     input().focus();
     helpButton().focus();
     expect(props.onCommit).not.toHaveBeenCalled();
   });
 
-  it("keeps focus in the box when the help button is pressed", () => {
+  it("keeps focus in the box when the ⓘ button is pressed", () => {
     showBar();
     // false: the mousedown's default, moving focus, was prevented.
     expect(fireEvent.mouseDown(helpButton())).toBe(false);
@@ -169,7 +169,7 @@ describe("FilterBar", () => {
       expect(panel).toHaveTextContent("observation:\"stores nearby\"");
     });
 
-    it("closes from its close button and returns focus to the help button", () => {
+    it("closes from its close button and returns focus to the ⓘ button", () => {
       showBar();
       fireEvent.click(helpButton());
       const closeButton = screen.getByRole("button", { name: "Close" });
@@ -179,7 +179,7 @@ describe("FilterBar", () => {
       expect(helpButton()).toHaveFocus();
     });
 
-    it("closes on Escape and returns focus to the help button", () => {
+    it("closes on Escape and returns focus to the ⓘ button", () => {
       showBar();
       fireEvent.click(helpButton());
       const panel = helpPanel();
@@ -200,7 +200,7 @@ describe("FilterBar", () => {
 
     // React sends no blur for a focused node it removes, so focus must leave the help before it
     // closes, or the bar never commits.
-    it("returns focus to the help button when a mousedown outside closes it with focus inside", () => {
+    it("returns focus to the ⓘ button when a mousedown outside closes it with focus inside", () => {
       showBar();
       fireEvent.click(helpButton());
       const panel = helpPanel();
@@ -210,7 +210,7 @@ describe("FilterBar", () => {
       expect(helpButton()).toHaveFocus();
     });
 
-    it("returns focus to the help button when it closes it with focus inside", () => {
+    it("returns focus to the ⓘ button when it closes it with focus inside", () => {
       showBar();
       fireEvent.click(helpButton());
       act(() => screen.getByRole("button", { name: "Close" }).focus());
@@ -226,7 +226,7 @@ describe("FilterBar", () => {
       expect(props.onDiscard).not.toHaveBeenCalled();
     });
 
-    it("closes on Escape when the help button was clicked and focus stayed on the page", () => {
+    it("closes on Escape when the ⓘ button was clicked and focus stayed on the page", () => {
       showBar();
       fireEvent.click(helpButton());
       fireEvent.keyDown(document.body, { key: "Escape" });

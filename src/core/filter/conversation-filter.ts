@@ -116,10 +116,7 @@ function fieldToken(name: string, location: TagToken["location"]): FieldToken {
   return { type: "Field", name, path: [name], quoted: false, location };
 }
 
-/**
- * A bare word searches the alien text or the observation. Without a field, liqe would search every
- * string field, target_label included.
- */
+/** Without a field, liqe would search every string field, target_label included. */
 function checkBareWord(tag: TagToken, query: string): ParserAst {
   const text = asText(tag, query);
   const [left, right] = BARE_WORD_FIELDS.map(name => ({ ...text, field: fieldToken(name, tag.location) }));

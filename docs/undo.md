@@ -94,8 +94,8 @@ However many times the student presses undo, nothing changes.
    must set a query without correcting. Loading saved state and URL params don't need it; they
    set state through snapshots.
 
-   This is built for the filter (`src/core/filter/`). Filtering is synchronous, and it takes the
-   shape of the last variant above: the view runs the filter, then calls
+   This is built for the filter (`src/core/filter/`). Filtering is synchronous, but it takes the
+   filter-run-first shape: the view runs the filter, then calls
    `setQueryAndCorrect(query, matchingIds)`. The models don't need the filter engine.
 2. **Correct in a synchronous MobX `reaction`.** Don't use a React `useEffect`. Wrap the student's
    change in `undoManager.withGroup` to make the grouping explicit, rather than relying on reaction
@@ -115,10 +115,9 @@ behind, and the student's original conversation is lost.
    list changes. They still check it when state arrives from outside, such as saved state, the
    previous interactive, or URL params (item 6). In the target design (draft PR #29), Trace a
    Case, Investigate Pathways, Prediction Chain and pane 1 of Investigate Unknown Pathway call
-   `ensureValidConversation` when their list changes. Trace a Case is built this way: it corrects
-   only when its conversations load, against the stored query's matches, and the filter bar
-   corrects through `setQueryAndCorrect`. With option 2 or 3 instead, each must correct in a
-   reaction, never a `useEffect`.
+   `ensureValidConversation` when their list changes. Trace a Case follows option 1: it corrects
+   only when its conversations load, and its filter bar corrects as above. With option 2 or 3
+   instead, each must correct in a reaction, never a `useEffect`.
 2. **Pane 2 of Investigate Unknown Pathway.** It would call `ensureValidPane2Conversation(filteredIds,
    pane1ConversationId)`. It needs the same treatment, and its correction also depends on pane
    1's conversation, which lives in the shared tree.
@@ -126,8 +125,8 @@ behind, and the student's original conversation is lost.
    calls `setQueryAndCorrect` like every other view. Without it, the correction happens later, in
    whichever view the student opens next, so one student change produces steps in two different
    views, and undo in either view can't reverse both.
-4. **Typing in the filter bar.** Settled: the bar filters live as the student types, but stores
-   the query only on Enter or blur, through `setQueryAndCorrect`, so one undo reverses one query.
+4. **Typing in the filter bar.** The bar filters live as the student types, but stores the query
+   only on Enter or blur, so one undo reverses one query.
    The text being typed is `SharedState.queryDraft`, which is volatile, so undo never records it.
    When undo is added, decide what undoing a query does to a pending draft. Clearing the draft is
    probably right.
