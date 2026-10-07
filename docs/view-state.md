@@ -112,6 +112,11 @@ the life of the page, in `SharedState.queryDraft`.
   `ensureValidPane2Conversation` for pane 2.
 - **`$modelType` names are permanent.** They are stored in saved student data, like view ids.
   Renaming one needs a migration.
+- **Filter field names are part of the saved form.** A stored `query` names fields such as
+  `model_correct` and `pathway_1`, so renaming a field or renumbering the pathways changes what a
+  saved query means. A query naming a field the filter no longer has shows its error and lists
+  every conversation. `n` is a position among all the conversations, not in a filtered list, so it
+  holds only while the dataset index keeps its order.
 - **Every tree has a `version`, starting at 1.** There are no migrations yet.
   - Adding a field with a default doesn't change the version. Older saved state loads, and the
     new field gets its default.
