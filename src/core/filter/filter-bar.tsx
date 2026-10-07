@@ -1,5 +1,6 @@
 import React, { useId } from "react";
 import { AttributeDefinition } from "../types/attributes";
+import { isComposing } from "./composing";
 import { FilterHelp } from "./filter-help";
 import "./filter-bar.scss";
 
@@ -48,8 +49,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         aria-invalid={hasError} aria-describedby={countId}
         onChange={event => onTextChange(event.target.value)}
         onKeyDown={event => {
-          // Enter and Escape during an IME composition finish or cancel it. Safari reports them as 229.
-          if (event.nativeEvent.isComposing || event.keyCode === 229) {
+          if (isComposing(event.nativeEvent)) {
             return;
           }
           if (event.key === "Enter") {

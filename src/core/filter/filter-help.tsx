@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AttributeDefinition } from "../types/attributes";
+import { isComposing } from "./composing";
 import "./filter-help.scss";
 
 interface FilterHelpProps {
@@ -83,7 +84,7 @@ export const FilterHelp: React.FC<FilterHelpProps> = ({ fields, attributes }) =>
     // Wherever focus is: opening the help doesn't move it. Caught before it reaches the box, so the
     // first Escape closes the help and keeps the draft.
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !isComposing(event)) {
         event.stopPropagation();
         close();
       }

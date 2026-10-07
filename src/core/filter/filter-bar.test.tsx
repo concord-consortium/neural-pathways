@@ -209,5 +209,15 @@ describe("FilterBar", () => {
       expect(props.onDiscard).not.toHaveBeenCalled();
       expect(input()).toHaveFocus();
     });
+
+    it("stays open when Escape ends an IME composition in the box", () => {
+      const props = showBar();
+      input().focus();
+      fireEvent.click(helpButton());
+      fireEvent.keyDown(input(), { key: "Escape", isComposing: true });
+      fireEvent.keyDown(input(), { key: "Escape", keyCode: 229 });
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(props.onDiscard).not.toHaveBeenCalled();
+    });
   });
 });
