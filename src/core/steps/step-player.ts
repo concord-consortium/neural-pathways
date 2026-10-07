@@ -1,4 +1,4 @@
-import { action, computed, observableRef } from "mobx";
+import { action, computed, computedStruct, observableRef } from "mobx";
 
 /** A point on a view's timeline where the scene rests and progress is saved. 0 is the start. */
 export type Marker = number;
@@ -39,9 +39,10 @@ function prefersReducedMotion(): boolean {
  * run saves the marker it starts from when it starts, and the one it ends at when it ends, so a
  * run still playing is never saved. Pressing anything during a run drops it.
  *
- * Only the run playing is held here, and the clock runs only while it plays, so `stop()` is all the
- * cleanup there is, and the player can play again after it. Its values are observable, so read
- * them inside an `observer`.
+ * Only the run playing is held here, and the clock runs only while it plays. So `stop()` is all
+ * the cleanup there is, and the player can play again after it. The constructor must not start
+ * anything: the view may make players that React never commits, and those are never stopped. Read
+ * the values inside an `observer`.
  */
 export class StepPlayer<S> {
   @observableRef private accessor run: Run | undefined = undefined;
@@ -58,6 +59,16 @@ export class StepPlayer<S> {
 
   get running(): Run | undefined {
     return this.run;
+  }
+
+  /**
+   * The button and segment of the run playing, without its time. Compared by value, so it changes
+   * when a run starts or ends, not on every frame like `running`. The step row reads this, so it
+   * re-renders once per run.
+   */
+  @computedStruct
+  get playing(): { button: string; segment: Segment } | undefined {
+    return this.run && { button: this.run.button, segment: { from: this.run.from, to: this.run.to } };
   }
 
   @computed

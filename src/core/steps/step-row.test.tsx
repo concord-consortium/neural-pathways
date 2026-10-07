@@ -107,7 +107,17 @@ describe("StepRow", () => {
     expect(button("Jump")).toHaveAttribute("aria-current", "step");
     const play = jest.spyOn(player, "play");
     fireEvent.click(button("Jump"));
-    expect(play).toHaveBeenCalledWith("jump", expect.objectContaining({ from: 1, to: 2 }));
+    expect(play).toHaveBeenCalledWith("jump", { from: 1, to: 2 });
+  });
+
+  it("re-renders when a run starts or ends, not on every frame", () => {
+    const segmentAt = jest.fn((marker: number) => (marker < 3 ? { from: marker, to: marker + 1 } : undefined));
+    showRow(1, [{ key: "next", label: "Next", segmentToPlayWhenAt: segmentAt }]);
+    fireEvent.click(button("Next"));
+    const callsOnceStarted = segmentAt.mock.calls.length;
+    // Half way through the run: many frames, each a new `running`.
+    act(() => jest.advanceTimersByTime(500));
+    expect(segmentAt).toHaveBeenCalledTimes(callsOnceStarted);
   });
 
   it("makes Reset available while the first step runs, and resets", () => {

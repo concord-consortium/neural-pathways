@@ -75,6 +75,7 @@ class StepPlayer<S> {
   constructor(timeline: StepTimeline<S>, progress: StepProgress);
   get marker(): Marker;
   get running(): Run | undefined;
+  get playing(): { button: string; segment: Segment } | undefined;  // @computed, by value
   get scene(): S;                                     // @computed
   play(button: string, segment: Segment): void;
   reset(): void;
@@ -117,6 +118,9 @@ interface StepButton {
 `<StepRow player buttons />`, an `observer`.
 
 - It renders the buttons in order, then Reset, in a `role="group"` labeled "Steps".
+- It reads `player.playing`, not `running`. `running` is replaced on every frame, and `playing` only
+  when a run starts or ends, so the row re-renders once per run, as NPW-32's review made Trace a
+  Case's row do.
 - A press calls `player.play(key, segment)` with that button's segment.
 - The current button has `aria-current="step"`, as NPW-32's review settled for Trace a Case:
   pressing it again replays it, so it isn't a toggle and `aria-pressed` would mislead. Disabled
