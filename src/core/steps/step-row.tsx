@@ -11,10 +11,11 @@ interface StepRowProps {
 
 /**
  * A view's step buttons, then Reset. A button plays the segment it gives for the marker the timeline
- * rests at; one that gives none is disabled, unless it is the one running, which replays its run. A
- * button shows as pressed while its run plays, or, while nothing runs, when it says to at the
- * marker. Reset is unavailable (aria-disabled) at the start with nothing running, and stays in the
- * tab order.
+ * rests at; one that gives none is disabled, unless it is the one running, which replays its run.
+ * The current step is marked with aria-current="step": the button whose run plays, or, while
+ * nothing runs, the one that says to at the marker. Pressing it again replays it, so the buttons
+ * aren't toggles. Reset is unavailable (aria-disabled) at the start with nothing running, and stays
+ * in the tab order.
  */
 export const StepRow = observer(function StepRow({ player, buttons }: StepRowProps) {
   const { marker, running } = player;
@@ -24,10 +25,10 @@ export const StepRow = observer(function StepRow({ player, buttons }: StepRowPro
       {buttons.map(button => {
         const isRunning = running?.button === button.key;
         const segment = button.segmentToPlayWhenAt(marker) ?? (isRunning ? running : undefined);
-        const pressed = isRunning || (!running && !!button.showAsPressedWhenAt?.(marker));
+        const current = isRunning || (!running && !!button.showAsCurrentWhenAt?.(marker));
         return (
           <button key={button.key} type="button" className="step-row__step"
-            aria-pressed={pressed}
+            aria-current={current ? "step" : undefined}
             disabled={!segment}
             onClick={segment && (() => player.play(button.key, segment))}>
             {button.label}

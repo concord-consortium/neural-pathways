@@ -6,13 +6,13 @@ import { TraceACaseState } from "./trace-a-case-state";
 
 /**
  * Step 1 to Step 4. Each jumps to the step before it and plays, as in the prototype, so none is
- * ever disabled. The step the timeline rests at shows as pressed.
+ * ever disabled. The step the timeline rests at is marked as current.
  */
 export const TRACE_BUTTONS: readonly StepButton[] = PHASES.map(phase => ({
   key: `step-${phase}`,
   label: `Step ${phase}`,
   segmentToPlayWhenAt: () => ({ from: phase - 1, to: phase }),
-  showAsPressedWhenAt: (marker: Marker) => marker === phase,
+  showAsCurrentWhenAt: (marker: Marker) => marker === phase,
 }));
 
 /**

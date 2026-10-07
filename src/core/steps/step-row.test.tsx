@@ -29,7 +29,7 @@ const BUTTONS: StepButton[] = [
     key: "one",
     label: "One",
     segmentToPlayWhenAt: () => ({ from: 0, to: 1 }),
-    showAsPressedWhenAt: marker => marker === 1,
+    showAsCurrentWhenAt: marker => marker === 1,
   },
   {
     key: "next",
@@ -76,22 +76,22 @@ describe("StepRow", () => {
     expect(button("Reset")).toBeEnabled();
   });
 
-  it("presses the button that says to at the marker while nothing runs", () => {
+  it("marks as current the button that says to at the marker while nothing runs", () => {
     showRow(1);
-    expect(button("One")).toHaveAttribute("aria-pressed", "true");
-    expect(button("Next")).toHaveAttribute("aria-pressed", "false");
+    expect(button("One")).toHaveAttribute("aria-current", "step");
+    expect(button("Next")).not.toHaveAttribute("aria-current");
     expect(button("Reset")).toHaveAttribute("aria-disabled", "false");
   });
 
-  it("plays a button's run when it is pressed, and presses it while it runs", () => {
+  it("plays a button's run when it is pressed, and marks it as current while it runs", () => {
     const player = showRow(1);
     const play = jest.spyOn(player, "play");
     fireEvent.click(button("Next"));
     expect(play).toHaveBeenCalledWith("next", { from: 1, to: 2 });
-    expect(button("Next")).toHaveAttribute("aria-pressed", "true");
-    expect(button("One")).toHaveAttribute("aria-pressed", "false");
+    expect(button("Next")).toHaveAttribute("aria-current", "step");
+    expect(button("One")).not.toHaveAttribute("aria-current");
     act(() => jest.advanceTimersByTime(1100));
-    expect(button("Next")).toHaveAttribute("aria-pressed", "false");
+    expect(button("Next")).not.toHaveAttribute("aria-current");
     expect(player.marker).toBe(2);
   });
 
@@ -104,7 +104,7 @@ describe("StepRow", () => {
     const player = showRow(0, [jumpAhead]);
     fireEvent.click(button("Jump"));
     expect(button("Jump")).toBeEnabled();
-    expect(button("Jump")).toHaveAttribute("aria-pressed", "true");
+    expect(button("Jump")).toHaveAttribute("aria-current", "step");
     const play = jest.spyOn(player, "play");
     fireEvent.click(button("Jump"));
     expect(play).toHaveBeenCalledWith("jump", expect.objectContaining({ from: 1, to: 2 }));

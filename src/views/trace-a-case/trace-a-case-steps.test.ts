@@ -40,9 +40,9 @@ describe("TRACE_BUTTONS", () => {
     }
   });
 
-  it("show the step the timeline rests at as pressed", () => {
-    expect(TRACE_BUTTONS.map(b => b.showAsPressedWhenAt?.(3))).toEqual([false, false, true, false]);
-    expect(TRACE_BUTTONS.map(b => b.showAsPressedWhenAt?.(0))).toEqual([false, false, false, false]);
+  it("mark the step the timeline rests at as current", () => {
+    expect(TRACE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(3))).toEqual([false, false, true, false]);
+    expect(TRACE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(0))).toEqual([false, false, false, false]);
   });
 });
 

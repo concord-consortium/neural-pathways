@@ -102,13 +102,13 @@ interface StepButton {
    * disabled at this marker.
    */
   segmentToPlayWhenAt(marker: Marker): Segment | undefined;
-  /** Whether it shows as pressed while nothing plays. */
-  showAsPressedWhenAt?(marker: Marker): boolean;
+  /** Whether it is marked as the current step while nothing plays. */
+  showAsCurrentWhenAt?(marker: Marker): boolean;
 }
 ```
 
-- **Pressed:** the button whose run is playing. When nothing runs, the button whose
-  `showAsPressedWhenAt(marker)` is true.
+- **Current:** the button whose run is playing. When nothing runs, the button whose
+  `showAsCurrentWhenAt(marker)` is true.
 - **Disabled:** `segmentToPlayWhenAt(marker)` is undefined. The running button is never disabled:
   when it gives no segment, pressing it replays its run.
 
@@ -118,7 +118,9 @@ interface StepButton {
 
 - It renders the buttons in order, then Reset, in a `role="group"` labeled "Steps".
 - A press calls `player.play(key, segment)` with that button's segment.
-- Pressed buttons have `aria-pressed="true"`. Disabled buttons have `disabled`.
+- The current button has `aria-current="step"`, as NPW-32's review settled for Trace a Case:
+  pressing it again replays it, so it isn't a toggle and `aria-pressed` would mislead. Disabled
+  buttons have `disabled`.
 - Reset is `aria-disabled` at marker 0 with nothing running, and stays in the tab order.
 - The step-row styles move here, to `step-row.scss`, from `trace-a-case.scss`.
 
@@ -127,7 +129,7 @@ interface StepButton {
 Nothing it does changes.
 
 - **Buttons:** `Step 1` to `Step 4`. Step *k* has `segmentToPlayWhenAt: () => ({ from: k − 1, to: k })`
-  and `showAsPressedWhenAt: m => m === k`.
+  and `showAsCurrentWhenAt: m => m === k`.
 - **Progress:** an adapter wraps `TraceACaseState` for the conversation shown. Marker *k* is *k*
   steps done, so the state keeps the marker itself: `stepsByConversation`, `stepsDone` and
   `setStepsDone` are renamed `markerByConversation`, `marker` and `setMarker`. Nothing has shipped. As now, the view
@@ -224,7 +226,7 @@ export class ExtractPathwaysState extends Model({
 | Collect All Conversations | always undefined (NPW-48) |
 | Extract Pathways | always undefined (NPW-48) |
 
-None has `showAsPressedWhenAt`. As in the prototype, a button shows as pressed only while it runs
+None has `showAsCurrentWhenAt`. As in the prototype, a button is marked only while it runs
 (`syncExRow`, lines 10888–10918).
 
 The rules that follow from this:
@@ -413,7 +415,7 @@ as in the prototype, where `setNodeLevel` has no transition.
   - `stop()` cancels the clock, and the player plays again afterward;
   - `reset()` saves 0.
 - **`step-row.test.tsx`** (RTL):
-  - pressed comes from the running button, or from `showAsPressedWhenAt` when idle;
+  - the current button comes from the running button, or from `showAsCurrentWhenAt` when idle;
   - a button is disabled when `segmentToPlayWhenAt(marker)` is undefined, but never while it runs,
     and pressing it then replays its run;
   - Reset is `aria-disabled` at 0 and stays focusable;
@@ -422,7 +424,7 @@ as in the prototype, where `setNodeLevel` has no transition.
 **Trace a Case**
 
 - Its view, timeline and player tests keep passing, which shows the move changed no behavior.
-- Its button list: `segmentToPlayWhenAt` and `showAsPressedWhenAt` for each step.
+- Its button list: `segmentToPlayWhenAt` and `showAsCurrentWhenAt` for each step.
 
 **The diagram**
 

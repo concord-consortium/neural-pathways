@@ -22,7 +22,7 @@
   white-space: nowrap;
   cursor: pointer;
 
-  &:hover:not(:disabled):not([aria-disabled="true"]):not([aria-pressed="true"]) {
+  &:hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="step"]) {
     background: colors.$surface;
   }
 
@@ -32,7 +32,7 @@
   }
 }
 
-.step-row__step[aria-pressed="true"] {
+.step-row__step[aria-current="step"] {
   border-color: colors.$ink;
   background: colors.$ink;
   color: #fff;
