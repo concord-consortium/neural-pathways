@@ -135,6 +135,10 @@ function checkFieldTag(tag: TagToken, field: FieldToken, fields: QueryFields): P
   if (!fields.all.has(field.name)) {
     throw new QueryError(`Unknown field: ${field.name}`);
   }
+  // `pathway_1:` with nothing after it would match nothing, and could be stored as if finished.
+  if (tag.expression.type === "EmptyExpression") {
+    throw new QueryError("Incomplete query");
+  }
   const operator = tag.operator.operator;
   const { expression } = tag;
   const isNumber = expression.type === "LiteralExpression" && typeof expression.value === "number";

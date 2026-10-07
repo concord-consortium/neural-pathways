@@ -178,6 +178,9 @@ describe("run", () => {
   it("reports an incomplete query", () => {
     expect(matches("(model_correct:0")).toEqual({ error: "Incomplete query" });
     expect(matches("yandor AND")).toEqual({ error: "Incomplete query" });
+    expect(matches("pathway_1:")).toEqual({ error: "Incomplete query" });
+    expect(matches("text:")).toEqual({ error: "Incomplete query" });
+    expect(matches("model_correct:0 AND id:")).toEqual({ error: "Incomplete query" });
   });
 
   it("reports where it can't read the query", () => {

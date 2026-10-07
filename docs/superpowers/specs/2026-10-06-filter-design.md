@@ -153,6 +153,7 @@ value as text, and a bad pattern shows the browser's own error.
 | A comparison without a number | `pathway_1:> needs a number` (the field and operator typed) |
 | A word given to a number field (`n`, an attribute, a pathway), such as `model_correct:no` | `model_correct needs a number`. Without it the query matches nothing: the records hold 0 and 1, not the value labels. |
 | liqe's `Found no parsings.`: a trailing `AND`, an unclosed `(`, a lone `NOT` | `Incomplete query` |
+| A field with no value, such as `pathway_1:`. liqe would match nothing, and Enter would store it. | `Incomplete query` |
 | liqe's `SyntaxError` | `Can't read the query at column 16` (liqe's `column`) |
 | Anything else liqe throws | its message |
 
