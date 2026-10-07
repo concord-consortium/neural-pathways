@@ -215,7 +215,8 @@ interface FilterBarProps {
 - Enter calls `onCommit`, and so does focus leaving the bar. Moving focus within the bar, to the
   ⓘ button or into the help, doesn't commit, so checking the help mid-query doesn't store a
   half-typed query. The ⓘ and × buttons don't take focus on mousedown, and the help is focusable.
-  Escape calls `onDiscard`, unless the help is open.
+  Escape calls `onDiscard`, unless the help is open. During an IME composition, Enter and Escape
+  belong to the composition and do neither.
 - The count, `aria-live="polite"`:
   - `800` when every conversation matches;
   - `64 of 800`, or `0 of 800`;

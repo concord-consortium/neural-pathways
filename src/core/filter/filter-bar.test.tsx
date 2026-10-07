@@ -112,6 +112,16 @@ describe("FilterBar", () => {
     expect(props.onDiscard).toHaveBeenCalledTimes(1);
   });
 
+  it("leaves Enter and Escape to an IME composition in progress", () => {
+    const props = showBar();
+    fireEvent.keyDown(input(), { key: "Enter", isComposing: true });
+    fireEvent.keyDown(input(), { key: "Escape", isComposing: true });
+    // Safari ends a composition with keyCode 229 and isComposing false.
+    fireEvent.keyDown(input(), { key: "Enter", keyCode: 229 });
+    expect(props.onCommit).not.toHaveBeenCalled();
+    expect(props.onDiscard).not.toHaveBeenCalled();
+  });
+
   describe("help", () => {
     it("starts closed", () => {
       showBar();
