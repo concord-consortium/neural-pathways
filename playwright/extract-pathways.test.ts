@@ -17,6 +17,24 @@ test("Setup lifts the hidden neurons out of the network, animated", async ({ pag
 
 test("three collections give three deck columns", async ({ page }) => {
   await open(page);
+test("a narrow frame scales the canvas down only so far, then scrolls it sideways", async ({ page }) => {
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?interactive=extract-pathways");
+  const canvas = page.getByRole("img", { name: "The network." });
+  await expect(canvas).toBeVisible();
+  // 0.75 of the 995-wide layout.
+  expect((await canvas.boundingBox())!.width).toBeCloseTo(746, 0);
+  const scrolls = await page.evaluate(() => {
+    const scrollsSideways = (element: Element) => element.scrollWidth > element.clientWidth;
+    return {
+      page: scrollsSideways(document.documentElement),
+      drawing: scrollsSideways(document.querySelector(".extract-drawing")!),
+    };
+  });
+  expect(scrolls).toEqual({ page: false, drawing: true });
+});
+
   await page.getByRole("button", { name: "Setup" }).click();
   const collect = page.getByRole("button", { name: "Collect a Conversation" });
   for (let i = 0; i < 3; i++) {

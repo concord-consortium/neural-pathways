@@ -7,7 +7,7 @@ import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { COLUMN_CAPTIONS, MIN_GAUGE, NetworkDrawing } from "../../core/network-diagram/network-drawing";
 import { useElementSize } from "../../core/use-element-size";
 import {
-  CANVAS_HEIGHT, deckPosition, extractGeometry, LABEL_Y, MIN_CANVAS_WIDTH, NETWORK_WIDTH,
+  CANVAS_HEIGHT, deckPosition, extractGeometry, LABEL_Y, MIN_CANVAS_SCALE, MIN_CANVAS_WIDTH, NETWORK_WIDTH,
 } from "./extract-geometry";
 import { ExtractScene } from "./extract-scene";
 import { Flight, flightDuration, Placed, placeCopy } from "./flight";
@@ -99,7 +99,7 @@ interface ExtractDrawingProps {
 /**
  * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, the
  * deck in the left, drawn as `scene` says. As wide as its container, but never laid out narrower
- * than MIN_CANVAS_WIDTH; a narrower container scales it down.
+ * than MIN_CANVAS_WIDTH; a narrower container scales it down to MIN_CANVAS_SCALE, then scrolls.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({ network, passes, scales, outputLabels, scene }) => {
   const [hostRef, size] = useElementSize<HTMLDivElement>({ width: MIN_CANVAS_WIDTH, height: CANVAS_HEIGHT });
@@ -122,7 +122,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({ network, passes,
   return (
     <div ref={hostRef} className="extract-drawing">
       <svg role="img" aria-label={describeScene(scene, hidden.length)} className="extract-drawing__svg"
-        viewBox={`0 0 ${width} ${height}`}>
+        viewBox={`0 0 ${width} ${height}`} style={{ minWidth: Math.round(MIN_CANVAS_WIDTH * MIN_CANVAS_SCALE) }}>
         <defs>
           <clipPath id={clipId}><circle r={deck.r} /></clipPath>
         </defs>

@@ -6,6 +6,11 @@ export const CANVAS_HEIGHT = 440;
  * narrower panel scales this layout down rather than squeezing the strips.
  */
 export const MIN_CANVAS_WIDTH = 995;
+/**
+ * The canvas scales down no further than this. Below it, the panel scrolls sideways instead, so the
+ * canvas text stays readable and still grows when the page is zoomed.
+ */
+export const MIN_CANVAS_SCALE = 0.75;
 export const NETWORK_WIDTH = 537;
 /** The baseline of "Conversation n" and "Hidden Layer Neurons". */
 export const LABEL_Y = 22;

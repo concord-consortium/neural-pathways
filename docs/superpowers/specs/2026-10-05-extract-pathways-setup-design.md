@@ -272,7 +272,10 @@ The rules that follow from this:
 **Canvas.**
 
 - The SVG is the panel's width and 440 tall, like Trace a Case's diagram.
-- Below 995 wide it lays out at 995 and scales down through its `viewBox`.
+- Below 995 wide it lays out at 995 and scales down through its `viewBox`, but no further than
+  0.75 (746 px wide). A narrower panel scrolls the canvas sideways, so its text stays readable and
+  still grows when the page is zoomed (WCAG 1.4.4). The interactive is meant to be embedded wide
+  enough not to need either.
 - The network is laid out by `layoutNetwork` at 537 × 440 and centered. The strips are what is
   left on each side.
 
@@ -474,6 +477,7 @@ as in the prototype, where `setNodeLevel` has no transition.
 - Switching to Trace a Case and back keeps the stage.
 - Collect a Conversation is unavailable after 10, and keeps the focus.
 - Reset clears everything.
+- A 600 px frame scales the canvas to 0.75 and scrolls it sideways, not the page.
 
 The existing Trace a Case tests still pass.
 
