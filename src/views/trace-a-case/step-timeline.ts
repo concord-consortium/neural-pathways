@@ -15,7 +15,7 @@ export interface RunningStep {
   t: number;
 }
 
-/** Step 1: input node i starts filling at i × FILL_GAP ms. */
+/** Step 1: input unit i starts filling at i × FILL_GAP ms. */
 const FILL_GAP = 55;
 /** How long a gauge takes to ease to its new level. */
 export const FILL_DURATION = 180;

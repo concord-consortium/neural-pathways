@@ -5,18 +5,13 @@ import { Model, model, modelAction, tProp, types } from "mobx-keystone";
 const stepsDoneType = types.refinement(types.integer, n => n >= 0 && n <= 4, "steps done, 0 to 4");
 
 /**
- * Trace a Case's own state. The current conversation is in SharedState. Animate and speed arrive
- * with their controls; see docs/view-state.md. Adding a field with a default is not a new version.
- *
- * The `$modelType` is stored in saved student data: never rename it.
+ * Trace a Case's own state. The current conversation is in SharedState. See docs/view-state.md for
+ * the fields still to come and the rules on changing the saved form.
  */
 @model("npw/TraceACaseState")
 export class TraceACaseState extends Model({
   version: tProp(types.literal(1), 1),
-  /**
-   * Steps done for each conversation, by conversation id. A step still playing isn't counted, and
-   * a conversation with none done isn't stored.
-   */
+  /** Steps done for each conversation, by conversation id. A conversation with none done isn't stored. */
   stepsByConversation: tProp(types.record(stepsDoneType), () => ({})),
 }) {
   stepsDone(conversationId: string): number {
