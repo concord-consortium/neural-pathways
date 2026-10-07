@@ -314,6 +314,14 @@ describe("TraceACase", () => {
       expect(screen.getByText(wordsOf(2))).toBeInTheDocument();
     });
 
+    it("draws the network for the matching conversation, not the one at its place in the list", async () => {
+      setReducedMotion();
+      showView(new SharedState({ query: "n:2" }));
+      await screen.findByText("1 / 1");
+      fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
+      expect(screen.getByRole("img", { name: /predicts Approach/ })).toBeInTheDocument();
+    });
+
     it("stores a draft before Next moves, when focus leaves the box", async () => {
       const shared = showView();
       await screen.findByText("1 / 3");
