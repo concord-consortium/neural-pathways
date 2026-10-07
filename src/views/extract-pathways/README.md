@@ -16,9 +16,7 @@ activations of conversations run through it, one column of the deck each.
   order, jumping Setup to its end if it isn't done.
 - `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `extract-timeline.ts`: what the
   view draws at any moment, as pure functions of the marker and the time into a segment, at the
-  prototype's "Med" speed. The first conversation replays the forward pass's phases, which Trace a
-  Case plays as its steps, faster; the next two drain and refill the network a layer at a time;
-  the rest refill it quickly.
+  prototype's "Med" speed.
 - `extract-geometry.ts`, `flight.ts`, `extract-drawing.tsx`: the canvas. The network sits in the
   middle, the lifted column in the right strip, the deck in the left. Copies of the hidden neurons
   fly on curved paths, landing in order and settling.

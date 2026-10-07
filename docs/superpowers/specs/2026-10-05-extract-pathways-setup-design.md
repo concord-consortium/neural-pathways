@@ -32,7 +32,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 | Button rules | Each button is a function from the marker the timeline rests at to the segment it plays, or to nothing when it is unavailable. Core derives unavailable and current from that. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
 | Progress | One marker: a point on the view's timeline where the scene rests and progress is saved. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
 | Markers and segments | The timeline's resting points are markers, and the animation between two is a segment, as in Lottie (`playSegments`) and After Effects. "Step" stays with the buttons and the row. | A button isn't a step of the timeline: Collect a Conversation plays a different segment each press, and Collect All will play across many. Trace a Case's Step *k* happens to play the segment to marker *k*. "Keyframe" would suggest in-betweens filled in for us, and `network-drawing.tsx` already uses it for the pill's pop. |
-| Press rules in this story | Trace a Case's: any enabled button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but disabled. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
+| Press rules in this story | Trace a Case's: any available button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but unavailable. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
 | `extracted` | Renamed `setupDone`. | It means "Setup has been done". "Extract Pathways" is a later step, so the old name would mislead. Nothing has shipped. |
 | Collect a Conversation's network animation | All three of the prototype's versions: a replay of Trace a Case's steps for the first conversation, a swap for the next two, and a quick swap after that. | The replay ties the deck back to Trace a Case. The slower swaps make each new conversation visible before they turn into shorthand. |
 | The end of a collection | Everything but the hidden neurons, and the lifted column, stay dimmed once the column lands, until the next collection starts. Coming back to the view shows the same. | As in the prototype (`collectOne` and `flyColumn`, lines 15161–15215). The prototype rebuilds a returned-to screen at full strength (`restoreRun`, lines 14746–14778), but a pure `sceneAt(marker)` must match the end of the run that reached it, so here it comes back as it was left. |
@@ -227,7 +227,7 @@ export class ExtractPathwaysState extends Model({
   would mean different things for different datasets.
 - A saved state with `collected > 0` but `setupDone` false reads as 0.
 
-### The buttons: `EXTRACT_BUTTONS`
+### The buttons: `extractButtons(limit)`
 
 | Button | `segmentToPlayWhenAt(marker)` |
 |---|---|

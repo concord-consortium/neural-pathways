@@ -6,10 +6,8 @@ const countType = types.refinement(types.integer, n => n >= 0, "non-negative int
 
 /**
  * Extract Pathways' own state: the extraction stages completed so far. A stage in progress is not
- * kept. Animate, speed and the later stages add their fields as they are built; see
- * docs/view-state.md. Adding a field with a default is not a new version.
- *
- * The `$modelType` is stored in saved student data: never rename it.
+ * kept. See docs/view-state.md for the fields still to come and the rules on changing the saved
+ * form.
  */
 @model("npw/ExtractPathwaysState")
 export class ExtractPathwaysState extends Model({

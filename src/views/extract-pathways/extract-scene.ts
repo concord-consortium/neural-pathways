@@ -4,13 +4,14 @@ import { flightDuration } from "./flight";
 
 /**
  * How strongly the hidden neurons are spotlit while copies of them fly out of the network:
- * everything else fades to half strength, and the lifted column's copies with it.
+ * everything else fades to half strength. During a collection, the lifted column's copies fade with
+ * it.
  */
 export const SPOTLIGHT = 0.5;
 
 /** What Extract Pathways draws at one moment. The timelines build these; ExtractDrawing draws them. */
 export interface ExtractScene {
-  /** The network: its fills, edges, answer and dim. */
+  /** The network: its fills, edges, answer and spotlight. */
   network: Scene;
   /** Which conversation the network shows, 1-based; undefined before any is collected. */
   shown: number | undefined;

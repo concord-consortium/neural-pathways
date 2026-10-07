@@ -56,8 +56,6 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
       <section className="extract-pathways__network" aria-labelledby={panelHeadId}>
         <h2 id={panelHeadId} className="extract-pathways__network-head">{PANEL_TITLE}</h2>
         <div className="extract-pathways__drawing">
-          {/* The scene is read only in this Observer and in StepRow, so a step playing re-renders
-              them and not the whole view. */}
           <Observer>
             {() => (
               <ExtractDrawing network={toyNetwork} passes={passes} scales={scales}
