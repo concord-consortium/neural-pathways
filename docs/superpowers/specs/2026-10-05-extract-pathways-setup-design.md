@@ -54,10 +54,13 @@ interface Segment {
   from: Marker;
   to: Marker;
 }
-/** One frame of a run, the playing of a segment. Replaced on every frame. */
-interface Frame extends Segment {
-  /** The key of the button that started the run. */
+/** One play of a segment, started by a button. */
+interface Run extends Segment {
+  /** The key of the button that started it. */
   button: string;
+}
+/** A run at one moment. Replaced on every frame. */
+interface Frame extends Run {
   /** Milliseconds since the run started. */
   t: number;
 }
@@ -75,7 +78,7 @@ class StepPlayer<S> {
   constructor(timeline: StepTimeline<S>, progress: StepProgress);
   get marker(): Marker;
   get currentFrame(): Frame | undefined;
-  get playing(): { button: string; segment: Segment } | undefined;  // @computed, by value
+  get currentRun(): Run | undefined;                  // @computed, by value
   get scene(): S;                                     // @computed
   play(button: string, segment: Segment): void;
   reset(): void;
@@ -118,8 +121,8 @@ interface StepButton {
 `<StepRow player buttons />`, an `observer`.
 
 - It renders the buttons in order, then Reset, in a `role="group"` labeled "Steps".
-- It reads `player.playing`, not `currentFrame`. `currentFrame` is replaced on every frame, and
-  `playing` only when a run starts or ends, so the row re-renders once per run, as NPW-32's review
+- It reads `player.currentRun`, not `currentFrame`. `currentFrame` is replaced on every frame, and
+  `currentRun` only when a run starts or ends, so the row re-renders once per run, as NPW-32's review
   made Trace a Case's row do.
 - A press calls `player.play(key, segment)` with that button's segment.
 - The current button has `aria-current="step"`, as NPW-32's review settled for Trace a Case:

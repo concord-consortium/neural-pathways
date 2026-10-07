@@ -108,7 +108,7 @@ describe("StepRow", () => {
     expect(button("Jump")).toHaveAttribute("aria-current", "step");
     const play = jest.spyOn(player, "play");
     fireEvent.click(button("Jump"));
-    expect(play).toHaveBeenCalledWith("jump", { from: 1, to: 2 });
+    expect(play).toHaveBeenCalledWith("jump", expect.objectContaining({ from: 1, to: 2 }));
   });
 
   it("re-renders when a run starts or ends, not on every frame", () => {

@@ -9,9 +9,14 @@ export interface Segment {
   to: Marker;
 }
 
-/** One frame of a run: the button that started it, its segment, and the time into it. */
-export interface Frame extends Segment {
+/** One play of a segment, started by a button. */
+export interface Run extends Segment {
+  /** The key of the button that started it. */
   button: string;
+}
+
+/** A run at one moment: the run, and the time into it. */
+export interface Frame extends Run {
   /** Milliseconds since the run started. */
   t: number;
 }
@@ -64,14 +69,13 @@ export class StepPlayer<S> {
   }
 
   /**
-   * The button and segment of the run playing, without its time. Compared by value, so it changes
-   * when a run starts or ends, not on every frame like `currentFrame`. The step row reads this, so
-   * it re-renders once per run.
+   * The run playing, without its time. Compared by value, so it changes when a run starts or ends,
+   * not on every frame like `currentFrame`. The step row reads this, so it re-renders once per run.
    */
   @computedStruct
-  get playing(): { button: string; segment: Segment } | undefined {
+  get currentRun(): Run | undefined {
     const frame = this.frame;
-    return frame && { button: frame.button, segment: { from: frame.from, to: frame.to } };
+    return frame && { button: frame.button, from: frame.from, to: frame.to };
   }
 
   @computed

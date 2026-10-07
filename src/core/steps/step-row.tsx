@@ -18,14 +18,14 @@ interface StepRowProps {
  * in the tab order.
  */
 export const StepRow = observer(function StepRow({ player, buttons }: StepRowProps) {
-  const { marker, playing } = player;
-  const nothingShown = marker === 0 && !playing;
+  const { marker, currentRun } = player;
+  const nothingShown = marker === 0 && !currentRun;
   return (
     <div className="step-row" role="group" aria-label="Steps">
       {buttons.map(button => {
-        const isRunning = playing?.button === button.key;
-        const segment = button.segmentToPlayWhenAt(marker) ?? (isRunning ? playing.segment : undefined);
-        const current = isRunning || (!playing && !!button.showAsCurrentWhenAt?.(marker));
+        const isRunning = currentRun?.button === button.key;
+        const segment = button.segmentToPlayWhenAt(marker) ?? (isRunning ? currentRun : undefined);
+        const current = isRunning || (!currentRun && !!button.showAsCurrentWhenAt?.(marker));
         return (
           <button key={button.key} type="button" className="step-row__step"
             aria-current={current ? "step" : undefined}
