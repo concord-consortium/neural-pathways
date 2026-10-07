@@ -8,11 +8,10 @@ through only the matches. Every view except Extract Pathways will use the filter
 it to Trace a Case only; the other views add it in their own stories.
 
 Jira: [NPW-35](https://concord-consortium.atlassian.net/browse/NPW-35). It is blocked by NPW-29
-(alien3 data in core) and NPW-30 (state framework). It is built on the end of the NPW-32 stack
-(`NPW-32-3-steps`), not NPW-33: the filter uses nothing NPW-33 adds, so it can be demonstrated in
-Trace a Case without waiting for Extract Pathways. Rebasing after NPW-33 merges will conflict in
-`trace-a-case.tsx` (imports and the player `useMemo`), `trace-a-case.scss`, the Trace a Case
-README and `docs/view-state.md`. These are text conflicts, not design ones.
+(alien3 data in core) and NPW-30 (state framework). It is based on `main` and uses nothing NPW-33
+adds, so it can be demonstrated in Trace a Case without waiting for Extract Pathways. Whichever of
+the two merges second will have text conflicts in `trace-a-case.tsx`, `trace-a-case.scss`, the
+Trace a Case README and `docs/view-state.md`, not design ones.
 
 The text box is for advanced users. A graphical way to build a query, the Filter Options popover
 (NPW-42), is what most students are expected to use. That is why the operators stay uppercase-only
@@ -37,8 +36,8 @@ Sources:
 | Correcting the conversation | `setQueryAndCorrect(query, ids)`: the view runs the filter first, then one action stores the query and corrects the conversation. | `docs/undo.md` option 1, the "filter run first" variant. Filtering 800 records is synchronous, so the models don't need the engine through a keystone context. |
 | An unreadable query | The count shows the error. The list falls back to the stored query's matches. An unreadable draft is never stored. | A half-typed query doesn't throw the student back to 800, and nothing unreadable reaches saved state from the bar. |
 | Operators | Uppercase only: `AND`, `OR`, `NOT`, as in Lucene and the explorer. Lowercase are search words, with no special handling. | The text box is for advanced users; the help says so. Keeping lowercase as plain words keeps the code simple, though a lowercase `or` matches inside most notes and narrows the results. |
-| The observer's notes | Searchable: an `observation` field, and bare words search both the alien text and the notes. `text:` or `observation:` searches only one. | Added after the final review. Searching them can lead to the planted bias, which is acceptable: reading the notes is how students are meant to find it. |
-| Case | Ignored everywhere, quoted or not: the records' text and notes, and every query value, are lowercased. | liqe matches a quoted value case-sensitively, and the notes start sentences with capitals. |
+| The observer's notes | Searchable: an `observation` field, and bare words search both the alien text and the notes. `text:` or `observation:` searches only one. | Searching them can lead to the planted bias, which is acceptable: reading the notes is how students are meant to find it. |
+| Case | Ignored, quoted or not: the records' text and notes, and every query value, are lowercased. A `/regex/` is the exception: it is matched as written. | liqe matches a quoted value case-sensitively, and the notes start sentences with capitals. |
 | Substring matching | Kept, for the notes too: `water` also matches "underwater". | Predictable, and consistent with the rest of the filter. Whole-word matching can come later. |
 | Filterable attributes | The ones not marked `hidden` in the data. The four hidden ones (`resource_stressed`, `gestures_repeated`, `young_present`, `carrying_burden`) are unknown fields. | The ticket's open question. The prototype hid only `resource_stressed`, but no other view shows the other three before they are commissioned. The engine takes the list as an input, so NPW-41 only adds the commissioned ones. |
 | No matches | The bar stays and shows "0 of 800". The card's cell says "No conversations match the filter." The steps row and the network are left out. The stored conversation is unchanged. | Loosening the query brings back the same conversation, at the same step. |
@@ -55,12 +54,12 @@ Checked on 2026-10-06 with throwaway scripts.
   are ANDed.
 - A bare word matches every string field. `wait` matched a record whose `target_label` was `wait`.
 - `bogus:1` parses and matches nothing.
-- `field:number` matches the number as text: `n:1` matches 1, 10–19, 21 and so on. Two records
-  couldn't show this; it was found on the real data after the review.
+- `field:number` matches the number as text: `n:1` matches 1, 10–19, 21 and so on. A fixture needs
+  more than nine records to show this.
 - `not yandor` and `yandor or sooma` treat the lowercase word as a search word. A bare word is a
-  substring match, so on the real data this narrows rather than failing: `or` is inside 700 of the
-  800 conversations, and `yandor or sooma` gives 210, the same as `yandor sooma` (`yandor OR sooma`
-  gives 560). Found in the final review, 2026-10-06. Kept as it is, for simplicity (see Decisions).
+  substring match, so on the real data this narrows rather than failing: `or` is inside the text or
+  notes of 795 of the 800 conversations, and `yandor or sooma` gives 210, the same as
+  `yandor sooma` (`yandor OR sooma` gives 560). Kept as it is, for simplicity (see Decisions).
 - `(model_correct:0`, `a AND`, `NOT` and `AND` throw `Error: Found no parsings.`
 - `model_correct:0)` and `OR yandor` throw a `SyntaxError` with `offset`, `line` and `column`.
 - `pathway_1:>abc` parses, then `filter` throws `TypeError: Expected a number.`
@@ -115,7 +114,8 @@ One flat record per conversation, built once when the filter is created:
 | each attribute key | `dataset.getAttributeValue(item, key)` |
 | `pathway_1` … `pathway_N` | `item.pathway_scores[fit][k - 1]`, where `fit` is the index's one fit (`alien-fa-3` in alien3) and `N` is its `n_pathways`. Numbered from 1, as in the lesson. |
 
-A `null` value is left out of the record, so it never matches, as in the explorer.
+A `null` value is left out of the record, as in the explorer: `field:value` never matches it, so
+`NOT field:value` always does.
 
 `fields` is `n`, `id`, `text`, `observation`, `target_label`, then the attribute keys in the order of
 `attributes`, then `pathway_1` to `pathway_N`.
@@ -138,11 +138,12 @@ key.
    - A comparison (`:>`, `:<`, `:>=`, `:<=`) whose value isn't a number is an error.
 4. Filter the records with liqe's `filter`, and return the matching ids in dataset order.
 
-Matching is liqe's. On a string field, `field:value` is a substring match, and case never matters. On a
-number field, `field:number` is rewritten as the range `[number TO number]`, so it is equality:
-liqe on its own matches a number as text, and `n:1` gave 233 conversations (every `n` with a 1 in
-it). Quotes, `*` wildcards, `/regex/` and `[a TO b]` ranges also work. The help
-doesn't list them.
+Matching is liqe's. On a string field, `field:value` is a substring match, and case doesn't matter.
+On a number field, `field:number` is rewritten as the range `[number TO number]`, so it is
+equality: liqe on its own matches a number as text, and `n:1` gave 233 conversations (every `n`
+with a 1 in it). Quotes, `*` wildcards, `/regex/` and `[a TO b]` ranges also work. The help
+doesn't list them. A `/regex/` isn't rewritten: it is case-sensitive, it matches a number field's
+value as text, and a bad pattern shows the browser's own error.
 
 ### Error messages
 
@@ -232,7 +233,7 @@ The ticket's "static help pane", as a popover:
   focus is, or a mousedown outside it. While it is open, the first Escape only closes it. Escape and
   × return focus to the ⓘ button, unless focus is in the box, where it stays.
 - **Fields:** a table built from `fields`:
-  - `n`: Position among all 800.
+  - `n`: Position among all the conversations, from 1.
   - `id`: The conversation's id.
   - `text`: The conversation's alien words. A bare word searches these and the observation.
   - `observation`: The observer's notes.
@@ -360,7 +361,7 @@ Called from an `observer` component. It reads `shared.query` and `shared.queryDr
   - add to "Deliberately not kept": a draft query is kept only for the life of the page.
 - **`docs/undo.md`:**
   - option 1 is built, as the "filter run first" variant, with synchronous filtering;
-  - item 4 is settled: a typed query is set on Enter or blur;
+  - item 4 is settled: a typed query is stored on Enter or blur;
   - new: the draft is outside undo, so the undo story decides what undoing a query does to a
     pending draft (clearing it is probably right).
 - **`src/core/README.md`:** a `filter/` entry.
