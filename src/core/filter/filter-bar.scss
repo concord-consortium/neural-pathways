@@ -17,8 +17,9 @@
   }
 }
 
-.filter-bar--error,
-.filter-bar--error:focus-within {
+// While the bar has focus, its focus border wins, as in the prototype: the box has no outline of
+// its own, so the border is the only sign of focus. The count still shows the error.
+.filter-bar--error {
   border-color: colors.$error;
 }
 
