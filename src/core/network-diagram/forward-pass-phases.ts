@@ -5,8 +5,7 @@ import { emptyScene, Scene } from "./scene";
  * The four phases of one conversation's forward pass through the network, as a function of time,
  * at the prototype's "Med" speed (neural-net-maker index.html: fillInputs, runFan, revealAnswer).
  * Phase p fills column p − 1; phases 2–4 first play the fan of edges into it, one source unit at a
- * time. Trace a Case plays each phase as one of its steps, and Extract Pathways will replay all
- * four within one segment for its first conversation.
+ * time. A view can play each phase as a segment of its own, or several within one segment.
  */
 export const PHASES = [1, 2, 3, 4] as const;
 export type Phase = (typeof PHASES)[number];

@@ -42,7 +42,7 @@ function prefersReducedMotion(): boolean {
 /**
  * Plays a view's segments on a requestAnimationFrame clock and keeps its marker in `progress`. A
  * run saves the marker it starts from when it starts, and the one it ends at when it ends, so a
- * run still playing is never saved. Pressing anything during a run drops it.
+ * run still playing is never saved. Playing, resetting or stopping during a run drops it.
  *
  * Only the run playing is held here, and the clock runs only while it plays. So `stop()` is all
  * the cleanup there is, and the player can play again after it. The constructor must not start

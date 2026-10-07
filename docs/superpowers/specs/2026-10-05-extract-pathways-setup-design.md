@@ -12,7 +12,7 @@ Along the way, Trace a Case's step player and step row move to `src/core/steps/`
 Pathways, and later Prediction Chain, share one step system.
 
 Jira: [NPW-33](https://concord-consortium.atlassian.net/browse/NPW-33). It builds on NPW-32
-(Trace a Case's network diagram and steps), and this branch is stacked on `NPW-32-3-steps`. It
+(Trace a Case's network diagram and steps), now on `main`. It
 blocks NPW-48 (Collect All Conversations and Extract Pathways), which blocks NPW-24 (Animate and
 speed, About and the activation legend, completing the view).
 
@@ -29,7 +29,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 |---|---|---|
 | Animate, speed and About | Not in this story. The steps always animate, at the prototype's Med timings. | NPW-38 and NPW-44 aren't built yet, and NPW-48 comes before them. NPW-24 adds both, and the activation legend, to the view. |
 | The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 promoted choreography to core once a second view needed it, and this is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
-| Button rules | Each button is a function from the marker the timeline rests at to the segment it plays, or to nothing when it is disabled. Core derives disabled and pressed from that. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
+| Button rules | Each button is a function from the marker the timeline rests at to the segment it plays, or to nothing when it is disabled. Core derives disabled and current from that. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
 | Progress | One marker: a point on the view's timeline where the scene rests and progress is saved. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
 | Markers and segments | The timeline's resting points are markers, and the animation between two is a segment, as in Lottie (`playSegments`) and After Effects. "Step" stays with the buttons and the row. | A button isn't a step of the timeline: Collect a Conversation plays a different segment each press, and Collect All will play across many. Trace a Case's Step *k* happens to play the segment to marker *k*. "Keyframe" would suggest in-betweens filled in for us, and `network-drawing.tsx` already uses it for the pill's pop. |
 | Press rules in this story | Trace a Case's: any enabled button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but disabled. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
@@ -446,7 +446,7 @@ as in the prototype, where `setNodeLevel` has no transition.
   rejected.
 - **Progress adapter:** the marker to `setupDone` and `collected` and back, including a saved state
   with `collected > 0` but `setupDone` false.
-- **Buttons:** `run` for each button at 0, 1, 5 and 11. Collect a Conversation is disabled at 11,
+- **Buttons:** `segmentToPlayWhenAt` for each button at 0, 1, 5 and 11. Collect a Conversation is disabled at 11,
   and the last two are always disabled.
 - **`flight.ts`:** the start and end positions and radius, the overshoot point, and landing order
   top to bottom.
@@ -488,8 +488,7 @@ The existing Trace a Case tests still pass.
 
 ## PRs
 
-Two PRs, stacked on `NPW-32-3-steps`, so the shared system is reviewed before the view that uses
-it. Moves go in commits of their own, apart from edits, so git shows them as renames.
+Two stacked PRs, so the shared system is reviewed before the view that uses it. Moves go in commits of their own, apart from edits, so git shows them as renames.
 
 1. **The shared step system and the diagram split** (about 20 files): `src/core/steps/`, Trace a
    Case moved onto it, `forward-pass-phases.ts`, `Scene.hiddenLayerSpotlight` and `NetworkDrawing`. Nothing

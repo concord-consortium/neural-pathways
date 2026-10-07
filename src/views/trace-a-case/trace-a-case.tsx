@@ -85,9 +85,6 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   );
 });
 
-// The player is read only in StepRow and this observer, so a step playing re-renders them and not
-// the card.
-
 interface PlayerDiagramProps {
   player: StepPlayer<Scene>;
   pass: ForwardPass;

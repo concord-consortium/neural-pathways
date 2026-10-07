@@ -18,8 +18,7 @@ export interface Scene {
   /**
    * How strongly the hidden layers' nodes (every column but the first and last) are picked out,
    * 0–1. Everything else fades to an opacity of 1 − this; the hidden layers' nodes stay at full
-   * strength. 0 draws the whole network normally. Extract Pathways will spotlight the hidden
-   * neurons as it lifts them out.
+   * strength. 0 draws the whole network normally.
    */
   hiddenLayerSpotlight: number;
 }

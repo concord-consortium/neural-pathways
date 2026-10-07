@@ -10,9 +10,6 @@ export interface StepButton {
    * disabled at this marker.
    */
   segmentToPlayWhenAt(marker: Marker): Segment | undefined;
-  /**
-   * Whether it is marked as the current step while nothing plays. Trace a Case marks the step it
-   * rests at.
-   */
+  /** Whether it is marked as the current step while nothing plays. */
   showAsCurrentWhenAt?(marker: Marker): boolean;
 }
