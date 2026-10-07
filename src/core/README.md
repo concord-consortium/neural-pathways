@@ -43,8 +43,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   it between views.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
-  words. Items are plain data, so these are functions that take the text.
-- `colors.ts`, `colors.scss`, `panel.scss`: the lesson's colors and the panel look.
+  words (`conversationWords`). Items are plain data, so this is a function that takes the text, not
+  a getter on a model.
+- `colors.ts`, `colors.scss`, `panel.scss`, `button.scss`: the lesson's colors, the panel look, and
+  how an unavailable button looks.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and
 files that use this code (the explorer's search, Codings dialog, regression panel and item panel,

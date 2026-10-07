@@ -6,8 +6,8 @@ This is the first demo-able version of Trace a Case. It covers the right-hand si
 and its steps, plus a minimal conversation card to step through the 800 conversations. NPW-23
 completes the view.
 
-Jira: [NPW-32](https://concord-consortium.atlassian.net/browse/NPW-32). It is blocked by NPW-29
-(alien3 data in core) and NPW-30 (state framework), and this branch merges both. It blocks NPW-33
+Jira: [NPW-32](https://concord-consortium.atlassian.net/browse/NPW-32). It builds on NPW-29
+(alien3 data in core) and NPW-30 (state framework). It blocks NPW-33
 (Extract Pathways), NPW-34 (the real alien3 network), NPW-36 (the full conversation card) and
 NPW-38 (the Animate and speed control).
 
@@ -15,7 +15,8 @@ The source is the prototype's `buildNetScreen` in `index.html` on the `neural-ne
 the demos repo ([live](https://models-resources.concord.org/demos/branch/neural-net-maker/), Trace
 a Case). Line numbers below refer to that file.
 
-The work is built on one branch. How it splits into PRs is decided once the code exists.
+The work is split into three stacked PRs: the conversation card, then the network diagram, then
+the steps with the view's own state.
 
 ## Decisions
 
@@ -26,7 +27,7 @@ The work is built on one branch. How it splits into PRs is decided once the code
 | Step 1 | The input gauges fill one by one, top to bottom, 55 ms apart (the prototype's `fillInputs`, line 15350). | The word flights are out of scope, and this keeps Step 1 visibly a step. |
 | Colors | Only the two sign colors and the output-pill tokens. The five-step `FILL_POS`/`FILL_NEG` ramp and `level()` are deferred. | Trace a Case draws only the darkest step of each ramp (`paintSignal`, `setNodeLevel`); `actColour` is vestigial here. Comments on NPW-37, NPW-39, NPW-26 and NPW-40 record where the ramp is needed. |
 | Where the vocabulary lives | With the network weights in `src/core/network/`. | It exists only in `scripts/`, which core may not import. The weights are meaningless without its order. |
-| Step progress | Kept for each conversation in the view's own state, `npw/TraceACaseState`, as steps done by conversation id. A step still playing isn't kept. Animate and speed join the model with NPW-38. | Returning to a conversation, or to Trace a Case from another view, keeps the steps it reached. The model was already designed in NPW-30, and this is the first view with its own state, so it sets the pattern for the others. Brought forward from NPW-23. |
+| Step progress | Kept for each conversation in the view's own state, `npw/TraceACaseState`, as steps done by conversation id. A step still playing isn't kept. Animate and speed join the model with NPW-38. | Returning to a conversation, or to Trace a Case from another view, keeps the steps it reached. The model was already designed in the view-state target (draft PR #29), and this is the first view with its own state, so it sets the pattern for the others. It had been planned for the story that completes the view (NPW-23). |
 | Conversation text | One paragraph of words, as in the prototype. The line breaks between turns are dropped. | NPW-36 owns how the full card looks. |
 | Loading the index | A core hook backed by a module-level promise cache. | NPW-29 left "a hook or shared cache" to the first view that needs one. Switching views must not refetch. |
 | Top-level page in CI | Not added. The release rehearsal stays manual. | The check would add a production build to every CI run, and this kind of breakage is rare. |
@@ -193,10 +194,12 @@ size, so they are memoized. A frame re-renders only the edges, gauges, pills and
 
 ### Colors: `src/core/colors.ts` and `src/core/colors.scss`
 
-- **The sign colors:** `POSITIVE = "#A84A2C"` and `NEGATIVE = "#1F4E8F"`.
-- **The class tokens:** approach `#D9722E`/`#FAE6D6` and wait `#3A72BE`/`#DCE7F7`.
-- **The neutrals the diagram uses:** wire, node outline, and ink.
-- The SCSS file mirrors them as variables for stylesheets.
+- **`colors.ts`** has what the code needs: the sign colors, `POSITIVE_COLOR = "#A84A2C"` and
+  `NEGATIVE_COLOR = "#1F4E8F"`, and `signColor(value)`.
+- **`colors.scss`** repeats the sign colors for stylesheets, and has the rest:
+  - the class tokens, approach `#D9722E`/`#FAE6D6` and wait `#3A72BE`/`#DCE7F7`, with darker
+    text shades;
+  - the neutrals: ink, rules, surfaces, and the diagram's wire and node outline.
 
 ## The steps: `src/views/trace-a-case/`
 
@@ -268,7 +271,9 @@ cell is left empty until then, so the steps still line up over the network.
 
 ```ts
 function useDatasetIndex(dataset: DatasetDefinition, options?: { onLoaded?: (index: S3Index) => void }):
-  { status: "loading" } | { status: "error"; error: Error } | { status: "ready"; index: S3Index };
+  | { status: "loading" }
+  | { status: "error"; error: Error; failed: "load" | "onLoaded" }
+  | { status: "ready"; index: S3Index };
 ```
 
 - **The cache:** a module-level map from dataset id to `{ promise, index? }`, so there is one
@@ -278,7 +283,8 @@ function useDatasetIndex(dataset: DatasetDefinition, options?: { onLoaded?: (ind
 - **Failures:** a failed fetch is removed from the map, so a later mount can retry.
 - **`onLoaded`** runs from the promise's `then` on every mount, whether or not the index was
   cached. It runs only while the component is still mounted, never during a render and never from
-  a `useEffect` reacting to the ready state.
+  a `useEffect` reacting to the ready state. If it throws, the state is an error with
+  `failed: "onLoaded"`, so the view can say the conversations loaded but couldn't be shown.
 - **Tests:** the module exports a test-only way to clear the cache.
 
 ### Shared state
@@ -289,8 +295,6 @@ These come over from `NPW-30-view-state` (draft PR #29):
   - `conversationId: tProp(types.maybe(types.string))`;
   - `setConversationId(id)`;
   - `ensureValidConversation(ids)`.
-
-  Adding a field with a default is not a new version.
 - **`src/core/state/conversation.ts`:** `validConversationId(currentId, ids)`, with its four tests.
 - **The shared-state tests** for setting and correcting the conversation.
 - **Fixtures:**
@@ -298,7 +302,8 @@ These come over from `NPW-30-view-state` (draft PR #29):
   - The old `{ "version": 1 }` shape stays as a second fixture, to show that older saves still
     load.
 
-`query` and `commissioned` stay on the target branch until NPW-35 and NPW-27.
+`query` and `commissioned` stay on the target branch until the filter (NPW-35) and Investigate
+Unknown Pathway (NPW-27) need them.
 
 ### `TraceACaseState`
 
@@ -312,8 +317,7 @@ fixture. It comes over from the draft in PR #29 with only the steps:
   A conversation set back to 0 is removed, so the saved form lists only conversations stepped;
 - `stepsDone(id)`, which is 0 for a conversation not stepped yet, and `setStepsDone(id, n)`.
 
-The draft's `animate` and `speed` come with NPW-38. Adding them with defaults is not a new
-version. A fixture, `trace-a-case-state.v1.json`, has two conversations' steps.
+The draft's `animate` and `speed` come with the Animate and speed control (NPW-38). A fixture, `trace-a-case-state.v1.json`, has two conversations' steps.
 
 ### Keeping the conversation valid
 
@@ -423,18 +427,23 @@ It is an `observer`.
   - the loading, error and ready states;
   - a later mount starts ready;
   - `onLoaded` runs on each mount, and not after unmount;
-  - a retry after an error.
-- **`conversation.test.ts` and `shared-state.test.ts`,** as brought over.
+  - the latest `onLoaded` runs, and runs again for a new dataset;
+  - a retry after an error, and a failure from a dataset no longer shown is ignored.
+- **`conversation.test.ts` and `shared-state.test.ts`,** as brought over, plus a check that
+  correcting a valid conversation records no change.
 - **`trace-a-case-state.test.ts`:** the fixture loads and saves back unchanged; another version
   and a step count outside 0 to 4 are rejected; setting a conversation's steps leaves the others
   alone, and setting them to 0 removes the conversation.
 - **`conversation-card.test.tsx`:** the count, prev/next callbacks, and `aria-disabled` at both
-  ends.
+  ends, in the middle, and with a single conversation.
 
 **The view and the app**
 
 - **`trace-a-case.test.tsx`** (mocked loader):
-  - loading, then "1 / 800";
+  - loading, then "1 / 3" (three mocked conversations);
+  - coming back with the index already loaded opens straight on the saved conversation;
+  - an empty list leaves the saved conversation alone;
+  - a throwing correction says the conversations couldn't be shown;
   - next moves the shared `conversationId`;
   - a saved `conversationId` opens on that conversation;
   - an unknown id falls back to the first;
@@ -449,7 +458,6 @@ It is an `observer`.
 - **Answer:** Step 4 ends with one output pill revealed.
 - **State across views** (moved from NPW-31): go to conversation 3, switch to another view, come
   back, and it still shows "3 / 800". Steps done on two conversations are still there too.
-- **`playwright/app.test.ts`:** update its Trace a Case heading assertions to match the view.
 
 ### Manual, once, before the PR
 

@@ -97,8 +97,9 @@ the stages it has completed, but not one in progress.
 - **Keep the conversation valid.** When a filtered list stops including the current
   conversation, the first one in the list is written back, so the next view opens on the same
   case. Pane 2 of Investigate Unknown Pathway falls back to the first conversation pane 1 isn't
-  showing, so the panes open on different cases. An empty list leaves the id alone. The draft
-  implements this as `ensureValidConversation` and `ensureValidPane2Conversation`.
+  showing, so the panes open on different cases. An empty list leaves the id alone.
+  `SharedState.ensureValidConversation` does this for the current conversation. The draft adds
+  `ensureValidPane2Conversation` for pane 2.
 - **`$modelType` names are permanent.** They are stored in saved student data, like view ids.
   Renaming one needs a migration.
 - **Every tree has a `version`, starting at 1.** There are no migrations yet.

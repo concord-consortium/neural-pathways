@@ -12,12 +12,12 @@ them.
 
 ## Still to come
 
-Next come the network diagram and Steps 1–4. After those, the view still needs:
+Next come the network diagram, then Steps 1–4 and Reset, with each conversation's steps kept in
+the view's own state (`TraceACaseState`). After those, the view still needs:
 - the filter;
 - the label chip, observation notes and attribute icons;
 - node hover and the pinned readout;
 - Step 1's word flights;
 - the Animate and speed controls;
-- saved step progress for each conversation (`TraceACaseState`);
 - the activation legend;
 - About.
