@@ -47,10 +47,10 @@ function pathwayFields(fit: Fit | undefined): string[] {
   return fit ? Array.from({ length: fit.pathwayCount }, (_, i) => `pathway_${i + 1}`) : [];
 }
 
-/** A missing value is left out, so a query never matches on it. */
+/** A missing value is left out: `field:value` never matches it, so `NOT field:value` always does. */
 function toRecord(
   item: S3Item,
-  position: number,
+  place: number,
   dataset: DatasetDefinition,
   attributes: readonly AttributeDefinition[],
   fit: Fit | undefined,
@@ -58,7 +58,7 @@ function toRecord(
   // Lowercase, as every query value is made, so a match ignores case even when quoted: liqe
   // matches a quoted value case-sensitively. The line breaks between turns become spaces, so a
   // quoted phrase can span two turns.
-  const record: FilterRecord = { n: position + 1, id: item.id, text: item.text.replace(/\n/g, " ").toLowerCase() };
+  const record: FilterRecord = { n: place + 1, id: item.id, text: item.text.replace(/\n/g, " ").toLowerCase() };
   if (item.observation != null) {
     record.observation = item.observation.toLowerCase();
   }
@@ -123,16 +123,16 @@ function checkBareWord(tag: TagToken): ParserAst {
 }
 
 /**
- * Rejects what liqe would accept without complaint: a field the records don't have, and a word
- * given to a number field, which would both match nothing, and a comparison with no number, which
- * liqe only rejects once filtering runs.
+ * Checks a tag with a field and rewrites it for matching. It rejects a field the records don't
+ * have, a word given to a number field, and a comparison with no number: liqe would match the first
+ * two against nothing, and reject the third only once filtering runs. It rewrites a number on a
+ * number field as a range, and lowercases a string value.
  */
 function checkFieldTag(tag: TagToken, field: FieldToken, fields: QueryFields): ParserAst {
   if (!fields.all.has(field.name)) {
     throw new QueryError(`Unknown field: ${field.name}`);
   }
-  // liqe leaves `operator` off a bare word, though its type says otherwise.
-  const operator = tag.operator?.operator ?? ":";
+  const operator = tag.operator.operator;
   const { expression } = tag;
   const isNumber = expression.type === "LiteralExpression" && typeof expression.value === "number";
   if (operator !== ":" && !isNumber) {
