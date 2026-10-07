@@ -68,6 +68,18 @@ describe("StepPlayer", () => {
     expect(player.shownStep).toBe(2);
   });
 
+  it("restarts the step playing when it is pressed again, with one clock", () => {
+    const player = makeState().playerFor("a");
+    player.play(2);
+    jest.advanceTimersByTime(500);
+    player.play(2);
+    expect(jest.getTimerCount()).toBe(1);
+    expect(player.stepsDone).toBe(1);
+    jest.advanceTimersByTime(4000);
+    expect(player.stepsDone).toBe(2);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
   it("a new step replaces the one playing", () => {
     const player = makeState().playerFor("a");
     player.play(3);

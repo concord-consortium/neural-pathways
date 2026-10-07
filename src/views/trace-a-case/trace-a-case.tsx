@@ -2,7 +2,9 @@ import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
+import { ForwardPass } from "../../core/network/forward";
 import { indexPasses } from "../../core/network/index-passes";
+import { NetworkScales } from "../../core/network/network-scales";
 import { toyNetwork } from "../../core/network/toy-network";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
 import { validConversationId } from "../../core/state/conversation";
@@ -47,7 +49,6 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const networkHeadId = useId();
   // Shown even before the store's correction lands, so an invalid id never reaches the screen.
   const currentId = validConversationId(shared.conversationId, ids);
-  // A player for the conversation shown, and a new one when it changes.
   const player = useMemo(
     () => (currentId === undefined ? undefined : new StepPlayer(COLUMN_SIZES, state, currentId)), [state, currentId]);
   // Stop the old player when the conversation changes or the view unmounts. A layout effect, so no
@@ -60,22 +61,41 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   }
   const goTo = (to: number) => shared.setConversationId(ids[to]);
 
+  // The card comes first, so the tab order matches the stacked layout as well as the wide one.
   return (
     <div className="trace-a-case__layout">
-      <div className="trace-a-case__steps">
-        <StepRow shownStep={player.shownStep} onStep={step => player.play(step)} onReset={() => player.reset()} />
-      </div>
       <div className="trace-a-case__case">
         <ConversationCard conversation={index.items[position]} position={position} total={ids.length}
           onPrev={() => goTo(position - 1)} onNext={() => goTo(position + 1)} />
       </div>
+      <div className="trace-a-case__steps">
+        <PlayerStepRow player={player} />
+      </div>
       <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
         <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
         <div className="trace-a-case__diagram">
-          <NetworkDiagram network={toyNetwork} pass={passes[position]} scales={scales}
-            outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+          <PlayerDiagram player={player} pass={passes[position]} scales={scales} />
         </div>
       </section>
     </div>
+  );
+});
+
+// The player is read only in these two observers, so a step playing re-renders them and not the card.
+
+const PlayerStepRow = observer(function PlayerStepRow({ player }: { player: StepPlayer }) {
+  return <StepRow shownStep={player.shownStep} onStep={step => player.play(step)} onReset={() => player.reset()} />;
+});
+
+interface PlayerDiagramProps {
+  player: StepPlayer;
+  pass: ForwardPass;
+  scales: NetworkScales;
+}
+
+const PlayerDiagram = observer(function PlayerDiagram({ player, pass, scales }: PlayerDiagramProps) {
+  return (
+    <NetworkDiagram network={toyNetwork} pass={pass} scales={scales}
+      outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
   );
 });

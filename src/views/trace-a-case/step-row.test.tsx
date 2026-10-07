@@ -6,15 +6,18 @@ describe("StepRow", () => {
   it("shows Steps 1 to 4 and Reset", () => {
     render(<StepRow shownStep={0} onStep={jest.fn()} onReset={jest.fn()} />);
     for (const step of [1, 2, 3, 4]) {
-      expect(screen.getByRole("button", { name: `Step ${step}` })).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByRole("button", { name: `Step ${step}` })).not.toHaveAttribute("aria-current");
     }
-    expect(screen.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
+    const reset = screen.getByRole("button", { name: "Reset" });
+    expect(reset).toHaveAttribute("aria-disabled", "true");
+    // Not disabled, so it stays in the tab order.
+    expect(reset).toBeEnabled();
   });
 
-  it("presses the step shown and enables Reset", () => {
+  it("marks the step shown as current and enables Reset", () => {
     render(<StepRow shownStep={3} onStep={jest.fn()} onReset={jest.fn()} />);
-    expect(screen.getByRole("button", { name: "Step 3" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Step 3" })).toHaveAttribute("aria-current", "step");
+    expect(screen.getByRole("button", { name: "Step 2" })).not.toHaveAttribute("aria-current");
     expect(screen.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "false");
   });
 

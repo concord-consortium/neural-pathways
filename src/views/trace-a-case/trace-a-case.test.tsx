@@ -1,5 +1,6 @@
 import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import * as conversationCard from "../../core/conversation-card/conversation-card";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import { SharedState } from "../../core/state/shared-state";
@@ -158,7 +159,7 @@ describe("TraceACase", () => {
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
     expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-current", "step");
   });
 
   it("starts a conversation not stepped yet with nothing done", async () => {
@@ -169,7 +170,7 @@ describe("TraceACase", () => {
     expect(screen.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "false");
     fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
     expect(screen.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
-    expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Step 2" })).not.toHaveAttribute("aria-current");
   });
 
   it("brings a conversation's steps back when returning to it", async () => {
@@ -179,7 +180,7 @@ describe("TraceACase", () => {
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
     fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
     fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
-    expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-current", "step");
     expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
   });
 
@@ -207,15 +208,63 @@ describe("TraceACase", () => {
       act(() => jest.advanceTimersByTime(5000));
       expect(state.stepsByConversation).toEqual({ [ids[0]]: 1 });
       fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
-      expect(screen.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-current", "step");
     } finally {
       jest.useRealTimers();
+    }
+  });
+
+  it("resets the conversation shown, and only that one", async () => {
+    setReducedMotion();
+    const state = new TraceACaseState({ stepsByConversation: { [ids[1]]: 2 } });
+    showView(new SharedState({}), state);
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("button", { name: "Step 3" }));
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+    for (const step of [1, 2, 3, 4]) {
+      expect(screen.getByRole("button", { name: `Step ${step}` })).not.toHaveAttribute("aria-current");
+    }
+    expect(screen.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
+    expect(state.stepsByConversation).toEqual({ [ids[1]]: 2 });
+  });
+
+  it("stops a step that is playing when the view unmounts, keeping the step before", async () => {
+    const state = new TraceACaseState({});
+    const { unmount } = render(viewWith(new SharedState({}), state));
+    await screen.findByText("1 / 3");
+    jest.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
+      act(() => jest.advanceTimersByTime(500));
+      unmount();
+      expect(jest.getTimerCount()).toBe(0);
+      act(() => jest.advanceTimersByTime(5000));
+      expect(state.stepsByConversation).toEqual({ [ids[0]]: 1 });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("doesn't re-render the conversation card while a step plays", async () => {
+    showView();
+    await screen.findByText("1 / 3");
+    const cardRenders = jest.spyOn(conversationCard, "ConversationCard");
+    jest.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
+      act(() => jest.advanceTimersByTime(1000));
+      // The diagram has moved on: the first embedding unit's edges are drawn.
+      expect(screen.getAllByTestId(/^edge-near-0-0-/).length).toBeGreaterThan(0);
+      expect(cardRenders).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+      cardRenders.mockRestore();
     }
   });
 
   it("opens a conversation at the steps saved for it", async () => {
     showView(new SharedState({}), new TraceACaseState({ stepsByConversation: { [ids[0]]: 2 } }));
     await screen.findByText("1 / 3");
-    expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-current", "step");
   });
 });

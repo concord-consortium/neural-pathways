@@ -12,10 +12,10 @@ function prefersReducedMotion(): boolean {
  * steps done in `state`. A step saves the step before when it starts and itself when it ends, so a
  * step still playing is never saved.
  *
- * The view makes a player for the conversation it shows, and a new one when the conversation
- * changes, stopping the old one. Only the step playing is held here, and the clock runs only while
- * it plays, so `stop()` is all the cleanup there is, and the player can play again after it. Its
- * values are observable, so read them inside an `observer`. `columnSizes` must not change.
+ * Only the step playing is held here, and the clock runs only while it plays. So `stop()` is all
+ * the cleanup there is. The constructor must not start anything: the view may make players that
+ * React never commits, and those are never stopped. Read the values inside an `observer`.
+ * `columnSizes` must not change.
  */
 export class StepPlayer {
   @observableRef private accessor running: RunningStep | undefined = undefined;
@@ -32,7 +32,11 @@ export class StepPlayer {
     return this.state.stepsDone(this.conversationId);
   }
 
-  /** The step whose button shows as pressed: the one playing, else the last one done (0 for none). */
+  /**
+   * The step whose button is marked current: the one playing, else the last one done (0 for none).
+   * Computed, so it changes once per step, not on every frame.
+   */
+  @computed
   get shownStep(): number {
     return this.running?.step ?? this.stepsDone;
   }
@@ -74,7 +78,7 @@ export class StepPlayer {
     this.state.setStepsDone(this.conversationId, 0);
   }
 
-  /** Drops a step that is playing. The conversation keeps the step before it. */
+  /** Drops a step that is playing. */
   @action
   stop() {
     if (this.frame !== undefined) {

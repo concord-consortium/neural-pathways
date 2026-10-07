@@ -1,3 +1,4 @@
+@use "../../core/button";
 @use "../../core/colors" as colors;
 @use "../../core/panel";
 
@@ -62,6 +63,7 @@
 
 .step-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -82,7 +84,7 @@
   white-space: nowrap;
   cursor: pointer;
 
-  &:hover:not([aria-disabled="true"]):not([aria-pressed="true"]) {
+  &:hover:not([aria-disabled="true"]):not([aria-current="step"]) {
     background: colors.$surface;
   }
 
@@ -92,13 +94,12 @@
   }
 }
 
-.step-row__step[aria-pressed="true"] {
+.step-row__step[aria-current="step"] {
   border-color: colors.$ink;
   background: colors.$ink;
   color: #fff;
 }
 
 .step-row__reset[aria-disabled="true"] {
-  opacity: 0.35;
-  cursor: default;
+  @include button.unavailable;
 }
