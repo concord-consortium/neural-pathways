@@ -23,7 +23,7 @@ the steps with the view's own state.
 | Decision | Choice | Why |
 |---|---|---|
 | How the steps animate | A pure function of time. `sceneAt(…, step, t)` computes what is drawn at any moment. The view runs a `requestAnimationFrame` clock and re-renders. | Jumps, Reset and reduced motion just set `t`, with no timers to cancel. Mid-step states can be tested in jsdom. NPW-38's speed control becomes a multiplier on `t`. |
-| The diagram's interface | A stateless SVG component drawing a `Scene`: gauge fill per node, drawn fraction per edge group, the weight captions, and the answer. | Extract Pathways and Investigate Pathways build their own scenes. They don't inherit Trace a Case's steps. |
+| The diagram's interface | An SVG component, keeping no state but its measured size, drawing a `Scene`: gauge fill per node, drawn fraction per edge group, the weight captions, and the answer. | Extract Pathways and Investigate Pathways build their own scenes. They don't inherit Trace a Case's steps. |
 | Step 1 | The input gauges fill one by one, top to bottom, 55 ms apart (the prototype's `fillInputs`, line 15350). | The word flights are out of scope, and this keeps Step 1 visibly a step. |
 | Colors | Only the two sign colors and the output-pill tokens. The five-step `FILL_POS`/`FILL_NEG` ramp and `level()` are deferred. | Trace a Case draws only the darkest step of each ramp (`paintSignal`, `setNodeLevel`); `actColour` is vestigial here. Comments on NPW-37, NPW-39, NPW-26 and NPW-40 record where the ramp is needed. |
 | Where the vocabulary lives | With the network weights in `src/core/network/`. | It exists only in `scripts/`, which core may not import. The weights are meaningless without its order. |
@@ -152,11 +152,11 @@ node's y, the shared radius, and the output pill boxes. It follows the prototype
 <NetworkDiagram network={…} pass={…} scales={…} outputLabels={…} scene={…} />
 ```
 
-This is one SVG with no state, no timers and no store access. It fills its container through
+This is one SVG with no timers and no store access; its only state is its measured size. It fills its container through
 `useElementSize` (a ResizeObserver hook in core, with a default size where ResizeObserver doesn't
 exist). From back to front:
 
-1. **Scaffold wires:** gray (`#909090`, 0.5 px), running from each source node's right edge to the
+1. **Wires:** gray (`#909090`, 0.5 px), running from each source node's right edge to the
    target's left edge. They stay drawn: an edge half is at least 1 px wide along the same line,
    so a drawn half covers its wire. The prototype hid them instead.
 2. **Edge halves** (`paintSignal`, lines 12542–12554). The dash offset comes from `edgeDraw` of
@@ -359,9 +359,10 @@ It is an `observer`.
   - narrower than 857 px, the columns stack: card, steps, network.
 - **While loading:** it shows "Loading conversations…".
 - **On error:** it shows the error message.
-- **Once ready**, it computes, in one `useMemo` keyed on the index:
-  - `forward(toyNetwork, text)` for all 800 conversations;
-  - `networkScales`.
+- **Once ready**, it gets every conversation's pass and the scales from
+  `indexPasses(toyNetwork, index)` in `src/core/network/`. That runs `forward` on all 800
+  conversations and `networkScales` over them once per index, so a view that mounts again doesn't
+  repeat the work.
 - **The diagram** then gets the current conversation's pass and the step player's scene.
 - **The steps** come from `useViewState(TraceACaseState)` for the current conversation.
 - **`VIEWS`:** Trace a Case's `stateModel` is `TraceACaseState`.
@@ -381,8 +382,10 @@ It is an `observer`.
 - **All 800 conversations:** during implementation, a one-off run checks that `predictedClass`
   matches `classification` for every one of them. The Jest suite doesn't depend on generated
   data (the NPW-29 decision).
+- **`index-passes.test.ts`:** the passes in index order with their scales, computed once per
+  network and index.
 - **`network-scales.test.ts`:**
-  - the tercile cut points on a small hand-built pool;
+  - the tercile cut points on a small hand-built pool, and each gap cut from its own pool;
   - `magnitudeBand` at and around the thresholds;
   - `logitScale`.
 - **The real thresholds:** a one-off run confirms they match the prototype's (gap 0 ≈
@@ -394,7 +397,8 @@ It is an `observer`.
   everything stays inside the SVG, and the radius stays within 5–12.
 - **`network-diagram.test.tsx`:**
   - `emptyScene` draws wires and empty nodes only;
-  - `fullScene` gives each edge half the expected color and width;
+  - `fullScene` gives each edge half the expected color and width, banded against its own gap's
+    thresholds;
   - gauge heights and directions follow the values;
   - the pill states follow `answer`;
   - the `aria-label` names the prediction once `answer` is 1.
@@ -444,7 +448,8 @@ It is an `observer`.
   - coming back with the index already loaded opens straight on the saved conversation;
   - an empty list leaves the saved conversation alone;
   - a throwing correction says the conversations couldn't be shown;
-  - next moves the shared `conversationId`;
+  - next moves the shared `conversationId`, and the diagram follows it from a Wait conversation to
+    an Approach one and back;
   - a saved `conversationId` opens on that conversation;
   - an unknown id falls back to the first;
   - each conversation's steps are kept in `TraceACaseState` and come back on returning to it;
