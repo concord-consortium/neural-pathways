@@ -1,8 +1,7 @@
-import React, { useLayoutEffect, useMemo } from "react";
+import React, { useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
-import { forward } from "../../core/network/forward";
-import { networkScales } from "../../core/network/network-scales";
+import { indexPasses } from "../../core/network/index-passes";
 import { toyNetwork } from "../../core/network/toy-network";
 import { useViewState } from "../../core/state/view-state-context";
 import { StepPlayer } from "../../core/steps/step-player";
@@ -36,9 +35,8 @@ export const ExtractPathways: React.FC = observer(function ExtractPathways() {
 
 const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { index: S3Index }) {
   const state = useViewState(ExtractPathwaysState);
-  // Every conversation's pass, so the edge widths are banded as in Trace a Case.
-  const passes = useMemo(() => index.items.map(item => forward(toyNetwork, item.text)), [index]);
-  const scales = useMemo(() => networkScales(toyNetwork, passes), [passes]);
+  const panelHeadId = useId();
+  const { passes, scales } = indexPasses(toyNetwork, index);
   const limit = Math.min(MAX_COLLECTED, passes.length);
   const buttons = useMemo(() => extractButtons(limit), [limit]);
   const player = useMemo(() => new StepPlayer(TIMELINE, extractProgress(state, limit)), [state, limit]);
@@ -55,8 +53,8 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
       <div className="extract-pathways__steps">
         <StepRow player={player} buttons={buttons} />
       </div>
-      <section className="extract-pathways__network" aria-label={PANEL_TITLE}>
-        <h2 className="extract-pathways__network-head">{PANEL_TITLE}</h2>
+      <section className="extract-pathways__network" aria-labelledby={panelHeadId}>
+        <h2 id={panelHeadId} className="extract-pathways__network-head">{PANEL_TITLE}</h2>
         <div className="extract-pathways__drawing">
           {/* The scene is read only in this Observer and in StepRow, so a step playing re-renders
               them and not the whole view. */}

@@ -20,7 +20,7 @@ const EDGE_WIDTHS = [1, 2, 3];
 /** The winning pill grows by this much on every side. */
 const PILL_GROW = 3;
 /** Gauges shorter than this aren't drawn. */
-const MIN_GAUGE = 0.35;
+export const MIN_GAUGE = 0.35;
 /** The prototype's d1a-pillpop keyframes, each segment eased like its CSS animation. */
 const POP_KEYS: readonly (readonly [number, number])[] = [[0, 0.94], [0.45, 1.1], [0.72, 0.98], [1, 1]];
 const popEase = cubicBezier(0.34, 1.1, 0.5, 1);

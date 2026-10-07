@@ -4,7 +4,7 @@ import { ForwardPass } from "../../core/network/forward";
 import { Network } from "../../core/network/network";
 import { NetworkScales } from "../../core/network/network-scales";
 import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
-import { COLUMN_CAPTIONS, NetworkDrawing } from "../../core/network-diagram/network-drawing";
+import { COLUMN_CAPTIONS, MIN_GAUGE, NetworkDrawing } from "../../core/network-diagram/network-drawing";
 import { useElementSize } from "../../core/use-element-size";
 import {
   CANVAS_HEIGHT, deckPosition, extractGeometry, LABEL_Y, MIN_CANVAS_WIDTH, NETWORK_WIDTH,
@@ -15,8 +15,6 @@ import "./extract-drawing.scss";
 
 /** The label's drop-in, overshooting as it lands (the prototype's bounceIn). */
 const bounceEase = cubicBezier(0.34, 1.56, 0.64, 1);
-/** Gauges shorter than this aren't drawn, as in the network diagram. */
-const MIN_GAUGE = 0.35;
 
 /** The hidden neurons' names, as the prototype's tooltips give them: "Hidden Layer 1 Neuron 3". */
 function hiddenNames(columnSizes: readonly number[]): string[] {
