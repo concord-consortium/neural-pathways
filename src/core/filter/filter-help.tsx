@@ -63,7 +63,8 @@ export const FilterHelp: React.FC<FilterHelpProps> = ({ fields, attributes }) =>
   const dialogId = useId();
 
   // Back to the ⓘ button when focus was in the help, or nowhere. Left alone when the student is
-  // typing in the box.
+  // typing in the box. Every way of closing goes through here: React sends no blur for a focused
+  // node it removes, so closing with focus inside would skip the bar's commit.
   const close = useCallback(() => {
     const focused = document.activeElement;
     setOpen(false);
@@ -78,7 +79,7 @@ export const FilterHelp: React.FC<FilterHelpProps> = ({ fields, attributes }) =>
     }
     const onMouseDown = (event: MouseEvent) => {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        close();
       }
     };
     // Wherever focus is: opening the help doesn't move it. Caught before it reaches the box, so the
@@ -105,7 +106,8 @@ export const FilterHelp: React.FC<FilterHelpProps> = ({ fields, attributes }) =>
     <div className="filter-help" ref={rootRef}>
       <button ref={buttonRef} type="button" className="filter-help__button"
         aria-label="Show what you can filter on" aria-expanded={open}
-        aria-controls={open ? dialogId : undefined} onMouseDown={keepFocus} onClick={() => setOpen(!open)}>
+        aria-controls={open ? dialogId : undefined} onMouseDown={keepFocus}
+        onClick={() => (open ? close() : setOpen(true))}>
         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
           <circle cx="10" cy="5.5" r="1.6" />
           <rect x="8.6" y="8.5" width="2.8" height="7.5" rx="1" />

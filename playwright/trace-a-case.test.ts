@@ -112,3 +112,18 @@ test("a number field matches the number exactly", async ({ page }) => {
   await page.getByRole("textbox", { name: "Filter" }).fill("n:12");
   await expect(page.getByText("1 of 800", { exact: true })).toBeVisible();
 });
+
+test("a query is stored when the help closes on a click outside it", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const filter = page.getByRole("textbox", { name: "Filter" });
+  await filter.fill("model_correct:0");
+  await page.getByRole("button", { name: "Show what you can filter on" }).click();
+  // A click inside moves focus into the help, which must not lose the commit when it closes.
+  await page.getByText("The observer's notes", { exact: true }).click();
+  await page.getByRole("heading", { name: "Trace a Case" }).click();
+  // Escape discards only an unstored draft, so the count stays if the query was stored.
+  await filter.focus();
+  await page.keyboard.press("Escape");
+  await expect(page.getByText("64 of 800", { exact: true })).toBeVisible();
+});

@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { AttributeDefinition } from "../types/attributes";
 import { FilterBar, FilterBarProps } from "./filter-bar";
 
@@ -164,7 +164,9 @@ describe("FilterBar", () => {
     it("closes from its close button and returns focus to the help button", () => {
       showBar();
       fireEvent.click(helpButton());
-      fireEvent.click(screen.getByRole("button", { name: "Close" }));
+      const closeButton = screen.getByRole("button", { name: "Close" });
+      act(() => closeButton.focus());
+      fireEvent.click(closeButton);
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       expect(helpButton()).toHaveFocus();
     });
@@ -172,7 +174,9 @@ describe("FilterBar", () => {
     it("closes on Escape and returns focus to the help button", () => {
       showBar();
       fireEvent.click(helpButton());
-      fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+      const dialog = screen.getByRole("dialog");
+      act(() => dialog.focus());
+      fireEvent.keyDown(dialog, { key: "Escape" });
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       expect(helpButton()).toHaveFocus();
     });
@@ -184,6 +188,27 @@ describe("FilterBar", () => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
       fireEvent.mouseDown(document.body);
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    // React sends no blur for a focused node it removes, so focus must leave the help before it
+    // closes, or the bar never commits.
+    it("returns focus to the help button when a mousedown outside closes it with focus inside", () => {
+      showBar();
+      fireEvent.click(helpButton());
+      const dialog = screen.getByRole("dialog");
+      act(() => dialog.focus());
+      fireEvent.mouseDown(document.body);
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(helpButton()).toHaveFocus();
+    });
+
+    it("returns focus to the help button when it closes it with focus inside", () => {
+      showBar();
+      fireEvent.click(helpButton());
+      act(() => screen.getByRole("button", { name: "Close" }).focus());
+      fireEvent.click(helpButton());
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(helpButton()).toHaveFocus();
     });
 
     it("doesn't discard the draft when Escape closes it", () => {
