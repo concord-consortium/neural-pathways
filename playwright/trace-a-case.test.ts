@@ -50,39 +50,39 @@ test("the conversation survives switching views", async ({ page }) => {
 
 test("the filter narrows the conversations Trace a Case steps through", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("1 / 800")).toBeVisible();
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   const filter = page.getByRole("textbox", { name: "Filter" });
   await filter.fill("model_correct:0");
-  await expect(page.getByText("64 of 800")).toBeVisible();
-  await expect(page.getByText("1 / 64")).toBeVisible();
+  await expect(page.getByText("64 of 800", { exact: true })).toBeVisible();
+  await expect(page.getByText("1 / 64", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Next conversation" }).click();
-  await expect(page.getByText("2 / 64")).toBeVisible();
+  await expect(page.getByText("2 / 64", { exact: true })).toBeVisible();
 });
 
 test("a finished query is kept when switching views", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("1 / 800")).toBeVisible();
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   await page.getByRole("textbox", { name: "Filter" }).fill("model_correct:0");
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Correlations", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
   await nav.getByRole("link", { name: "Trace a Case" }).click();
-  await expect(page.getByText("1 / 64")).toBeVisible();
+  await expect(page.getByText("1 / 64", { exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Filter" })).toHaveValue("model_correct:0");
 });
 
 test("a half-typed query is kept when switching views", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("1 / 800")).toBeVisible();
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   await page.getByRole("textbox", { name: "Filter" }).fill("(model_correct:0");
-  await expect(page.getByText("Incomplete query")).toBeVisible();
+  await expect(page.getByText("Incomplete query", { exact: true })).toBeVisible();
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Correlations", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
   await nav.getByRole("link", { name: "Trace a Case" }).click();
   await expect(page.getByRole("textbox", { name: "Filter" })).toHaveValue("(model_correct:0");
-  await expect(page.getByText("Incomplete query")).toBeVisible();
-  await expect(page.getByText("1 / 800")).toBeVisible();
+  await expect(page.getByText("Incomplete query", { exact: true })).toBeVisible();
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
 });
 
 test("the filter's help lists what a query can use", async ({ page }) => {
@@ -98,17 +98,17 @@ test("the filter's help lists what a query can use", async ({ page }) => {
 
 test("the filter searches the observer's notes, ignoring case", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("1 / 800")).toBeVisible();
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   const filter = page.getByRole("textbox", { name: "Filter" });
   await filter.fill("observation:\"Stores Nearby\"");
-  await expect(page.getByText("212 of 800")).toBeVisible();
+  await expect(page.getByText("212 of 800", { exact: true })).toBeVisible();
   await filter.fill("water");
-  await expect(page.getByText("363 of 800")).toBeVisible();
+  await expect(page.getByText("363 of 800", { exact: true })).toBeVisible();
 });
 
 test("a number field matches the number exactly", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("1 / 800")).toBeVisible();
-  await page.getByRole("textbox", { name: "Filter" }).fill("n:127");
-  await expect(page.getByText("1 of 800")).toBeVisible();
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  await page.getByRole("textbox", { name: "Filter" }).fill("n:12");
+  await expect(page.getByText("1 of 800", { exact: true })).toBeVisible();
 });
