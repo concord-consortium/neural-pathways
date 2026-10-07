@@ -4,7 +4,8 @@ export function clamp01(x: number): number {
 
 /**
  * A CSS-style cubic Bézier timing function through (0, 0), (x1, y1), (x2, y2), (1, 1). Returns
- * the eased progress for a linear progress `t`, clamped to 0 below 0 and 1 above 1.
+ * the eased progress for a linear progress `t`. It is 0 for any `t` at or below 0 and 1 at or above
+ * 1. In between it is not clamped: it overshoots 1 when y1 or y2 is above 1.
  */
 export function cubicBezier(x1: number, y1: number, x2: number, y2: number): (t: number) => number {
   const cx = 3 * x1;

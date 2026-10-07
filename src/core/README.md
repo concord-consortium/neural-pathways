@@ -43,11 +43,12 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   it between views.
 - `network/`: the network types, the toy network Trace a Case uses until there is one built from
   the real alien3 activations (`toy-network.ts`), the forward pass, and the scales the diagram
-  draws against (`network-scales.ts`).
+  draws against (`network-scales.ts`). `index-passes.ts` computes a dataset index's passes and
+  scales once per page.
 
   Three words name the same thing, each from its own side:
-  - **unit:** one element of a layer, in the network's math (`forward.ts`, and the `[source unit]`
-    index of a `Scene`'s `edgeDraw`). This is the textbook term, and the one Keras uses.
+  - **unit:** one element of a layer, in the network's math (`network.ts`, and the `[unit]` and
+    `[source unit]` indexes of a `Scene`). This is the textbook term, and the one Keras uses.
   - **node:** that unit's circle in the diagram (`network-diagram/`), with its gauge. A node's
     drawn row and its unit index can differ: `unitAt` in `network-diagram.tsx` maps one to the
     other.
