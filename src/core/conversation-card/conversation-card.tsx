@@ -20,7 +20,7 @@ interface ConversationCardProps {
 export const ConversationCard: React.FC<ConversationCardProps> = ({
   conversation, position, total, onPrev, onNext,
 }) => {
-  // One paragraph, as in the prototype: the line breaks between turns are dropped.
+  // One paragraph, as in the prototype.
   const words = conversationWords(conversation.text).join(" ");
   return (
     <section className="conversation-card" aria-label="Conversation">

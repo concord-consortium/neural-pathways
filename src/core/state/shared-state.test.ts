@@ -1,8 +1,15 @@
-import { fromSnapshot, getGlobalConfig, ModelAutoTypeCheckingMode } from "mobx-keystone";
+import {
+  fromSnapshot, getGlobalConfig, getSnapshot, Model, model, ModelAutoTypeCheckingMode, onPatches, Patch,
+  SnapshotTypeMismatchError,
+} from "mobx-keystone";
 import { SharedState } from "./shared-state";
 import { savedJson } from "./test-helpers";
 import fixture from "./__fixtures__/shared-state.v1.json";
 import noConversationFixture from "./__fixtures__/shared-state.v1-no-conversation.json";
+
+// Test-only: another registered model whose saved form must not load as SharedState.
+@model("test/NotSharedState")
+class NotSharedState extends Model({}) {}
 
 describe("SharedState", () => {
   it("turns on type checking in every environment when it is imported, production included", () => {
@@ -35,6 +42,12 @@ describe("SharedState", () => {
     expect(() => fromSnapshot(SharedState, { ...fixture, version: 2 } as any)).toThrow();
   });
 
+  // Before mobx-keystone 2.3.0 this returned a NotSharedState (mobx-keystone #590).
+  it("rejects the saved form of a different model", () => {
+    const other = getSnapshot(new NotSharedState({}));
+    expect(() => fromSnapshot(SharedState, other as any)).toThrow(SnapshotTypeMismatchError);
+  });
+
   it("sets the conversation", () => {
     const state = new SharedState({});
     state.setConversationId("7b117e548ba4");
@@ -60,6 +73,16 @@ describe("SharedState", () => {
       const state = new SharedState({ conversationId: "7b117e548ba4" });
       state.ensureValidConversation(ids);
       expect(state.conversationId).toBe("7b117e548ba4");
+    });
+
+    it("records a change only when the conversation needs correcting, so a valid one leaves nothing to undo", () => {
+      const state = new SharedState({ conversationId: "7b117e548ba4" });
+      const patches: Patch[] = [];
+      onPatches(state, recorded => patches.push(...recorded));
+      state.ensureValidConversation(ids);
+      expect(patches).toEqual([]);
+      state.ensureValidConversation(["361e65b1002a"]);
+      expect(patches).toEqual([{ op: "replace", path: ["conversationId"], value: "361e65b1002a" }]);
     });
 
     it("keeps the conversation when the list is empty", () => {

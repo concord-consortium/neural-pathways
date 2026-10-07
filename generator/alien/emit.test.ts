@@ -155,7 +155,7 @@ describe("buildDataset", () => {
     }
   });
 
-  it("buckets each conversation by the first two characters of its id", () => {
+  it("buckets each conversation's SHAP by the first two characters of its id", () => {
     for (const [bucket, contents] of dataset.shapBuckets) {
       expect(bucket).toMatch(/^[0-9a-f]{2}$/);
       for (const entry of contents.reviews) expect(entry.id.slice(0, 2)).toBe(bucket);

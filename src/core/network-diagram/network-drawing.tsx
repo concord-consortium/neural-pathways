@@ -8,6 +8,10 @@ import { NetworkLayout, PILL_GAP } from "./layout";
 import { Scene } from "./scene";
 import "./network-diagram.scss";
 
+/**
+ * As in the prototype, "Input Layer" captions the first drawn column, the embedding. The code calls
+ * the word-presence vector before it the input.
+ */
 export const COLUMN_CAPTIONS = ["Input Layer", "Hidden Layer 1", "Hidden Layer 2", "Output Layer"];
 /** Output units top to bottom: Approach (class 1) above Wait (class 0), as in the prototype. */
 export const OUTPUT_ORDER = [1, 0];
@@ -67,6 +71,10 @@ export interface NetworkDrawingProps {
  * far as `scene` says. NetworkDiagram sizes it and wraps it in an SVG of its own; a view that draws
  * more around the network places it in its own SVG. Stateless: views animate it by passing new
  * scenes.
+ *
+ * It expects this lesson's network: four drawn columns (`COLUMN_CAPTIONS`) and two outputs,
+ * Approach above Wait (`OUTPUT_ORDER`, the class captions, and CSS classes named after the labels).
+ * A network of another shape needs those generalized first.
  */
 export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
   { network, layout, pass, scales, outputLabels, scene },
@@ -197,7 +205,7 @@ interface WiresProps {
   opacity: number | undefined;
 }
 
-/** The gray scaffold. Drawn signal halves lie on top and cover it. */
+/** The gray wires. Drawn signal halves lie on top and cover them. */
 const Wires = React.memo(function Wires({ layout, lastColumn, opacity: groupOpacity }: WiresProps) {
   const { nodes, radius } = layout;
   const lines: React.ReactElement[] = [];
@@ -250,7 +258,7 @@ interface OutlinesProps {
   surroundOpacity: number;
 }
 
-/** Node outlines, drawn over the gauges so the edge stays crisp, and the column captions. */
+/** Node outlines, drawn over the gauges so the rim stays crisp, and the column captions. */
 const Outlines = React.memo(function Outlines({ layout, surroundOpacity }: OutlinesProps) {
   const lastColumn = layout.nodes.length - 1;
   const outlines: React.ReactElement[] = [];

@@ -1,17 +1,20 @@
 # core
 
-Reviewed code shared by the student app (`src/app/`) and the lesson views (`src/views/`):
-data loading, types, math, generic charts.
+Reviewed code shared by the student app (`src/app/`), the lesson views (`src/views/`) and the
+dataset generator (`generator/`): data types, data loading, dataset definitions and math.
 
 ## Rules
 
-- Every line under `src/app/`, `src/views/` and `src/core/` is reviewed. Code enters these
-  folders only through a story's PR.
-- `core` imports only from `core` and packages. It never imports `app`, `views` or `lab`.
+- Every line under `src/app/`, `src/views/`, `src/core/` and `generator/` is reviewed. Code
+  enters these folders only through a story's PR. The generator is reviewed because it writes
+  the data students see.
+- `core` imports only from `core` and packages.
+- `generator` imports only from `generator`, `core` and packages.
 - Nothing student-facing imports from `src/lab/` or `scripts/`, which are unreviewed, or from
   anything else outside `app`, `views` and `core`. ESLint (`import/no-restricted-paths`) enforces
-  this; see `eslint.config.mjs`. Disabling the rule in these folders is itself a lint error, and
-  `npm run lint:boundary` checks that the rule still catches violations.
+  this and the generator rule; see `eslint.config.mjs`. Disabling the rule in any reviewed folder
+  is itself a lint error, and `npm run lint:boundary` checks that the rule still catches
+  violations.
 - ESLint does not see SCSS `@use` or `@import`, so a reviewer checks that stylesheets here do
   not pull in styles from `src/lab/`.
 
@@ -27,6 +30,9 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   `attributes.ts`.
 - `data-loader.ts`: `fetchIndex`, `fetchActivations`, `fetchShap`.
 - `data-url.ts`: `dataUrl`. Every fetched data URL goes through it; see the comment there.
+- `math/`: `statistics.ts` (`mean`, `standardDeviation`, `isUsable`, `pearson`),
+  `regression.ts` (`multipleRegression`, `logisticRegression`) and `matrix.ts` (the
+  symmetric-matrix solvers regression uses).
 - `datasets/dataset-definition.ts`: what a dataset is, and attribute-key validation.
 - `datasets/alien3-dataset.ts`: the lesson's dataset, `alien3Dataset`.
 - `state/`: the mobx-keystone model for the shared state, any model more than one view uses, the
@@ -37,11 +43,12 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   it between views.
 - `network/`: the network types, the toy network Trace a Case uses until there is one built from
   the real alien3 activations (`toy-network.ts`), the forward pass, and the scales the diagram
-  draws against (`network-scales.ts`).
+  draws against (`network-scales.ts`). `index-passes.ts` computes a dataset index's passes and
+  scales once per page.
 
   Three words name the same thing, each from its own side:
-  - **unit:** one element of a layer, in the network's math (`forward.ts`, and the `[source unit]`
-    index of a `Scene`'s `edgeDraw`). This is the textbook term, and the one Keras uses.
+  - **unit:** one element of a layer, in the network's math (`network.ts`, and the `[unit]` and
+    `[source unit]` indexes of a `Scene`). This is the textbook term, and the one Keras uses.
   - **node:** that unit's circle in the diagram (`network-diagram/`), with its gauge. A node's
     drawn row and its unit index can differ: `unitAt` in `network-drawing.tsx` maps one to the
     other.
@@ -63,8 +70,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   at a marker, and `StepRow` draws them with Reset.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
-  words. Items are plain data, so these are functions that take the text.
-- `colors.ts`, `colors.scss`, `panel.scss`: the lesson's colors and the panel look.
+  words (`conversationWords`). Items are plain data, so this is a function that takes the text, not
+  a getter on a model.
+- `colors.ts`, `colors.scss`, `panel.scss`, `button.scss`: the lesson's colors, the panel look, and
+  how an unavailable button looks.
 - `use-element-size.ts`: an element's size, kept current with a ResizeObserver.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and

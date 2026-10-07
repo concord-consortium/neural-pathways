@@ -1,4 +1,4 @@
-// Checks that the student-facing import boundary in eslint.config.mjs still catches violations.
+// Checks that the reviewed-code import boundary in eslint.config.mjs still catches violations.
 // A zone that matches no files is silent, so a config refactor could otherwise disable it unnoticed.
 // Run with `npm run lint:boundary`. This is not a jest test because ESLint loads its .mjs config
 // with a dynamic import.
@@ -16,7 +16,8 @@ const viewA = path.join(root, "src/views/boundary-test-a");
 const viewB = path.join(root, "src/views/boundary-test-b");
 const labDir = path.join(root, "src/lab/boundary-test");
 const scriptsDir = path.join(root, "scripts/boundary-test");
-const fixtureDirs = [viewA, viewB, labDir, scriptsDir];
+const generatorDir = path.join(root, "generator/boundary-test");
+const fixtureDirs = [viewA, viewB, labDir, scriptsDir, generatorDir];
 
 let eslint;
 
@@ -25,10 +26,12 @@ before(() => {
   fs.mkdirSync(viewB, { recursive: true });
   fs.mkdirSync(labDir, { recursive: true });
   fs.mkdirSync(scriptsDir, { recursive: true });
+  fs.mkdirSync(generatorDir, { recursive: true });
   fs.writeFileSync(path.join(viewA, "sub/inner.js"), "export const inner = 1;\n");
   fs.writeFileSync(path.join(viewB, "b.js"), "export const b = 1;\n");
   fs.writeFileSync(path.join(labDir, "lab.js"), "export const lab = 1;\n");
   fs.writeFileSync(path.join(scriptsDir, "script.js"), "export const script = 1;\n");
+  fs.writeFileSync(path.join(generatorDir, "gen.js"), "export const gen = 1;\n");
   // import/no-cycle crashes on lintText input.
   eslint = new ESLint({ cwd: root, overrideConfig: { rules: { "import/no-cycle": "off" } } });
 });
@@ -60,6 +63,13 @@ const forbidden = [
   ["src/views/x.js", "./boundary-test-b/b"],
   ["src/app/x.js", "../lab/boundary-test/lab"],
   ["src/app/x.js", "../../scripts/boundary-test/script"],
+  ["generator/x.js", "../src/lab/boundary-test/lab"],
+  ["generator/x.js", "../scripts/boundary-test/script"],
+  ["generator/x.js", "../src/app/README.md"],
+  ["generator/x.js", "../src/test/setupTests"],
+  ["generator/alien/x.ts", "../../src/lab/boundary-test/lab"],
+  ["src/core/x.js", "../../generator/boundary-test/gen"],
+  ["src/app/x.js", "../../generator/boundary-test/gen"],
 ];
 
 const allowed = [
@@ -71,9 +81,15 @@ const allowed = [
   ["src/app/x.js", "../views/boundary-test-b/b"],
   ["src/app/x.js", "../core/README.md"],
   ["src/lab/x.js", "../../scripts/boundary-test/script"],
+  ["generator/x.js", "../src/core/README.md"],
+  ["generator/x.js", "./boundary-test/gen"],
+  ["generator/x.js", "fs"],
+  ["generator/x.js", "node:path"],
+  ["scripts/analysis/x.js", "../../generator/boundary-test/gen"],
+  ["scripts/analysis/x.js", "../../src/lab/boundary-test/lab"],
 ];
 
-describe("student-facing import boundary", () => {
+describe("reviewed-code import boundary", () => {
   for (const [file, source] of forbidden) {
     it(`forbids ${file} importing ${source}`, async () => {
       const errors = await boundaryErrors(file, `export * from "${source}";\n`);
@@ -91,6 +107,13 @@ describe("student-facing import boundary", () => {
   it("forbids disabling the rule in student-facing code", async () => {
     const code = `// eslint-disable-next-line import/no-restricted-paths\nexport * from "../lab/boundary-test/lab";\n`;
     const errors = await boundaryErrors("src/core/x.js", code);
+    assert.deepEqual(errors.map(e => e.ruleId), ["@eslint-community/eslint-comments/no-restricted-disable"]);
+  });
+
+  it("forbids disabling the rule in the generator", async () => {
+    const code = "// eslint-disable-next-line import/no-restricted-paths\n"
+      + `export * from "../src/lab/boundary-test/lab";\n`;
+    const errors = await boundaryErrors("generator/x.js", code);
     assert.deepEqual(errors.map(e => e.ruleId), ["@eslint-community/eslint-comments/no-restricted-disable"]);
   });
 });

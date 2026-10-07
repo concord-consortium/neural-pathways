@@ -5,7 +5,7 @@ import { layoutNetwork } from "./layout";
 import { emptyScene, fullScene, Scene } from "./scene";
 import { toyNetwork } from "../network/toy-network";
 import { ForwardPass, forward, predictedClass } from "../network/forward";
-import { magnitudeBand, networkScales } from "../network/network-scales";
+import { BandThresholds, magnitudeBand, networkScales } from "../network/network-scales";
 import { NEGATIVE_COLOR, POSITIVE_COLOR, signColor } from "../colors";
 import fixture from "../network/__fixtures__/toy-network-conversations.json";
 
@@ -65,6 +65,18 @@ describe("NetworkDiagram", () => {
     expect(near).toHaveAttribute("stroke-width", String(magnitudeBand(activation, scales.edgeThresholds[1]) + 1));
     expect(far).toHaveAttribute("stroke", signColor(contribution));
     expect(far).toHaveAttribute("stroke-width", String(magnitudeBand(contribution, scales.edgeThresholds[1]) + 1));
+  });
+
+  it("bands each gap against its own thresholds", () => {
+    // Every nonzero value is thick in gaps 0 and 2, and thin in gap 1.
+    const perGap = { ...scales, edgeThresholds: [[0, 0], [Infinity, Infinity], [0, 0]] as BandThresholds[] };
+    render(<NetworkDiagram network={toyNetwork} pass={waitPass} scales={perGap} outputLabels={LABELS}
+      scene={fullScene(SIZES)} />);
+    const widths = (gap: number) => new Set(
+      screen.getAllByTestId(new RegExp(`^edge-(near|far)-${gap}-`)).map(edge => edge.getAttribute("stroke-width")));
+    expect(widths(0)).toEqual(new Set(["3"]));
+    expect(widths(1)).toEqual(new Set(["1"]));
+    expect(widths(2)).toEqual(new Set(["3"]));
   });
 
   it("uses both colors across a full scene", () => {

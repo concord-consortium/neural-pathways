@@ -1,5 +1,5 @@
 import { Series } from "../types/explorer-data";
-import { isUsable, mean } from "./statistics";
+import { isUsable, mean } from "../../../core/math/statistics";
 
 export interface DroppedColumn {
   label: string;
@@ -32,10 +32,10 @@ function variance(values: number[]): number {
   return sum / (values.length - 1);
 }
 
-// Not statistics.ts's pearson(): that returns { r: number | null } to represent an
-// undefined correlation, and unwrapping that per pair across this O(k^2) duplicate
-// check buys nothing here — zero-variance columns are already dropped in the loop
-// above, before this runs, so a genuinely undefined correlation cannot occur.
+// Not pearson() from src/core/math/statistics.ts: that returns { r: number | null } to
+// represent an undefined correlation, and unwrapping that per pair across this O(k^2)
+// duplicate check buys nothing here — the caller drops zero-variance columns first, so a
+// genuinely undefined correlation cannot occur.
 function correlation(a: number[], b: number[]): number {
   const meanA = mean(a);
   const meanB = mean(b);

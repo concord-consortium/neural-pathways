@@ -8,8 +8,8 @@ export type BandThresholds = readonly [number, number];
 export type MagnitudeBand = 0 | 1 | 2;
 
 /**
- * What the network diagram draws against, computed once over a set of passes (all 800 alien3
- * conversations in Trace a Case) so a width or a gauge means the same thing from case to case.
+ * What the network diagram draws against, computed once over a set of passes so a width or a gauge
+ * means the same thing from one pass to the next.
  */
 export interface NetworkScales {
   /**

@@ -27,7 +27,7 @@ export function pathwayPrediction(
 
 /**
  * The class a pathway prediction implies. Zero counts as class 1, matching
- * logisticRegression (src/lab/explorer/utils/regression.ts), which classifies on
+ * logisticRegression (src/core/math/regression.ts), which classifies on
  * `eta >= 0`.
  */
 export function pathwayPredictionClass(sum: number): number {

@@ -1,3 +1,4 @@
+import * as path from "path";
 import { fourPathwayConfig } from "../alien-config";
 import { validateConfig } from "./config-validation";
 import { AlienConfig } from "./config-types";
@@ -66,15 +67,43 @@ describe("validateConfig", () => {
   });
 
   it("rejects an absolute outputDir", () => {
-    const config = clone();
-    config.outputDir = "/tmp/alien-data";
-    expect(() => validateConfig(config)).toThrow(/outputDir/i);
+    // The second path lands inside dist/ relative to the check's stand-in root, so only
+    // the absolute-path clause rejects it.
+    for (const dir of ["/tmp/alien-data", path.resolve("/repo", "dist", "alien-data")]) {
+      const config = clone();
+      config.outputDir = dir;
+      expect(() => validateConfig(config)).toThrow(/outputDir/i);
+    }
   });
 
   it("rejects an outputDir that escapes via ..", () => {
     const config = clone();
     config.outputDir = "../alien-data";
     expect(() => validateConfig(config)).toThrow(/outputDir/i);
+  });
+
+  it("rejects an outputDir outside dist/, such as a source folder", () => {
+    for (const dir of ["src", "generator", "docs/alien-data", "dist/../src"]) {
+      const config = clone();
+      config.outputDir = dir;
+      expect(() => validateConfig(config)).toThrow(/outputDir/i);
+    }
+  });
+
+  it("rejects dist/ itself, which holds the whole build", () => {
+    for (const dir of ["dist", "dist/", "dist/."]) {
+      const config = clone();
+      config.outputDir = dir;
+      expect(() => validateConfig(config)).toThrow(/outputDir/i);
+    }
+  });
+
+  it("accepts a folder inside dist/", () => {
+    for (const dir of ["dist/alien-data", "./dist/alien-data-3", "dist/nested/alien", "dist/..cache"]) {
+      const config = clone();
+      config.outputDir = dir;
+      expect(() => validateConfig(config)).not.toThrow();
+    }
   });
 
   it("rejects an unknown bias attribute key", () => {
@@ -89,6 +118,16 @@ describe("validateConfig", () => {
     expect(() => validateConfig(config)).toThrow(/binary/i);
   });
 
+  it("rejects a binary attribute whose values do not start at 0", () => {
+    // Outcomes and checks read a binary attribute's 1 as "on", so values {1, 2} would invert
+    // its meaning. Notes are re-keyed so only minValue is wrong.
+    const config = clone();
+    const binary = config.attributes.find(a => a.type === "binary" && a.key !== config.biasAttributeKey)!;
+    binary.notes = { 1: binary.notes[0], 2: binary.notes[1] };
+    binary.minValue = 1;
+    expect(() => validateConfig(config)).toThrow(/binary attribute's values must be 0 and 1/);
+  });
+
   it("rejects an attribute key that collides with a reserved search field", () => {
     const config = clone();
     config.attributes[0].key = "text";
@@ -96,7 +135,7 @@ describe("validateConfig", () => {
   });
 
   it("rejects a neuron count below the identifiability floor", () => {
-    // Four pathways need (n - 4)^2 >= n + 4, which 7 neurons fails and 8 passes.
+    // For four pathways, 7 neurons is just below the floor and 8 just above it.
     const config = clone();
     config.activations.neuronCount = 7;
     expect(() => validateConfig(config)).toThrow(/identif/i);
@@ -110,12 +149,37 @@ describe("validateConfig", () => {
     expect(() => validateConfig(config)).toThrow(/explainedVarianceTotal/);
   });
 
-  it("rejects a noise variance range that is unordered or touches zero", () => {
+  it("rejects a noise variance range that is unordered", () => {
     const config = clone();
     config.activations.noiseVarianceRange = [0.2, 0.1];
-    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
-    config.activations.noiseVarianceRange = [0, 0.1];
-    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange/);
+    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange .* must be ordered low to high/);
+  });
+
+  it("rejects a noise variance range whose low end is zero or negative", () => {
+    // The worst-case check below would also reject [0, 0.1], but not [-0.05, 0.1]: a negative
+    // low end makes its denominator negative. Only the lower-bound check catches both.
+    for (const range of [[0, 0.1], [-0.05, 0.1]] as [number, number][]) {
+      const config = clone();
+      config.activations.noiseVarianceRange = range;
+      expect(() => validateConfig(config)).toThrow(/noiseVarianceRange lower bound .* must exceed 0/);
+    }
+  });
+
+  // Draws are rescaled to mean 1 - explainedVarianceTotal. The worst case is one draw at the
+  // top of the range and the other 13 at the bottom: high * (1 - E) * 14 / (high + 13 * low).
+  // With E = 0.5 and low = 0.4 that reaches 1 at high ≈ 0.867.
+  it("rejects a noise variance range whose worst case is just over 1", () => {
+    const config = clone();
+    config.activations.explainedVarianceTotal = 0.5;
+    config.activations.noiseVarianceRange = [0.4, 0.87];  // worst case ≈ 1.003
+    expect(() => validateConfig(config)).toThrow(/noiseVarianceRange .* can rescale/);
+  });
+
+  it("accepts a noise variance range whose worst case is just under 1", () => {
+    const config = clone();
+    config.activations.explainedVarianceTotal = 0.5;
+    config.activations.noiseVarianceRange = [0.4, 0.86];  // worst case ≈ 0.993
+    expect(() => validateConfig(config)).not.toThrow();
   });
 
   it("rejects a scaler scale range that is not positive", () => {
@@ -142,9 +206,7 @@ describe("validateConfig", () => {
   });
 
   it("rejects target variance shares that do not sum to 1", () => {
-    // The solver's row and column constraints are only consistent at a total of
-    // 1. At any other total it still converges, to the normalized split, so the
-    // configured shares would be silently rescaled rather than rejected.
+    // See checkActivations for why a total other than 1 must fail rather than rescale.
     const config = clone();
     config.targetVarianceShares = config.targetVarianceShares.map(share => share * 0.8);
     expect(() => validateConfig(config)).toThrow(/targetVarianceShares/);

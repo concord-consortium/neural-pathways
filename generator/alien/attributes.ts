@@ -1,4 +1,4 @@
-import { pearson } from "../../src/lab/explorer/utils/statistics";
+import { pearson } from "../../src/core/math/statistics";
 import { AlienConfig, AttributeConfig } from "./config-types";
 import { Rng } from "./rng";
 
