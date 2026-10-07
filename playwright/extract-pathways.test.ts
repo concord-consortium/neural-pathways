@@ -43,7 +43,10 @@ test("Collect a Conversation stops after ten", async ({ page }) => {
   for (let i = 0; i < 10; i++) {
     await collect.click();
   }
+  // Playwright counts aria-disabled as disabled.
   await expect(collect).toBeDisabled();
+  // aria-disabled, not disabled, so the focus stays on it.
+  await expect(collect).toBeFocused();
   await expect(page.getByRole("button", { name: "Collect All Conversations" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Extract Pathways" })).toBeDisabled();
 });

@@ -113,8 +113,8 @@ interface StepButton {
 
 - **Current:** the button whose run is playing. When nothing runs, the button whose
   `showAsCurrentWhenAt(marker)` is true.
-- **Disabled:** `segmentToPlayWhenAt(marker)` is undefined. The running button is never disabled:
-  when it gives no segment, pressing it replays its run.
+- **Unavailable:** `segmentToPlayWhenAt(marker)` is undefined. The running button is never
+  unavailable: when it gives no segment, pressing it replays its run.
 
 ### `step-row.tsx`
 
@@ -126,8 +126,11 @@ interface StepButton {
   made Trace a Case's row do.
 - A press calls `player.play(key, segment)` with that button's segment.
 - The current button has `aria-current="step"`, as NPW-32's review settled for Trace a Case:
-  pressing it again replays it, so it isn't a toggle and `aria-pressed` would mislead. Disabled
-  buttons have `disabled`.
+  pressing it again replays it, so it isn't a toggle and `aria-pressed` would mislead.
+- Unavailable buttons have `aria-disabled="true"`, not `disabled`, and stay in the tab order. A
+  button that becomes unavailable while it has focus, as Collect a Conversation does at its limit,
+  keeps the focus instead of dropping it to the page. Reset and the conversation card's buttons
+  already work this way. Pressing an unavailable button does nothing.
 - Reset is `aria-disabled` at marker 0 with nothing running, and stays in the tab order.
 - The step-row styles move here, to `step-row.scss`, from `trace-a-case.scss`.
 
@@ -423,8 +426,10 @@ as in the prototype, where `setNodeLevel` has no transition.
   - `reset()` saves 0.
 - **`step-row.test.tsx`** (RTL):
   - the current button comes from the running button, or from `showAsCurrentWhenAt` when idle;
-  - a button is disabled when `segmentToPlayWhenAt(marker)` is undefined, but never while it runs,
-    and pressing it then replays its run;
+  - a button is unavailable when `segmentToPlayWhenAt(marker)` is undefined, but never while it
+    runs, and pressing it then replays its run;
+  - an unavailable button stays focusable, keeps the focus when it becomes unavailable, and does
+    nothing when pressed;
   - Reset is `aria-disabled` at 0 and stays focusable;
   - a press calls `play` with that button's segment.
 
@@ -446,8 +451,8 @@ as in the prototype, where `setNodeLevel` has no transition.
   rejected.
 - **Progress adapter:** the marker to `setupDone` and `collected` and back, including a saved state
   with `collected > 0` but `setupDone` false.
-- **Buttons:** `run` for each button at 0, 1, 5 and 11. Collect a Conversation is disabled at 11,
-  and the last two are always disabled.
+- **Buttons:** `run` for each button at 0, 1, 5 and 11. Collect a Conversation is unavailable at 11,
+  and the last two are always unavailable.
 - **`flight.ts`:** the start and end positions and radius, the overshoot point, and landing order
   top to bottom.
 - **Timelines:**
@@ -467,7 +472,7 @@ as in the prototype, where `setNodeLevel` has no transition.
 - Setup shows the lifted column.
 - Three collections give three deck columns and "Conversation 3".
 - Switching to Trace a Case and back keeps the stage.
-- Collect a Conversation is disabled after 10.
+- Collect a Conversation is unavailable after 10, and keeps the focus.
 - Reset clears everything.
 
 The existing Trace a Case tests still pass.

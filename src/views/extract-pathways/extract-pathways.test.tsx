@@ -71,10 +71,10 @@ describe("ExtractPathways", () => {
     expect(screen.getByText("Loading conversations…")).toBeInTheDocument();
     expect(await screen.findByRole("img", { name: "The network." })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Network → Activated Pathways" })).toBeInTheDocument();
-    expect(button("Setup")).toBeEnabled();
-    expect(button("Collect a Conversation")).toBeEnabled();
-    expect(button("Collect All Conversations")).toBeDisabled();
-    expect(button("Extract Pathways")).toBeDisabled();
+    expect(button("Setup")).toHaveAttribute("aria-disabled", "false");
+    expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "false");
+    expect(button("Collect All Conversations")).toHaveAttribute("aria-disabled", "true");
+    expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "true");
     expect(button("Reset")).toHaveAttribute("aria-disabled", "true");
   });
 
@@ -120,7 +120,7 @@ describe("ExtractPathways", () => {
       fireEvent.click(button("Collect a Conversation"));
     }
     expect(drawing(collectedLabel(10))).toBeInTheDocument();
-    expect(button("Collect a Conversation")).toBeDisabled();
+    expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "true");
   });
 
   it("collects no more conversations than were loaded", async () => {
@@ -131,7 +131,7 @@ describe("ExtractPathways", () => {
     for (let i = 0; i < 3; i++) {
       fireEvent.click(button("Collect a Conversation"));
     }
-    expect(button("Collect a Conversation")).toBeDisabled();
+    expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "true");
   });
 
   it("opens at the stage saved, clamped to the conversations loaded", async () => {

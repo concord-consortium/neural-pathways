@@ -11,11 +11,13 @@ interface StepRowProps {
 
 /**
  * A view's step buttons, then Reset. A button plays the segment it gives for the marker the timeline
- * rests at; one that gives none is disabled, unless it is the one running, which replays its run.
+ * rests at; one that gives none is unavailable (aria-disabled), unless it is the one running, which
+ * replays its run.
  * The current step is marked with aria-current="step": the button whose run plays, or, while
  * nothing runs, the one that says to at the marker. Pressing it again replays it, so the buttons
- * aren't toggles. Reset is unavailable (aria-disabled) at the start with nothing running, and stays
- * in the tab order.
+ * aren't toggles. Reset is unavailable at the start with nothing running. Unavailable buttons stay
+ * in the tab order, so one that becomes unavailable while it has focus, such as a step reaching its
+ * limit, keeps the focus instead of dropping it to the page.
  */
 export const StepRow = observer(function StepRow({ player, buttons }: StepRowProps) {
   const { marker, currentRun } = player;
@@ -29,7 +31,7 @@ export const StepRow = observer(function StepRow({ player, buttons }: StepRowPro
         return (
           <button key={button.key} type="button" className="step-row__step"
             aria-current={current ? "step" : undefined}
-            disabled={!segment}
+            aria-disabled={!segment}
             onClick={segment && (() => player.play(button.key, segment))}>
             {button.label}
           </button>

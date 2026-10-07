@@ -23,7 +23,7 @@ class Progress implements StepProgress {
   }
 }
 
-/** One: always from 0 to 1, pressed at 1. Next: on one marker, up to 3. Later: always disabled. */
+/** One: always from 0 to 1, current at 1. Next: on one marker, up to 3. Later: always unavailable. */
 const BUTTONS: StepButton[] = [
   {
     key: "one",
@@ -68,13 +68,32 @@ describe("StepRow", () => {
       .toEqual(["One", "Next", "Later", "Reset"]);
   });
 
-  it("disables a button with no segment, and makes Reset unavailable at the start", () => {
+  it("makes a button with no segment unavailable, and Reset at the start", () => {
     showRow();
-    expect(button("Later")).toBeDisabled();
-    expect(button("Next")).toBeEnabled();
+    expect(button("Later")).toHaveAttribute("aria-disabled", "true");
+    expect(button("Next")).toHaveAttribute("aria-disabled", "false");
     expect(button("Reset")).toHaveAttribute("aria-disabled", "true");
     // Not disabled, so it stays in the tab order.
     expect(button("Reset")).toBeEnabled();
+  });
+
+  it("keeps an unavailable button focusable, and does nothing when it is pressed", () => {
+    // eslint-disable-next-line testing-library/render-result-naming-convention -- showRow returns StepPlayer
+    const player = showRow();
+    const play = jest.spyOn(player, "play");
+    // Not disabled, so it stays in the tab order.
+    expect(button("Later")).toBeEnabled();
+    fireEvent.click(button("Later"));
+    expect(play).not.toHaveBeenCalled();
+  });
+
+  it("keeps the focus on a button that becomes unavailable when its run ends", () => {
+    showRow(2);
+    button("Next").focus();
+    fireEvent.click(button("Next"));
+    act(() => jest.advanceTimersByTime(1100));
+    expect(button("Next")).toHaveAttribute("aria-disabled", "true");
+    expect(button("Next")).toHaveFocus();
   });
 
   it("marks as current the button that says to at the marker while nothing runs", () => {
@@ -104,7 +123,7 @@ describe("StepRow", () => {
     };
     const player = showRow(0, [jumpAhead]);
     fireEvent.click(button("Jump"));
-    expect(button("Jump")).toBeEnabled();
+    expect(button("Jump")).toHaveAttribute("aria-disabled", "false");
     expect(button("Jump")).toHaveAttribute("aria-current", "step");
     const play = jest.spyOn(player, "play");
     fireEvent.click(button("Jump"));
