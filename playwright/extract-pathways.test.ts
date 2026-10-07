@@ -12,11 +12,11 @@ async function open(page: Page, reducedMotion: "reduce" | "no-preference" = "red
 test("Setup lifts the hidden neurons out of the network, animated", async ({ page }) => {
   await open(page, "no-preference");
   await page.getByRole("button", { name: "Setup" }).click();
+  // Setup takes a few seconds, so the column isn't described as lifted out yet.
+  await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
   await expect(page.getByRole("img", { name: LIFTED })).toBeVisible({ timeout: 10_000 });
 });
 
-test("three collections give three deck columns", async ({ page }) => {
-  await open(page);
 test("a narrow frame scales the canvas down only so far, then scrolls it sideways", async ({ page }) => {
   await page.setViewportSize({ width: 600, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -35,6 +35,8 @@ test("a narrow frame scales the canvas down only so far, then scrolls it sideway
   expect(scrolls).toEqual({ page: false, drawing: true });
 });
 
+test("three collections give three deck columns", async ({ page }) => {
+  await open(page);
   await page.getByRole("button", { name: "Setup" }).click();
   const collect = page.getByRole("button", { name: "Collect a Conversation" });
   for (let i = 0; i < 3; i++) {

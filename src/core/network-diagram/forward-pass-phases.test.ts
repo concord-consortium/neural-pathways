@@ -108,7 +108,11 @@ describe("edgeDrawAt", () => {
     expect(edgeDrawAt(0)).toBe(0);
     expect(edgeDrawAt(0.5)).toBe(0.5);
     expect(edgeDrawAt(1)).toBe(1);
-    expect(edgeDrawAt(0.25)).toBeGreaterThan(0);
-    expect(edgeDrawAt(0.25)).toBeLessThan(0.5);
+  });
+
+  it("eases each half on the edge curve, cubic-bezier(.3,.05,.4,1)", () => {
+    // Halfway through either half, the curve is at about 0.698, so that half has added 0.349.
+    expect(edgeDrawAt(0.25)).toBeCloseTo(0.3491, 4);
+    expect(edgeDrawAt(0.75)).toBeCloseTo(0.8491, 4);
   });
 });

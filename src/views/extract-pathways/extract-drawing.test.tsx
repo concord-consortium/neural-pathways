@@ -3,11 +3,13 @@ import { render, screen } from "@testing-library/react";
 import { toyNetwork } from "../../core/network/toy-network";
 import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
-import { signColor } from "../../core/colors";
+import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
 import { ExtractScene, restScene } from "./extract-scene";
 import { extractGeometry, MIN_CANVAS_WIDTH } from "./extract-geometry";
+import { flightDuration } from "./flight";
 import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
@@ -32,6 +34,24 @@ function strongest(values: number[]): number {
 function placeOf(element: Element): { x: number; y: number } {
   const match = /translate\(([-\d.]+),\s*([-\d.]+)\)/.exec(element.getAttribute("transform") ?? "");
   return { x: Number(match![1]), y: Number(match![2]) };
+}
+
+/** The scale in a copy's transform. */
+function scaleOf(element: Element): number {
+  return Number(/scale\(([-\d.e]+)\)/.exec(element.getAttribute("transform") ?? "")![1]);
+}
+
+/** Each copy's gauge in deck column `column`, as its height and y, or undefined where none is drawn. */
+function deckGauges(column: number): ({ height: number; y: number } | undefined)[] {
+  // eslint-disable-next-line testing-library/no-node-access -- copies are groups with only a test id
+  const copies = screen.getByTestId(`deck-column-${column}`).querySelectorAll("[data-testid^='copy-']");
+  return [...copies].map(copy => {
+    // eslint-disable-next-line testing-library/no-node-access -- the gauge is an unlabeled rect in a copy
+    const gauge = copy.querySelector("rect");
+    return gauge
+      ? { height: Number(gauge.getAttribute("height")), y: Number(gauge.getAttribute("y")) }
+      : undefined;
+  });
 }
 
 describe("ExtractDrawing", () => {
@@ -78,11 +98,35 @@ describe("ExtractDrawing", () => {
     )).toBeInTheDocument();
     expect(screen.getByText("Conversation 3")).toBeInTheDocument();
     expect(screen.getAllByTestId(/^deck-column-/)).toHaveLength(3);
-    const values = [...passes[1].layers[1], ...passes[1].layers[2]];
-    const k = strongest(values);
-    // eslint-disable-next-line testing-library/no-node-access -- the gauge is an unlabeled rect in a copy
-    const gauge = screen.getByTestId("deck-column-1").querySelector(`[data-testid='copy-${k}'] rect`);
-    expect(gauge).toHaveAttribute("fill", signColor(values[k]));
+  });
+
+  it("draws each deck column from its own conversation, positive gauges up and negative down", () => {
+    renderDrawing(restScene(SIZES, 3));
+    [0, 1].forEach(column => {
+      const values = [...passes[column].layers[1], ...passes[column].layers[2]];
+      const expected = values.map(v => {
+        const height = geometry.deck.r * Math.min(1, Math.abs(v));
+        return height >= MIN_GAUGE ? { height, y: v >= 0 ? -height : 0 } : undefined;
+      });
+      expect(deckGauges(column)).toEqual(expected);
+    });
+  });
+
+  it("starts a deck copy on its hidden neuron, at the neuron's size", () => {
+    const flyAt = collectDuration(SIZES, 2) - flightDuration(14);
+    renderDrawing(collectSceneAt(SIZES, 2, flyAt));
+    // eslint-disable-next-line testing-library/no-node-access -- copies are groups with only a test id
+    const first = screen.getByTestId("deck-column-1").querySelector("[data-testid='copy-0']")!;
+    expect(placeOf(first)).toEqual(geometry.hidden[0]);
+    expect(scaleOf(first)).toBeCloseTo(geometry.network.radius / geometry.deck.r);
+  });
+
+  it("doesn't count a deck column still in flight as collected", () => {
+    renderDrawing(collectSceneAt(SIZES, 2, collectDuration(SIZES, 2) - 1000));
+    expect(screen.getAllByTestId(/^deck-column-/)).toHaveLength(2);
+    expect(screen.getByRole(
+      "img", { name: "The network, with its 14 hidden neurons lifted out and 1 conversation collected." },
+    )).toBeInTheDocument();
   });
 
   it("names one conversation collected in the singular", () => {

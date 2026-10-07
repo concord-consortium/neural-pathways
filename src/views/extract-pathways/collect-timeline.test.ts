@@ -6,6 +6,7 @@ const SIZES = [10, 8, 6, 2];
 const UNDIM = 320;
 /** Swap: the network is blank 504 ms after the undim and refilled by 3,024. Quick swap: done at 456. */
 const BLANK = UNDIM + 504;
+const REFILLED = UNDIM + 3024;
 const QUICK_DONE = UNDIM + 456;
 
 describe("collectVersion", () => {
@@ -90,6 +91,12 @@ describe("collectSceneAt", () => {
     const sweepStart = refill + 9 * 30 + 30;
     const sweep = collectSceneAt(SIZES, 2, sweepStart + 180).network.edgeDraw[0];
     expect(sweep.every(x => Math.abs(x - 0.5) < 1e-9)).toBe(true);
+  });
+
+  it("swaps: pops the answer in over 460 ms once the network is refilled", () => {
+    expect(collectSceneAt(SIZES, 2, REFILLED - 1).network.answer).toBe(0);
+    expect(collectSceneAt(SIZES, 2, REFILLED + 230).network.answer).toBeCloseTo(0.5);
+    expect(collectSceneAt(SIZES, 2, REFILLED + 460).network.answer).toBe(1);
   });
 
   it("takes the quick swap once the network is back, with a shorter bounce", () => {
