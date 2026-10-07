@@ -167,7 +167,7 @@ describe("ExtractPathways", () => {
       await screen.findByRole("img", { name: "The network." });
       jest.useFakeTimers();
       fireEvent.click(button("Setup"));
-      expect(button("Setup")).toHaveAttribute("aria-pressed", "true");
+      expect(button("Setup")).toHaveAttribute("aria-current", "step");
       act(() => jest.advanceTimersByTime(1000));
       expect(state.setupDone).toBe(false);
       act(() => jest.advanceTimersByTime(setupDuration(SIZES)));

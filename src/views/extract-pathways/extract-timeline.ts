@@ -7,11 +7,13 @@ import { setupDuration, setupSceneAt } from "./setup-timeline";
 export function extractTimeline(columnSizes: readonly number[]): StepTimeline<ExtractScene> {
   return {
     duration: ({ to }) => (to === 1 ? setupDuration(columnSizes) : collectDuration(columnSizes, to - 1)),
-    sceneAt: (marker, run) => {
-      if (!run) {
+    sceneAt: (marker, frame) => {
+      if (!frame) {
         return restScene(columnSizes, marker);
       }
-      return run.to === 1 ? setupSceneAt(columnSizes, run.t) : collectSceneAt(columnSizes, run.to - 1, run.t);
+      return frame.to === 1
+        ? setupSceneAt(columnSizes, frame.t)
+        : collectSceneAt(columnSizes, frame.to - 1, frame.t);
     },
   };
 }
