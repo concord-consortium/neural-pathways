@@ -53,8 +53,10 @@
   font-family: colors.$mono;
   font-size: 13px;
 
+  // Darker than the prototype's #A6AEBA, which is 2.07:1 on $surface: the example is the only
+  // hint of the syntax before the help is opened. 4.5:1.
   &::placeholder {
-    color: #A6AEBA;
+    color: colors.$ink-3;
   }
 }
 
