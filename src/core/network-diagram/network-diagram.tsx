@@ -9,11 +9,15 @@ import { layoutNetwork, NetworkLayout, PILL_GAP } from "./layout";
 import { Scene } from "./scene";
 import "./network-diagram.scss";
 
+/**
+ * As in the prototype, "Input Layer" captions the first drawn column, the embedding. The code calls
+ * the word-presence vector before it the input.
+ */
 export const COLUMN_CAPTIONS = ["Input Layer", "Hidden Layer 1", "Hidden Layer 2", "Output Layer"];
 /** Output units top to bottom: Approach (class 1) above Wait (class 0), as in the prototype. */
 export const OUTPUT_ORDER = [1, 0];
-/** The size drawn until the container reports its own. */
-export const DIAGRAM_DEFAULT_SIZE = { width: 537, height: 420 };
+/** The size drawn until the container reports its own: the content box Trace a Case gives it. */
+export const DIAGRAM_DEFAULT_SIZE = { width: 537, height: 440 };
 /** Stroke widths for the thin, mid and thick bands. */
 const EDGE_WIDTHS = [1, 2, 3];
 /** The winning pill grows by this much on every side. */
@@ -56,15 +60,22 @@ interface NetworkDiagramProps {
 }
 
 /**
- * One conversation's pass through the network, drawn as far as `scene` says. Stateless: views
- * decide what is drawn and animate by passing new scenes. Shared by Trace a Case, Extract
- * Pathways and Investigate Pathways.
+ * One conversation's pass through the network, drawn as far as `scene` says. The only state it
+ * keeps is its measured size: views decide what is drawn, and animate by passing new scenes. Built
+ * to be shared by Trace a Case, Extract Pathways and Investigate Pathways.
+ *
+ * It expects this lesson's network: four drawn columns (`COLUMN_CAPTIONS`) and two outputs,
+ * Approach above Wait (`OUTPUT_ORDER`, the class captions, and CSS classes named after the labels).
+ * A network of another shape needs those generalized first.
  */
 export const NetworkDiagram: React.FC<NetworkDiagramProps> = ({ network, pass, scales, outputLabels, scene }) => {
   const [hostRef, size] = useElementSize<HTMLDivElement>(DIAGRAM_DEFAULT_SIZE);
   const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
+  // layoutNetwork rounds the size, so a sub-pixel resize keeps the same layout and the memoized layers.
+  const roundedWidth = Math.round(size.width);
+  const roundedHeight = Math.round(size.height);
   const layout = useMemo(
-    () => layoutNetwork(columnSizes, size.width, size.height), [columnSizes, size.width, size.height]);
+    () => layoutNetwork(columnSizes, roundedWidth, roundedHeight), [columnSizes, roundedWidth, roundedHeight]);
   const clipPrefix = `network-clip-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const lastColumn = columnSizes.length - 1;
   const { radius } = layout;
@@ -192,7 +203,7 @@ interface StaticLayerProps {
   lastColumn: number;
 }
 
-/** The gray scaffold. Drawn signal halves lie on top and cover it. */
+/** The gray wires. Drawn signal halves lie on top and cover them. */
 const Wires = React.memo(function Wires({ layout, lastColumn }: StaticLayerProps) {
   const { nodes, radius } = layout;
   const lines: React.ReactElement[] = [];
@@ -227,7 +238,7 @@ const Discs = React.memo(function Discs({ layout, clipPrefix }: { layout: Networ
   );
 });
 
-/** Node outlines, drawn over the gauges so the edge stays crisp, and the column captions. */
+/** Node outlines, drawn over the gauges so the rim stays crisp, and the column captions. */
 const Outlines = React.memo(function Outlines({ layout, lastColumn }: StaticLayerProps) {
   const outlines: React.ReactElement[] = [];
   layout.nodes.forEach((column, c) => column.forEach((node, row) => {

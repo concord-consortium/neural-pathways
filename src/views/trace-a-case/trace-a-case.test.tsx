@@ -22,8 +22,8 @@ function item(id: string, text: string, classification: number): S3Item {
   };
 }
 
-// The first is classified Wait.
-const items = fixture.conversations.slice(0, 3).map(c => item(c.id, c.text, c.classification));
+// The first and third are classified Wait, the second Approach.
+const items = [0, 6, 1].map(i => fixture.conversations[i]).map(c => item(c.id, c.text, c.classification));
 const ids = items.map(i => i.id);
 const index: S3Index = { metadata: { fa_fits: {}, review_sets: {} }, items };
 
@@ -72,6 +72,21 @@ describe("TraceACase", () => {
     expect(shared.conversationId).toBe(ids[1]);
     fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
     expect(shared.conversationId).toBe(ids[0]);
+  });
+
+  it("draws the network for the conversation shown", async () => {
+    showView();
+    expect(await screen.findByRole("img", { name: /predicts Wait/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
+    expect(screen.getByRole("img", { name: /predicts Approach/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
+    expect(screen.getByRole("img", { name: /predicts Wait/ })).toBeInTheDocument();
+  });
+
+  it("names the network's section by its heading", async () => {
+    showView();
+    await screen.findByText("1 / 3");
+    expect(screen.getByRole("region", { name: "The Network" })).toBeInTheDocument();
   });
 
   it("opens straight on the saved conversation when the conversations are already loaded", async () => {
