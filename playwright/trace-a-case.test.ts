@@ -104,8 +104,6 @@ test("the filter searches the observer's notes, ignoring case", async ({ page })
   await expect(page.getByText("212 of 800")).toBeVisible();
   await filter.fill("water");
   await expect(page.getByText("363 of 800")).toBeVisible();
-  await filter.fill("yandor or sooma");
-  await expect(page.getByText("Write OR in capitals")).toBeVisible();
 });
 
 test("a number field matches the number exactly", async ({ page }) => {

@@ -36,7 +36,7 @@ Sources:
 | The text being typed | Kept in volatile state on `SharedState`, `queryDraft`, while it differs from `query`. Never saved, never an undo step. | A student may switch to another view to look something up while writing a query. Volatile state keeps the draft for the life of the page, and every view's bar shows the same draft. |
 | Correcting the conversation | `setQueryAndCorrect(query, ids)`: the view runs the filter first, then one action stores the query and corrects the conversation. | `docs/undo.md` option 1, the "filter run first" variant. Filtering 800 records is synchronous, so the models don't need the engine through a keystone context. |
 | An unreadable query | The count shows the error. The list falls back to the stored query's matches. An unreadable draft is never stored. | A half-typed query doesn't throw the student back to 800, and nothing unreadable reaches saved state from the bar. |
-| Operators | Uppercase only: `AND`, `OR`, `NOT`, as in Lucene and the explorer. An unquoted lowercase `and`, `or` or `not` as a bare word is an error, `Write OR in capitals`; quoted, or after a field, it is searched for. | The text box is for advanced users; the help says so. Searched as a word, a lowercase operator matches inside hundreds of notes and gives a plausible wrong count. |
+| Operators | Uppercase only: `AND`, `OR`, `NOT`, as in Lucene and the explorer. Lowercase are search words, with no special handling. | The text box is for advanced users; the help says so. Keeping lowercase as plain words keeps the code simple, though a lowercase `or` matches inside most notes and narrows the results. |
 | The observer's notes | Searchable: an `observation` field, and bare words search both the alien text and the notes. `text:` or `observation:` searches only one. | Added after the final review. Searching them can lead to the planted bias, which is acceptable: reading the notes is how students are meant to find it. |
 | Case | Ignored everywhere, quoted or not: the records' text and notes, and every query value, are lowercased. | liqe matches a quoted value case-sensitively, and the notes start sentences with capitals. |
 | Substring matching | Kept, for the notes too: `water` also matches "underwater". | Predictable, and consistent with the rest of the filter. Whole-word matching can come later. |
@@ -60,7 +60,7 @@ Checked on 2026-10-06 with throwaway scripts.
 - `not yandor` and `yandor or sooma` treat the lowercase word as a search word. A bare word is a
   substring match, so on the real data this narrows rather than failing: `or` is inside 700 of the
   800 conversations, and `yandor or sooma` gives 210, the same as `yandor sooma` (`yandor OR sooma`
-  gives 560). Found in the final review, 2026-10-06. It is now an error (see Decisions).
+  gives 560). Found in the final review, 2026-10-06. Kept as it is, for simplicity (see Decisions).
 - `(model_correct:0`, `a AND`, `NOT` and `AND` throw `Error: Found no parsings.`
 - `model_correct:0)` and `OR yandor` throw a `SyntaxError` with `offset`, `line` and `column`.
 - `pathway_1:>abc` parses, then `filter` throws `TypeError: Expected a number.`
@@ -132,8 +132,7 @@ key.
 1. A query that is empty or only whitespace matches every conversation.
 2. Parse the query with liqe's `parse`.
 3. Walk the parsed query once:
-   - A tag with an implicit field (a bare word) becomes `(text:word OR observation:word)`. An
-     unquoted `and`, `or` or `not`, in any case, is an error instead.
+   - A tag with an implicit field (a bare word) becomes `(text:word OR observation:word)`.
    - A string value is lowercased, to match the lowercased records.
    - A field name not in `fields` is an error.
    - A comparison (`:>`, `:<`, `:>=`, `:<=`) whose value isn't a number is an error.
@@ -151,7 +150,6 @@ doesn't list them.
 |---|---|
 | A field not in `fields`, including a hidden attribute | `Unknown field: bogus` |
 | A comparison without a number | `pathway_1:> needs a number` (the field and operator typed) |
-| An unquoted lowercase operator as a bare word | `Write OR in capitals` (the word, in capitals) |
 | A word given to a number field (`n`, an attribute, a pathway), such as `model_correct:no` | `model_correct needs a number`. Without it the query matches nothing: the records hold 0 and 1, not the value labels. |
 | liqe's `Found no parsings.`: a trailing `AND`, an unclosed `(`, a lone `NOT` | `Incomplete query` |
 | liqe's `SyntaxError` | `Can't read the query at column 16` (liqe's `column`) |
@@ -317,7 +315,7 @@ Called from an `observer` component. It reads `shared.query` and `shared.queryDr
       `target_label` of `wait`; `text:` and `observation:` search only one;
     - case is ignored, quoted or not;
     - each error message, including a hidden attribute reported as unknown;
-    - an unquoted lowercase `or`, `and` or `not` is an error; quoted, or after a field, it is searched for;
+    - a lowercase `or` is a word to search for;
     - ids come back in dataset order.
   - `conversationFilterFor` returns the same filter for the same index.
 - **`shared-state.test.ts`:**

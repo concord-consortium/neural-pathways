@@ -91,9 +91,6 @@ interface QueryFields {
 /** The fields a bare word searches: the conversation's alien words and the observer's notes. */
 const BARE_WORD_FIELDS = ["text", "observation"];
 
-/** Lowercase words the student most likely meant as operators, which liqe only reads in capitals. */
-const OPERATOR_WORDS = new Set(["and", "or", "not"]);
-
 /** The tag with its value lowercased, to match the lowercased records. */
 function lowercased(tag: TagToken): TagToken {
   const { expression } = tag;
@@ -108,15 +105,9 @@ function fieldToken(name: string, location: TagToken["location"]): FieldToken {
 
 /**
  * A bare word searches the alien text or the observation. Without a field, liqe would search every
- * string field, target_label included. An unquoted lowercase and, or or not would quietly become a
- * word to search for, which matches inside hundreds of notes, so it is an error instead.
+ * string field, target_label included.
  */
 function checkBareWord(tag: TagToken): ParserAst {
-  const { expression } = tag;
-  if (expression.type === "LiteralExpression" && !expression.quoted && typeof expression.value === "string"
-    && OPERATOR_WORDS.has(expression.value.toLowerCase())) {
-    throw new QueryError(`Write ${expression.value.toUpperCase()} in capitals`);
-  }
   const [left, right] = BARE_WORD_FIELDS.map(name => ({ ...lowercased(tag), field: fieldToken(name, tag.location) }));
   return {
     type: "ParenthesizedExpression",

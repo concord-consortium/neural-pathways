@@ -122,10 +122,9 @@ describe("run", () => {
     expect(matches("chullo OR blikka")).toEqual({ ids: ["aaa111", "ccc333", "ddd444"] });
   });
 
-  it("asks for capitals when an operator is written in lowercase", () => {
-    expect(matches("yandor or chullo")).toEqual({ error: "Write OR in capitals" });
-    expect(matches("not yandor")).toEqual({ error: "Write NOT in capitals" });
-    expect(matches("yandor And sooma")).toEqual({ error: "Write AND in capitals" });
+  it("treats a lowercase operator as a word to search for", () => {
+    expect(matches("yandor or chullo")).toEqual({ ids: [] });
+    expect(matches("nothing or")).toEqual({ ids: ["ccc333"] });
   });
 
   it("searches for an operator word that is quoted or given a field", () => {
