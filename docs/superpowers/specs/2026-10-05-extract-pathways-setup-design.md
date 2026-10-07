@@ -29,7 +29,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 |---|---|---|
 | Animate, speed and About | Not in this story. The steps always animate, at the prototype's Med timings. | NPW-38 and NPW-44 aren't built yet, and NPW-48 comes before them. NPW-24 adds both, and the activation legend, to the view. |
 | The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 promoted choreography to core once a second view needed it, and this is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
-| Button rules | Each button is a function from the marker the timeline rests at to the segment it plays, or to nothing when it is disabled. Core derives disabled and current from that. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
+| Button rules | Each button is a function from the marker the timeline rests at to the segment it plays, or to nothing when it is unavailable. Core derives unavailable and current from that. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
 | Progress | One marker: a point on the view's timeline where the scene rests and progress is saved. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
 | Markers and segments | The timeline's resting points are markers, and the animation between two is a segment, as in Lottie (`playSegments`) and After Effects. "Step" stays with the buttons and the row. | A button isn't a step of the timeline: Collect a Conversation plays a different segment each press, and Collect All will play across many. Trace a Case's Step *k* happens to play the segment to marker *k*. "Keyframe" would suggest in-betweens filled in for us, and `network-drawing.tsx` already uses it for the pill's pop. |
 | Press rules in this story | Trace a Case's: any enabled button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but disabled. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
@@ -103,7 +103,7 @@ interface StepButton {
   label: string;
   /**
    * The segment this button plays when the timeline rests at `marker`, or undefined if it should be
-   * disabled at this marker.
+   * unavailable at this marker.
    */
   segmentToPlayWhenAt(marker: Marker): Segment | undefined;
   /** Whether it is marked as the current step while nothing plays. */

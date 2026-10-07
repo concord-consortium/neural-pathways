@@ -7,7 +7,7 @@ export interface StepButton {
   label: string;
   /**
    * The segment this button plays when the timeline rests at `marker`, or undefined if it should be
-   * disabled at this marker.
+   * unavailable at this marker.
    */
   segmentToPlayWhenAt(marker: Marker): Segment | undefined;
   /** Whether it is marked as the current step while nothing plays. */

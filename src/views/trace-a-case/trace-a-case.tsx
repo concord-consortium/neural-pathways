@@ -75,8 +75,6 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
       <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
         <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
         <div className="trace-a-case__diagram">
-          {/* The scene is read only in this Observer and in StepRow, so a step playing re-renders
-              them and not the card. */}
           <Observer>
             {() => (
               <NetworkDiagram network={toyNetwork} pass={passes[position]} scales={scales}
