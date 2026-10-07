@@ -118,6 +118,14 @@ describe("run", () => {
       .toEqual({ ids: ["bbb222", "ccc333"] });
   });
 
+  // pathway_1:2 matches nothing exactly, but bbb222's 2.4 as text: only checked terms tell them apart.
+  it("checks the terms inside NOT and parentheses as it does any other", () => {
+    expect(matches("NOT pathway_1:2")).toEqual({ ids: ALL });
+    expect(matches("(pathway_1:2)")).toEqual({ ids: [] });
+    expect(matches("NOT bogus:1")).toEqual({ error: "Unknown field: bogus" });
+    expect(matches("(bogus:1)")).toEqual({ error: "Unknown field: bogus" });
+  });
+
   it("returns OR's matches in dataset order", () => {
     expect(matches("chullo OR blikka")).toEqual({ ids: ["aaa111", "ccc333", "ddd444"] });
   });
