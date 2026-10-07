@@ -16,7 +16,7 @@ const FIXED_FIELDS: Record<string, string> = {
 };
 
 const OPERATORS: [string, string][] = [
-  ["field:value", "Equals, or contains for words. Capitals don't matter."],
+  ["field:value", "Equals, or contains for words. Capitals in the value don't matter."],
   ["field:>value", "Greater than. Also <, >= and <="],
   ["AND", "Both"],
   ["OR", "Either"],
