@@ -1,13 +1,10 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
-import { observer } from "mobx-react-lite";
+import { Observer, observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
-import { ForwardPass } from "../../core/network/forward";
 import { indexPasses } from "../../core/network/index-passes";
-import { NetworkScales } from "../../core/network/network-scales";
 import { toyNetwork } from "../../core/network/toy-network";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
-import { Scene } from "../../core/network-diagram/scene";
 import { validConversationId } from "../../core/state/conversation";
 import { TraceACaseState } from "./trace-a-case-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
@@ -78,25 +75,16 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
       <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
         <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
         <div className="trace-a-case__diagram">
-          <PlayerDiagram player={player} pass={passes[position]} scales={scales} />
+          {/* The scene is read only in this Observer and in StepRow, so a step playing re-renders
+              them and not the card. */}
+          <Observer>
+            {() => (
+              <NetworkDiagram network={toyNetwork} pass={passes[position]} scales={scales}
+                outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+            )}
+          </Observer>
         </div>
       </section>
     </div>
-  );
-});
-
-// The player is read only in StepRow and this observer, so a step playing re-renders them and not
-// the card.
-
-interface PlayerDiagramProps {
-  player: StepPlayer<Scene>;
-  pass: ForwardPass;
-  scales: NetworkScales;
-}
-
-const PlayerDiagram = observer(function PlayerDiagram({ player, pass, scales }: PlayerDiagramProps) {
-  return (
-    <NetworkDiagram network={toyNetwork} pass={pass} scales={scales}
-      outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
   );
 });

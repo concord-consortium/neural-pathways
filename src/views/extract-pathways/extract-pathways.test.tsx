@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import { SharedState } from "../../core/state/shared-state";
+import * as viewStateContext from "../../core/state/view-state-context";
 import { ViewStateProvider } from "../../core/state/view-state-context";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { clearDatasetIndexCache } from "../../core/use-dataset-index";
@@ -181,6 +182,23 @@ describe("ExtractPathways", () => {
       act(() => jest.advanceTimersByTime(collectDuration(SIZES, 1)));
       expect(state.collected).toBe(1);
       expect(drawing(collectedLabel(1))).toBeInTheDocument();
+    });
+
+    it("doesn't re-render the view's body while a step plays", async () => {
+      showView();
+      await screen.findByRole("img", { name: "The network." });
+      // The body reads the view's state on every render.
+      const bodyRenders = jest.spyOn(viewStateContext, "useViewState");
+      jest.useFakeTimers();
+      try {
+        fireEvent.click(button("Setup"));
+        act(() => jest.advanceTimersByTime(1000));
+        // The drawing has moved on: the copies are in flight.
+        expect(screen.getAllByTestId(/^copy-/).length).toBeGreaterThan(0);
+        expect(bodyRenders).not.toHaveBeenCalled();
+      } finally {
+        bodyRenders.mockRestore();
+      }
     });
 
     it("starts over when Setup is pressed during a collection", async () => {

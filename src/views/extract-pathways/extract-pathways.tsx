@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useMemo } from "react";
-import { observer } from "mobx-react-lite";
+import { Observer, observer } from "mobx-react-lite";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
 import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
@@ -58,8 +58,14 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
       <section className="extract-pathways__network" aria-label={PANEL_TITLE}>
         <h2 className="extract-pathways__network-head">{PANEL_TITLE}</h2>
         <div className="extract-pathways__drawing">
-          <ExtractDrawing network={toyNetwork} passes={passes} scales={scales}
-            outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+          {/* The scene is read only in this Observer and in StepRow, so a step playing re-renders
+              them and not the whole view. */}
+          <Observer>
+            {() => (
+              <ExtractDrawing network={toyNetwork} passes={passes} scales={scales}
+                outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+            )}
+          </Observer>
         </div>
       </section>
     </>

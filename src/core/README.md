@@ -67,7 +67,9 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   scene is still and progress is saved, and plays segments between them. `StepPlayer` plays the
   segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. A view
   lists its buttons as `StepButton`s, each saying which segment it plays when the timeline rests
-  at a marker, and `StepRow` draws them with Reset.
+  at a marker, and `StepRow` draws them with Reset. The player's scene changes on every frame of a
+  run, so a view reads `player.scene` only inside a small `<Observer>` around its drawing; the
+  rest of the view then doesn't re-render while a step plays.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words (`conversationWords`). Items are plain data, so this is a function that takes the text, not
