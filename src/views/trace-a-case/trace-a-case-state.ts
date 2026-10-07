@@ -1,7 +1,7 @@
 import "../../core/state/setup";
 import { Model, model, modelAction, tProp, types } from "mobx-keystone";
 
-/** A marker on Trace a Case's timeline: how many of the pass's four steps are done, none to all. */
+/** A marker on Trace a Case's timeline: how many of Steps 1–4 are done, 0 to 4. */
 const markerType = types.refinement(types.integer, n => n >= 0 && n <= 4, "marker, 0 to 4");
 
 /**
