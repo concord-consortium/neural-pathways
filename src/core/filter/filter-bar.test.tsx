@@ -32,6 +32,12 @@ describe("FilterBar", () => {
     expect(input()).toHaveAttribute("placeholder", "Example: model_correct:0");
   });
 
+  it("keeps focus in the box when the label is pressed, so the draft isn't committed", () => {
+    showBar();
+    // A default that isn't prevented would blur the box before the click refocuses it.
+    expect(fireEvent.mouseDown(screen.getByText("Filter"))).toBe(false);
+  });
+
   it("shows the text it is given", () => {
     showBar({ text: "n:2" });
     expect(input()).toHaveValue("n:2");

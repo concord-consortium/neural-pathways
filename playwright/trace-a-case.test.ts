@@ -127,3 +127,15 @@ test("a query is stored when the help closes on a click outside it", async ({ pa
   await page.keyboard.press("Escape");
   await expect(page.getByText("64 of 800", { exact: true })).toBeVisible();
 });
+
+test("clicking the Filter label doesn't store a half-typed query", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const filter = page.getByRole("textbox", { name: "Filter" });
+  await filter.fill("water");
+  await page.getByText("Filter", { exact: true }).click();
+  await expect(filter).toBeFocused();
+  // Escape discards an unstored draft, so the count returns to every conversation.
+  await page.keyboard.press("Escape");
+  await expect(page.getByText("800", { exact: true })).toBeVisible();
+});

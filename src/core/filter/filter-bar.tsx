@@ -43,7 +43,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           onCommit();
         }
       }}>
-      <label className="filter-bar__label" htmlFor={inputId}>Filter</label>
+      {/* A mousedown on the label would blur the box, with nothing to focus, and commit the draft
+          before the click puts focus back. */}
+      <label className="filter-bar__label" htmlFor={inputId} onMouseDown={event => event.preventDefault()}>
+        Filter
+      </label>
       <input id={inputId} className="filter-bar__input" type="text" value={text}
         placeholder="Example: model_correct:0" autoComplete="off" spellCheck={false}
         aria-invalid={hasError} aria-describedby={countId}
