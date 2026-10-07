@@ -139,3 +139,14 @@ test("clicking the Filter label doesn't store a half-typed query", async ({ page
   await page.keyboard.press("Escape");
   await expect(page.getByText("800", { exact: true })).toBeVisible();
 });
+
+test("the filter bar shows focus in forced-colors mode", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const bar = page.locator(".filter-bar");
+  const outline = () => bar.evaluate(element => getComputedStyle(element).outlineStyle);
+  expect(await outline()).toBe("none");
+  await page.getByRole("textbox", { name: "Filter" }).focus();
+  expect(await outline()).toBe("solid");
+});
