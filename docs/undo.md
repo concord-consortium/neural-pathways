@@ -150,11 +150,12 @@ behind, and the student's original conversation is lost.
 7. **Extract Pathways writes its progress in stages as an animation runs.** Each write from a
    timer is its own step. Decide whether an extraction can be undone at all. If it can, run it
    as a `@modelFlow` or group it with `withGroupFlow` or `createGroup`.
-8. **Trace a Case's steps write twice.** Pressing a step saves the step before it, and the step
-   itself is saved from a `requestAnimationFrame` tick when it finishes (`StepPlayer` in
-   `src/views/trace-a-case/step-player.ts`). Unchanged, one press is two undo steps, and the
-   second isn't tied to anything the student did. Group the two writes, make the completion
-   `withoutUndo`, or record only the press.
+8. **A step press writes twice.** The shared step player (`StepPlayer` in
+   `src/core/steps/step-player.ts`) saves the marker a run starts from when a step button is
+   pressed, and the marker it ends at from a `requestAnimationFrame` tick when it finishes. Trace a
+   Case's steps work this way. Unchanged, one press is two undo steps, and the second isn't tied to
+   anything the student did. Group the two writes, make the completion `withoutUndo`, or record
+   only the press.
 9. **Settings versus work.** Decide which fields are undoable:
    - `animate` and `speed` look like preferences;
    - Correlations' `mode` and `openDetail` look like navigation.
