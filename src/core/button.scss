@@ -1,0 +1,11 @@
+@use "sass:color";
+@use "./colors" as colors;
+
+// A lesson button that is unavailable. It uses aria-disabled rather than disabled, so it keeps its
+// place in the tab order. Only its face fades: opacity on the whole button would fade its focus
+// ring too. For the white buttons with a $rule border and $ink-2 text.
+@mixin unavailable {
+  border-color: color.change(colors.$rule, $alpha: 0.35);
+  color: color.change(colors.$ink-2, $alpha: 0.35);
+  cursor: default;
+}
