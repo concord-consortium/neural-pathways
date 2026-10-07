@@ -446,8 +446,8 @@ as in the prototype, where `setNodeLevel` has no transition.
   rejected.
 - **Progress adapter:** the marker to `setupDone` and `collected` and back, including a saved state
   with `collected > 0` but `setupDone` false.
-- **Buttons:** `segmentToPlayWhenAt` for each button at 0, 1, 5 and 11. Collect a Conversation is disabled at 11,
-  and the last two are always disabled.
+- **Buttons:** `segmentToPlayWhenAt` for each button at 0, 1, 5 and 11. Collect a Conversation is
+  disabled at 11, and the last two are always disabled.
 - **`flight.ts`:** the start and end positions and radius, the overshoot point, and landing order
   top to bottom.
 - **Timelines:**
@@ -488,7 +488,8 @@ The existing Trace a Case tests still pass.
 
 ## PRs
 
-Two stacked PRs, so the shared system is reviewed before the view that uses it. Moves go in commits of their own, apart from edits, so git shows them as renames.
+Two stacked PRs, so the shared system is reviewed before the view that uses it. Moves go in
+commits of their own, apart from edits, so git shows them as renames.
 
 1. **The shared step system and the diagram split** (about 20 files): `src/core/steps/`, Trace a
    Case moved onto it, `forward-pass-phases.ts`, `Scene.hiddenLayerSpotlight` and `NetworkDrawing`. Nothing
