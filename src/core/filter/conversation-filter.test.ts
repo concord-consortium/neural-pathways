@@ -2,6 +2,7 @@ import { conversationFilterFor, createConversationFilter, FIXED_FIELDS, idsFor }
 import { alien3Dataset } from "../datasets/alien3-dataset";
 import { RESERVED_FIELD_NAMES } from "../datasets/dataset-definition";
 import { filterTestIndex } from "./__fixtures__/filter-test-index";
+import { EXAMPLES, FIELD_DESCRIPTIONS } from "./filter-help";
 
 const ALL = ["aaa111", "bbb222", "ccc333", "ddd444"];
 
@@ -215,6 +216,43 @@ describe("createConversationFilter", () => {
     datasetIndex.items[0].target_label = null;
     const filter = createConversationFilter(datasetIndex, alien3Dataset, []);
     expect(filter.run("target_label:wait")).toEqual({ ids: ["ddd444"] });
+  });
+
+  it("leaves out pathway scores the conversation doesn't have", () => {
+    const datasetIndex = filterTestIndex();
+    datasetIndex.items[0].pathway_scores = {};
+    const filter = conversationFilterFor(datasetIndex);
+    expect(filter.run("pathway_1:>-10")).toEqual({ ids: ["bbb222", "ccc333", "ddd444"] });
+    expect(filter.run("NOT pathway_1:>-10")).toEqual({ ids: ["aaa111"] });
+  });
+
+  it("refuses an index with more than one fit, since a pathway's number would be ambiguous", () => {
+    const datasetIndex = filterTestIndex();
+    const fits = datasetIndex.metadata.fa_fits;
+    fits["another-fit"] = fits["alien-fa-3"];
+    expect(() => createConversationFilter(datasetIndex, alien3Dataset, []))
+      .toThrow("Expected at most one fit, found alien-fa-3, another-fit");
+  });
+});
+
+describe("the help's examples", () => {
+  it("all run without an error", () => {
+    const datasetIndex = filterTestIndex();
+    const nearWater = { key: "near_water", label: "Near water", description: "", type: "binary" } as const;
+    datasetIndex.metadata.attributes = [...(datasetIndex.metadata.attributes ?? []), nearWater];
+    const filter = conversationFilterFor(datasetIndex);
+    // [query, result] pairs, so a failure names the example.
+    const results = EXAMPLES.map(([query]) => {
+      const result = filter.run(query);
+      return [query, "error" in result ? result.error : "ok"];
+    });
+    expect(results).toEqual(EXAMPLES.map(([query]) => [query, "ok"]));
+  });
+});
+
+describe("the help's field descriptions", () => {
+  it("describe exactly the fixed fields", () => {
+    expect(Object.keys(FIELD_DESCRIPTIONS).sort()).toEqual([...FIXED_FIELDS].sort());
   });
 });
 

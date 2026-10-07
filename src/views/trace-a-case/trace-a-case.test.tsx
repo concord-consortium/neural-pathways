@@ -376,9 +376,11 @@ describe("TraceACase", () => {
     });
 
     it("shows a stored query's error, and every conversation, when it can't be read", async () => {
-      showView(new SharedState({ query: "bogus:1" }));
-      await screen.findByText("1 / 3");
+      const shared = showView(new SharedState({ query: "bogus:1", conversationId: ids[1] }));
+      await screen.findByText("2 / 3");
       expect(filterBox()).toHaveAccessibleDescription("Unknown field: bogus");
+      // Every conversation is in the list, so the stored one is kept.
+      expect(shared.conversationId).toBe(ids[1]);
     });
 
     it("keeps a half-typed query when the view goes away and comes back", async () => {
