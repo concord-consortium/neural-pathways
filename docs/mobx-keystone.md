@@ -55,12 +55,6 @@ real choice is between those two.
   CLUE and CODAP already store a permanent `type` in each tile's content, so this widens a rule we
   already follow to every model. Saved data that didn't depend on keystone would need a layer that
   adds and strips the field.
-- **Loading trusts `$modelType`.** `fromSnapshot(TraceACaseState, json)` can return something
-  that isn't a `TraceACaseState`. If `json` is saved Correlations state, for example because an
-  author changed an interactive's view after students saved work in it, it returns a
-  `CorrelationsState`. That happens with no error, even with type checking on, while TypeScript
-  still types it as `TraceACaseState`. So the loader also checks the class with `typeCheck` (see
-  [view-state.md](view-state.md)).
 
 ## What the trial should tell us
 

@@ -60,7 +60,7 @@ After this work:
 
 | Decision | Choice | Why |
 |---|---|---|
-| State library | **mobx-keystone** 2.2 on MobX 7 | Class models; snapshots, patches, action recording and built-in undo; runtime type checking on load. Why keystone rather than MST, and its costs, are in `docs/mobx-keystone.md`. |
+| State library | **mobx-keystone** 2.3 on MobX 7 | Class models; snapshots, patches, action recording and built-in undo; runtime type checking on load. Why keystone rather than MST, and its costs, are in `docs/mobx-keystone.md`. |
 | Trees | **Separate trees in both modes:** one per view, plus one shared, as children of one runtime-only root | Matches the AP, where each interactive saves its own state. Save and load work the same way in the standalone app and in the AP. One root lets an action that changes a view's tree and the shared tree be one undo step. |
 | Query and conversation | **Shared** | Moving between views keeps the student on the same filter and the same case. The one exception is Investigate Unknown Pathway's second pane, which keeps its own conversation. |
 | Default queries | **None in code** | Keeps the views free of lesson content. An author who wants a starting query sets it in the interactive's URL (NPW-45). |
@@ -205,7 +205,7 @@ model, which is never saved itself:
 the holder. Views import only from `core`, and `app` supplies the values, so the import boundary
 from NPW-22 is kept.
 
-**Dependencies:** `mobx` ^7, `mobx-keystone` ^2.2, `mobx-react-lite` ^5.1, and `core-js` for the
+**Dependencies:** `mobx` ^7, `mobx-keystone` ^2.3, `mobx-react-lite` ^5.1, and `core-js` for the
 newer `Set` methods that keystone's types declare. In `tsconfig.json`, `experimentalDecorators` is
 removed and `lib` adds `esnext.collection`. Jest compiles with the same tsconfig through `ts-jest`.
 
@@ -240,7 +240,7 @@ an error. Simply starting fresh would overwrite the student's unreadable work on
 - The standalone app keeps state in memory only. A reload is a fresh start, as in the prototype.
 - Keystone type-checks every load and write in every environment. `src/core/state/setup.ts`
   sets `modelAutoTypeChecking` to `AlwaysOn`, so a view that sets a wrong-typed value throws, in
-  production too. keystone's default would check nothing in a browser build.
+  production too. keystone's default, `DevModeOnly`, checks only in development builds.
 - `useViewState` with the wrong model class throws, with a message naming the view id, the
   tree's `$modelType` and the requested class.
 
@@ -266,12 +266,12 @@ Unit tests (Jest), in `src/core/state/` and `src/app/state/`, and beside each vi
   - `ensureValidPane2Conversation` falls back to the first conversation pane 1 isn't showing, or
     to the only one.
 - **`AppState`:**
-  - The shared tree and every view's tree are under one root store.
+  - The shared tree and every view's tree are under one root store, so every view gets the same
+    shared tree.
   - Each view's tree is of the view's model type, and a later call returns the same instance.
   - A view's slot rejects a tree of another model.
   - One undo manager on the root records a change in any view.
   - Every `VIEWS` entry resolves to a tree of its model, or to none.
-  - The shared tree is the same instance across views.
 - **Context:** a test component that uses `useViewState` and `useSharedState` gets the trees
   from the provider. `useViewState` throws when asked for the wrong model class.
 

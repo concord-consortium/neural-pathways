@@ -4,7 +4,7 @@ const SIZES = [10, 8, 6, 2];
 
 describe.each([
   [380, 300],
-  [537, 420],
+  [537, 440],
   [1200, 900],
 ])("layoutNetwork at %i × %i", (width, height) => {
   const layout = layoutNetwork(SIZES, width, height);

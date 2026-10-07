@@ -1,4 +1,4 @@
-import { pearson } from "../../src/lab/explorer/utils/statistics";
+import { pearson } from "../../src/core/math/statistics";
 import { solvedFor } from "./attributes";
 import { CheckResult, recoveryReport } from "./checks";
 import { fitFactorAnalysis } from "./factor-analysis";

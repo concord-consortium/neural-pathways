@@ -150,16 +150,21 @@ behind, and the student's original conversation is lost.
 7. **Extract Pathways writes its progress in stages as an animation runs.** Each write from a
    timer is its own step. Decide whether an extraction can be undone at all. If it can, run it
    as a `@modelFlow` or group it with `withGroupFlow` or `createGroup`.
-8. **Settings versus work.** Decide which fields are undoable:
+8. **Trace a Case's steps write twice.** Pressing a step saves the step before it, and the step
+   itself is saved from a `requestAnimationFrame` tick when it finishes (`StepPlayer` in
+   `src/views/trace-a-case/step-player.ts`). Unchanged, one press is two undo steps, and the
+   second isn't tied to anything the student did. Group the two writes, make the completion
+   `withoutUndo`, or record only the press.
+9. **Settings versus work.** Decide which fields are undoable:
    - `animate` and `speed` look like preferences;
    - Correlations' `mode` and `openDetail` look like navigation.
 
    Fields that aren't undoable can use `withoutUndo` safely, because nothing else depends on
    them.
-9. **Commissioning and Reset in Investigate Unknown Pathway.** Reset clears the shared
+10. **Commissioning and Reset in Investigate Unknown Pathway.** Reset clears the shared
    `commissioned` list. If it also clears the view's selected chips, it is another action that
    changes both trees (item 5).
-10. **Saved undo history.** If the undo store is saved with an interactive's state, its patches
+11. **Saved undo history.** If the undo store is saved with an interactive's state, its patches
    are in the saved form of the version they were recorded under. Migrations would then have to
    migrate patches too. CLUE hit this: it had to keep a removed property so old history could
    replay. Undo also can't cross interactives in the Activity Player: each interactive has its own

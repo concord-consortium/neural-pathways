@@ -43,8 +43,9 @@ export class TemplateNoteRenderer implements NoteRenderer {
   render(facts: ObservationFacts, rng: Rng): string {
     const sentences: string[] = [];
 
-    // One fragment per attribute, hidden included: phase 6 commissions a coding
-    // for a hidden attribute, and that coding has to be derivable from the note.
+    // One fragment per attribute, hidden included: a student can commission a
+    // coding of a hidden attribute (docs/testing-attribute-commissioning.md), and
+    // that coding has to be derivable from the note.
     for (const attribute of this.config.attributes) {
       const value = facts.attributes[attribute.key];
       const fragments = attribute.notes[value];

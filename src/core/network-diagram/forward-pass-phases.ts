@@ -20,13 +20,14 @@ export function toPhase(n: number): Phase {
   return phase;
 }
 
-export interface RunningPhase {
+/** One frame of a phase playing: the phase, and the time into it. */
+export interface PhaseFrame {
   phase: Phase;
   /** Milliseconds since the phase started. */
   t: number;
 }
 
-/** Phase 1: input node i starts filling at i × FILL_GAP ms. */
+/** Phase 1: input unit i starts filling at i × FILL_GAP ms. */
 const FILL_GAP = 55;
 /** How long a gauge takes to ease to its new level. */
 export const FILL_DURATION = 180;
@@ -77,8 +78,8 @@ export function phaseDuration(phase: Phase, columnSizes: readonly number[]): num
   return ends[ends.length - 1] + settle;
 }
 
-/** The scene with `phasesDone` phases complete and `running` part way. */
-export function sceneAt(columnSizes: readonly number[], phasesDone: number, running?: RunningPhase): Scene {
+/** The scene with `phasesDone` phases complete, and the phase in `frame` drawn up to its time. */
+export function sceneAt(columnSizes: readonly number[], phasesDone: number, frame?: PhaseFrame): Scene {
   const scene = emptyScene(columnSizes);
   for (const phase of PHASES) {
     if (phase > phasesDone) {
@@ -86,8 +87,8 @@ export function sceneAt(columnSizes: readonly number[], phasesDone: number, runn
     }
     applyPhase(scene, columnSizes, phase, Infinity);
   }
-  if (running) {
-    applyPhase(scene, columnSizes, running.phase, running.t);
+  if (frame) {
+    applyPhase(scene, columnSizes, frame.phase, frame.t);
   }
   return scene;
 }

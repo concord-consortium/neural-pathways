@@ -25,9 +25,9 @@ Player (AP), each interactive will save `{ view, shared }`: its own view tree an
 The framework is in place: `SharedState`, `AppState`, and the context views use. Trace a Case and
 Extract Pathways have their state models. Each view's model, and each shared field, arrives with the
 story that first builds the UI using it, so it can be reviewed against that UI. The complete
-target is kept in draft
-[PR #29](https://github.com/concord-consortium/neural-pathways/pull/29). Bring a view's model over
-from it, and change the model if the UI turns out to need something different. The tables below
+target is kept in draft [PR #29](https://github.com/concord-consortium/neural-pathways/pull/29).
+Bring a view's model over from it, and change the model if the UI turns out to need something
+different. The tables below
 list that target and the story each piece is expected to arrive with.
 
 Where the models live follows the rule for `src/core/`: it holds what more than one view uses.
@@ -69,14 +69,14 @@ It has `version` and `conversationId` so far. Its fields:
 
 ## Each view's state
 
-Trace a Case's is in place, with only the marker each conversation rests at so far, and Extract
-Pathways' with its first two stages. Animate and speed arrive with their controls. The others are
-not built yet. The target:
+Trace a Case's and Extract Pathways' are built so far: Trace a Case's with only the marker each
+conversation rests at, and Extract Pathways' with its first two stages. Animate and speed arrive
+with their controls. The target, with what is built marked:
 
 | View | Model | Keeps |
 |---|---|---|
-| Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id; Animate on/off; speed (0 slow, 1 normal, 2 fast) |
-| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`) and how many conversations are collected (`collected`), in place; Animate; speed; the later stages (`cubeDone`, `pathwaysDone`) |
+| Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id (built); Animate on/off; speed (0 slow, 1 normal, 2 fast) |
+| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`) and how many conversations are collected (`collected`) (built); Animate; speed; the later stages (`cubeDone`, `pathwaysDone`) |
 | Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
 | Prediction Chain | `npw/PredictionChainState` | The step each conversation is on (0 to 4), by id; Animate; speed |
 | Correlations | `npw/CorrelationsState` | Measures or Graphs; the open detail card, by attribute key and pathway number |
@@ -100,8 +100,9 @@ the stages it has completed, but not one in progress.
 - **Keep the conversation valid.** When a filtered list stops including the current
   conversation, the first one in the list is written back, so the next view opens on the same
   case. Pane 2 of Investigate Unknown Pathway falls back to the first conversation pane 1 isn't
-  showing, so the panes open on different cases. An empty list leaves the id alone. The draft
-  implements this as `ensureValidConversation` and `ensureValidPane2Conversation`.
+  showing, so the panes open on different cases. An empty list leaves the id alone.
+  `SharedState.ensureValidConversation` does this for the current conversation. The draft adds
+  `ensureValidPane2Conversation` for pane 2.
 - **`$modelType` names are permanent.** They are stored in saved student data, like view ids.
   Renaming one needs a migration.
 - **Every tree has a `version`, starting at 1.** There are no migrations yet.
@@ -120,10 +121,9 @@ the stages it has completed, but not one in progress.
   where it is written, so it never reaches saved student state. The trees are small, so the cost
   is negligible.
 
-  Keystone's default, `DevModeOnly`, would turn these checks off in every browser build, the dev
-  server included, not only in production. keystone decides it is in dev mode with
-  `typeof process !== "undefined"`, and webpack 5 doesn't define `process` in browser bundles.
-  With the checks off, bad data loads silently: `commissioned: [5]`,
+  Keystone's default, `DevModeOnly`, would turn these checks off in production builds, which is
+  where saved student state is loaded. With the checks off, bad data loads silently:
+  `commissioned: [5]`,
   `markerByConversation: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`, so
   the first change to it crashes).
 
@@ -152,13 +152,12 @@ are no built-in default queries. An author who wants an interactive to open on a
 Saved interactive state will be loaded through one function, `loadInteractiveState(json)`, which
 returns the two trees or an error result and never throws. It returns an error when the JSON:
 
-- fails `typeCheck` against the expected model, as in `typeCheck(types.model(TraceACaseState), view)`.
-  This check is needed even when `fromSnapshot` succeeds with type checking on. A snapshot whose
-  `$modelType` names a different registered model loads as that other class:
-  `fromSnapshot(TraceACaseState, …)` given Correlations state returns a `CorrelationsState`.
-  `typeCheck`, or an `instanceof` check, catches it, and so does putting the tree in its slot
-  under `AppState`'s root, which throws a type error. This was reported as
-  [mobx-keystone #590](https://github.com/xaviergonz/mobx-keystone/issues/590);
+- doesn't load with `fromSnapshot(Model, json)`, which throws:
+  - a `TypeCheckError` for a wrong-typed value, since type checking is always on;
+  - a `SnapshotTypeMismatchError` for the saved state of a different model, such as Correlations
+    state loaded as `TraceACaseState`. Before mobx-keystone 2.3.0 this returned the other model
+    instead ([mobx-keystone #590](https://github.com/xaviergonz/mobx-keystone/issues/590)).
+    `shared-state.test.ts` checks it;
 - has an unknown `$modelType`;
 - has a `version` other than the model's.
 

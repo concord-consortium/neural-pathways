@@ -1,7 +1,7 @@
 /**
- * Dense linear algebra for matrices no larger than the neuron count (14) on
- * one side and the pathway count on the other. Nothing here is tuned for
- * size; it is tuned for having no dependency and being readable.
+ * Dense linear algebra for matrices no larger than neuron count by neuron count
+ * (14 by 14). Nothing here is tuned for size; it is tuned for having no
+ * dependency and being readable.
  */
 export type Matrix = number[][];
 

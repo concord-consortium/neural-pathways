@@ -1,7 +1,7 @@
-import { alienConfigs } from "../alien-config";
-import { recoveryReport } from "../alien/checks";
-import { AlienConfig } from "../alien/config-types";
-import { generate } from "../alien/pipeline";
+import { alienConfigs } from "../../generator/alien-config";
+import { recoveryReport } from "../../generator/alien/checks";
+import { AlienConfig } from "../../generator/alien/config-types";
+import { generate } from "../../generator/alien/pipeline";
 
 /**
  * Where is the floor? Regenerates each dataset with fewer neurons and less

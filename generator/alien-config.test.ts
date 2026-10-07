@@ -74,9 +74,9 @@ describe("threePathwayConfig", () => {
   });
 });
 
-describe("realized variance split", () => {
-  // No generator self-check asserts this — targetVarianceShares is reported
-  // against, not enforced — so this is what keeps the solved scales honest.
+describe("word-sum split", () => {
+  // No self-check asserts the word-sum split (it is only reported), so this is
+  // what keeps the solved scales honest.
   for (const config of alienConfigs) {
     it(`${config.fitName} lands within a point of its target split`, () => {
       const corpus = buildCorpus(config, createRng(config.seed));

@@ -7,18 +7,23 @@ const WEIGHT_TOLERANCE = 1e-9;
 
 /**
  * writeDataset (emit.ts) recursively deletes outputDir with force: true before
- * writing. An empty, ".", "..", absolute, or escaping path would resolve outside
- * the intended dist/ directory — at worst to the repo root — and be wiped
- * silently. Keep it a plain relative path that stays inside the repo.
+ * writing, so outputDir must name a folder strictly inside dist/. Anything else
+ * — a source folder such as "src", dist/ itself, an absolute path, or one that
+ * climbs out with ".." — would be wiped silently. The check resolves the path
+ * against a stand-in root, so it does not depend on where the repo lives, and
+ * uses the platform's path rules, so "\" separators are caught on Windows.
  */
 function checkOutputDir(config: AlienConfig): void {
   const dir = config.outputDir;
-  const unsafe = dir === "" || dir === "."
-    || path.isAbsolute(dir) || dir.split("/").some(segment => segment === "..");
-  if (unsafe) {
+  const root = path.resolve("/repo");
+  const fromDist = path.relative(path.join(root, "dist"), path.resolve(root, dir));
+  const insideDist = dir !== "" && !path.isAbsolute(dir)
+    && fromDist !== "" && fromDist !== ".." && !fromDist.startsWith(`..${path.sep}`)
+    && !path.isAbsolute(fromDist);
+  if (!insideDist) {
     throw new Error(
       `outputDir "${dir}" is unsafe: writeDataset deletes it recursively before writing. Use a `
-      + `non-empty relative path inside the repo, e.g. "dist/alien-data".`,
+      + `relative path to a folder inside dist/, e.g. "dist/alien-data".`,
     );
   }
 }
@@ -90,6 +95,11 @@ function checkAttributes(config: AlienConfig): void {
     if (attr.type === "binary" && attr.valueShares.length !== 2) {
       throw new Error(`Attribute "${attr.key}": a binary attribute needs exactly two value shares`);
     }
+    // Outcomes and the self-checks read a binary 1 as "on" (biasValues[i] === 1 in
+    // outcomes.ts), so a binary attribute counted from 1 would silently invert.
+    if (attr.type === "binary" && attr.minValue !== 0) {
+      throw new Error(`Attribute "${attr.key}": a binary attribute's values must be 0 and 1 (minValue 0)`);
+    }
     if (attr.pathway !== null
         && (attr.pathway < 0 || attr.pathway >= config.pathwayCount)) {
       throw new Error(`Attribute "${attr.key}": pathway ${attr.pathway} is out of range`);
@@ -110,9 +120,9 @@ function checkAttributes(config: AlienConfig): void {
 }
 
 /**
- * Self-check 2 attests an attribute value by finding one of its fragments inside
- * the note. That only identifies a value if no fragment appears anywhere else,
- * including inside a longer fragment.
+ * The note-evidence self-check attests an attribute value by finding one of its
+ * fragments inside the note. That only identifies a value if no fragment appears
+ * anywhere else, including inside a longer fragment.
  */
 function checkFragmentsAreDistinguishable(config: AlienConfig): void {
   const fragments: { text: string; owner: string }[] = [];
@@ -192,6 +202,22 @@ function checkActivations(config: AlienConfig): void {
     throw new Error(`explainedVarianceTotal ${explainedVarianceTotal} must lie strictly between 0 and 1`);
   }
   checkRange("noiseVarianceRange", config.activations.noiseVarianceRange, 0);
+  // drawNoiseVariances (activations.ts) rescales the draws to mean
+  // 1 - explainedVarianceTotal. A neuron's communality is 1 minus its variance, so
+  // a rescaled variance of 1 or more leaves nothing for the pathways to explain and
+  // the loading solver fails with an opaque linear-algebra error. The largest one
+  // comes from a single draw at the top of the range with every other draw at the
+  // bottom; ruling that out here keeps every validated config solvable.
+  const [noiseLow, noiseHigh] = config.activations.noiseVarianceRange;
+  const worstNoise = noiseHigh * (1 - explainedVarianceTotal) * neuronCount
+    / (noiseHigh + (neuronCount - 1) * noiseLow);
+  if (!(worstNoise < 1)) {
+    throw new Error(
+      `noiseVarianceRange [${noiseLow}, ${noiseHigh}] can rescale a neuron's noise variance to `
+      + `${worstNoise.toFixed(3)}, leaving it no communality. Narrow the range or raise `
+      + `explainedVarianceTotal so the worst case stays below 1.`,
+    );
+  }
   checkRange("scalerMeanRange", config.activations.scalerMeanRange, -Infinity);
   checkRange("scalerScaleRange", config.activations.scalerScaleRange, 0);
   for (const name of ["faScoreRecoveryMin", "faLoadingRecoveryMin"] as const) {

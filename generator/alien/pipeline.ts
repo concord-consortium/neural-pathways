@@ -31,8 +31,8 @@ export function generate(config: AlienConfig): GeneratorRun {
   const solvedAttributes = solveAttributes(corpus.scores, config, rng);
   const outcomes = solveOutcomes(corpus.scores, solvedAttributes, config, rng);
   const notes = renderNotes(solvedAttributes, config, new TemplateNoteRenderer(config), rng);
-  // Last on purpose: every draw above is untouched by adding activations, so the
-  // text, attributes, outcomes and notes of an existing dataset do not change.
+  // Last on purpose, so the activation draws never shift the text, attributes,
+  // outcomes or notes drawn above.
   const activations = buildActivations(corpus.scores, config, rng);
   const dataset = buildDataset({ corpus, solvedAttributes, outcomes, notes, activations, config });
 

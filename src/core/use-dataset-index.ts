@@ -5,7 +5,8 @@ import { S3Index } from "./types/s3-data";
 
 export type DatasetIndexState =
   | { status: "loading" }
-  | { status: "error"; error: Error }
+  /** `failed` says which part failed: the fetch, or the caller's `onLoaded` after the index arrived. */
+  | { status: "error"; error: Error; failed: "load" | "onLoaded" }
   | { status: "ready"; index: S3Index };
 
 function toError(error: unknown): Error {
@@ -45,8 +46,8 @@ function load(dataset: DatasetDefinition): CacheEntry {
 interface UseDatasetIndexOptions {
   /**
    * Runs when the index is available to this component, on every mount, even when it was already
-   * cached. Views use it to correct the shared conversation against the list that arrived. It
-   * doesn't run after the component unmounts.
+   * cached. It doesn't run after the component unmounts. If it throws, the hook returns an error
+   * with `failed: "onLoaded"`.
    */
   onLoaded?: (index: S3Index) => void;
 }
@@ -75,7 +76,7 @@ export function useDatasetIndex(dataset: DatasetDefinition, options?: UseDataset
         try {
           onLoadedRef.current?.(index);
         } catch (error: unknown) {
-          setState({ datasetId: dataset.id, value: { status: "error", error: toError(error) } });
+          setState({ datasetId: dataset.id, value: { status: "error", error: toError(error), failed: "onLoaded" } });
           return;
         }
         setState(previous =>
@@ -85,7 +86,7 @@ export function useDatasetIndex(dataset: DatasetDefinition, options?: UseDataset
       },
       (error: unknown) => {
         if (active) {
-          setState({ datasetId: dataset.id, value: { status: "error", error: toError(error) } });
+          setState({ datasetId: dataset.id, value: { status: "error", error: toError(error), failed: "load" } });
         }
       },
     );

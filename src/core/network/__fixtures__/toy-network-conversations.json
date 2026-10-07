@@ -1,5 +1,5 @@
 {
-  "note": "Real alien3 conversations and the model's classification, taken from dist/alien-data-3/index.json. Two of them, one per class, carry the prototype forward pass (neural-net-maker index.html, forward()) rounded to 6 places.",
+  "note": "Real alien3 conversations and the model's classification, taken from dist/alien-data-3/index.json: the first six of each class in index order, then eight close calls picked by hand, four of each class, which the model gives a probability of approach between 0.34 and 0.54. Two of them, one per class, carry the prototype forward pass (neural-net-maker index.html, forward()) rounded to 6 places.",
   "conversations": [
     {
       "id": "361e65b1002a",

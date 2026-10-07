@@ -27,10 +27,11 @@ export interface NetworkLayout {
 
 export const MIN_WIDTH = 380;
 export const MIN_HEIGHT = 300;
-/** The most space between neighboring nodes. A taller panel centers the diagram, not stretches it. */
+/** The most space between neighboring nodes. */
 const STEP_MAX = 30;
-/** Room above the first node for the captions, and below the last. */
+/** Room above the first node, for the captions. */
 const TOP = 44;
+/** Room below the last node. */
 const BOTTOM = 14;
 const PAD = 4;
 /** About half the width of "Input Layer" in 12px Lato. The prototype measured it; jsdom can't. */
@@ -38,7 +39,7 @@ const FIRST_CAPTION_HALF = 30;
 /** Room for "APPROACH", the wider output label, in 13px Barlow Condensed. */
 const PILL_LABEL_WIDTH = 60;
 const PILL_PAD_LEFT = 4;
-/** From an output node's edge to its label. */
+/** From an output node's rim to its label. */
 export const PILL_GAP = 7;
 const PILL_PAD_RIGHT = 13;
 /** Between the two output pills: room for the caption over the lower one. */

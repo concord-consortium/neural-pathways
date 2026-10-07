@@ -28,9 +28,9 @@ function uniform(range: [number, number], rng: Rng): number {
  * Per-neuron noise variance, drawn first and then rescaled so the mean is
  * exactly 1 - explainedVarianceTotal. Because the activations are standardized,
  * a neuron's communality is 1 - its noise variance, so this draw also fixes how
- * much of every neuron the pathways must explain. That total then equals the sum
- * of the target row energies, which is what makes the solver's constraints
- * consistent.
+ * much of every neuron the pathways must explain. checkActivations
+ * (config-validation.ts) explains why that total has to match the target row
+ * energies.
  */
 export function drawNoiseVariances(config: ActivationConfig, rng: Rng): number[] {
   const draws = Array.from({ length: config.neuronCount }, () => uniform(config.noiseVarianceRange, rng));

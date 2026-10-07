@@ -40,7 +40,7 @@ describe("extractButtons", () => {
   it("are Setup, Collect a Conversation and the two steps still to come", () => {
     expect(buttons.map(b => b.label))
       .toEqual(["Setup", "Collect a Conversation", "Collect All Conversations", "Extract Pathways"]);
-    expect(buttons.every(b => b.showAsPressedWhenAt === undefined)).toBe(true);
+    expect(buttons.every(b => b.showAsCurrentWhenAt === undefined)).toBe(true);
   });
 
   it.each<[number, unknown[]]>([

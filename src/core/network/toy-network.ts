@@ -3,7 +3,8 @@ import { Network } from "./network";
 /**
  * A stand-in network for the alien3 lesson data, copied from the demo prototype's `NET`
  * (neural-net-maker branch of the demos repo, index.html). It was fitted offline to reproduce the
- * model's prediction (`classification`) for all 800 alien3 conversations, which it does.
+ * model's prediction (`classification`) for all 800 alien3 conversations (checked once, against the
+ * generated data; the tests use a fixture instead).
  *
  * - Input: the 30 vocabulary words, sorted alphabetically, as 0/1 presence.
  * - Layers: an embedding of 10, hidden layers of 8 and 6, all tanh; then 2 linear outputs,
