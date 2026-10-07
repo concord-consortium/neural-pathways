@@ -126,7 +126,7 @@ describe("Trace a Case's steps on the step player", () => {
     first.stop();
     const again = playerFor("a");
     expect(again.marker).toBe(1);
-    expect(again.running).toBeUndefined();
+    expect(again.currentFrame).toBeUndefined();
     expect(again.scene).toEqual(sceneAt(SIZES, 1));
     expect(jest.getTimerCount()).toBe(0);
   });

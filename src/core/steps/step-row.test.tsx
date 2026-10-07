@@ -116,7 +116,7 @@ describe("StepRow", () => {
     showRow(1, [{ key: "next", label: "Next", segmentToPlayWhenAt: segmentAt }]);
     fireEvent.click(button("Next"));
     const callsOnceStarted = segmentAt.mock.calls.length;
-    // Half way through the run: many frames, each a new `running`.
+    // Half way through the run: many frames, each a new `currentFrame`.
     act(() => jest.advanceTimersByTime(500));
     expect(segmentAt).toHaveBeenCalledTimes(callsOnceStarted);
   });
@@ -127,7 +127,7 @@ describe("StepRow", () => {
     expect(button("Reset")).toHaveAttribute("aria-disabled", "false");
     fireEvent.click(button("Reset"));
     expect(player.marker).toBe(0);
-    expect(player.running).toBeUndefined();
+    expect(player.currentFrame).toBeUndefined();
   });
 
   it("does nothing when Reset is unavailable", () => {

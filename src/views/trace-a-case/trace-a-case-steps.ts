@@ -22,7 +22,7 @@ export const TRACE_BUTTONS: readonly StepButton[] = PHASES.map(phase => ({
 export function traceTimeline(columnSizes: readonly number[]): StepTimeline<Scene> {
   return {
     duration: ({ to }) => phaseDuration(toPhase(to), columnSizes),
-    sceneAt: (marker, run) => sceneAt(columnSizes, marker, run && { phase: toPhase(run.to), t: run.t }),
+    sceneAt: (marker, frame) => sceneAt(columnSizes, marker, frame && { phase: toPhase(frame.to), t: frame.t }),
   };
 }
 

@@ -54,17 +54,17 @@ interface Segment {
   from: Marker;
   to: Marker;
 }
-/** A segment playing. */
-interface Run extends Segment {
-  /** The key of the button that started it. */
+/** One frame of a run, the playing of a segment. Replaced on every frame. */
+interface Frame extends Segment {
+  /** The key of the button that started the run. */
   button: string;
-  /** Milliseconds since it started. */
+  /** Milliseconds since the run started. */
   t: number;
 }
 interface StepTimeline<S> {
   duration(segment: Segment): number;
   /** Pure. S is whatever the view draws. */
-  sceneAt(marker: Marker, run?: Run): S;
+  sceneAt(marker: Marker, frame?: Frame): S;
 }
 interface StepProgress {
   readonly marker: Marker;
@@ -74,7 +74,7 @@ interface StepProgress {
 class StepPlayer<S> {
   constructor(timeline: StepTimeline<S>, progress: StepProgress);
   get marker(): Marker;
-  get running(): Run | undefined;
+  get currentFrame(): Frame | undefined;
   get playing(): { button: string; segment: Segment } | undefined;  // @computed, by value
   get scene(): S;                                     // @computed
   play(button: string, segment: Segment): void;
@@ -118,9 +118,9 @@ interface StepButton {
 `<StepRow player buttons />`, an `observer`.
 
 - It renders the buttons in order, then Reset, in a `role="group"` labeled "Steps".
-- It reads `player.playing`, not `running`. `running` is replaced on every frame, and `playing` only
-  when a run starts or ends, so the row re-renders once per run, as NPW-32's review made Trace a
-  Case's row do.
+- It reads `player.playing`, not `currentFrame`. `currentFrame` is replaced on every frame, and
+  `playing` only when a run starts or ends, so the row re-renders once per run, as NPW-32's review
+  made Trace a Case's row do.
 - A press calls `player.play(key, segment)` with that button's segment.
 - The current button has `aria-current="step"`, as NPW-32's review settled for Trace a Case:
   pressing it again replays it, so it isn't a toggle and `aria-pressed` would mislead. Disabled
@@ -146,10 +146,10 @@ Nothing it does changes.
 ### `forward-pass-phases.ts`
 
 What Trace a Case's `step-timeline.ts` holds now moves here, so Extract Pathways' replay can use
-it: `PHASES`, `Phase`, `RunningPhase`, `unitDuration`, `phaseDuration`, `sceneAt`, `applyPhase`
+it: `PHASES`, `Phase`, `PhaseFrame`, `unitDuration`, `phaseDuration`, `sceneAt`, `applyPhase`
 and their constants, and a new `toPhase(n)`, which turns a marker into its phase without an `as`
-and throws for a number that isn't one. That is the input fill, the three fans and the answer. Its tests move with
-it. Trace a Case keeps only its button list and the timeline wrapper.
+and throws for a number that isn't one. That is the input fill, the three fans and the answer. Its
+tests move with it. Trace a Case keeps only its button list and the timeline wrapper.
 
 - They were called steps, and are renamed phases of the forward pass, the ML name for running one
   input through the network. A third term keeps them apart from the step buttons and the

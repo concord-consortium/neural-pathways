@@ -52,7 +52,7 @@ describe("sceneAt", () => {
     expect(sceneAt(SIZES, 0, { phase: 1, t: 675 }).nodeFill[0].every(x => x === 1)).toBe(true);
   });
 
-  it("draws a running phase over the phases already done", () => {
+  it("draws a phase playing over the phases already done", () => {
     const scene = sceneAt(SIZES, 1, { phase: 2, t: 0 });
     expect(scene.nodeFill[0].every(x => x === 1)).toBe(true);
     expect(scene.edgeDraw[0].every(x => x === 0)).toBe(true);
