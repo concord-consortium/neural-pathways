@@ -63,7 +63,12 @@ Checked on 2026-10-06 with throwaway scripts.
 - `(model_correct:0`, `a AND`, `NOT` and `AND` throw `Error: Found no parsings.`
 - `model_correct:0)` and `OR yandor` throw a `SyntaxError` with `offset`, `line` and `column`.
 - `pathway_1:>abc` parses, then `filter` throws `TypeError: Expected a number.`
-- `""` and `"  "` throw `Error: Expected left to be defined.`
+- `()`, and an empty group anywhere, such as `yandor AND ()`, throws
+  `Error: Expected left to be defined.` `""` matches nothing.
+- An unquoted number on a text field is parsed as a number: `id:007` searched for 7, matching 434
+  ids instead of 2.
+- An unquoted wildcard treats `.` as any character: `observation:nearby.*` matches 307 notes,
+  though only 155 contain `nearby.`.
 - None of the 30 alien3 words is `and`, `or`, `not` or `to`.
 
 **mobx-keystone 2.3.1, with this repo's standard decorators:**
@@ -142,20 +147,24 @@ Matching is liqe's. On a string field, `field:value` is a substring match, and c
 On a number field, `field:number` is rewritten as the range `[number TO number]`, so it is
 equality: liqe on its own matches a number as text, and `n:1` gave 233 conversations (every `n`
 with a 1 in it). Quotes, `*` wildcards, `/regex/` and `[a TO b]` ranges also work. The help
-doesn't list them. A `/regex/` isn't rewritten: it is case-sensitive, it matches a number field's
-value as text, and a bad pattern shows the browser's own error.
+doesn't list them. A `/regex/` isn't rewritten: it is case-sensitive, and it matches a number
+field's value as text. In a wildcard, `.` matches any character, as liqe turns the wildcard into a
+regular expression; quote the value to match a period. A number typed on a text field is matched as
+typed, so `id:007` keeps its zeros.
 
 ### Error messages
 
 | Cause | Message |
 |---|---|
 | A field not in `fields`, including a hidden attribute | `Unknown field: bogus` |
+| A comparison or a range on a text field, such as `text:>5` | `text isn't a number field`. liqe would compare the text and match nothing. |
 | A comparison without a number | `pathway_1:> needs a number` (the field and operator typed) |
 | A word given to a number field (`n`, an attribute, a pathway), such as `model_correct:no` | `model_correct needs a number`. Without it the query matches nothing: the records hold 0 and 1, not the value labels. |
 | liqe's `Found no parsings.`: a trailing `AND`, an unclosed `(`, a lone `NOT` | `Incomplete query` |
 | A field with no value, such as `pathway_1:`. liqe would match nothing, and Enter would store it. | `Incomplete query` |
+| An empty group, `()`, which liqe can't filter on | `Incomplete query` |
 | liqe's `SyntaxError` | `Can't read the query at column 16` (liqe's `column`) |
-| Anything else liqe throws | its message |
+| Anything else liqe or the browser throws, such as a bad `/regex/` | `Can't read the query`. Their wording isn't written for students. |
 
 A hidden attribute gets the same message as a typo, so the error doesn't hint that it exists.
 

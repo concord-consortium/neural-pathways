@@ -86,6 +86,15 @@ describe("run", () => {
     expect(matches("id:111")).toEqual({ ids: ["aaa111"] });
   });
 
+  it("keeps a text field's digits as typed, leading zeros included", () => {
+    const datasetIndex = filterTestIndex();
+    datasetIndex.items = ["a007", "b070", "c700"].map((id, i) => ({ ...datasetIndex.items[i], id }));
+    const filter007 = conversationFilterFor(datasetIndex);
+    // liqe reads 007 as 7, which every one of these ids contains.
+    expect(filter007.run("id:007")).toEqual({ ids: ["a007"] });
+    expect(filter007.run("id:007 OR id:070")).toEqual({ ids: ["a007", "b070"] });
+  });
+
   it("compares numbers", () => {
     expect(matches("group_size:>=3")).toEqual({ ids: ["bbb222", "ddd444"] });
   });
@@ -181,6 +190,18 @@ describe("run", () => {
     expect(matches("pathway_1:")).toEqual({ error: "Incomplete query" });
     expect(matches("text:")).toEqual({ error: "Incomplete query" });
     expect(matches("model_correct:0 AND id:")).toEqual({ error: "Incomplete query" });
+    expect(matches("()")).toEqual({ error: "Incomplete query" });
+    expect(matches("yandor AND ()")).toEqual({ error: "Incomplete query" });
+  });
+
+  it("reports a comparison or range on a text field, rather than matching nothing", () => {
+    expect(matches("text:>5")).toEqual({ error: "text isn't a number field" });
+    expect(matches("id:>=abc")).toEqual({ error: "id isn't a number field" });
+    expect(matches("text:[1 TO 5]")).toEqual({ error: "text isn't a number field" });
+  });
+
+  it("reports any other problem in its own words, never liqe's or the browser's", () => {
+    expect(matches("text:/(/")).toEqual({ error: "Can't read the query" });
   });
 
   it("reports where it can't read the query", () => {

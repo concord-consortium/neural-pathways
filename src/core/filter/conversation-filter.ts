@@ -94,12 +94,22 @@ export const FIXED_FIELDS = ["n", "id", "text", "observation", "target_label"];
 /** The fields a bare word searches: the conversation's alien words and the observer's notes. */
 const BARE_WORD_FIELDS = ["text", "observation"];
 
-/** The tag with its value lowercased, to match the lowercased records. */
-function lowercased(tag: TagToken): TagToken {
+/**
+ * The tag's value as text, lowercased to match the lowercased records. liqe parses an unquoted
+ * `007` as the number 7, so a number is taken back from the query as it was typed. Its
+ * `location.end` is worked out from the parsed number, so the text runs from `start` to the next
+ * space or parenthesis.
+ */
+function asText(tag: TagToken, query: string): TagToken {
   const { expression } = tag;
-  return expression.type === "LiteralExpression" && typeof expression.value === "string"
-    ? { ...tag, expression: { ...expression, value: expression.value.toLowerCase() } }
-    : tag;
+  if (expression.type !== "LiteralExpression") {
+    return tag;
+  }
+  const { value } = expression;
+  const text = typeof value === "number"
+    ? /^[^\s()]+/.exec(query.slice(expression.location.start))?.[0] ?? String(value)
+    : value;
+  return typeof text === "string" ? { ...tag, expression: { ...expression, value: text.toLowerCase() } } : tag;
 }
 
 function fieldToken(name: string, location: TagToken["location"]): FieldToken {
@@ -110,8 +120,9 @@ function fieldToken(name: string, location: TagToken["location"]): FieldToken {
  * A bare word searches the alien text or the observation. Without a field, liqe would search every
  * string field, target_label included.
  */
-function checkBareWord(tag: TagToken): ParserAst {
-  const [left, right] = BARE_WORD_FIELDS.map(name => ({ ...lowercased(tag), field: fieldToken(name, tag.location) }));
+function checkBareWord(tag: TagToken, query: string): ParserAst {
+  const text = asText(tag, query);
+  const [left, right] = BARE_WORD_FIELDS.map(name => ({ ...text, field: fieldToken(name, tag.location) }));
   return {
     type: "ParenthesizedExpression",
     location: tag.location,
@@ -126,12 +137,10 @@ function checkBareWord(tag: TagToken): ParserAst {
 }
 
 /**
- * Checks a tag with a field and rewrites it for matching. It rejects a field the records don't
- * have, a word given to a number field, and a comparison with no number: liqe would match the first
- * two against nothing, and reject the third only once filtering runs. It rewrites a number on a
- * number field as a range, and lowercases a string value.
+ * Checks a tag with a field, throwing an error a student can read, and rewrites it for liqe. Each
+ * check and rewrite says why it's needed.
  */
-function checkFieldTag(tag: TagToken, field: FieldToken, fields: QueryFields): ParserAst {
+function checkFieldTag(tag: TagToken, field: FieldToken, fields: QueryFields, query: string): ParserAst {
   if (!fields.all.has(field.name)) {
     throw new QueryError(`Unknown field: ${field.name}`);
   }
@@ -141,6 +150,10 @@ function checkFieldTag(tag: TagToken, field: FieldToken, fields: QueryFields): P
   }
   const operator = tag.operator.operator;
   const { expression } = tag;
+  // liqe would compare a text field as text, so `text:>5` would quietly match nothing.
+  if (!fields.numbers.has(field.name) && (operator !== ":" || expression.type === "RangeExpression")) {
+    throw new QueryError(`${field.name} isn't a number field`);
+  }
   const isNumber = expression.type === "LiteralExpression" && typeof expression.value === "number";
   if (operator !== ":" && !isNumber) {
     throw new QueryError(`${field.name}${operator} needs a number`);
@@ -163,21 +176,28 @@ function checkFieldTag(tag: TagToken, field: FieldToken, fields: QueryFields): P
       },
     };
   }
-  return lowercased(tag);
+  // A number field keeps its number for comparisons; a text field takes the value as typed.
+  return fields.numbers.has(field.name) ? tag : asText(tag, query);
 }
 
-function checkQuery(ast: ParserAst, fields: QueryFields): ParserAst {
+function checkQuery(ast: ParserAst, fields: QueryFields, query: string): ParserAst {
   switch (ast.type) {
     case "EmptyExpression":
       return ast;
     case "LogicalExpression":
-      return { ...ast, left: checkQuery(ast.left, fields), right: checkQuery(ast.right, fields) };
+      return { ...ast, left: checkQuery(ast.left, fields, query), right: checkQuery(ast.right, fields, query) };
     case "ParenthesizedExpression":
-      return { ...ast, expression: checkQuery(ast.expression, fields) };
+      // `()` parses, but liqe can't filter on it.
+      if (ast.expression.type === "EmptyExpression") {
+        throw new QueryError("Incomplete query");
+      }
+      return { ...ast, expression: checkQuery(ast.expression, fields, query) };
     case "UnaryOperator":
-      return { ...ast, operand: checkQuery(ast.operand, fields) };
+      return { ...ast, operand: checkQuery(ast.operand, fields, query) };
     case "Tag":
-      return ast.field.type === "ImplicitField" ? checkBareWord(ast) : checkFieldTag(ast, ast.field, fields);
+      return ast.field.type === "ImplicitField"
+        ? checkBareWord(ast, query)
+        : checkFieldTag(ast, ast.field, fields, query);
   }
 }
 
@@ -188,11 +208,12 @@ function errorMessage(error: unknown): string {
   if (error instanceof LiqeSyntaxError) {
     return `Can't read the query at column ${error.column}`;
   }
-  if (error instanceof Error) {
-    // A trailing AND, an unclosed parenthesis or a lone NOT.
-    return error.message === "Found no parsings." ? "Incomplete query" : error.message;
+  // A trailing AND, an unclosed parenthesis or a lone NOT.
+  if (error instanceof Error && error.message === "Found no parsings.") {
+    return "Incomplete query";
   }
-  return String(error);
+  // Anything else, such as a bad /regex/, has liqe's or the browser's wording, not the student's.
+  return "Can't read the query";
 }
 
 export function createConversationFilter(
@@ -219,7 +240,7 @@ export function createConversationFilter(
       }
       let matched: readonly FilterRecord[];
       try {
-        matched = liqeFilter(checkQuery(parse(query), queryFields) as LiqeQuery, records);
+        matched = liqeFilter(checkQuery(parse(query), queryFields, query) as LiqeQuery, records);
       } catch (error) {
         return { error: errorMessage(error) };
       }
