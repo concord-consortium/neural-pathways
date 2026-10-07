@@ -27,8 +27,7 @@ the first view with a state model. Each view's model, and each shared field, arr
 story that first builds the UI using it, so it can be reviewed against that UI. The complete
 target is kept in draft [PR #29](https://github.com/concord-consortium/neural-pathways/pull/29).
 Bring a view's model over from it, and change the model if the UI turns out to need something
-different. The tables below
-list that target and the story each piece is expected to arrive with.
+different. The tables below list that target and the story each piece is expected to arrive with.
 
 Where the models live follows the rule for `src/core/`: it holds what more than one view uses.
 
@@ -64,7 +63,7 @@ It has `version`, `query` and `conversationId` so far. Its fields:
 | Field | Meaning | Arrives with |
 |---|---|---|
 | `conversationId` | The current conversation, in every view that shows one. Also pane 1 of Investigate Unknown Pathway. A view that shows one calls `ensureValidConversation` when its list arrives or changes. | In place |
-| `query` | The filter query every view uses, stored when the student presses Enter or leaves the filter box. Unset: no query has been set. `""`: the student cleared it. | In place |
+| `query` | The filter query every view uses, stored when the student presses Enter or leaves the filter bar. Unset: no query has been set. `""`: the student cleared it. | In place |
 | `commissioned` | Attribute keys the student commissioned in Investigate Unknown Pathway, in order, at most 2. Correlations Part 2 reads them. | Investigate Unknown Pathway |
 
 `SharedState` also has one volatile field, `queryDraft`: the filter bar's text while it differs

@@ -18,11 +18,7 @@ export class SharedState extends Model({
   /** The current conversation, in every view that shows one. Unset until a view first loads its conversations. */
   conversationId: tProp(types.maybe(types.string)),
 }) {
-  /**
-   * The filter bar's text while it differs from `query`; unset otherwise. Volatile: it is never
-   * saved and never an undo step. It lets a half-typed query survive switching views, but not a
-   * reload.
-   */
+  /** The filter bar's text while it differs from `query`; unset otherwise. Volatile: see docs/view-state.md. */
   @observable accessor queryDraft: string | undefined = undefined;
 
   @action
