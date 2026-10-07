@@ -88,7 +88,7 @@ test("a half-typed query is kept when switching views", async ({ page }) => {
 test("the filter's help lists what a query can use", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Show what you can filter on" }).click();
-  const help = page.getByRole("dialog", { name: "What you can filter on" });
+  const help = page.getByRole("region", { name: "What you can filter on" });
   await expect(help).toContainText("model_correct");
   await expect(help).toContainText("pathway_3");
   await expect(help).not.toContainText("resource_stressed");

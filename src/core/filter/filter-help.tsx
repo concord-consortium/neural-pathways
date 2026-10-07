@@ -8,7 +8,8 @@ interface FilterHelpProps {
   attributes: readonly AttributeDefinition[];
 }
 
-const FIXED_FIELDS: Record<string, string> = {
+/** What the help says about each of the engine's FIXED_FIELDS. */
+export const FIELD_DESCRIPTIONS: Record<string, string> = {
   n: "Position among all the conversations, from 1",
   id: "The conversation's id",
   text: "The conversation's alien words. A bare word searches these and the observation.",
@@ -27,7 +28,7 @@ const OPERATORS: [string, string][] = [
   ["\"quoted phrase\"", "These words together"],
 ];
 
-const EXAMPLES: [string, string][] = [
+export const EXAMPLES: [string, string][] = [
   ["model_correct:0", "the ones the model got wrong"],
   ["pathway_1:>2", "a high score on Pathway 1"],
   ["yandor", "conversations containing that word, or with it in their notes"],
@@ -38,8 +39,8 @@ const EXAMPLES: [string, string][] = [
 ];
 
 function describeField(field: string, attributes: readonly AttributeDefinition[]): string {
-  if (field in FIXED_FIELDS) {
-    return FIXED_FIELDS[field];
+  if (field in FIELD_DESCRIPTIONS) {
+    return FIELD_DESCRIPTIONS[field];
   }
   const pathway = /^pathway_(\d+)$/.exec(field);
   if (pathway) {
@@ -60,7 +61,7 @@ export const FilterHelp: React.FC<FilterHelpProps> = ({ fields, attributes }) =>
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const dialogId = useId();
+  const panelId = useId();
 
   // Back to the ⓘ button when focus was in the help, or nowhere. Left alone when the student is
   // typing in the box. Every way of closing goes through here: React sends no blur for a focused
@@ -106,7 +107,7 @@ export const FilterHelp: React.FC<FilterHelpProps> = ({ fields, attributes }) =>
     <div className="filter-help" ref={rootRef}>
       <button ref={buttonRef} type="button" className="filter-help__button"
         aria-label="Show what you can filter on" aria-expanded={open}
-        aria-controls={open ? dialogId : undefined} onMouseDown={keepFocus}
+        aria-controls={open ? panelId : undefined} onMouseDown={keepFocus}
         onClick={() => (open ? close() : setOpen(true))}>
         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
           <circle cx="10" cy="5.5" r="1.6" />
@@ -114,36 +115,38 @@ export const FilterHelp: React.FC<FilterHelpProps> = ({ fields, attributes }) =>
         </svg>
       </button>
       {open &&
-        // Focusable, so a click inside it keeps focus in the bar rather than committing the query.
-        <div id={dialogId} className="filter-help__dialog" role="dialog" aria-label="What you can filter on"
-          tabIndex={-1}>
+        // A disclosure, not a dialog: opening it leaves the caret in the box. Focusable, so a click
+        // inside it keeps focus in the bar rather than committing the query.
+        <section id={panelId} className="filter-help__panel" aria-label="What you can filter on" tabIndex={-1}>
           <button type="button" className="filter-help__close" aria-label="Close" onMouseDown={keepFocus}
             onClick={close}>
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
               <path d="M5 5 L15 15 M15 5 L5 15" />
             </svg>
           </button>
-          <h3>Fields</h3>
+          <h2>Fields</h2>
           <table>
             <tbody>
               {fields.map(field =>
-                <tr key={field}><td><code>{field}</code></td><td>{describeField(field, attributes)}</td></tr>)}
+                <tr key={field}>
+                  <th scope="row"><code>{field}</code></th><td>{describeField(field, attributes)}</td>
+                </tr>)}
             </tbody>
           </table>
-          <h3>Operators</h3>
+          <h2>Operators</h2>
           <table>
             <tbody>
               {OPERATORS.map(([operator, meaning]) =>
-                <tr key={operator}><td><code>{operator}</code></td><td>{meaning}</td></tr>)}
+                <tr key={operator}><th scope="row"><code>{operator}</code></th><td>{meaning}</td></tr>)}
             </tbody>
           </table>
           <p>Write AND, OR and NOT in capitals. In lowercase they are searched for as words.</p>
-          <h3>Examples</h3>
+          <h2>Examples</h2>
           <ul>
             {EXAMPLES.map(([query, meaning]) =>
               <li key={query}><code>{query}</code>{meaning && ` — ${meaning}`}</li>)}
           </ul>
-        </div>}
+        </section>}
     </div>
   );
 };

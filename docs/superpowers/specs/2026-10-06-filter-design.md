@@ -240,9 +240,12 @@ The ticket's "static help pane", as a popover:
 
 - Opened from an ⓘ button in the bar's tail, with `aria-label="Show what you can filter on"` and
   `aria-expanded`.
-- The popover is `role="dialog"`. It closes on the ⓘ button again, an × button, Escape wherever
-  focus is, or a mousedown outside it. While it is open, the first Escape only closes it. Escape and
-  × return focus to the ⓘ button, unless focus is in the box, where it stays.
+- The popover is a disclosure: a `<section>` labeled "What you can filter on", which the ⓘ button
+  expands. It isn't a dialog, since opening it leaves the caret in the box. It closes on the ⓘ
+  button again, an × button, Escape wherever focus is, or a mousedown outside it. While it is open,
+  the first Escape only closes it. Every way of closing returns focus to the ⓘ button when focus
+  was in the help, so the bar's commit on leaving still happens; when focus is in the box, it stays.
+- Its headings are `<h2>`, and the field and operator names are row headers.
 - **Fields:** a table built from `fields`:
   - `n`: Position among all the conversations, from 1.
   - `id`: The conversation's id.

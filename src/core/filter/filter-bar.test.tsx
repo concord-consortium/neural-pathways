@@ -25,6 +25,8 @@ function showBar(overrides: Partial<FilterBarProps> = {}) {
 
 const input = () => screen.getByRole("textbox", { name: "Filter" });
 const helpButton = () => screen.getByRole("button", { name: "Show what you can filter on" });
+const helpPanel = () => screen.getByRole("region", { name: "What you can filter on" });
+const queryHelpPanel = () => screen.queryByRole("region", { name: "What you can filter on" });
 
 describe("FilterBar", () => {
   it("labels the box Filter and gives an example", () => {
@@ -107,8 +109,8 @@ describe("FilterBar", () => {
     const props = showBar();
     fireEvent.click(helpButton());
     input().focus();
-    screen.getByRole("dialog").focus();
-    expect(screen.getByRole("dialog")).toHaveFocus();
+    helpPanel().focus();
+    expect(helpPanel()).toHaveFocus();
     expect(props.onCommit).not.toHaveBeenCalled();
   });
 
@@ -131,40 +133,40 @@ describe("FilterBar", () => {
   describe("help", () => {
     it("starts closed", () => {
       showBar();
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(queryHelpPanel()).not.toBeInTheDocument();
       expect(helpButton()).toHaveAttribute("aria-expanded", "false");
     });
 
     it("opens and closes from its button", () => {
       showBar();
       fireEvent.click(helpButton());
-      expect(screen.getByRole("dialog", { name: "What you can filter on" })).toBeInTheDocument();
+      expect(helpPanel()).toBeInTheDocument();
       expect(helpButton()).toHaveAttribute("aria-expanded", "true");
       fireEvent.click(helpButton());
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(queryHelpPanel()).not.toBeInTheDocument();
     });
 
     it("lists every field, with what it holds", () => {
       showBar();
       fireEvent.click(helpButton());
-      const dialog = screen.getByRole("dialog");
+      const panel = helpPanel();
       for (const field of ["n", "id", "text", "observation", "target_label", "group_size", "model_correct",
         "pathway_1"]) {
-        expect(dialog).toHaveTextContent(field);
+        expect(panel).toHaveTextContent(field);
       }
-      expect(dialog).toHaveTextContent("The observer's notes");
-      expect(dialog).toHaveTextContent("Group size (1–6)");
-      expect(dialog).toHaveTextContent("Model was correct");
-      expect(dialog).toHaveTextContent("Score on Pathway 1");
+      expect(panel).toHaveTextContent("The observer's notes");
+      expect(panel).toHaveTextContent("Group size (1–6)");
+      expect(panel).toHaveTextContent("Model was correct");
+      expect(panel).toHaveTextContent("Score on Pathway 1");
     });
 
     it("says the operators must be capitals, and gives examples", () => {
       showBar();
       fireEvent.click(helpButton());
-      const dialog = screen.getByRole("dialog");
-      expect(dialog).toHaveTextContent("Write AND, OR and NOT in capitals");
-      expect(dialog).toHaveTextContent("voices_raised:1 AND pathway_1:<0");
-      expect(dialog).toHaveTextContent("observation:\"stores nearby\"");
+      const panel = helpPanel();
+      expect(panel).toHaveTextContent("Write AND, OR and NOT in capitals");
+      expect(panel).toHaveTextContent("voices_raised:1 AND pathway_1:<0");
+      expect(panel).toHaveTextContent("observation:\"stores nearby\"");
     });
 
     it("closes from its close button and returns focus to the help button", () => {
@@ -173,27 +175,27 @@ describe("FilterBar", () => {
       const closeButton = screen.getByRole("button", { name: "Close" });
       act(() => closeButton.focus());
       fireEvent.click(closeButton);
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(queryHelpPanel()).not.toBeInTheDocument();
       expect(helpButton()).toHaveFocus();
     });
 
     it("closes on Escape and returns focus to the help button", () => {
       showBar();
       fireEvent.click(helpButton());
-      const dialog = screen.getByRole("dialog");
-      act(() => dialog.focus());
-      fireEvent.keyDown(dialog, { key: "Escape" });
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      const panel = helpPanel();
+      act(() => panel.focus());
+      fireEvent.keyDown(panel, { key: "Escape" });
+      expect(queryHelpPanel()).not.toBeInTheDocument();
       expect(helpButton()).toHaveFocus();
     });
 
     it("closes on a mousedown outside it, but not inside it", () => {
       showBar();
       fireEvent.click(helpButton());
-      fireEvent.mouseDown(screen.getByRole("dialog"));
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      fireEvent.mouseDown(helpPanel());
+      expect(helpPanel()).toBeInTheDocument();
       fireEvent.mouseDown(document.body);
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(queryHelpPanel()).not.toBeInTheDocument();
     });
 
     // React sends no blur for a focused node it removes, so focus must leave the help before it
@@ -201,10 +203,10 @@ describe("FilterBar", () => {
     it("returns focus to the help button when a mousedown outside closes it with focus inside", () => {
       showBar();
       fireEvent.click(helpButton());
-      const dialog = screen.getByRole("dialog");
-      act(() => dialog.focus());
+      const panel = helpPanel();
+      act(() => panel.focus());
       fireEvent.mouseDown(document.body);
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(queryHelpPanel()).not.toBeInTheDocument();
       expect(helpButton()).toHaveFocus();
     });
 
@@ -213,14 +215,14 @@ describe("FilterBar", () => {
       fireEvent.click(helpButton());
       act(() => screen.getByRole("button", { name: "Close" }).focus());
       fireEvent.click(helpButton());
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(queryHelpPanel()).not.toBeInTheDocument();
       expect(helpButton()).toHaveFocus();
     });
 
     it("doesn't discard the draft when Escape closes it", () => {
       const props = showBar();
       fireEvent.click(helpButton());
-      fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+      fireEvent.keyDown(helpPanel(), { key: "Escape" });
       expect(props.onDiscard).not.toHaveBeenCalled();
     });
 
@@ -228,7 +230,7 @@ describe("FilterBar", () => {
       showBar();
       fireEvent.click(helpButton());
       fireEvent.keyDown(document.body, { key: "Escape" });
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(queryHelpPanel()).not.toBeInTheDocument();
     });
 
     it("closes first on Escape in the box, keeping the draft and the caret", () => {
@@ -236,7 +238,7 @@ describe("FilterBar", () => {
       input().focus();
       fireEvent.click(helpButton());
       fireEvent.keyDown(input(), { key: "Escape" });
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(queryHelpPanel()).not.toBeInTheDocument();
       expect(props.onDiscard).not.toHaveBeenCalled();
       expect(input()).toHaveFocus();
     });
@@ -247,7 +249,7 @@ describe("FilterBar", () => {
       fireEvent.click(helpButton());
       fireEvent.keyDown(input(), { key: "Escape", isComposing: true });
       fireEvent.keyDown(input(), { key: "Escape", keyCode: 229 });
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(helpPanel()).toBeInTheDocument();
       expect(props.onDiscard).not.toHaveBeenCalled();
     });
   });

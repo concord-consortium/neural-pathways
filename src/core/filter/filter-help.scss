@@ -1,6 +1,6 @@
 @use "../colors" as colors;
 
-// Not positioned, so the dialog hangs from the filter bar and takes its width.
+// Not positioned, so the panel hangs from the filter bar and takes its width.
 .filter-help {
   display: flex;
 }
@@ -56,7 +56,7 @@
   }
 }
 
-.filter-help__dialog {
+.filter-help__panel {
   position: absolute;
   z-index: 20;
   top: calc(100% + 5px);
@@ -74,7 +74,7 @@
   font-size: 12.5px;
   line-height: 1.5;
 
-  h3 {
+  h2 {
     margin: 8px 0 4px;
     color: colors.$ink-3;
     font-family: "Barlow Condensed", sans-serif;
@@ -92,9 +92,16 @@
     border-collapse: collapse;
   }
 
+  th,
   td {
     padding: 1px 10px 1px 0;
     vertical-align: top;
+  }
+
+  // Row headers, for screen readers; they look like the cells beside them.
+  th {
+    font-weight: inherit;
+    text-align: left;
   }
 
   p {
