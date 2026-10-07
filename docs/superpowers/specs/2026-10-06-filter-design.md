@@ -55,6 +55,8 @@ Checked on 2026-10-06 with throwaway scripts.
   are ANDed.
 - A bare word matches every string field. `wait` matched a record whose `target_label` was `wait`.
 - `bogus:1` parses and matches nothing.
+- `field:number` matches the number as text: `n:1` matches 1, 10–19, 21 and so on. Two records
+  couldn't show this; it was found on the real data after the review.
 - `not yandor` and `yandor or sooma` treat the lowercase word as a search word. A bare word is a
   substring match, so on the real data this narrows rather than failing: `or` is inside 700 of the
   800 conversations, and `yandor or sooma` gives 210, the same as `yandor sooma` (`yandor OR sooma`
@@ -138,7 +140,9 @@ key.
 4. Filter the records with liqe's `filter`, and return the matching ids in dataset order.
 
 Matching is liqe's. On a string field, `field:value` is a substring match, and case never matters. On a
-number, it is equality. Quotes, `*` wildcards, `/regex/` and `[a TO b]` ranges also work. The help
+number field, `field:number` is rewritten as the range `[number TO number]`, so it is equality:
+liqe on its own matches a number as text, and `n:1` gave 233 conversations (every `n` with a 1 in
+it). Quotes, `*` wildcards, `/regex/` and `[a TO b]` ranges also work. The help
 doesn't list them.
 
 ### Error messages

@@ -68,6 +68,19 @@ describe("run", () => {
     expect(matches("pathway_3:>2")).toEqual({ ids: ["aaa111"] });
   });
 
+  it("matches a number exactly, not as digits inside a longer number", () => {
+    const datasetIndex = filterTestIndex();
+    // Twelve conversations, so n runs past 9: n:1 must not match 10, 11 or 12.
+    datasetIndex.items = Array.from({ length: 12 }, (_, i) => ({ ...datasetIndex.items[i % 4], id: `id${i + 1}` }));
+    expect(conversationFilterFor(datasetIndex).run("n:1")).toEqual({ ids: ["id1"] });
+    expect(matches("pathway_1:2")).toEqual({ ids: [] });
+    expect(matches("pathway_1:2.4")).toEqual({ ids: ["bbb222"] });
+  });
+
+  it("still matches digits inside a text field's value", () => {
+    expect(matches("id:111")).toEqual({ ids: ["aaa111"] });
+  });
+
   it("compares numbers", () => {
     expect(matches("group_size:>=3")).toEqual({ ids: ["bbb222", "ddd444"] });
   });

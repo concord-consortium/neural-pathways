@@ -151,6 +151,20 @@ function checkFieldTag(tag: TagToken, field: FieldToken, fields: QueryFields): P
   if (fields.numbers.has(field.name) && expression.type === "LiteralExpression" && !isNumber) {
     throw new QueryError(`${field.name} needs a number`);
   }
+  // liqe matches `field:1` as text, so n:1 would also match 10 to 19, 21 and so on. As the range
+  // [1 TO 1], it is compared as a number. Only on a number field: id:111 is still a substring.
+  if (fields.numbers.has(field.name) && operator === ":" && expression.type === "LiteralExpression"
+    && typeof expression.value === "number") {
+    const { value } = expression;
+    return {
+      ...tag,
+      expression: {
+        type: "RangeExpression",
+        location: expression.location,
+        range: { min: value, max: value, minInclusive: true, maxInclusive: true },
+      },
+    };
+  }
   return lowercased(tag);
 }
 
