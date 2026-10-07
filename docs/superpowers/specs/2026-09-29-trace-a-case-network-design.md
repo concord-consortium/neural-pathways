@@ -258,8 +258,10 @@ with no React.
 ### The step row
 
 The step row sits in a toolbar above the network panel, as in the prototype:
-- "Step 1" to "Step 4" as buttons, with `aria-pressed` on the step shown;
-- then Reset, which is disabled when `stepsDone` is 0.
+- "Step 1" to "Step 4" as plain buttons, with `aria-current="step"` on the step shown. Pressing
+  the step shown replays it, so the steps aren't toggle buttons (`aria-pressed`);
+- then Reset, which is unavailable (`aria-disabled`) while no step is shown: nothing done and
+  nothing playing. So Reset can stop a Step 1 played from nothing.
 
 In the prototype the filter sits in a matching toolbar above the conversation card, and About
 sits at the right end of the step row; those come in NPW-35 and NPW-44. The filter's toolbar
@@ -363,7 +365,9 @@ It is an `observer`.
   `indexPasses(toyNetwork, index)` in `src/core/network/`. That runs `forward` on all 800
   conversations and `networkScales` over them once per index, so a view that mounts again doesn't
   repeat the work.
-- **The diagram** then gets the current conversation's pass and the step player's scene.
+- **The diagram** then gets the current conversation's pass and the step player's scene. The step
+  row and the diagram read the player in their own `observer`s, so a frame re-renders only them,
+  not the card.
 - **The steps** come from `useViewState(TraceACaseState)` for the current conversation.
 - **`VIEWS`:** Trace a Case's `stateModel` is `TraceACaseState`.
 
@@ -417,6 +421,7 @@ It is an `observer`.
   React) **and the step row** (RTL):
   - Step 2 from nothing fills the inputs at once, then animates to completion;
   - Reset clears the scene;
+  - pressing the step playing again restarts it, with one clock running;
   - reduced motion makes a step instant;
   - only the step before is saved while a step plays, and the step once it ends;
   - `stop()` cancels the clock and leaves the step before saved, and the player plays again
@@ -453,7 +458,10 @@ It is an `observer`.
   - a saved `conversationId` opens on that conversation;
   - an unknown id falls back to the first;
   - each conversation's steps are kept in `TraceACaseState` and come back on returning to it;
-  - changing conversation mid-step drops the step, leaving the step before saved.
+  - changing conversation mid-step drops the step, leaving the step before saved, and so does
+    unmounting the view;
+  - Reset clears only the conversation shown;
+  - the conversation card isn't re-rendered while a step plays.
 - **`src/app/components/app.test.tsx`:** mocks the data loader, as the lab explorer tests do.
   Its assertions change if the view's heading changes.
 

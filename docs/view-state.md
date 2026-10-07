@@ -22,11 +22,12 @@ Player (AP), each interactive will save `{ view, shared }`: its own view tree an
 
 ## How the state arrives
 
-The framework is in place: `SharedState`, `AppState`, and the context views use. No view has a
-state model yet. Each view's model, and each shared field, arrives with the story that first
-builds the UI using it, so it can be reviewed against that UI. The complete target is kept in draft
-[PR #29](https://github.com/concord-consortium/neural-pathways/pull/29). Bring a view's model over
-from it, and change the model if the UI turns out to need something different. The tables below
+The framework is in place: `SharedState`, `AppState`, and the context views use. Trace a Case is
+the first view with a state model. Each view's model, and each shared field, arrives with the
+story that first builds the UI using it, so it can be reviewed against that UI. The complete
+target is kept in draft [PR #29](https://github.com/concord-consortium/neural-pathways/pull/29).
+Bring a view's model over from it, and change the model if the UI turns out to need something
+different. The tables below
 list that target and the story each piece is expected to arrive with.
 
 Where the models live follows the rule for `src/core/`: it holds what more than one view uses.
@@ -68,11 +69,12 @@ It has `version` and `conversationId` so far. Its fields:
 
 ## Each view's state
 
-None is in place yet. The target:
+Only Trace a Case's is built so far, and only its steps done for each conversation. Animate and
+speed arrive with their controls. The target, with what is built marked:
 
 | View | Model | Keeps |
 |---|---|---|
-| Trace a Case | `npw/TraceACaseState` | Steps done for each conversation, by id; Animate on/off; speed (0 slow, 1 normal, 2 fast) |
+| Trace a Case | `npw/TraceACaseState` | Steps done for each conversation, by id (built); Animate on/off; speed (0 slow, 1 normal, 2 fast) |
 | Extract Pathways | `npw/ExtractPathwaysState` | Animate; speed; the extraction stages completed (`extracted`, `collected`, `cubeDone`, `pathwaysDone`) |
 | Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
 | Prediction Chain | `npw/PredictionChainState` | The step each conversation is on (0 to 4), by id; Animate; speed |

@@ -5,16 +5,22 @@ The lesson's first view: follow one conversation through the network, a layer at
 ## What's here
 
 - `trace-a-case.tsx`: the view. It loads the alien3 conversations, keeps the shared conversation
-  valid, and lays out the conversation card and the network. The network shows the whole pass
-  for the current conversation.
+  valid, and lays out the conversation card and the network, with the step row above the network.
+- `step-timeline.ts`: what Steps 1–4 draw at any moment, as a pure function of time.
+- `step-player.ts`: `StepPlayer`, a MobX class that plays the steps for one conversation and gives
+  the view the scene to draw. Under `prefers-reduced-motion` a step jumps straight to its end. Its
+  tests need no React.
+- `step-row.tsx`: the Step 1–4 and Reset buttons. Reset clears the conversation shown.
+- `trace-a-case-state.ts`: the view's saved state, `TraceACaseState`: the steps done for each
+  conversation, so they survive moving between conversations and switching views. Only this view
+  uses it, so it lives here rather than in `src/core/state/`.
 
 The network, the diagram, the conversation card and the data loading live in `src/core/`, where
 Extract Pathways and Investigate Pathways can use them.
 
 ## Still to come
 
-Next come Steps 1–4 and Reset, which build the pass up a layer at a time, with each conversation's
-steps kept in the view's own state (`TraceACaseState`). After those, the view still needs:
+The view still needs:
 - the filter;
 - the label chip, observation notes and attribute icons;
 - node hover and the pinned readout;
