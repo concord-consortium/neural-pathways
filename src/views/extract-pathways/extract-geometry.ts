@@ -31,8 +31,8 @@ function deckRadius(nodeR: number): number {
 /**
  * The narrowest the canvas is laid out: the network, and a strip each side wide enough that the
  * deck's columns collected by hand fit in the left one, stepping left from its middle. A narrower
- * panel scrolls the drawing sideways rather than scaling it down, so its text grows when the page
- * is zoomed (see docs/accessibility.md).
+ * panel scrolls the drawing sideways rather than scaling it down, since text scaled to fit stops
+ * growing when the page is zoomed (WCAG 1.4.4).
  *
  * The prototype has no minimum: it widens its canvas to whatever the panel has, so wherever the
  * panel is at least this wide, the two lay out alike.

@@ -272,7 +272,8 @@ The rules that follow from this:
 **Canvas.**
 
 - The SVG is the panel's width and 440 tall, like Trace a Case's diagram, drawn at full size: one
-  drawing unit to a CSS pixel, never scaled to fit (`docs/accessibility.md`).
+  drawing unit to a CSS pixel, never scaled to fit: text scaled to fit stops growing when the page
+  is zoomed (WCAG 1.4.4). NPW-51 records this as a guideline for the whole repo.
 - It is never narrower than `minCanvasWidth`, 909: the network plus two strips that each hold the
   ten columns collected by hand, with 10 clear. A narrower panel scrolls the drawing sideways. While
   it scrolls, the drawing's container is a group named by the panel heading, with `tabIndex` 0, so
