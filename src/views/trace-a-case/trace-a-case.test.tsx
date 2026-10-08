@@ -362,13 +362,16 @@ describe("TraceACase", () => {
       expect(screen.getByText("2 / 2")).toBeInTheDocument();
     });
 
-    it("says so when nothing matches, leaving out the steps and the network", async () => {
+    it("says so in the card when nothing matches, leaving out the steps and the network", async () => {
       const shared = showView();
       await screen.findByText("1 / 3");
+      // The card stays, so its status is still in the page to announce the way back.
+      const status = within(card()).getByRole("status");
       typeQuery("n:9");
       fireEvent.keyDown(filterBox(), { key: "Enter" });
       expect(filterBox()).toHaveAccessibleDescription("0 of 3");
-      expect(screen.getByText("No conversations match the filter.")).toBeInTheDocument();
+      expect(card()).toHaveTextContent("No conversations match that search.");
+      expect(within(card()).getByRole("status")).toBe(status);
       expect(screen.queryByRole("button", { name: "Step 1" })).not.toBeInTheDocument();
       expect(screen.queryByRole("heading", { name: "The Network" })).not.toBeInTheDocument();
       expect(shared.conversationId).toBe(ids[0]);

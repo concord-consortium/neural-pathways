@@ -171,21 +171,23 @@ export function AlienMark({ attributeKey, size }: { attributeKey: string; size: 
   index. These are the generated attributes in the data's order, so the derived `target`,
   `prediction` and `model_correct` aren't among them. For alien3 that is `voices_raised`,
   `engaged_in_task`, `group_size`, `near_water` and `food_present`.
-- **An empty index** still shows the existing "No conversations." On `main` nothing filters the
-  list, so the card's empty state isn't reachable from this view yet.
+- **A filter that matches nothing** gives the card a `total` of 0, so it shows its empty state;
+  see [Merging with the filter](#merging-with-the-filter). An empty index still shows the existing
+  "No conversations."
 - **Re-renders:** the card stays outside the step player's observers, so a step playing doesn't
   re-render it.
 
 ## Merging with the filter
 
-The filter (NPW-35, PR #38) renders its own "No conversations match the filter." panel in the
-card's cell, as `trace-a-case__no-match`, and leaves out the steps and the network. Whichever
-branch merges second:
+The filter (NPW-35, PR #38) merged first. It rendered its own "No conversations match the filter."
+panel in place of the card, as `trace-a-case__no-match`, and left out the steps and the network.
+After rebasing on it, this branch:
 
 - deletes that paragraph and its `.trace-a-case__no-match` style;
-- renders `<ConversationCard position={-1} total={0} … />` in their place, still leaving out the
-  steps and the network;
-- updates the filter's tests and spec to the card's wording.
+- always renders the card, with `total` 0 when nothing matches and its parts only when a
+  conversation is shown, still leaving out the steps and the network. The card's status stays in
+  the page, so loosening the query is announced;
+- updates the filter's test and spec to the card's wording.
 
 After the merge a change of query updates two polite live regions: the filter bar's count ("64 of
 800") and the card's status ("Conversation 1 of 64"). The second tells a listener which

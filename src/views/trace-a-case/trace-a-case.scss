@@ -50,16 +50,6 @@
   min-width: 0;
 }
 
-// In the card's place when nothing matches, so the layout keeps its shape.
-.trace-a-case__no-match {
-  @include panel.panel;
-  margin: 0;
-  padding: 24px 14px;
-  color: colors.$ink-3;
-  font-size: 15px;
-  text-align: center;
-}
-
 .trace-a-case__network {
   @include panel.panel;
   grid-area: network;

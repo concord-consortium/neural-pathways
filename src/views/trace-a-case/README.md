@@ -6,9 +6,9 @@ The lesson's first view: follow one conversation through the network, a layer at
 
 - `trace-a-case.tsx`: the view. It loads the alien3 conversations, keeps the shared conversation
   valid, and lays out the filter bar over the conversation card and the step row over the network.
-  Prev/next step through the conversations the filter matches. When nothing matches, the card's
-  place says so, and the steps and the network are left out. The card marks the attributes that
-  aren't hidden under the observation notes.
+  Prev/next step through the conversations the filter matches. When nothing matches, the card says
+  so, and the steps and the network are left out. The card marks the attributes that aren't hidden
+  under the observation notes.
 - `step-timeline.ts`: what Steps 1–4 draw at any moment, as a pure function of time.
 - `step-player.ts`: `StepPlayer`, a MobX class that plays the steps for one conversation and gives
   the view the scene to draw. Under `prefers-reduced-motion` a step jumps straight to its end. Its

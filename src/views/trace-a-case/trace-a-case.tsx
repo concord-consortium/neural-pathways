@@ -80,42 +80,38 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const place = shownId === undefined ? undefined : placeById.get(shownId);
   const shown = place === undefined ? undefined : index.items[place];
 
-  const noMatch = (
-    <div className="trace-a-case__case">
-      <p className="trace-a-case__no-match">No conversations match the filter.</p>
-    </div>
-  );
-  // The card comes before the steps, so the tab order matches the stacked layout as well as the
-  // wide one.
-  const conversation = player && shown && place !== undefined && (
-    <>
-      <div className="trace-a-case__case">
-        <ConversationCard position={listPosition} total={ids.length}
-          onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)}>
-          <ConversationWords text={shown.text} />
-          <ActualLabel target={shown.target} labels={alien3Dataset.classificationLabels} />
-          <ObservationNotes observation={shown.observation} attributes={markedAttributes} values={shown.attributes} />
-        </ConversationCard>
-      </div>
-      <div className="trace-a-case__steps">
-        <PlayerStepRow player={player} />
-      </div>
-      <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
-        <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
-        <div className="trace-a-case__diagram">
-          <PlayerDiagram player={player} pass={passes[place]} scales={scales} />
-        </div>
-      </section>
-    </>
-  );
-
-  // The filter comes first: it sits over the card in both layouts.
+  // The filter comes first: it sits over the card in both layouts. The card comes before the steps,
+  // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
+  // card says so, and the steps and the network are left out.
   return (
     <div className="trace-a-case__layout">
       <div className="trace-a-case__filter">
         <FilterBar {...bar} />
       </div>
-      {conversation || noMatch}
+      <div className="trace-a-case__case">
+        <ConversationCard position={listPosition} total={ids.length}
+          onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)}>
+          {shown &&
+            <>
+              <ConversationWords text={shown.text} />
+              <ActualLabel target={shown.target} labels={alien3Dataset.classificationLabels} />
+              <ObservationNotes observation={shown.observation} attributes={markedAttributes}
+                values={shown.attributes} />
+            </>}
+        </ConversationCard>
+      </div>
+      {player && place !== undefined &&
+        <>
+          <div className="trace-a-case__steps">
+            <PlayerStepRow player={player} />
+          </div>
+          <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
+            <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
+            <div className="trace-a-case__diagram">
+              <PlayerDiagram player={player} pass={passes[place]} scales={scales} />
+            </div>
+          </section>
+        </>}
     </div>
   );
 });
