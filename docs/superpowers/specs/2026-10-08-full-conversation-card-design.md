@@ -223,7 +223,8 @@ After rebasing on it, this branch:
 - always renders the card, with `total` 0 when nothing matches and its parts only when a
   conversation is shown, still leaving out the steps and the network. The card's status stays in
   the page, so loosening the query is announced;
-- updates the filter's test and spec to the card's wording.
+- updates the filter's test to the card's wording. The filter's spec stays as the record of its
+  design.
 
 After the merge a change of query updates two polite live regions: the filter bar's count ("64 of
 800") and the card's status ("Conversation 1 of 64"). The second tells a listener which

@@ -40,7 +40,7 @@ Sources:
 | Case | Ignored, quoted or not: the records' text and notes, and every query value, are lowercased. A `/regex/` is the exception: it is matched as written. | liqe matches a quoted value case-sensitively, and the notes start sentences with capitals. |
 | Substring matching | Kept, for the notes too: `water` also matches "underwater". | Predictable, and consistent with the rest of the filter. Whole-word matching can come later. |
 | Filterable attributes | The ones not marked `hidden` in the data. The four hidden ones (`resource_stressed`, `gestures_repeated`, `young_present`, `carrying_burden`) are unknown fields. | The ticket's open question. The prototype hid only `resource_stressed`, but no other view shows the other three before they are commissioned. The engine takes the list as an input, so NPW-41 only adds the commissioned ones. |
-| No matches | The bar stays and shows "0 of 800". The card shows its empty state, "No conversations match that search." The steps row and the network are left out. The stored conversation is unchanged. | Loosening the query brings back the same conversation, at the same step. |
+| No matches | The bar stays and shows "0 of 800". The card's cell says "No conversations match the filter." The steps row and the network are left out. The stored conversation is unchanged. | Loosening the query brings back the same conversation, at the same step. |
 | The help pane | A popover opened from an ⓘ button in the bar. | The prototype's screens without the Options panel do this, and so does the explorer. NPW-42 can point the button at the Options popover on Trace a Case. |
 
 ## Verified behavior
@@ -301,7 +301,7 @@ Called from an `observer` component. It reads `shared.query` and `shared.queryDr
   - shows `validConversationId(shared.conversationId, ids)`, without writing it, as it does now;
   - gives the card its position and total within `ids` ("3 / 64"); prev/next step through `ids`;
   - always renders the bar, in the grid's empty cell above the card, as `trace-a-case__filter`.
-- **No matches:** the card shows its empty state, "No conversations match that search." The steps
+- **No matches:** the card's cell shows a panel, "No conversations match the filter." The steps
   row and the network are left out, and no player is made. An index with no items at all still
   shows the existing `No conversations.`
 - **Prev/next during a draft:**
