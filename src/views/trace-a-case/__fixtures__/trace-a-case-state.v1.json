@@ -1,5 +1,7 @@
 {
   "version": 1,
   "markerByConversation": { "361e65b1002a": 3, "7b117e548ba4": 1 },
+  "animate": false,
+  "speed": 0,
   "$modelType": "npw/TraceACaseState"
 }
