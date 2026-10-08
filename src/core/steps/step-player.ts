@@ -87,6 +87,8 @@ export class StepPlayer<S> {
   @action
   play(button: string, segment: Segment) {
     const { from, to } = segment;
+    // First, so a timeline that throws for this segment leaves the player as it was.
+    const duration = this.timeline.duration(segment);
     this.stop();
     if (prefersReducedMotion()) {
       this.progress.setMarker(to);
@@ -94,7 +96,6 @@ export class StepPlayer<S> {
     }
     this.progress.setMarker(from);
     this.frame = { button, from, to, t: 0 };
-    const duration = this.timeline.duration(segment);
     let start: number | undefined;
     const tick = action((now: number) => {
       start ??= now;

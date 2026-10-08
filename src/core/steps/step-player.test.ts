@@ -111,4 +111,24 @@ describe("StepPlayer", () => {
     jest.advanceTimersByTime(2000);
     expect(progress.marker).toBe(0);
   });
+
+  it("changes nothing when the timeline can't time a segment", () => {
+    const progress = new TestProgress(2);
+    const strict: StepTimeline<TestScene> = {
+      ...timeline,
+      duration: segment => {
+        if (segment.to > 3) {
+          throw new RangeError("No such marker");
+        }
+        return timeline.duration(segment);
+      },
+    };
+    const player = new StepPlayer(strict, progress);
+    player.play("a", { from: 2, to: 3 });
+    expect(() => player.play("b", { from: 3, to: 9 })).toThrow(RangeError);
+    expect(progress.marker).toBe(2);
+    expect(player.currentFrame).toEqual({ button: "a", from: 2, to: 3, t: 0 });
+    jest.advanceTimersByTime(1100);
+    expect(progress.marker).toBe(3);
+  });
 });
