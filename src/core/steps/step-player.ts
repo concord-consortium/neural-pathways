@@ -1,6 +1,6 @@
 import { action, computed, computedStruct, observableRef } from "mobx";
 
-/** A point on a view's timeline where the scene rests and progress is saved. 0 is the start. */
+/** A point on a view's timeline where the scene rests and progress is stored. 0 is the start. */
 export type Marker = number;
 
 /** The animation between two markers. */
@@ -41,8 +41,8 @@ function prefersReducedMotion(): boolean {
 
 /**
  * Plays a view's segments on a requestAnimationFrame clock and keeps its marker in `progress`. A
- * run saves the marker it starts from when it starts, and the one it ends at when it ends, so a
- * run still playing is never saved. Playing, resetting or stopping during a run drops it.
+ * run stores the marker it starts from when it starts, and the one it ends at when it ends, so a
+ * run still playing is never stored. Playing, resetting or stopping during a run drops it.
  *
  * Only the run playing is held here, and the clock runs only while it plays. So `stop()` is all
  * the cleanup there is, and the player can play again after it. The constructor must not start

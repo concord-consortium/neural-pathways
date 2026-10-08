@@ -23,7 +23,7 @@ describe("StepPlayer", () => {
     clearReducedMotion();
   });
 
-  it("starts at the progress saved, with nothing running", () => {
+  it("starts at the progress stored, with nothing running", () => {
     const progress = new TestProgress();
     progress.setMarker(2);
     const player = new StepPlayer(timeline, progress);
@@ -32,7 +32,7 @@ describe("StepPlayer", () => {
     expect(player.scene).toEqual({ marker: 2 });
   });
 
-  it("saves `from`, plays the run, then saves `to`", () => {
+  it("stores `from`, plays the run, then stores `to`", () => {
     const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
     player.play("b", { from: 1, to: 2 });
@@ -50,7 +50,7 @@ describe("StepPlayer", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("drops a run when another is pressed: the first's `to` is never saved", () => {
+  it("drops a run when another is pressed: the first's `to` is never stored", () => {
     const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
     player.play("a", { from: 0, to: 3 });
@@ -77,7 +77,7 @@ describe("StepPlayer", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("saves `to` straight away under reduced motion", () => {
+  it("stores `to` straight away under reduced motion", () => {
     setReducedMotion(true);
     const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
@@ -100,7 +100,7 @@ describe("StepPlayer", () => {
     expect(progress.marker).toBe(2);
   });
 
-  it("reset() stops a run and saves 0", () => {
+  it("reset() stops a run and stores 0", () => {
     const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
     player.play("a", { from: 2, to: 3 });

@@ -64,7 +64,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   conversation's forward pass through the network as a function of time, which Trace a Case plays
   as its steps and Extract Pathways will replay.
 - `steps/`: the step system views share. A view's timeline rests at markers, points where the
-  scene is still and progress is saved, and plays segments between them. `StepPlayer` plays the
+  scene is still and progress is stored, and plays segments between them. `StepPlayer` plays the
   segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. A view
   lists its buttons as `StepButton`s, each saying which segment it plays when the timeline rests
   at a marker, and `StepRow` draws them with Reset.
