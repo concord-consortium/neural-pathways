@@ -1,3 +1,4 @@
+@use "../../core/colors" as colors;
 @use "../../core/panel";
 
 .trace-a-case {
@@ -10,26 +11,32 @@
 
 // Two columns, each a toolbar over a panel, as in the prototype: the filter over the
 // conversation card, the steps over the network. The toolbars share a row, so the two panels
-// start on the same line. The filter's cell stays empty until the filter is built.
+// start on the same line.
 .trace-a-case__layout {
   display: grid;
   grid-template-columns: 447px minmax(400px, 1fr);
   grid-template-areas:
-    ".    steps"
-    "case network";
+    "filter steps"
+    "case   network";
   align-items: start;
   gap: 9px 10px;
 }
 
-// Too narrow for both columns: stack them, keeping the steps above the network.
+// Too narrow for both columns: stack them, keeping each toolbar above its panel.
 @container (width < 857px) {
   .trace-a-case__layout {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
+      "filter"
       "case"
       "steps"
       "network";
   }
+}
+
+.trace-a-case__filter {
+  grid-area: filter;
+  min-width: 0;
 }
 
 .trace-a-case__steps {
@@ -40,6 +47,16 @@
 .trace-a-case__case {
   grid-area: case;
   min-width: 0;
+}
+
+// In the card's place when nothing matches, so the layout keeps its shape.
+.trace-a-case__no-match {
+  @include panel.panel;
+  margin: 0;
+  padding: 24px 14px;
+  color: colors.$ink-3;
+  font-size: 15px;
+  text-align: center;
 }
 
 .trace-a-case__network {

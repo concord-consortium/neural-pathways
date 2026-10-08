@@ -15,6 +15,9 @@ describe("validateAttributeKeys", () => {
 
   it("rejects a key that collides with a reserved field name", () => {
     expect(() => validateAttributeKeys([def("text")])).toThrow(/reserved search field/);
+    expect(() => validateAttributeKeys([def("n")])).toThrow(/reserved search field/);
+    expect(() => validateAttributeKeys([def("id")])).toThrow(/reserved search field/);
+    expect(() => validateAttributeKeys([def("observation")])).toThrow(/reserved search field/);
   });
 
   it("rejects a key matching the pathway_<n> pattern", () => {

@@ -2,6 +2,9 @@ import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
+import { conversationFilterFor, idsFor } from "../../core/filter/conversation-filter";
+import { FilterBar } from "../../core/filter/filter-bar";
+import { useConversationFilter } from "../../core/filter/use-conversation-filter";
 import { indexPasses } from "../../core/network/index-passes";
 import { toyNetwork } from "../../core/network/toy-network";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
@@ -23,9 +26,11 @@ const TIMELINE = traceTimeline(COLUMN_SIZES);
 export const TraceACase: React.FC = observer(function TraceACase() {
   const shared = useSharedState();
   // Correct the shared conversation when the list arrives, not in a useEffect: see docs/undo.md.
-  // There is no filter yet, so the list is every conversation.
+  // The list is the stored query's matches: a query still being typed never moves the stored
+  // conversation.
   const onLoaded = useCallback(
-    (index: S3Index) => shared.ensureValidConversation(index.items.map(item => item.id)), [shared]);
+    (index: S3Index) => shared.ensureValidConversation(idsFor(conversationFilterFor(index), shared.query ?? "")),
+    [shared]);
   const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
 
   return (
@@ -44,30 +49,43 @@ export const TraceACase: React.FC = observer(function TraceACase() {
 const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3Index }) {
   const shared = useSharedState();
   const state = useViewState(TraceACaseState);
-  const ids = useMemo(() => index.items.map(item => item.id), [index]);
+  const { ids, bar } = useConversationFilter(conversationFilterFor(index));
+  // A conversation's place among all of them, which its pass is stored by. Its place in `ids`
+  // changes with the query.
+  const placeById = useMemo(() => new Map(index.items.map((item, i) => [item.id, i])), [index]);
   const { passes, scales } = indexPasses(toyNetwork, index);
   const networkHeadId = useId();
-  // Shown even before the store's correction lands, so an invalid id never reaches the screen.
+  // Shown even before the store's correction lands, and while a query is being typed, so an id
+  // the list doesn't include never reaches the screen.
   const currentId = validConversationId(shared.conversationId, ids);
+  const listPosition = currentId === undefined ? -1 : ids.indexOf(currentId);
+  // No conversation is shown when nothing matches: the empty list leaves the stored id in place.
+  const shownId = listPosition < 0 ? undefined : currentId;
   const player = useMemo(
-    () => (currentId === undefined ? undefined : new StepPlayer(TIMELINE, traceProgress(state, currentId))),
-    [state, currentId]);
+    () => (shownId === undefined ? undefined : new StepPlayer(TIMELINE, traceProgress(state, shownId))),
+    [state, shownId]);
   // Stop the old player when the conversation changes or the view unmounts. A layout effect, so its
   // run can't play another frame, and save, after the change is committed.
   useLayoutEffect(() => () => player?.stop(), [player]);
 
-  const position = currentId === undefined ? -1 : ids.indexOf(currentId);
-  if (position < 0 || !player) {
+  if (index.items.length === 0) {
     return <p>No conversations.</p>;
   }
   const goTo = (to: number) => shared.setConversationId(ids[to]);
+  const place = shownId === undefined ? undefined : placeById.get(shownId);
 
-  // The card comes first, so the tab order matches the stacked layout as well as the wide one.
-  return (
-    <div className="trace-a-case__layout">
+  const noMatch = (
+    <div className="trace-a-case__case">
+      <p className="trace-a-case__no-match">No conversations match the filter.</p>
+    </div>
+  );
+  // The card comes before the steps, so the tab order matches the stacked layout as well as the
+  // wide one.
+  const conversation = player && place !== undefined && (
+    <>
       <div className="trace-a-case__case">
-        <ConversationCard conversation={index.items[position]} position={position} total={ids.length}
-          onPrev={() => goTo(position - 1)} onNext={() => goTo(position + 1)} />
+        <ConversationCard conversation={index.items[place]} position={listPosition} total={ids.length}
+          onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)} />
       </div>
       <div className="trace-a-case__steps">
         <StepRow player={player} buttons={TRACE_BUTTONS} />
@@ -77,12 +95,22 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
         <div className="trace-a-case__diagram">
           <Observer>
             {() => (
-              <NetworkDiagram network={toyNetwork} pass={passes[position]} scales={scales}
+              <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
                 outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
             )}
           </Observer>
         </div>
       </section>
+    </>
+  );
+
+  // The filter comes first: it sits over the card in both layouts.
+  return (
+    <div className="trace-a-case__layout">
+      <div className="trace-a-case__filter">
+        <FilterBar {...bar} />
+      </div>
+      {conversation || noMatch}
     </div>
   );
 });
