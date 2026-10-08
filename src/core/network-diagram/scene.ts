@@ -1,7 +1,7 @@
 /**
- * What a network diagram shows at one moment. Views build scenes; NetworkDiagram draws them.
- * Columns are the drawn layers, left to right, indexed by unit. Gap g joins column g to column
- * g + 1.
+ * What a network diagram shows at one moment. Views build scenes; NetworkDrawing draws them, and
+ * NetworkDiagram sizes it to its container. Columns are the drawn layers, left to right, indexed
+ * by unit. Gap g joins column g to column g + 1.
  */
 export interface Scene {
   /** [column][unit], 0–1: how much of each node's value its gauge shows. */
@@ -17,8 +17,8 @@ export interface Scene {
   answer: number;
   /**
    * How strongly the hidden layers' nodes (every column but the first and last) are picked out,
-   * 0–1. Everything else fades to an opacity of 1 − this; the hidden layers' nodes stay at full
-   * strength. 0 draws the whole network normally.
+   * 0–1. Everything else drawn fades to an opacity of 1 − this, except the white discs behind the
+   * nodes; the hidden layers' nodes stay at full strength. 0 draws the whole network normally.
    */
   hiddenLayerSpotlight: number;
 }

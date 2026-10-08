@@ -10,7 +10,7 @@ const timeline: StepTimeline<number> = {
   sceneAt: marker => marker,
 };
 
-/** One: always from 0 to 1, pressed at 1. Next: on one marker, up to 3. Later: always disabled. */
+/** One: always from 0 to 1, current at 1. Next: on one marker, up to 3. Later: always disabled. */
 const BUTTONS: StepButton[] = [
   {
     key: "one",
@@ -106,7 +106,7 @@ describe("StepRow", () => {
     expect(segmentAt).toHaveBeenCalledTimes(callsOnceStarted);
   });
 
-  it("makes Reset available while the first step runs, and resets", () => {
+  it("makes Reset available while a run plays, and resets", () => {
     const player = showRow();
     fireEvent.click(button("One"));
     expect(button("Reset")).toHaveAttribute("aria-disabled", "false");

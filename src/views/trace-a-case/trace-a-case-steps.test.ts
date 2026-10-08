@@ -24,7 +24,7 @@ function press(player: StepPlayer<Scene>, step: number) {
 }
 
 describe("TRACE_BUTTONS", () => {
-  it("are Step 1 to Step 4, each playing from the step before it", () => {
+  it("are Step 1 to Step 4, each playing from the marker before it", () => {
     expect(TRACE_BUTTONS.map(b => b.label)).toEqual(["Step 1", "Step 2", "Step 3", "Step 4"]);
     for (const marker of [0, 2, 4]) {
       expect(TRACE_BUTTONS.map(b => b.segmentToPlayWhenAt(marker))).toEqual([
