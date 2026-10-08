@@ -1,0 +1,83 @@
+@use "../colors" as colors;
+@use "../visually-hidden";
+
+.observation-notes__head {
+  margin: 0 0 8px;
+  padding-top: 10px;
+  border-top: 1px solid colors.$rule-soft;
+  color: colors.$ink-2;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.observation-notes__box {
+  padding: 10px 12px;
+  border-left: 3px solid colors.$notes-rule;
+  border-radius: 0 5px 5px 0;
+  background: colors.$surface;
+}
+
+.observation-notes__text {
+  margin: 0;
+  color: colors.$ink;
+  font-family: "Lato", sans-serif;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+// The cells share the row's width, so a long label wraps rather than pushing the row wider.
+.observation-notes__marks {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.observation-notes__mark {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  color: colors.$ink-2;
+}
+
+// margin-bottom: auto pushes the drawing and badge to the foot of the cell, so they share a
+// baseline across the row however the labels wrapped.
+.observation-notes__label {
+  margin-bottom: auto;
+  color: colors.$ink-3;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.12;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+.observation-notes__mark svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.observation-notes__spoken {
+  @include visually-hidden.visually-hidden;
+}
+
+.observation-notes__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: colors.$ink;
+  font-family: "Lato", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
