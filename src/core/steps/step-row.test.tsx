@@ -1,27 +1,14 @@
 import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { action, makeObservable, observable } from "mobx";
 import { StepButton } from "./step-buttons";
-import { Marker, StepPlayer, StepProgress, StepTimeline } from "./step-player";
+import { StepPlayer, StepTimeline } from "./step-player";
 import { StepRow } from "./step-row";
+import { clearReducedMotion, setReducedMotion, TestProgress } from "./test-helpers";
 
 const timeline: StepTimeline<number> = {
   duration: ({ from, to }) => (to - from) * 1000,
   sceneAt: marker => marker,
 };
-
-class Progress implements StepProgress {
-  marker = 0;
-
-  constructor(marker = 0) {
-    this.marker = marker;
-    makeObservable(this, { marker: observable, setMarker: action });
-  }
-
-  setMarker(marker: Marker) {
-    this.marker = marker;
-  }
-}
 
 /** One: always from 0 to 1, pressed at 1. Next: on one marker, up to 3. Later: always disabled. */
 const BUTTONS: StepButton[] = [
@@ -40,7 +27,7 @@ const BUTTONS: StepButton[] = [
 ];
 
 function showRow(marker = 0, buttons = BUTTONS) {
-  const player = new StepPlayer(timeline, new Progress(marker));
+  const player = new StepPlayer(timeline, new TestProgress(marker));
   render(<StepRow player={player} buttons={buttons} />);
   return player;
 }
@@ -50,14 +37,12 @@ const button = (name: string) => screen.getByRole("button", { name });
 describe("StepRow", () => {
   beforeEach(() => {
     jest.useFakeTimers();
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true, writable: true, value: jest.fn().mockReturnValue({ matches: false }),
-    });
+    setReducedMotion(false);
   });
 
   afterEach(() => {
     jest.useRealTimers();
-    delete (window as any).matchMedia;
+    clearReducedMotion();
   });
 
   it("shows the buttons in order, then Reset, in a group named Steps", () => {

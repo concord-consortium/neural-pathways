@@ -1,5 +1,5 @@
-import { action, makeObservable, observable } from "mobx";
-import { Frame, Marker, StepPlayer, StepProgress, StepTimeline } from "./step-player";
+import { Frame, Marker, StepPlayer, StepTimeline } from "./step-player";
+import { clearReducedMotion, setReducedMotion, TestProgress } from "./test-helpers";
 
 interface TestScene {
   marker: Marker;
@@ -12,26 +12,6 @@ const timeline: StepTimeline<TestScene> = {
   sceneAt: (marker, frame) => (frame ? { marker, frame } : { marker }),
 };
 
-class Progress implements StepProgress {
-  marker = 0;
-
-  constructor() {
-    makeObservable(this, { marker: observable, setMarker: action });
-  }
-
-  setMarker(marker: Marker) {
-    this.marker = marker;
-  }
-}
-
-function setReducedMotion(reduce: boolean) {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    writable: true,
-    value: jest.fn().mockReturnValue({ matches: reduce }),
-  });
-}
-
 describe("StepPlayer", () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -40,11 +20,11 @@ describe("StepPlayer", () => {
 
   afterEach(() => {
     jest.useRealTimers();
-    delete (window as any).matchMedia;
+    clearReducedMotion();
   });
 
   it("starts at the progress saved, with nothing running", () => {
-    const progress = new Progress();
+    const progress = new TestProgress();
     progress.setMarker(2);
     const player = new StepPlayer(timeline, progress);
     expect(player.marker).toBe(2);
@@ -53,7 +33,7 @@ describe("StepPlayer", () => {
   });
 
   it("saves `from`, plays the run, then saves `to`", () => {
-    const progress = new Progress();
+    const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
     player.play("b", { from: 1, to: 2 });
     expect(progress.marker).toBe(1);
@@ -71,7 +51,7 @@ describe("StepPlayer", () => {
   });
 
   it("drops a run when another is pressed: the first's `to` is never saved", () => {
-    const progress = new Progress();
+    const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
     player.play("a", { from: 0, to: 3 });
     jest.advanceTimersByTime(1000);
@@ -85,7 +65,7 @@ describe("StepPlayer", () => {
   });
 
   it("restarts a run when its button is pressed again, with one clock", () => {
-    const progress = new Progress();
+    const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
     player.play("a", { from: 1, to: 2 });
     jest.advanceTimersByTime(500);
@@ -99,7 +79,7 @@ describe("StepPlayer", () => {
 
   it("saves `to` straight away under reduced motion", () => {
     setReducedMotion(true);
-    const progress = new Progress();
+    const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
     player.play("a", { from: 0, to: 3 });
     expect(progress.marker).toBe(3);
@@ -108,7 +88,7 @@ describe("StepPlayer", () => {
   });
 
   it("stop() cancels the clock and keeps `from`, and the player plays again afterward", () => {
-    const progress = new Progress();
+    const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
     player.play("a", { from: 1, to: 2 });
     player.stop();
@@ -121,7 +101,7 @@ describe("StepPlayer", () => {
   });
 
   it("reset() stops a run and saves 0", () => {
-    const progress = new Progress();
+    const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress);
     player.play("a", { from: 2, to: 3 });
     jest.advanceTimersByTime(200);

@@ -1,19 +1,12 @@
 import { emptyScene, Scene } from "../../core/network-diagram/scene";
 import { sceneAt } from "../../core/network-diagram/forward-pass-phases";
 import { StepPlayer } from "../../core/steps/step-player";
+import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
 import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
 import { TraceACaseState } from "./trace-a-case-state";
 
 const SIZES = [10, 8, 6, 2];
 const timeline = traceTimeline(SIZES);
-
-function setReducedMotion(reduce: boolean) {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    writable: true,
-    value: jest.fn().mockReturnValue({ matches: reduce }),
-  });
-}
 
 /** Players over one TraceACaseState, made for a conversation as the view makes them. */
 function makeState() {
@@ -54,7 +47,7 @@ describe("Trace a Case's steps on the step player", () => {
 
   afterEach(() => {
     jest.useRealTimers();
-    delete (window as any).matchMedia;
+    clearReducedMotion();
   });
 
   it("starts with nothing done", () => {
