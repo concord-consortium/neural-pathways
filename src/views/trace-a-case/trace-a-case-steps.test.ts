@@ -11,7 +11,8 @@ const timeline = traceTimeline(SIZES);
 /** Players over one TraceACaseState, made for a conversation as the view makes them. */
 function makeState() {
   const state = new TraceACaseState({});
-  const playerFor = (conversationId: string) => new StepPlayer(timeline, traceProgress(state, conversationId));
+  const playerFor = (conversationId: string) =>
+    new StepPlayer(timeline, traceProgress(state, conversationId), state);
   /** The markers stored, by conversation. */
   const stored = () => ({ ...state.markerByConversation });
   return { playerFor, stored };

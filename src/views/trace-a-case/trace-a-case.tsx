@@ -62,7 +62,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // No conversation is shown when nothing matches: the empty list leaves the stored id in place.
   const shownId = listPosition < 0 ? undefined : currentId;
   const player = useMemo(
-    () => (shownId === undefined ? undefined : new StepPlayer(TIMELINE, traceProgress(state, shownId))),
+    () => (shownId === undefined ? undefined : new StepPlayer(TIMELINE, traceProgress(state, shownId), state)),
     [state, shownId]);
   // Stop the old player when the conversation changes or the view unmounts. A layout effect, so its
   // run can't finish and store its marker after the change is committed.
