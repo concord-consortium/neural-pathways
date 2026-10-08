@@ -165,7 +165,7 @@ test("the card shows the conversation's label, notes and attribute indicators", 
   const widths = await indicators.evaluateAll(items =>
     items.map(item => Math.round(item.getBoundingClientRect().width)));
   expect(new Set(widths).size).toBe(1);
-  // What a screen reader reads of each attribute indicator: the tick or count is hidden from it.
+  // What a screen reader reads of each indicator; the check mark or count is hidden from it.
   const spoken = () => indicators.evaluateAll(items => items.map(item => {
     const copy = item.cloneNode(true) as Element;
     copy.querySelectorAll('[aria-hidden="true"]').forEach(hidden => hidden.remove());

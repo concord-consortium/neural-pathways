@@ -52,7 +52,7 @@ describe("ObservationNotes", () => {
     expect(items().map(spokenText)).toEqual(["Near water: no", "Voices raised: yes", "Group size: 2"]);
   });
 
-  it("ticks a binary attribute that is 1 and leaves one that is 0 blank", () => {
+  it("checks a binary attribute that is 1 and leaves one that is 0 blank", () => {
     render(<ObservationNotes attributes={[voices, water]} values={{ voices_raised: 1, near_water: 0 }} />);
     expect(shownValue(items()[0])).toBe("✔︎");
     expect(shownValue(items()[1])).toBe("");

@@ -57,9 +57,9 @@ function spokenValue(attribute: AttributeDefinition, value: number | null | unde
 }
 
 /**
- * A tick for a binary attribute that is 1 and a blank for 0. A missing value shows a dash, so a
- * blank always means 0. Anything else shows its number. The tick is followed by a variation
- * selector so no platform draws it as an emoji.
+ * A check mark for a binary attribute that is 1 and a blank for 0. A missing value shows a dash,
+ * so a blank always means 0. Anything else shows its number. The check mark is followed by a
+ * variation selector so no platform draws it as an emoji.
  */
 function shownValue(attribute: AttributeDefinition, value: number | null | undefined): string {
   if (value == null) return "–";
