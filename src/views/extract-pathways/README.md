@@ -10,10 +10,7 @@ activations of conversations run through it, one column of the deck each.
 - `extract-pathways-state.ts`: the view's saved state, `ExtractPathwaysState`: whether Setup is
   done, and how many conversations are collected. A step still playing isn't kept.
 - `extract-steps.ts`: the buttons and the marker, on the shared step system in
-  `src/core/steps/`. The marker is 1 once Setup is done and one more for each conversation
-  collected; the state keeps Setup and the count rather than the marker.
-  Setup always starts over; Collect a Conversation collects the next of the first ten, in dataset
-  order, jumping Setup to its end if it isn't done.
+  `src/core/steps/`.
 - `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `extract-timeline.ts`: what the
   view draws at any moment, as pure functions of the marker and the time into a segment, at the
   prototype's "Med" speed.
