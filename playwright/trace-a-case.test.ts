@@ -150,3 +150,44 @@ test("the filter bar shows focus in forced-colors mode", async ({ page }) => {
   await page.getByRole("textbox", { name: "Filter" }).focus();
   expect(await outline()).toBe("solid");
 });
+
+test("Animate and the speed survive switching views", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const network = page.getByRole("region", { name: "The Network" });
+  const animate = network.getByRole("checkbox", { name: "Animate" });
+  const speed = network.getByRole("slider", { name: "Animation speed" });
+  await expect(speed).toHaveAttribute("aria-valuetext", "Med");
+  await speed.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(speed).toHaveAttribute("aria-valuetext", "Fast");
+  await animate.uncheck();
+  await expect(speed).toBeDisabled();
+  const nav = page.getByRole("navigation", { name: "Views" });
+  await nav.getByRole("link", { name: "Correlations", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
+  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await expect(animate).not.toBeChecked();
+  await expect(speed).toBeDisabled();
+  await expect(speed).toHaveAttribute("aria-valuetext", "Fast");
+});
+
+test("clicking a speed's name moves the slider to it", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const network = page.getByRole("region", { name: "The Network" });
+  // The slider is stretched over the names, so a click where a name is lands on the slider.
+  const name = await network.getByText("Slow", { exact: true }).boundingBox();
+  await page.mouse.click(name!.x + name!.width / 2, name!.y + name!.height / 2);
+  await expect(network.getByRole("slider", { name: "Animation speed" })).toHaveAttribute("aria-valuetext", "Slow");
+});
+
+test("with Animate off, Step 4 shows the answer at once", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  await page.getByRole("checkbox", { name: "Animate" }).uncheck();
+  await page.getByRole("button", { name: "Step 4" }).click();
+  // Animated at Med, Step 4 takes several seconds to name the answer.
+  await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
+    .toBeVisible({ timeout: 1_000 });
+});

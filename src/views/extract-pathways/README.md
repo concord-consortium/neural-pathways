@@ -6,9 +6,11 @@ activations of conversations run through it, one column of the deck each.
 ## What's here
 
 - `extract-pathways.tsx`: the view. It loads the alien3 conversations and shows the step row above
-  one full-width panel holding the drawing. There is no filter and no conversation panel.
+  one full-width panel holding the drawing. The panel's head holds the shared Animate and speed
+  control. There is no filter and no conversation panel.
 - `extract-pathways-state.ts`: the view's saved state, `ExtractPathwaysState`: whether Setup is
-  done, and how many conversations are collected. A Setup or collection still playing isn't stored.
+  done, how many conversations are collected, and Animate and the speed. A Setup or collection
+  still playing isn't stored.
 - `extract-steps.ts`: the buttons and the marker, on the shared step system in
   `src/core/steps/`.
 - `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `extract-timeline.ts`: what the
@@ -22,6 +24,5 @@ activations of conversations run through it, one column of the deck each.
 
 The view still needs:
 - Collect All Conversations and Extract Pathways;
-- the Animate and speed controls;
 - the activation legend;
 - About.

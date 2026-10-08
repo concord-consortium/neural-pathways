@@ -1,5 +1,6 @@
 import React, { useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
+import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
 import { toyNetwork } from "../../core/network/toy-network";
@@ -54,7 +55,10 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
         <StepRow player={player} buttons={buttons} />
       </div>
       <section className="extract-pathways__network" aria-labelledby={panelHeadId}>
-        <h2 id={panelHeadId} className="extract-pathways__network-head">{PANEL_TITLE}</h2>
+        <div className="extract-pathways__network-head">
+          <h2 id={panelHeadId} className="extract-pathways__network-title">{PANEL_TITLE}</h2>
+          <AnimationControls animated={state} />
+        </div>
         <div className="extract-pathways__drawing">
           <Observer>
             {() => (
