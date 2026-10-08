@@ -10,11 +10,11 @@ interface StepRowProps {
 }
 
 /**
- * A view's step buttons, then Reset. A button plays the segment it gives for the marker the timeline
- * rests at; one that gives none is unavailable (aria-disabled), unless it is the one running, which
- * replays its run. The current step is marked with aria-current="step": the button whose run
- * plays, or, while nothing runs, the one that says to at the marker. Pressing it again replays it,
- * so the buttons aren't toggles.
+ * A view's step buttons, then Reset. A button plays the segment it gives for the marker the
+ * timeline rests at; one that gives none is unavailable (aria-disabled), unless it is the one
+ * running, which replays its run. The current step is marked with aria-current="step": the button
+ * whose run plays, or, while nothing runs, the one that says to at the marker. Pressing it again
+ * replays it, so the buttons aren't toggles.
  *
  * Reset is unavailable at the start with nothing running. Unavailable buttons stay in the tab
  * order, so one that becomes unavailable while it has focus, such as a step reaching its limit,

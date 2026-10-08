@@ -8,8 +8,6 @@ import { NetworkDrawing } from "./network-drawing";
 import { Scene } from "./scene";
 import "./network-diagram.scss";
 
-export { COLUMN_CAPTIONS, OUTPUT_ORDER, popScale } from "./network-drawing";
-
 /** The size drawn until the container reports its own: the content box Trace a Case gives it. */
 export const DIAGRAM_DEFAULT_SIZE = { width: 537, height: 440 };
 

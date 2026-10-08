@@ -21,7 +21,9 @@ const EDGE_WIDTHS = [1, 2, 3];
 const PILL_GROW = 3;
 /** Gauges shorter than this aren't drawn. */
 export const MIN_GAUGE = 0.35;
-/** The prototype's d1a-pillpop keyframes, each segment eased like its CSS animation. */
+/**
+ * The prototype's d1a-pillpop keyframes, each stretch between them eased like its CSS animation.
+ */
 const POP_KEYS: readonly (readonly [number, number])[] = [[0, 0.94], [0.45, 1.1], [0.72, 0.98], [1, 1]];
 const popEase = cubicBezier(0.34, 1.1, 0.5, 1);
 
@@ -169,7 +171,7 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
           );
         })}
       </g>
-      <Wires layout={layout} lastColumn={lastColumn} opacity={opacity(surroundOpacity)} />
+      <Wires layout={layout} opacity={opacity(surroundOpacity)} />
       <g className="network-diagram__edges" opacity={opacity(surroundOpacity)}>{edges}</g>
       <Discs layout={layout} clipPrefix={clipPrefix} />
       <g className="network-diagram__gauges">{gauges}</g>
@@ -204,13 +206,13 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
 
 interface WiresProps {
   layout: NetworkLayout;
-  lastColumn: number;
   opacity: number | undefined;
 }
 
 /** The gray wires. Drawn signal halves lie on top and cover them. */
-const Wires = React.memo(function Wires({ layout, lastColumn, opacity: groupOpacity }: WiresProps) {
+const Wires = React.memo(function Wires({ layout, opacity: groupOpacity }: WiresProps) {
   const { nodes, radius } = layout;
+  const lastColumn = nodes.length - 1;
   const lines: React.ReactElement[] = [];
   for (let gap = 0; gap < nodes.length - 1; gap++) {
     nodes[gap].forEach((from, sourceRow) => nodes[gap + 1].forEach((to, targetRow) => {

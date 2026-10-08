@@ -6,6 +6,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { SharedState } from "../../core/state/shared-state";
 import { TraceACaseState } from "./trace-a-case-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
+import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { clearDatasetIndexCache } from "../../core/use-dataset-index";
 import { TraceACase } from "./trace-a-case";
@@ -42,14 +43,6 @@ function showView(shared = new SharedState({}), state = new TraceACaseState({}))
   return shared;
 }
 
-function setReducedMotion() {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    writable: true,
-    value: jest.fn().mockReturnValue({ matches: true }),
-  });
-}
-
 describe("TraceACase", () => {
   beforeEach(() => {
     clearDatasetIndexCache();
@@ -58,7 +51,7 @@ describe("TraceACase", () => {
   });
 
   afterEach(() => {
-    delete (window as any).matchMedia;
+    clearReducedMotion();
   });
 
   it("shows loading, then the first conversation and the network", async () => {
@@ -88,7 +81,7 @@ describe("TraceACase", () => {
   });
 
   it("draws the network for the conversation shown", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     showView();
     await screen.findByText("1 / 3");
     const stepToAnswer = () => fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
@@ -154,7 +147,7 @@ describe("TraceACase", () => {
   });
 
   it("reveals the network's answer at Step 4", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     showView();
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
@@ -163,7 +156,7 @@ describe("TraceACase", () => {
   });
 
   it("starts a conversation not stepped yet with nothing done", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     showView();
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
@@ -174,7 +167,7 @@ describe("TraceACase", () => {
   });
 
   it("brings a conversation's steps back when returning to it", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     showView();
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
@@ -185,7 +178,7 @@ describe("TraceACase", () => {
   });
 
   it("keeps the steps done for each conversation in the view's state", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     const state = new TraceACaseState({});
     showView(new SharedState({}), state);
     await screen.findByText("1 / 3");
@@ -215,7 +208,7 @@ describe("TraceACase", () => {
   });
 
   it("resets the conversation shown, and only that one", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     const state = new TraceACaseState({ markerByConversation: { [ids[1]]: 2 } });
     showView(new SharedState({}), state);
     await screen.findByText("1 / 3");

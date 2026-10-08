@@ -70,7 +70,8 @@ export class StepPlayer<S> {
 
   /**
    * The run playing, without its time. Compared by value, so it changes when a run starts or ends,
-   * not on every frame like `currentFrame`. The step row reads this, so it re-renders once per run.
+   * not on every frame like `currentFrame`. The step row reads this, so it re-renders only when a
+   * run starts or ends.
    */
   @computedStruct
   get currentRun(): Run | undefined {
@@ -83,10 +84,15 @@ export class StepPlayer<S> {
     return this.timeline.sceneAt(this.progress.marker, this.frame);
   }
 
-  /** Jumps to `segment.from`, then plays to `segment.to`. Under reduced motion, jumps straight to `to`. */
+  /**
+   * Jumps to `segment.from`, then plays to `segment.to`. Under reduced motion, jumps straight to
+   * `to`.
+   */
   @action
   play(button: string, segment: Segment) {
     const { from, to } = segment;
+    // First, so a timeline that throws for this segment leaves the player as it was.
+    const duration = this.timeline.duration(segment);
     this.stop();
     if (prefersReducedMotion()) {
       this.progress.setMarker(to);
@@ -94,7 +100,6 @@ export class StepPlayer<S> {
     }
     this.progress.setMarker(from);
     this.frame = { button, from, to, t: 0 };
-    const duration = this.timeline.duration(segment);
     let start: number | undefined;
     const tick = action((now: number) => {
       start ??= now;

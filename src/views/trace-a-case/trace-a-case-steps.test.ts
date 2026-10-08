@@ -1,19 +1,12 @@
 import { emptyScene, Scene } from "../../core/network-diagram/scene";
 import { sceneAt } from "../../core/network-diagram/forward-pass-phases";
 import { StepPlayer } from "../../core/steps/step-player";
+import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
 import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
 import { TraceACaseState } from "./trace-a-case-state";
 
 const SIZES = [10, 8, 6, 2];
 const timeline = traceTimeline(SIZES);
-
-function setReducedMotion(reduce: boolean) {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    writable: true,
-    value: jest.fn().mockReturnValue({ matches: reduce }),
-  });
-}
 
 /** Players over one TraceACaseState, made for a conversation as the view makes them. */
 function makeState() {
@@ -31,7 +24,7 @@ function press(player: StepPlayer<Scene>, step: number) {
 }
 
 describe("TRACE_BUTTONS", () => {
-  it("are Step 1 to Step 4, each playing from the step before it", () => {
+  it("are Step 1 to Step 4, each playing from the marker before it", () => {
     expect(TRACE_BUTTONS.map(b => b.label)).toEqual(["Step 1", "Step 2", "Step 3", "Step 4"]);
     for (const marker of [0, 2, 4]) {
       expect(TRACE_BUTTONS.map(b => b.segmentToPlayWhenAt(marker))).toEqual([
@@ -54,7 +47,7 @@ describe("Trace a Case's steps on the step player", () => {
 
   afterEach(() => {
     jest.useRealTimers();
-    delete (window as any).matchMedia;
+    clearReducedMotion();
   });
 
   it("starts with nothing done", () => {

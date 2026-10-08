@@ -11,7 +11,10 @@ const markerType = types.refinement(types.integer, n => n >= 0 && n <= 4, "marke
 @model("npw/TraceACaseState")
 export class TraceACaseState extends Model({
   version: tProp(types.literal(1), 1),
-  /** The marker each conversation rests at, by conversation id. A conversation at the start isn't stored. */
+  /**
+   * The marker each conversation rests at, by conversation id. A conversation at the start isn't
+   * stored.
+   */
   markerByConversation: tProp(types.record(markerType), () => ({})),
 }) {
   marker(conversationId: string): number {
