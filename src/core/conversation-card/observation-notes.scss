@@ -1,6 +1,15 @@
 @use "../colors" as colors;
 @use "../visually-hidden";
 
+// In a card with a set height the notes take the space left, and the box scrolls when that is too
+// little. With no set height they are as tall as their content.
+.observation-notes {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .observation-notes__head {
   margin: 0 0 8px;
   padding-top: 10px;
@@ -13,11 +22,20 @@
   text-transform: uppercase;
 }
 
+// 70 px, as in the prototype, keeps a few lines of the notes in view however short the card.
 .observation-notes__box {
+  flex: 1 1 auto;
+  min-height: 70px;
+  overflow-y: auto;
   padding: 10px 12px;
   border-left: 3px solid colors.$notes-rule;
   border-radius: 0 5px 5px 0;
   background: colors.$surface;
+
+  &:focus-visible {
+    outline: 2px solid colors.$wait;
+    outline-offset: 1px;
+  }
 }
 
 .observation-notes__text {

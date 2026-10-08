@@ -30,7 +30,7 @@ empty state; see [Merging with the filter](#merging-with-the-filter).
 | Attribute colors (`ATTR_COLOUR`) | Not added. Left to the first story that draws them, with their soft and faint tints. | The Trace a Case card draws its marks in plain ink (`--nnm-ink-2`). The colors' first users are Investigate Unknown Pathway's pills and the Correlations headings. |
 | Where the empty state lives | In the card: `total === 0` shows the message in place of the header and body. | The ticket lists it as common to every card, so every view gets it without writing its own. |
 | Empty-state wording | "No conversations match that search." | As in the ticket and the prototype. |
-| The card's height | Its natural height. | In the prototype the card stretches to the network panel's height and the notes scroll. The notes are a few sentences, so a scroll box would mostly add a second scrollbar. |
+| The panels' height | The card and the network are the same height, filling the window below the toolbars, from 380 px up to 800 px. The notes box scrolls when the card is too short. Their heads are the same height. | As in the prototype. Changed after a look at the app: the panels had been their natural heights. See [Panel heights](#panel-heights). |
 
 ## The shell: `ConversationCard`
 
@@ -176,6 +176,34 @@ export function AlienMark({ attributeKey, size }: { attributeKey: string; size: 
   "No conversations."
 - **Re-renders:** the card stays outside the step player's observers, so a step playing doesn't
   re-render it.
+
+### Panel heights
+
+CSS only, with no measuring in code and no offset for what sits above the panels:
+
+- **The view** is at least the window's height (`100vh`, which in the Activity Player is the
+  iframe's). Its grid takes the height the title leaves (`flex: 1 1 0`, with `min-height: 0`
+  because the browser measures its content with the panel row at its largest).
+- **The panel row** is `minmax(380px, 800px)`, and both panels stretch to it.
+  - 800 px keeps the network from floating in the middle of a very tall window, with room for
+    controls added later.
+  - 380 px is the network's smallest: the diagram's 300 px minimum layout plus the head, padding
+    and border. Below it the panels run past the window and the page scrolls; on such a short
+    wide window the view's bottom padding no longer shows below them.
+- **The network head** has a 62 px minimum, the card's head with its 44 px buttons, so the heads
+  match and either can still grow if its controls wrap.
+- **The diagram** is `flex: 1 1 440px` with a 300 px minimum, so it fills the panel and the layout
+  centers the drawing.
+- **The card** is `height: 100%`, so it fills a cell with a set height and is its natural height
+  elsewhere. The body and the notes flex to fill it; the notes box scrolls, with the prototype's
+  70 px minimum. On a tall window the box grows, so its background reaches the bottom of the card.
+- **The notes box** is a region named by its heading, with `tabIndex={0}`, so a keyboard can
+  scroll it: Safari doesn't make a scrolling box focusable on its own.
+- **Stacked** (narrower than 857 px), the rows and the layout are their content's height, and
+  nothing fills or scrolls.
+
+Playwright checks the heads, the matching and filling at 1280×800, the cap at 1280×1400, the notes
+scrolling at 1280×620, the floor and page scroll at 1280×450, and the stacked layout.
 
 ## Merging with the filter
 

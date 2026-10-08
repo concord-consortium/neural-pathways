@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import { AlienMark } from "../alien-marks";
 import { AttributeDefinition } from "../types/attributes";
 import "./observation-notes.scss";
@@ -16,19 +16,24 @@ interface ObservationNotesProps {
  * notes record: the sentence is the evidence and the mark is the reading of it. The marks keep
  * the order they are given, so a mark is in the same place for every conversation.
  */
-export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation, attributes, values }) => (
-  <div className="observation-notes">
-    <h3 className="observation-notes__head">Observation notes</h3>
-    <div className="observation-notes__box">
-      <p className="observation-notes__text">{observation || "(no notes for this conversation)"}</p>
-      {attributes.length > 0 &&
-        <ul className="observation-notes__marks">
-          {attributes.map(attribute =>
-            <Mark key={attribute.key} attribute={attribute} value={values?.[attribute.key]} />)}
-        </ul>}
+export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation, attributes, values }) => {
+  const headId = useId();
+  return (
+    <div className="observation-notes">
+      <h3 id={headId} className="observation-notes__head">Observation notes</h3>
+      {/* The box scrolls when the card is too short for it, so it is a named region the keyboard
+          can reach. Safari doesn't make a scrolling box focusable on its own. */}
+      <div className="observation-notes__box" role="region" aria-labelledby={headId} tabIndex={0}>
+        <p className="observation-notes__text">{observation || "(no notes for this conversation)"}</p>
+        {attributes.length > 0 &&
+          <ul className="observation-notes__marks">
+            {attributes.map(attribute =>
+              <Mark key={attribute.key} attribute={attribute} value={values?.[attribute.key]} />)}
+          </ul>}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 interface MarkProps {
   attribute: AttributeDefinition;

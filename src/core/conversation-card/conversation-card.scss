@@ -3,9 +3,13 @@
 @use "../panel";
 @use "../visually-hidden";
 
+// Fills a parent with a set height, so the notes scroll instead of the card growing. In a parent
+// without one, 100% is ignored and the card is as tall as its content.
 .conversation-card {
   @include panel.panel;
   position: relative;
+  box-sizing: border-box;
+  height: 100%;
 }
 
 .conversation-card__head {
@@ -73,7 +77,9 @@
 // The parts a view puts in the card, top to bottom.
 .conversation-card__body {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
+  min-height: 0;
   gap: 10px;
   padding: 12px 14px;
 }

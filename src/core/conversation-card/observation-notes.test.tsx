@@ -32,6 +32,15 @@ describe("ObservationNotes", () => {
     expect(screen.getByText("Two individuals, facing each other.")).toBeInTheDocument();
   });
 
+  // The box scrolls when the card is short, so a keyboard has to be able to reach it.
+  it("puts the notes in a region named by their heading, reachable by keyboard", () => {
+    render(<ObservationNotes observation="Quiet." attributes={[voices]} values={{ voices_raised: 0 }} />);
+    const region = screen.getByRole("region", { name: "Observation notes" });
+    expect(region).toHaveAttribute("tabindex", "0");
+    expect(region).toHaveTextContent("Quiet.");
+    expect(region).toContainElement(items()[0]);
+  });
+
   it.each([undefined, ""])("says there are no notes when the observation is %p", observation => {
     render(<ObservationNotes observation={observation} attributes={[]} />);
     expect(screen.getByText("(no notes for this conversation)")).toBeInTheDocument();

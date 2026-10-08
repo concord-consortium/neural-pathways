@@ -2,10 +2,13 @@
 @use "../../core/colors" as colors;
 @use "../../core/panel";
 
+// At least the window's height, so the layout below the title can fill what is left of it.
 .trace-a-case {
   display: flex;
   flex-direction: column;
   gap: 9px;
+  box-sizing: border-box;
+  min-height: 100vh;
   padding-bottom: 16px;
   container-type: inline-size;
 }
@@ -13,20 +16,33 @@
 // Two columns, each a toolbar over a panel, as in the prototype: the filter over the
 // conversation card, the steps over the network. The toolbars share a row, so the two panels
 // start on the same line.
+//
+// The layout takes the height the title leaves, and the panel row grows into it, up to 800 px so a
+// very tall window doesn't leave the network floating in empty space. It stops at 380 px, the
+// network's smallest (see .trace-a-case__diagram); below that the panels run past the window and
+// the page scrolls. min-height: 0 because the browser measures the layout's content height with
+// the row at its 800 px most, which would otherwise be its minimum.
 .trace-a-case__layout {
   display: grid;
+  flex: 1 1 0;
+  min-height: 0;
   grid-template-columns: 447px minmax(400px, 1fr);
+  grid-template-rows: auto minmax(380px, 800px);
   grid-template-areas:
     "filter steps"
     "case   network";
+  align-content: start;
   align-items: start;
   gap: 9px 10px;
 }
 
-// Too narrow for both columns: stack them, keeping each toolbar above its panel.
+// Too narrow for both columns: stack them, keeping each toolbar above its panel. Each panel is as
+// tall as its content, and the layout as tall as the panels.
 @container (width < 857px) {
   .trace-a-case__layout {
+    flex: none;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
     grid-template-areas:
       "filter"
       "case"
@@ -45,24 +61,34 @@
   min-width: 0;
 }
 
+// The two panels stretch to their row, so they are the same height.
 .trace-a-case__case {
   grid-area: case;
+  align-self: stretch;
   min-width: 0;
 }
 
 .trace-a-case__network {
   @include panel.panel;
   grid-area: network;
+  align-self: stretch;
 }
 
+// The card's head holds 44 px buttons; with the head's 9 + 8 px padding and 1 px rule that is
+// 62 px. A minimum, so a head can still grow if its controls wrap.
 .trace-a-case__network-head {
   @include panel.panel-head;
+  min-height: 62px;
 }
 
+// 440 px tall on its own, and otherwise the panel's height less the head. At least 300 px, the
+// diagram's smallest layout (MIN_HEIGHT in layout.ts): with the 62 px head, the padding and the
+// panel's border that makes the network panel's smallest 380 px.
 .trace-a-case__diagram {
+  flex: 1 1 440px;
   width: 100%;
   max-width: 537px;
-  height: 440px;
+  min-height: 300px;
   margin: 0 auto;
   padding: 8px 0;
 }

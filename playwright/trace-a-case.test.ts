@@ -1,5 +1,5 @@
 import { test } from "./lib/base-url";
-import { expect } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 test("Trace a Case steps through the 800 conversations", async ({ page }) => {
   await page.goto("/");
@@ -186,4 +186,75 @@ test("the card fits the stacked layout without scrolling sideways", async ({ pag
   await expect(card.getByRole("listitem")).toHaveCount(5);
   const overflow = await card.evaluate(el => el.scrollWidth - el.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test.describe("the card and network panels", () => {
+  const panels = (page: Page) => ({
+    card: page.getByRole("region", { name: "Conversation", exact: true }),
+    network: page.getByRole("region", { name: "The Network" }),
+  });
+  const rect = (locator: Locator) => locator.evaluate(el => {
+    const { top, bottom, height } = el.getBoundingClientRect();
+    return { top, bottom, height };
+  });
+
+  test("have heads of the same height", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    await page.goto("/");
+    const { card, network } = panels(page);
+    const cardHead = await rect(card.getByRole("heading", { name: "Conversation" }).locator(".."));
+    const networkHead = await rect(network.getByRole("heading", { name: "The Network" }));
+    expect(networkHead.height).toBeCloseTo(cardHead.height, 0);
+  });
+
+  test("match each other and fill the window", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    const { card, network } = panels(page);
+    await expect(card.getByRole("listitem")).toHaveCount(5);
+    const cardBox = await rect(card);
+    const networkBox = await rect(network);
+    expect(networkBox.height).toBeCloseTo(cardBox.height, 0);
+    // The view's 16 px bottom padding is all that's left below them.
+    expect(cardBox.bottom).toBeCloseTo(800 - 16, 0);
+  });
+
+  test("stop growing at 800 px on a tall window", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1400 });
+    await page.goto("/");
+    const { card, network } = panels(page);
+    await expect(card.getByRole("listitem")).toHaveCount(5);
+    expect((await rect(card)).height).toBeCloseTo(800, 0);
+    expect((await rect(network)).height).toBeCloseTo(800, 0);
+  });
+
+  test("scroll the notes, not the card, on a short window", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 620 });
+    await page.goto("/");
+    const { card } = panels(page);
+    const notes = card.getByRole("region", { name: "Observation notes" });
+    await expect(notes).toBeVisible();
+    const overflow = (locator: Locator) => locator.evaluate(el => el.scrollHeight - el.clientHeight);
+    expect(await overflow(notes)).toBeGreaterThan(0);
+    expect(await overflow(card)).toBeLessThanOrEqual(0);
+  });
+
+  test("keep their natural height when stacked", async ({ page }) => {
+    await page.setViewportSize({ width: 600, height: 500 });
+    await page.goto("/");
+    const notes = panels(page).card.getByRole("region", { name: "Observation notes" });
+    await expect(notes).toBeVisible();
+    expect(await notes.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(0);
+  });
+
+  test("stop shrinking at 380 px, and the page scrolls instead", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 450 });
+    await page.goto("/");
+    const { card, network } = panels(page);
+    await expect(card.getByRole("listitem")).toHaveCount(5);
+    expect((await rect(card)).height).toBeCloseTo(380, 0);
+    expect((await rect(network)).height).toBeCloseTo(380, 0);
+    const view = page.getByRole("main");
+    expect(await view.evaluate(el => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0);
+  });
 });
