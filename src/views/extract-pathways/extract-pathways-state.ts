@@ -18,8 +18,8 @@ export class ExtractPathwaysState extends Model({
   collected: tProp(countType, 0),
 }) {
   /**
-   * One action, so a step that changes both is one change. The count is set first: it is the one
-   * that can be refused, and a refused count must leave Setup as it was.
+   * One action, so storing both is one change. The count is set first: it is the one that can be
+   * refused, and a refused count must leave Setup as it was.
    */
   @modelAction
   setProgress(setupDone: boolean, collected: number) {

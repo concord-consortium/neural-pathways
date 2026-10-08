@@ -25,7 +25,7 @@ describe("extractProgress", () => {
     [0, false, 0],
     [1, true, 0],
     [4, true, 3],
-  ])("saves marker %p as Setup %p with %p collected", (marker, setupDone, collected) => {
+  ])("stores marker %p as Setup %p with %p collected", (marker, setupDone, collected) => {
     const state = new ExtractPathwaysState({ setupDone: true, collected: 7 });
     extractProgress(state, MAX_COLLECTED).setMarker(marker);
     expect(state.setupDone).toBe(setupDone);

@@ -154,7 +154,7 @@ behind, and the student's original conversation is lost.
    Start the undo manager after loading, or call `clearUndo()` once the initial corrections have
    run. Under the one root, loading a saved tree replaces a child of the root, which is itself a
    recorded change, so the order matters.
-7. **Extract Pathways saves its progress through the shared step player,** so each Setup or
+7. **Extract Pathways stores its progress through the shared step player,** so each Setup or
    collection writes twice, as item 8 describes. Decide whether an extraction can be undone at
    all. If it can, run it as a `@modelFlow` or group it with `withGroupFlow` or `createGroup`.
 8. **A step press writes twice.** The shared step player (`StepPlayer` in

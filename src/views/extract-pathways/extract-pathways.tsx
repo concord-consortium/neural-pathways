@@ -40,8 +40,8 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
   const limit = Math.min(MAX_COLLECTED, passes.length);
   const buttons = useMemo(() => extractButtons(limit), [limit]);
   const player = useMemo(() => new StepPlayer(TIMELINE, extractProgress(state, limit)), [state, limit]);
-  // Stop the player when the view unmounts. A layout effect, so no frame of a step can run, and
-  // save, after the view is gone.
+  // Stop the player when the view unmounts. A layout effect, so no existing run can finish and
+  // store its marker after the view is gone.
   useLayoutEffect(() => () => player.stop(), [player]);
 
   if (passes.length === 0) {
