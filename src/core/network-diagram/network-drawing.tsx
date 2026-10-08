@@ -169,7 +169,7 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
           );
         })}
       </g>
-      <Wires layout={layout} lastColumn={lastColumn} opacity={opacity(surroundOpacity)} />
+      <Wires layout={layout} opacity={opacity(surroundOpacity)} />
       <g className="network-diagram__edges" opacity={opacity(surroundOpacity)}>{edges}</g>
       <Discs layout={layout} clipPrefix={clipPrefix} />
       <g className="network-diagram__gauges">{gauges}</g>
@@ -204,13 +204,13 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
 
 interface WiresProps {
   layout: NetworkLayout;
-  lastColumn: number;
   opacity: number | undefined;
 }
 
 /** The gray wires. Drawn signal halves lie on top and cover them. */
-const Wires = React.memo(function Wires({ layout, lastColumn, opacity: groupOpacity }: WiresProps) {
+const Wires = React.memo(function Wires({ layout, opacity: groupOpacity }: WiresProps) {
   const { nodes, radius } = layout;
+  const lastColumn = nodes.length - 1;
   const lines: React.ReactElement[] = [];
   for (let gap = 0; gap < nodes.length - 1; gap++) {
     nodes[gap].forEach((from, sourceRow) => nodes[gap + 1].forEach((to, targetRow) => {
