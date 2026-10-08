@@ -223,7 +223,7 @@ export class ExtractPathwaysState extends Model({
 
 **Progress adapter.**
 
-- `marker = setupDone ? 1 + collected : 0`.
+- `marker = setupDone ? 1 + min(collected, limit) : 0`, where `limit` is the collect limit below.
 - `setMarker(m)` sets `setupDone = m >= 1` and `collected = max(0, m − 1)`. So Reset and Setup both
   clear the deck.
 - Unlike Trace a Case, the state keeps the stages, not the marker. The collect limit depends on how
@@ -387,8 +387,11 @@ its network part starts when that ends.
 
 - "Conversation 1" bounces in over 520 ms with `cubic-bezier(.34,1.56,.64,1)`, the opacity over
   the first 45%.
-- At 540 ms, phase 1 of the forward pass plays at its normal speed. Phases 2–4 follow at 0.26 of
-  their normal durations. A 110 ms gap follows each phase, the last included: `runSteps` (line
+- At 540 ms, phase 1 of the forward pass plays at its normal speed, as Trace a Case plays it: each
+  input gauge eases in over 180 ms, and the phase ends at 675 ms. The prototype's recap
+  (`fillInputs`, line 15350) sets each gauge with no transition and hands on at 710 ms. The 35 ms
+  is too small to see, and reusing the phase needs no code of its own. Phases 2–4 follow at 0.26
+  of their normal durations. A 110 ms gap follows each phase, the last included: `runSteps` (line
   15365) waits `STEP_GAP` after every step, then calls itself for the next.
 - A 700 ms rest follows that last gap, so 810 ms pass between the end of the answer and the
   flight's dim.
@@ -406,9 +409,12 @@ its network part starts when that ends.
 
 **Quick swap (*n* = 4–10)**, about 460 ms, from `setConversation` (lines 15097–15118):
 
-- Everything clears at once, and the label bounces over 0.7 × 520 ms.
+- Everything clears at once, the answer with it, and the label bounces over 0.7 × 520 ms.
 - Layer by layer, the gauges fill 16 ms apart, and each layer's lines snap in.
 - The answer is shown 40 ms after the last layer.
+- The prototype keeps the old answer highlighted until the new one is shown: its quick branch
+  never calls `revealAnswer(false)`. Here it is hidden, so an answer is never shown beside a
+  conversation it doesn't belong to.
 
 After a swap or quick swap there's a 550 ms hold (`NEXT_HOLD`). The gauges in both swaps jump,
 as in the prototype, where `setNodeLevel` has no transition.
@@ -477,7 +483,7 @@ as in the prototype, where `setNodeLevel` has no transition.
   - Setup, then Collect a Conversation, with fake timers;
   - leaving the view and coming back shows the same stage.
 
-### Playwright (dev server, with reduced motion so steps are instant)
+### Playwright (dev server, with reduced motion except where a test checks the animation)
 
 `playwright/extract-pathways.test.ts`:
 
@@ -505,6 +511,10 @@ The existing Trace a Case tests still pass.
 - **`src/core/README.md`:** add `steps/` to "What's here".
 - **`src/views/trace-a-case/README.md`:** its step row and player now come from core.
 - **`src/views/extract-pathways/README.md`:** new, with "What's here" and "Still to come".
+- **`docs/undo.md`:** item 7 says Extract Pathways saves through the shared step player, so each
+  Setup or collection writes twice, as item 8 describes.
+- **`src/core/README.md`:** `steps/` says a view reads `player.scene` only inside an `<Observer>`
+  around its drawing.
 
 ## PRs
 
@@ -515,8 +525,10 @@ row are written new, and Trace a Case's are removed once it uses them.
 1. **The shared step system and the diagram split** (about 20 files): `src/core/steps/`, Trace a
    Case moved onto it, `forward-pass-phases.ts`, `Scene.hiddenLayerSpotlight` and
    `NetworkDrawing`. Nothing a user sees changes.
-2. **The Extract Pathways view** (about 22 files): state, buttons, drawing, flights, timelines,
-   tests and docs.
+2. **The Extract Pathways view** (about 40 files): state, buttons, drawing, flights, timelines,
+   tests and docs. It also changes the shared system where the view needs it: unavailable step
+   buttons become `aria-disabled`, both views read the player's scene in an `<Observer>` around
+   their drawing, and core exports `edgeDrawAt` and `MIN_GAUGE`.
 
 ## Out of scope
 
