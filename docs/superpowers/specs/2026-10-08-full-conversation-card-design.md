@@ -17,8 +17,8 @@ a Case). Line numbers below refer to that file: the card's DOM at 11036–11098,
 12252–12320, `paintMarks` at 12331–12371, the marks' CSS at 1851–1924, and the icon artwork
 `ALIEN_A1` at 4646–4758.
 
-The branch is based on `main`, not on the filter (NPW-35, PR #38). The two meet in one place, the
-empty state; see [Merging with the filter](#merging-with-the-filter).
+The branch started on `main` before the filter (NPW-35, PR #38) merged, and was rebased onto it.
+The two meet in one place, the empty state; see [Merging with the filter](#merging-with-the-filter).
 
 ## Decisions
 
