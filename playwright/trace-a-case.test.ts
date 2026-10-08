@@ -151,6 +151,19 @@ test("the filter bar shows focus in forced-colors mode", async ({ page }) => {
   expect(await outline()).toBe("solid");
 });
 
+test("the speed slider shows focus in forced-colors mode", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const speed = page.getByRole("slider", { name: "Animation speed" });
+  const outline = () => speed.evaluate(element => getComputedStyle(element).outlineStyle);
+  expect(await outline()).toBe("none");
+  await page.getByRole("checkbox", { name: "Animate" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(speed).toBeFocused();
+  expect(await outline()).toBe("solid");
+});
+
 test("Animate and the speed survive switching views", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();

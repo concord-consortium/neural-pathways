@@ -38,8 +38,8 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `state/`: the mobx-keystone model for the shared state, any model more than one view uses, the
   setup every model imports, and the context views use to reach their state. `animation.ts` has
   the Animate and speed props the animated views share, and the `Animated` interface their models
-  declare. A model only one view uses lives in that view's folder. What each view keeps, and the rules for changing a saved
-  form, are in `docs/view-state.md`.
+  declare. A model only one view uses lives in that view's folder. What each view keeps, and the
+  rules for changing a saved form, are in `docs/view-state.md`.
 - `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
   it between views.
 - `network/`: the network types, the toy network Trace a Case uses until there is one built from
@@ -69,8 +69,9 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. It
   plays at the view's speed: a timeline is written in timeline time, at the prototype's Med speed,
   and the player runs it slower or faster (`playback.ts`), or jumps each run to its end when
-  Animate is off. So no view defines its timeline more than once. A view lists its buttons as `StepButton`s, each saying which segment it plays when the timeline rests
-  at a marker, and `StepRow` draws them with Reset. The player's scene changes on every frame of a
+  Animate is off. So no view defines its timeline more than once. A view lists its buttons as
+  `StepButton`s, each saying which segment it plays when the timeline rests at a marker, and
+  `StepRow` draws them with Reset. The player's scene changes on every frame of a
   run, so a view reads `player.scene` only inside a small `<Observer>` around its drawing; the
   rest of the view then doesn't re-render while a run plays.
 - `animation-controls/`: the Animate checkbox and the Slow/Med/Fast speed slider, for any view

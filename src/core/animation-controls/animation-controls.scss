@@ -165,6 +165,15 @@
   }
 }
 
+// Forced colors repaints the thumb's border the same with or without focus, and drops its shadow,
+// so focus needs an outline.
+@media (forced-colors: active) {
+  .animation-controls__slider:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
 .animation-controls__stops {
   position: relative;
   height: 17px;
