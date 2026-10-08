@@ -22,7 +22,8 @@ export interface DatasetDefinition {
 
 /**
  * Search field names an attribute key must not shadow, because the existing
- * field holds a different kind of value than an attribute would.
+ * field holds a different kind of value than an attribute would. It covers the
+ * lab explorer's search fields and the core filter's fixed fields.
  *
  * `stars` and `review_stars` are deliberately absent: they are numeric fields
  * whose values an attribute may legitimately alias. See
@@ -34,6 +35,10 @@ export interface DatasetDefinition {
 export const RESERVED_FIELD_NAMES = [
   "text",
   "target_label",
+  // The core filter's other fixed fields (FIXED_FIELDS in src/core/filter/conversation-filter.ts).
+  "n",
+  "id",
+  "observation",
   "name",
   "city",
   "state",

@@ -50,6 +50,10 @@ function setReducedMotion() {
   });
 }
 
+const filterBox = () => screen.getByRole("textbox", { name: "Filter" });
+const typeQuery = (text: string) => fireEvent.change(filterBox(), { target: { value: text } });
+const wordsOf = (i: number) => items[i].text.split(/\s+/).join(" ");
+
 describe("TraceACase", () => {
   beforeEach(() => {
     clearDatasetIndexCache();
@@ -266,5 +270,150 @@ describe("TraceACase", () => {
     showView(new SharedState({}), new TraceACaseState({ stepsByConversation: { [ids[0]]: 2 } }));
     await screen.findByText("1 / 3");
     expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-current", "step");
+  });
+
+  describe("the filter", () => {
+    it("shows the filter, counting every conversation", async () => {
+      showView();
+      await screen.findByText("1 / 3");
+      expect(filterBox()).toHaveAccessibleDescription("3");
+    });
+
+    it("narrows the conversations as the student types, without storing the query", async () => {
+      const shared = showView();
+      await screen.findByText("1 / 3");
+      typeQuery("n:>1");
+      expect(filterBox()).toHaveAccessibleDescription("2 of 3");
+      expect(screen.getByText("1 / 2")).toBeInTheDocument();
+      expect(screen.getByText(wordsOf(1))).toBeInTheDocument();
+      expect(shared.query).toBeUndefined();
+      expect(shared.conversationId).toBe(ids[0]);
+    });
+
+    it("stores the query and corrects the conversation on Enter", async () => {
+      const shared = showView();
+      await screen.findByText("1 / 3");
+      typeQuery("n:>1");
+      fireEvent.keyDown(filterBox(), { key: "Enter" });
+      expect(shared.query).toBe("n:>1");
+      expect(shared.conversationId).toBe(ids[1]);
+    });
+
+    it("steps through only the matches", async () => {
+      const shared = showView(new SharedState({ query: "n:>1" }));
+      await screen.findByText("1 / 2");
+      fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
+      expect(screen.getByText("2 / 2")).toBeInTheDocument();
+      expect(shared.conversationId).toBe(ids[2]);
+      expect(screen.getByRole("button", { name: "Next conversation" })).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("shows the matching conversation's own words, not the one at its place in the list", async () => {
+      showView(new SharedState({ query: "n:3" }));
+      await screen.findByText("1 / 1");
+      expect(screen.getByText(wordsOf(2))).toBeInTheDocument();
+    });
+
+    it("draws the network for the matching conversation, not the one at its place in the list", async () => {
+      setReducedMotion();
+      showView(new SharedState({ query: "n:2" }));
+      await screen.findByText("1 / 1");
+      fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
+      expect(screen.getByRole("img", { name: /predicts Approach/ })).toBeInTheDocument();
+    });
+
+    it("stores a draft before Next moves, when focus leaves the box", async () => {
+      const shared = showView();
+      await screen.findByText("1 / 3");
+      filterBox().focus();
+      typeQuery("n:>1");
+      const next = screen.getByRole("button", { name: "Next conversation" });
+      act(() => next.focus());
+      fireEvent.click(next);
+      expect(shared.query).toBe("n:>1");
+      expect(shared.conversationId).toBe(ids[2]);
+      expect(screen.getByText("2 / 2")).toBeInTheDocument();
+    });
+
+    it("says so when nothing matches, leaving out the steps and the network", async () => {
+      const shared = showView();
+      await screen.findByText("1 / 3");
+      typeQuery("n:9");
+      fireEvent.keyDown(filterBox(), { key: "Enter" });
+      expect(filterBox()).toHaveAccessibleDescription("0 of 3");
+      expect(screen.getByText("No conversations match the filter.")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Step 1" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "The Network" })).not.toBeInTheDocument();
+      expect(shared.conversationId).toBe(ids[0]);
+    });
+
+    it("brings the same conversation back, at its step, when the query is cleared", async () => {
+      setReducedMotion();
+      const shared = showView(new SharedState({ conversationId: ids[1] }));
+      await screen.findByText("2 / 3");
+      fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
+      typeQuery("n:9");
+      fireEvent.keyDown(filterBox(), { key: "Enter" });
+      typeQuery("");
+      fireEvent.keyDown(filterBox(), { key: "Enter" });
+      expect(screen.getByText("2 / 3")).toBeInTheDocument();
+      expect(shared.conversationId).toBe(ids[1]);
+      expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-current", "step");
+    });
+
+    it("corrects the conversation on load against the stored query", async () => {
+      const shared = showView(new SharedState({ query: "n:>1", conversationId: ids[0] }));
+      await screen.findByText("1 / 2");
+      expect(shared.conversationId).toBe(ids[1]);
+    });
+
+    it("doesn't correct the stored conversation against a draft on load", async () => {
+      const shared = new SharedState({ conversationId: ids[0] });
+      shared.setQueryDraft("n:>1");
+      showView(shared);
+      await screen.findByText("1 / 2");
+      expect(shared.conversationId).toBe(ids[0]);
+    });
+
+    it("shows a stored query's error, and every conversation, when it can't be read", async () => {
+      const shared = showView(new SharedState({ query: "bogus:1", conversationId: ids[1] }));
+      await screen.findByText("2 / 3");
+      expect(filterBox()).toHaveAccessibleDescription("Unknown field: bogus");
+      // Every conversation is in the list, so the stored one is kept.
+      expect(shared.conversationId).toBe(ids[1]);
+    });
+
+    it("keeps a half-typed query when the view goes away and comes back", async () => {
+      const shared = new SharedState({});
+      const { unmount } = render(
+        <ViewStateProvider viewId="trace-a-case" view={new TraceACaseState({})} shared={shared}>
+          <TraceACase />
+        </ViewStateProvider>,
+      );
+      await screen.findByText("1 / 3");
+      typeQuery("(n:2");
+      unmount();
+      showView(shared);
+      await screen.findByText("1 / 3");
+      expect(filterBox()).toHaveValue("(n:2");
+      expect(filterBox()).toHaveAccessibleDescription("Incomplete query");
+    });
+
+    it("stops a step playing on a conversation the draft hides, keeping the step before", async () => {
+      const state = new TraceACaseState({});
+      showView(new SharedState({}), state);
+      await screen.findByText("1 / 3");
+      jest.useFakeTimers();
+      try {
+        fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
+        act(() => jest.advanceTimersByTime(500));
+        typeQuery("n:>1");
+        expect(jest.getTimerCount()).toBe(0);
+        act(() => jest.advanceTimersByTime(5000));
+        expect(state.stepsByConversation).toEqual({ [ids[0]]: 1 });
+      } finally {
+        jest.useRealTimers();
+      }
+    });
   });
 });

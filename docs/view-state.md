@@ -27,8 +27,7 @@ the first view with a state model. Each view's model, and each shared field, arr
 story that first builds the UI using it, so it can be reviewed against that UI. The complete
 target is kept in draft [PR #29](https://github.com/concord-consortium/neural-pathways/pull/29).
 Bring a view's model over from it, and change the model if the UI turns out to need something
-different. The tables below
-list that target and the story each piece is expected to arrive with.
+different. The tables below list that target and the story each piece is expected to arrive with.
 
 Where the models live follows the rule for `src/core/`: it holds what more than one view uses.
 
@@ -59,13 +58,20 @@ throws.
 
 ## Shared state (`npw/SharedState`)
 
-It has `version` and `conversationId` so far. Its fields:
+It has `version`, `query` and `conversationId` so far. Its fields:
 
 | Field | Meaning | Arrives with |
 |---|---|---|
 | `conversationId` | The current conversation, in every view that shows one. Also pane 1 of Investigate Unknown Pathway. A view that shows one calls `ensureValidConversation` when its list arrives or changes. | In place |
-| `query` | The filter query every view uses. Unset: no query has been set. `""`: the student cleared it. | The filter |
+| `query` | The filter query every view uses, stored when the student presses Enter or leaves the filter bar. Unset: no query has been set. `""`: the student cleared it. | In place |
 | `commissioned` | Attribute keys the student commissioned in Investigate Unknown Pathway, in order, at most 2. Correlations Part 2 reads them. | Investigate Unknown Pathway |
+
+`SharedState` also has one volatile field, `queryDraft`: the filter bar's text while it differs
+from `query`. Filtering follows the draft as the student types, but only `setQueryAndCorrect`
+stores a query and corrects the conversation. The draft lives in the shared state so that every
+view's filter bar shows the same text, and so a half-typed query survives switching views. It is
+volatile (`@observable accessor`, not a `tProp`): it is never saved, never in a snapshot, and never
+an undo step.
 
 ## Each view's state
 
@@ -89,7 +95,8 @@ an `Animated` interface, so one set of controls can drive any of them.
 
 Hover and anything shown only on hover, the About modal, scroll positions, and anything in the
 middle of an animation, such as chips in flight or a step still running. Extract Pathways keeps
-the stages it has completed, but not one in progress.
+the stages it has completed, but not one in progress. A query still being typed is kept only for
+the life of the page, in `SharedState.queryDraft`.
 
 ## Rules
 
@@ -104,6 +111,11 @@ the stages it has completed, but not one in progress.
   `ensureValidPane2Conversation` for pane 2.
 - **`$modelType` names are permanent.** They are stored in saved student data, like view ids.
   Renaming one needs a migration.
+- **Filter field names are part of the saved form.** A stored `query` names fields such as
+  `model_correct` and `pathway_1`, so renaming a field or renumbering the pathways changes what a
+  saved query means. A query naming a field the filter no longer has shows its error and lists
+  every conversation. `n` is a position among all the conversations, not in a filtered list, so it
+  holds only while the dataset index keeps its order.
 - **Every tree has a `version`, starting at 1.** There are no migrations yet.
   - Adding a field with a default doesn't change the version. Older saved state loads, and the
     new field gets its default.
