@@ -13,9 +13,9 @@ interface ConversationCardProps {
 }
 
 /**
- * The conversation panel every view shares: which conversation of how many, previous and next,
- * and a body the view fills from the parts in this folder. With no conversations it says nothing
- * matches instead.
+ * The conversation panel the lesson's views share: which conversation of how many, previous and
+ * next, and a body the view fills from the parts in this folder. With no conversations it says
+ * nothing matches instead.
  */
 export const ConversationCard: React.FC<ConversationCardProps> = ({
   position, total, onPrev, onNext, children,
