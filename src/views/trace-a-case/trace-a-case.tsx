@@ -62,7 +62,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const placeById = useMemo(() => new Map(index.items.map((item, i) => [item.id, i])), [index]);
   // The generated attributes a student can see. The derived target, prediction and
   // model_correct aren't among them, and the hidden ones wait to be commissioned.
-  const markedAttributes = useMemo(() => (index.metadata.attributes ?? []).filter(a => !a.hidden), [index]);
+  const indicatorAttributes = useMemo(() => (index.metadata.attributes ?? []).filter(a => !a.hidden), [index]);
   const { passes, scales } = indexPasses(toyNetwork, index);
   const networkHeadId = useId();
   // Shown even before the store's correction lands, and while a query is being typed, so an id
@@ -99,7 +99,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
             <>
               <ConversationWords text={shown.text} />
               <ActualLabel target={shown.target} labels={alien3Dataset.classificationLabels} />
-              <ObservationNotes observation={shown.observation} attributes={markedAttributes}
+              <ObservationNotes observation={shown.observation} attributes={indicatorAttributes}
                 values={shown.attributes} />
             </>}
         </ConversationCard>

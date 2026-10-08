@@ -1,20 +1,21 @@
 import React, { useId } from "react";
-import { AlienMark } from "../alien-marks";
+import { AlienIcon } from "../alien-icons";
 import { AttributeDefinition } from "../types/attributes";
 import "./observation-notes.scss";
 
 interface ObservationNotesProps {
   observation?: string;
-  /** The attributes to mark, in the order to show them. */
+  /** The attributes to show indicators for, in the order to show them. */
   attributes: AttributeDefinition[];
   /** The conversation's values, keyed by attribute key. */
   values?: Record<string, number | null>;
 }
 
 /**
- * What the observer wrote about the conversation, and under it a mark for each attribute the
- * notes record: the sentence is the evidence and the mark is the reading of it. The marks keep
- * the order they are given, so a mark is in the same place for every conversation.
+ * What the observer wrote about the conversation, and under it an attribute indicator for each
+ * attribute the notes record: the sentence is the evidence and the indicator sums it up. The
+ * indicators keep the order they are given, so an attribute's indicator is in the same place for
+ * every conversation.
  */
 export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation, attributes, values }) => {
   const headId = useId();
@@ -26,26 +27,26 @@ export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation,
       <div className="observation-notes__box" role="region" aria-labelledby={headId} tabIndex={0}>
         <p className="observation-notes__text">{observation || "(no notes for this conversation)"}</p>
         {attributes.length > 0 &&
-          <ul className="observation-notes__marks">
+          <ul className="observation-notes__indicators">
             {attributes.map(attribute =>
-              <Mark key={attribute.key} attribute={attribute} value={values?.[attribute.key]} />)}
+              <AttributeIndicator key={attribute.key} attribute={attribute} value={values?.[attribute.key]} />)}
           </ul>}
       </div>
     </div>
   );
 };
 
-interface MarkProps {
+interface AttributeIndicatorProps {
   attribute: AttributeDefinition;
   value: number | null | undefined;
 }
 
-/** Label, drawing, answer: the order a field sheet reads in. A screen reader hears "Label: value". */
-const Mark: React.FC<MarkProps> = ({ attribute, value }) => (
-  <li className="observation-notes__mark">
+/** Label, icon, badge: the order a field sheet reads in. A screen reader hears "Label: value". */
+const AttributeIndicator: React.FC<AttributeIndicatorProps> = ({ attribute, value }) => (
+  <li className="observation-notes__indicator">
     <span className="observation-notes__label">{attribute.label}</span>
     <span className="observation-notes__spoken">{`: ${spokenValue(attribute, value)}`}</span>
-    <AlienMark attributeKey={attribute.key} size={34} />
+    <AlienIcon attributeKey={attribute.key} size={34} />
     <b className="observation-notes__badge" aria-hidden="true">{badgeText(attribute, value)}</b>
   </li>
 );

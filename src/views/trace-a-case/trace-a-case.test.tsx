@@ -29,7 +29,7 @@ function item(id: string, text: string, classification: number, groupSize: numbe
 }
 
 const YES_NO = { 0: "no", 1: "yes" };
-// One of each kind, and a hidden one, which gets no mark.
+// One of each kind, and a hidden one, which gets no attribute indicator.
 const attributes: AttributeDefinition[] = [
   { key: "voices_raised", label: "Voices raised", description: "", type: "binary", valueLabels: YES_NO },
   { key: "group_size", label: "Group size", description: "", type: "integer", min: 1, max: 6 },
@@ -106,7 +106,7 @@ describe("TraceACase", () => {
     expect(shared.conversationId).toBe(ids[0]);
   });
 
-  it("shows the conversation's label, notes and marks, with no mark for a hidden attribute", async () => {
+  it("shows the conversation's label, notes and attribute indicators, with none for a hidden attribute", async () => {
     showView();
     await screen.findByText("1 / 3");
     expect(within(card()).getByText("wait")).toHaveClass("actual-label__pill");

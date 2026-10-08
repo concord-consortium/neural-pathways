@@ -151,21 +151,22 @@ test("the filter bar shows focus in forced-colors mode", async ({ page }) => {
   expect(await outline()).toBe("solid");
 });
 
-test("the card shows the conversation's label, notes and marks", async ({ page }) => {
+test("the card shows the conversation's label, notes and attribute indicators", async ({ page }) => {
   await page.goto("/");
   const card = page.getByRole("region", { name: "Conversation", exact: true });
   await expect(card.getByRole("status")).toHaveText("Conversation 1 of 800");
   await expect(card.getByText("wait", { exact: true })).toBeVisible();
   await expect(card.getByText(/^At least one juvenile was present\./)).toBeVisible();
-  const marks = card.getByRole("listitem");
-  await expect(marks).toHaveCount(5);
+  const indicators = card.getByRole("listitem");
+  await expect(indicators).toHaveCount(5);
   // Each of the data's attributes has a drawing.
-  await expect(marks.locator("svg")).toHaveCount(5);
+  await expect(indicators.locator("svg")).toHaveCount(5);
   // The cells share the row equally, so a long label wraps rather than widening its cell.
-  const widths = await marks.evaluateAll(items => items.map(item => Math.round(item.getBoundingClientRect().width)));
+  const widths = await indicators.evaluateAll(items =>
+    items.map(item => Math.round(item.getBoundingClientRect().width)));
   expect(new Set(widths).size).toBe(1);
-  // What a screen reader reads of each mark: the tick or count beside it is hidden from it.
-  const spoken = () => marks.evaluateAll(items => items.map(item => {
+  // What a screen reader reads of each attribute indicator: the tick or count is hidden from it.
+  const spoken = () => indicators.evaluateAll(items => items.map(item => {
     const copy = item.cloneNode(true) as Element;
     copy.querySelectorAll('[aria-hidden="true"]').forEach(hidden => hidden.remove());
     return copy.textContent;
@@ -173,7 +174,7 @@ test("the card shows the conversation's label, notes and marks", async ({ page }
   expect(await spoken()).toEqual([
     "Voices raised: no", "Engaged in a task: yes", "Group size: 2", "Near water: yes", "Food present: no",
   ]);
-  // A hidden attribute gets no mark until it is commissioned.
+  // A hidden attribute gets no attribute indicator until it is commissioned.
   await expect(card.getByText("Resource stressed")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Next conversation" }).click();
@@ -251,7 +252,7 @@ test.describe("the card and network panels", () => {
     const notes = card.getByRole("region", { name: "Observation notes" });
     await expect(notes).toBeVisible();
     expect(await notes.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(0);
-    // The box ends its 10 px padding below the marks, so nothing stretched it.
+    // The box ends its 10 px padding below the attribute indicators, so nothing stretched it.
     const below = await notes.evaluate(el =>
       el.getBoundingClientRect().bottom - el.querySelector("ul")!.getBoundingClientRect().bottom);
     expect(below).toBeCloseTo(10, 0);

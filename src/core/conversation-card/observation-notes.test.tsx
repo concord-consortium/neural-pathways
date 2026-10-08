@@ -20,7 +20,7 @@ function items() {
   return screen.getAllByRole("listitem");
 }
 
-/** The badge is the only text in a mark that screen readers don't read, and it comes last. */
+/** The badge is the only text in an attribute indicator that screen readers don't read, and it comes last. */
 function badge(item: HTMLElement) {
   return (item.textContent ?? "").slice(spokenText(item).length);
 }
@@ -46,7 +46,7 @@ describe("ObservationNotes", () => {
     expect(screen.getByText("(no notes for this conversation)")).toBeInTheDocument();
   });
 
-  it("marks the attributes in the order given, not the order of the values", () => {
+  it("shows the attribute indicators in the order given, not the order of the values", () => {
     render(<ObservationNotes attributes={[water, voices, group]}
       values={{ voices_raised: 1, group_size: 2, near_water: 0 }} />);
     expect(items().map(spokenText)).toEqual(["Near water: no", "Voices raised: yes", "Group size: 2"]);
@@ -83,12 +83,12 @@ describe("ObservationNotes", () => {
     expect(badge(items()[0])).toBe("–");
   });
 
-  it("draws each attribute's mark", () => {
+  it("draws an icon in each attribute indicator", () => {
     render(<ObservationNotes attributes={[voices, group]} values={{ voices_raised: 1, group_size: 3 }} />);
     expect(items().map(item => item.innerHTML.includes("<svg"))).toEqual([true, true]);
   });
 
-  it("has no list when there are no attributes to mark", () => {
+  it("has no list when there are no attributes to show", () => {
     render(<ObservationNotes observation="Quiet." attributes={[]} />);
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
   });

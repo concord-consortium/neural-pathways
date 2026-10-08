@@ -4,7 +4,7 @@ import React from "react";
  * One drawing per alien attribute, from the prototype's "A1 Full Figure" icon plate: the same
  * species drawn the same way everywhere, in a small scene that says what the observer saw. Each is
  * built from primitives on a 32 × 32 grid with a 1.7 stroke. The stroke is currentColor, so the
- * mark takes its parent's color. The drawings hold at 24 px and blur below about 14 px. A Map, so a
+ * icon takes its parent's color. The drawings hold at 24 px and blur below about 14 px. A Map, so a
  * key only finds a drawing put here, never something on Object.prototype.
  */
 const DRAWINGS = new Map<string, React.ReactNode>(Object.entries({
@@ -205,14 +205,14 @@ const DRAWINGS = new Map<string, React.ReactNode>(Object.entries({
   ),
 }));
 
-interface AlienMarkProps {
+interface AlienIconProps {
   attributeKey: string;
   /** Width and height, in pixels. */
   size: number;
 }
 
-/** The drawing for an attribute, or nothing for an attribute without one. Decorative. */
-export const AlienMark: React.FC<AlienMarkProps> = ({ attributeKey, size }) => {
+/** The icon for an attribute, or nothing for an attribute without a drawing. Decorative. */
+export const AlienIcon: React.FC<AlienIconProps> = ({ attributeKey, size }) => {
   const drawing = DRAWINGS.get(attributeKey);
   if (!drawing) return null;
   return (

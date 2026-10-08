@@ -46,8 +46,8 @@
   line-height: 1.55;
 }
 
-// The cells share the row's width, so a long label wraps rather than pushing the row wider.
-.observation-notes__marks {
+// The indicators share the row's width, so a long label wraps rather than pushing the row wider.
+.observation-notes__indicators {
   display: flex;
   gap: 6px;
   margin: 12px 0 0;
@@ -55,7 +55,7 @@
   list-style: none;
 }
 
-.observation-notes__mark {
+.observation-notes__indicator {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
@@ -65,7 +65,7 @@
   color: colors.$ink-2;
 }
 
-// margin-bottom: auto pushes the drawing and badge to the foot of the cell, so they share a
+// margin-bottom: auto pushes the icon and badge to the foot of the indicator, so they share a
 // baseline across the row however the labels wrapped.
 .observation-notes__label {
   margin-bottom: auto;
@@ -78,7 +78,7 @@
   overflow-wrap: break-word;
 }
 
-.observation-notes__mark svg {
+.observation-notes__indicator svg {
   display: block;
   flex-shrink: 0;
 }

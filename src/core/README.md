@@ -63,9 +63,9 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   shell: the count, previous and next, a screen-reader status, and "No conversations match that
   search." when the list is empty. A view fills its body from the parts beside it:
   `ConversationWords` (the words, one span each), `ActualLabel` (the true answer as a chip) and
-  `ObservationNotes` (the observer's notes with a mark for each attribute it is given). A view that
-  needs a different body adds a part rather than a flag on the shell.
-- `alien-marks.tsx`: `AlienMark`, the drawing for each alien attribute, in the parent's color.
+  `ObservationNotes` (the observer's notes with an attribute indicator for each attribute it is
+  given). A view that needs a different body adds a part rather than a flag on the shell.
+- `alien-icons.tsx`: `AlienIcon`, the icon for each alien attribute, in the parent's color.
 - `visually-hidden.scss`: the `visually-hidden` mixin, for text only screen readers read.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words (`conversationWords`). Items are plain data, so this is a function that takes the text, not
