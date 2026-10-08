@@ -1,3 +1,4 @@
+import { cubicBezier } from "../../core/network-diagram/easing";
 import { Flight, flightDuration, placeCopy } from "./flight";
 
 // Three copies flying right into a column, the first from farthest away.
@@ -53,6 +54,12 @@ describe("placeCopy", () => {
     expect(placed.x).toBeLessThan(400);
     expect(placed.r).toBeLessThan(12);
     expect(placed.r).toBeGreaterThan(8);
+  });
+
+  it("shrinks on the vertical path's curve, as the prototype's inner group does", () => {
+    // Copy 0 flies farthest, so for 800 × 1.17 = 936 ms from 0; at 600 ms it is that far along.
+    const progress = 600 / 936;
+    expect(placeCopy(flights, 0, 600).r).toBeCloseTo(8 * (1.5 - 0.5 * cubicBezier(0.45, 0.05, 0.3, 1)(progress)));
   });
 
   it("settles back onto the mark over 190 ms", () => {
