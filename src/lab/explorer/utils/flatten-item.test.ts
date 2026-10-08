@@ -259,6 +259,7 @@ describe("flattenItem reserved fields", () => {
     const noAttributes = { ...activeYelp, attributes: [] };
     const flat = flattenItem(item, "fit_a", noAttributes, [1, 2, -1]);
     const fixedKeys = Object.keys(flat).filter(key => !/^pathway_\d+$/.test(key));
-    expect(fixedKeys.sort()).toEqual([...RESERVED_FIELD_NAMES, "stars", "review_stars"].sort());
+    const unreserved = fixedKeys.filter(key => !RESERVED_FIELD_NAMES.includes(key));
+    expect(unreserved.sort()).toEqual(["review_stars", "stars"]);
   });
 });

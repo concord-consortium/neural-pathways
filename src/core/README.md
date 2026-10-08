@@ -72,6 +72,13 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words (`conversationWords`). Items are plain data, so this is a function that takes the text, not
   a getter on a model.
+- `filter/`: the filter over the conversations. `conversation-filter.ts` builds one flat record per
+  conversation and runs a liqe query over them. Bare words search the alien text and the observer's
+  notes, case is ignored, and unknown fields and unreadable queries are reported.
+  `filter-bar.tsx` is the bar, which takes everything it shows as props, and `filter-help.tsx` is
+  its help popover, which keeps only whether it is open. `use-conversation-filter.ts` ties them to
+  the shared `query` and its volatile draft, `queryDraft`, and gives a view the ids to step
+  through. The lab explorer keeps its own search: its fields differ.
 - `colors.ts`, `colors.scss`, `panel.scss`, `button.scss`: the lesson's colors, the panel look, and
   how an unavailable button looks.
 - `use-element-size.ts`: an element's size, kept current with a ResizeObserver.
