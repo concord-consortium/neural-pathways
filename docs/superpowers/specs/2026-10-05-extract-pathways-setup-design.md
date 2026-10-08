@@ -12,9 +12,9 @@ Along the way, Trace a Case's step player and step row move to `src/core/steps/`
 Pathways, and later Prediction Chain, share one step system.
 
 Jira: [NPW-33](https://concord-consortium.atlassian.net/browse/NPW-33). It builds on NPW-32
-(Trace a Case's network diagram and steps), now on `main`. It
-blocks NPW-48 (Collect All Conversations and Extract Pathways), which blocks NPW-24 (Animate and
-speed, About and the activation legend, completing the view).
+(Trace a Case's network diagram and steps), which is on `main`. It blocks NPW-48 (Collect All
+Conversations and Extract Pathways), which blocks NPW-24 (Animate and speed, About and the
+activation legend, completing the view).
 
 The source is the `EX_STAGE0_ONLY` branch of `runExtract` in `index.html` on the
 `neural-net-maker` branch of the demos repo
@@ -27,9 +27,9 @@ The work is two stacked PRs (see [PRs](#prs)).
 
 | Decision | Choice | Why |
 |---|---|---|
-| Animate, speed and About | Not in this story. The steps always animate, at the prototype's Med timings. | NPW-38 and NPW-44 aren't built yet, and NPW-48 comes before them. NPW-24 adds both, and the activation legend, to the view. |
-| The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 promoted choreography to core once a second view needed it, and this is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
-| Button rules | Each button is a function from the marker the timeline rests at to the segment it plays, or to nothing when it is disabled. Core derives disabled and current from that. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
+| Animate, speed and About | Not in this story. The steps always animate, at the prototype's Med timings. | The Animate and speed controls (NPW-38, NPW-44) aren't built yet, and NPW-48 comes before them. NPW-24 adds both, and the activation legend, to the view. |
+| The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 put the network diagram and its timing in core once a second view needed them, and this is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
+| Button rules | Each button says which segment it plays at the marker the timeline rests at (none when it is disabled), and can say whether it is current there. The step row works out disabled and current from those. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
 | Progress | One marker: a point on the view's timeline where the scene rests and progress is saved. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
 | Markers and segments | The timeline's resting points are markers, and the animation between two is a segment, as in Lottie (`playSegments`) and After Effects. "Step" stays with the buttons and the row. | A button isn't a step of the timeline: Collect a Conversation plays a different segment each press, and Collect All will play across many. Trace a Case's Step *k* happens to play the segment to marker *k*. "Keyframe" would suggest in-betweens filled in for us, and `network-drawing.tsx` already uses it for the pill's pop. |
 | Press rules in this story | Trace a Case's: any enabled button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but disabled. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
@@ -122,8 +122,8 @@ interface StepButton {
 
 - It renders the buttons in order, then Reset, in a `role="group"` labeled "Steps".
 - It reads `player.currentRun`, not `currentFrame`. `currentFrame` is replaced on every frame, and
-  `currentRun` only when a run starts or ends, so the row re-renders once per run, as NPW-32's review
-  made Trace a Case's row do.
+  `currentRun` only when a run starts or ends, so the row re-renders only then, not on every
+  frame, as NPW-32's review made Trace a Case's row do.
 - A press calls `player.play(key, segment)` with that button's segment.
 - The current button has `aria-current="step"`, as NPW-32's review settled for Trace a Case:
   pressing it again replays it, so it isn't a toggle and `aria-pressed` would mislead. Disabled
@@ -135,12 +135,13 @@ interface StepButton {
 
 Nothing it does changes.
 
-- **Buttons:** `Step 1` to `Step 4`. Step *k* has `segmentToPlayWhenAt: () => ({ from: k − 1, to: k })`
-  and `showAsCurrentWhenAt: m => m === k`.
+- **Buttons:** `Step 1` to `Step 4`. Step *k* has
+  `segmentToPlayWhenAt: () => ({ from: k − 1, to: k })` and `showAsCurrentWhenAt: m => m === k`.
 - **Progress:** an adapter wraps `TraceACaseState` for the conversation shown. Marker *k* is *k*
   steps done, so the state keeps the marker itself: `stepsByConversation`, `stepsDone` and
-  `setStepsDone` are renamed `markerByConversation`, `marker` and `setMarker`. Nothing has shipped. As now, the view
-  makes a player for that conversation and a new one when it changes.
+  `setStepsDone` are renamed `markerByConversation`, `marker` and `setMarker`. Nothing has
+  shipped. The view makes a player for that conversation, and a new one when it changes, as it
+  does on `main`.
 - **Timeline:** `duration` and `sceneAt` wrap the forward pass's phases (below), with `run.to` as
   the phase: Step *k* plays phase *k*.
 
@@ -148,16 +149,17 @@ Nothing it does changes.
 
 ### `forward-pass-phases.ts`
 
-What Trace a Case's `step-timeline.ts` holds now moves here, so Extract Pathways' replay can use
-it: `PHASES`, `Phase`, `PhaseFrame`, `unitDuration`, `phaseDuration`, `sceneAt`, `applyPhase`
-and their constants, and a new `toPhase(n)`, which turns a marker into its phase without an `as`
-and throws for a number that isn't one. That is the input fill, the three fans and the answer. Its
-tests move with it. Trace a Case keeps only its button list and the timeline wrapper.
+Trace a Case's `step-timeline.ts` moves here, so Extract Pathways' replay can use it: `PHASES`,
+`Phase`, `PhaseFrame`, `unitDuration`, `phaseDuration`, `sceneAt`, `applyPhase` and their
+constants, and a new `toPhase(n)`, which turns a marker into its phase without an `as` and throws
+for a number that isn't one. The four phases are the input fill and the three fans, the last
+ending with the answer. Its tests move with it. Trace a Case keeps only its button list, the
+timeline wrapper and the progress adapter.
 
-- They were called steps, and are renamed phases of the forward pass, the ML name for running one
-  input through the network. A third term keeps them apart from the step buttons and the
-  timeline's markers: Trace a Case's Step *k* plays phase *k*, but Extract Pathways' first
-  collection plays all four phases within one segment.
+- Phases of the forward pass, the ML name for running one input through the network: a third term
+  that keeps them apart from the step buttons and the timeline's markers. Trace a Case's Step *k*
+  plays phase *k*, but Extract Pathways' first collection plays all four phases within one
+  segment.
 
 ### `Scene.hiddenLayerSpotlight`
 
@@ -169,10 +171,11 @@ interface Scene {
 }
 ```
 
-- The name says what the effect is: the hidden layers stay lit while the rest of the network
-  fades. It holds the effect's strength, so 0 draws the network normally.
+- The name says what the effect is: the hidden layers' nodes stay lit while the rest of the
+  network fades. It holds the effect's strength, so 0 draws the network normally. The prototype
+  calls this dimming (`dimRest`), and so does this spec.
 - What fades covers the wires, edges, input and output nodes, pills, captions and labels. The
-  hidden layers' nodes stay at full strength; the prototype never dims the hidden neurons while
+  hidden layers' nodes stay at full strength; the prototype never dims them while
   Extract Pathways runs (`dimRest`, and `dimAll`, line 15280).
 - `emptyScene` and `fullScene` set it to 0. Trace a Case never changes it.
 - As in the prototype's `dimRest` (lines 13467–13478), opacity is set on each group of lines and
@@ -183,8 +186,9 @@ interface Scene {
 
 ### `NetworkDrawing` and `NetworkDiagram`
 
-- **`NetworkDrawing`** draws the network as an SVG `<g>` from a layout, a pass, scales, output
-  labels and a scene. Everything `network-diagram.tsx` draws now moves into it, in the same order.
+- **`NetworkDrawing`** draws the network as an SVG `<g>` from the network, a layout, a pass,
+  scales, output labels and a scene. Everything `network-diagram.tsx` draws moves into it, in the
+  same order.
 - **`NetworkDiagram`** keeps its props and behavior. It measures its box, calls `layoutNetwork`
   and wraps a `NetworkDrawing` in an `<svg>`.
 
@@ -414,8 +418,8 @@ as in the prototype, where `setNodeLevel` has no transition.
 
 **The step system**
 
-- **`step-player.test.ts`** (moved from Trace a Case and made generic; plain calls with fake
-  timers):
+- **`step-player.test.ts`** (new and generic; plain calls with fake timers and a stand-in
+  timeline):
   - `play` saves `from`, runs, then saves `to`;
   - a press during a run drops it, so its `to` is never saved;
   - reduced motion saves `to` straight away;
@@ -430,7 +434,9 @@ as in the prototype, where `setNodeLevel` has no transition.
 
 **Trace a Case**
 
-- Its view, timeline and player tests keep passing, which shows the move changed no behavior.
+- Its view tests keep passing with only the state field's new name changed, which shows the move
+  changed no behavior. Its timeline tests move with the timeline to `forward-pass-phases.test.ts`,
+  and its player tests become `trace-a-case-steps.test.ts`, which runs them on the shared player.
 - Its button list: `segmentToPlayWhenAt` and `showAsCurrentWhenAt` for each step.
 
 **The diagram**
@@ -488,12 +494,13 @@ The existing Trace a Case tests still pass.
 
 ## PRs
 
-Two stacked PRs, so the shared system is reviewed before the view that uses it. Moves go in
-commits of their own, apart from edits, so git shows them as renames.
+Two stacked PRs, so the shared system is reviewed before the view that uses it. The timeline and
+its tests move to core in a commit of their own, so git shows them as renames. The core player and
+row are written new, and Trace a Case's are removed once it uses them.
 
 1. **The shared step system and the diagram split** (about 20 files): `src/core/steps/`, Trace a
-   Case moved onto it, `forward-pass-phases.ts`, `Scene.hiddenLayerSpotlight` and `NetworkDrawing`. Nothing
-   a user sees changes.
+   Case moved onto it, `forward-pass-phases.ts`, `Scene.hiddenLayerSpotlight` and
+   `NetworkDrawing`. Nothing a user sees changes.
 2. **The Extract Pathways view** (about 22 files): state, buttons, drawing, flights, timelines,
    tests and docs.
 
