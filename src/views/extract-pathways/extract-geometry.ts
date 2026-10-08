@@ -1,16 +1,7 @@
 import { layoutNetwork, NetworkLayout, Point } from "../../core/network-diagram/layout";
+import { MAX_COLLECTED } from "./extract-steps";
 
 export const CANVAS_HEIGHT = 440;
-/**
- * The prototype's width once it lifts its 537 cap: the network plus a 229 strip each side. A
- * narrower panel scales this layout down rather than squeezing the strips.
- */
-export const MIN_CANVAS_WIDTH = 995;
-/**
- * The canvas scales down no further than this. Below it, the panel scrolls sideways instead, so the
- * canvas text stays readable and still grows when the page is zoomed.
- */
-export const MIN_CANVAS_SCALE = 0.75;
 export const NETWORK_WIDTH = 537;
 /** The baseline of "Conversation n" and "Hidden Layer Neurons". */
 export const LABEL_Y = 22;
@@ -26,8 +17,32 @@ const LIFT_PAD_BOTTOM = 10;
 const DECK_BAND = 34;
 const DECK_PAD_TOP = 2;
 const DECK_PAD_BOTTOM = 10;
+/** Clear left of the last column collected by hand on the narrowest canvas, as below the deck. */
+const DECK_PAD_SIDE = 10;
 /** With DECK_COLUMNS, what the prototype divides the height by to size the deck. */
 const DECK_ROWS_EXTRA = 27;
+
+/** The deck's radius: the network's node radius `nodeR`, or smaller so DECK_COLUMNS fit down the canvas. */
+function deckRadius(nodeR: number): number {
+  const room = CANVAS_HEIGHT - DECK_BAND - DECK_PAD_TOP - DECK_PAD_BOTTOM;
+  return Math.min(nodeR, Math.floor((room / (DECK_COLUMNS + DECK_ROWS_EXTRA)) * 10) / 10);
+}
+
+/**
+ * The narrowest the canvas is laid out: the network, and a strip each side wide enough that the
+ * deck's columns collected by hand fit in the left one, stepping left from its middle. A narrower
+ * panel scrolls the drawing sideways rather than scaling it down, so its text grows when the page
+ * is zoomed (see docs/accessibility.md).
+ *
+ * The prototype has no minimum: it widens its canvas to whatever the panel has, so wherever the
+ * panel is at least this wide, the two lay out alike.
+ */
+export function minCanvasWidth(columnSizes: readonly number[]): number {
+  const nodeR = layoutNetwork(columnSizes, NETWORK_WIDTH, CANVAS_HEIGHT).radius;
+  // The deck's first column is centered in its strip, and each later one is a radius further left.
+  const halfStrip = Math.ceil(MAX_COLLECTED * deckRadius(nodeR) + DECK_PAD_SIDE);
+  return NETWORK_WIDTH + 4 * halfStrip;
+}
 
 /** A column of the 14 copies: its center x, each row's y, and the radius. */
 export interface ColumnGeometry {
@@ -49,9 +64,12 @@ export interface ExtractGeometry {
   deck: ColumnGeometry;
 }
 
-/** The canvas laid out for a host `hostWidth` wide. */
+/**
+ * The canvas laid out for a host `hostWidth` wide: as wide as the host, in whole pixels so it never
+ * overflows it, but no narrower than `minCanvasWidth`.
+ */
 export function extractGeometry(columnSizes: readonly number[], hostWidth: number): ExtractGeometry {
-  const width = Math.max(MIN_CANVAS_WIDTH, Math.round(hostWidth));
+  const width = Math.max(minCanvasWidth(columnSizes), Math.floor(hostWidth));
   const height = CANVAS_HEIGHT;
   const network = layoutNetwork(columnSizes, NETWORK_WIDTH, height);
   const networkX = Math.round((width - NETWORK_WIDTH) / 2);
@@ -71,8 +89,7 @@ export function extractGeometry(columnSizes: readonly number[], hostWidth: numbe
     r: liftedR,
   };
 
-  const deckR = Math.min(R,
-    Math.floor(((height - DECK_BAND - DECK_PAD_TOP - DECK_PAD_BOTTOM) / (DECK_COLUMNS + DECK_ROWS_EXTRA)) * 10) / 10);
+  const deckR = deckRadius(R);
   const deckTop = DECK_BAND + deckR + DECK_PAD_TOP;
   const deckBottom = height - DECK_PAD_BOTTOM - deckR - deckR * (DECK_COLUMNS - 1);
   const deckStep = (deckBottom - deckTop) / (count - 1);

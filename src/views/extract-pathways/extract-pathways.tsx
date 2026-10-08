@@ -59,7 +59,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
           <Observer>
             {() => (
               <ExtractDrawing network={toyNetwork} passes={passes} scales={scales}
-                outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+                outputLabels={alien3Dataset.classificationLabels} scene={player.scene} headingId={panelHeadId} />
             )}
           </Observer>
         </div>

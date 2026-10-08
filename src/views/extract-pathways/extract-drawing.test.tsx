@@ -8,7 +8,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
 import { ExtractScene, restScene } from "./extract-scene";
-import { extractGeometry, MIN_CANVAS_WIDTH } from "./extract-geometry";
+import { extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { flightDuration } from "./flight";
 import { setupSceneAt } from "./setup-timeline";
 
@@ -16,12 +16,13 @@ const SIZES = [10, 8, 6, 2];
 const LABELS = { 0: "wait", 1: "approach" };
 const passes = fixture.conversations.map(c => forward(toyNetwork, c.text));
 const scales = networkScales(toyNetwork, passes);
-// jsdom has no ResizeObserver, so the drawing lays out at its minimum width.
-const geometry = extractGeometry(SIZES, MIN_CANVAS_WIDTH);
+// jsdom has no ResizeObserver, so the drawing lays out at its narrowest.
+const geometry = extractGeometry(SIZES, 0);
 
 function renderDrawing(scene: ExtractScene) {
   return render(
-    <ExtractDrawing network={toyNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene} />,
+    <ExtractDrawing network={toyNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
+      headingId="panel-head" />,
   );
 }
 
@@ -74,6 +75,15 @@ describe("ExtractDrawing", () => {
     expect(copies).toHaveLength(14);
     // eslint-disable-next-line testing-library/no-node-access -- a copy's name is its <title> child
     expect(copies[0].querySelector("title")).toHaveTextContent("Hidden Layer 1 Neuron 1");
+  it("draws the canvas at full size, one drawing unit to a pixel, so its text zooms with the page", () => {
+    renderDrawing(restScene(SIZES, 0));
+    const width = String(minCanvasWidth(SIZES));
+    const svg = screen.getByRole("img", { name: "The network." });
+    expect(svg).toHaveAttribute("width", width);
+    expect(svg).toHaveAttribute("height", "440");
+    expect(svg).toHaveAttribute("viewBox", `0 0 ${width} 440`);
+  });
+
     // eslint-disable-next-line testing-library/no-node-access -- a copy's name is its <title> child
     expect(copies[13].querySelector("title")).toHaveTextContent("Hidden Layer 2 Neuron 6");
     expect(placeOf(copies[0])).toEqual({ x: geometry.lifted.x, y: geometry.lifted.ys[0] });

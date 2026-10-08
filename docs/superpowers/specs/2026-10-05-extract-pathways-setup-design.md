@@ -37,7 +37,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 | Collect a Conversation's network animation | All three of the prototype's versions: a replay of Trace a Case's steps for the first conversation, a swap for the next two, and a quick swap after that. | The replay ties the deck back to Trace a Case. The slower swaps make each new conversation visible before they turn into shorthand. |
 | The end of a collection | Everything but the hidden neurons, and the lifted column, stay dimmed once the column lands, until the next collection starts. Coming back to the view shows the same. | As in the prototype (`collectOne` and `flyColumn`, lines 15161–15215). The prototype rebuilds a returned-to screen at full strength (`restoreRun`, lines 14746–14778), but a pure `sceneAt(marker)` must match the end of the run that reached it, so here it comes back as it was left. |
 | Which conversations | The first ten in dataset order. Extract Pathways doesn't read or change the shared conversation. | The prototype does the same (`cases`, line 10622, with `idx` 0). The view has no conversation panel. |
-| The canvas | One SVG as wide as the panel, never narrower than 995 drawing units: the network in a 537-wide middle, the deck in the left strip, the lifted column in the right. | Before Setup the strips are just empty. This replaces the prototype's widen-and-shift (`widenForLift`, lines 13371–13411). 995 is the prototype's width at its 537 cap plus its two 229 strips, which the 20-column deck needs once NPW-48 adds it. |
+| The canvas | One SVG as wide as the panel, at full size, never narrower than 909: the network in a 537-wide middle, the deck in the left strip, the lifted column in the right. A narrower panel scrolls it rather than scaling it, so its text grows when the page is zoomed. | Before Setup the strips are just empty. This replaces the prototype's widen-and-shift (`widenForLift`, lines 13371–13411), which widens to whatever the panel has; its comments' 229 strips are just the width of the window it was built in. 909 is the narrowest canvas whose left strip holds the ten columns collected by hand. Collect All's 20-column deck would need 352-wide strips, a 1,241 canvas, if it started in the same place; the prototype instead re-centers the deck between the canvas's left edge and the lifted column as it grows (`centreCube`, line 13804), so NPW-48 sets the width that needs. |
 | The activation legend | Left out. | It's in NPW-24's scope, and NPW-23 adds the same key to Trace a Case. |
 
 ## The shared step system: `src/core/steps/`
@@ -271,11 +271,13 @@ The rules that follow from this:
 
 **Canvas.**
 
-- The SVG is the panel's width and 440 tall, like Trace a Case's diagram.
-- Below 995 wide it lays out at 995 and scales down through its `viewBox`, but no further than
-  0.75 (746 px wide). A narrower panel scrolls the canvas sideways, so its text stays readable and
-  still grows when the page is zoomed (WCAG 1.4.4). The interactive is meant to be embedded wide
-  enough not to need either.
+- The SVG is the panel's width and 440 tall, like Trace a Case's diagram, drawn at full size: one
+  drawing unit to a CSS pixel, never scaled to fit (`docs/accessibility.md`).
+- It is never narrower than `minCanvasWidth`, 909: the network plus two strips that each hold the
+  ten columns collected by hand, with 10 clear. A narrower panel scrolls the drawing sideways. While
+  it scrolls, the drawing's container is a group named by the panel heading, with `tabIndex` 0, so
+  the keyboard can reach and scroll it in any browser. The interactive is meant to be embedded wide
+  enough not to scroll; an iPad's standalone layout leaves 980.
 - The network is laid out by `layoutNetwork` at 537 × 440 and centered. The strips are what is
   left on each side.
 
@@ -477,7 +479,9 @@ as in the prototype, where `setNodeLevel` has no transition.
 - Switching to Trace a Case and back keeps the stage.
 - Collect a Conversation is unavailable after 10, and keeps the focus.
 - Reset clears everything.
-- A 600 px frame scales the canvas to 0.75 and scrolls it sideways, not the page.
+- A 980 px panel, as an iPad's standalone layout leaves, holds the canvas at full size without
+  scrolling. A 600 px frame scrolls the drawing sideways, not the page, and the keyboard can tab to
+  the drawing and scroll it.
 
 The existing Trace a Case tests still pass.
 

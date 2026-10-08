@@ -17,14 +17,13 @@ test("Setup lifts the hidden neurons out of the network, animated", async ({ pag
   await expect(page.getByRole("img", { name: LIFTED })).toBeVisible({ timeout: 10_000 });
 });
 
-test("a narrow frame scales the canvas down only so far, then scrolls it sideways", async ({ page }) => {
-  await page.setViewportSize({ width: 600, height: 900 });
+/** Opens the view alone in a frame `width` wide, and returns the canvas's width and what scrolls. */
+async function canvasIn(page: Page, width: number) {
+  await page.setViewportSize({ width, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?interactive=extract-pathways");
   const canvas = page.getByRole("img", { name: "The network." });
   await expect(canvas).toBeVisible();
-  // 0.75 of the 995-wide layout.
-  expect((await canvas.boundingBox())!.width).toBeCloseTo(746, 0);
   const scrolls = await page.evaluate(() => {
     const scrollsSideways = (element: Element) => element.scrollWidth > element.clientWidth;
     return {
@@ -32,7 +31,31 @@ test("a narrow frame scales the canvas down only so far, then scrolls it sideway
       drawing: scrollsSideways(document.querySelector(".extract-drawing")!),
     };
   });
-  expect(scrolls).toEqual({ page: false, drawing: true });
+  return { width: (await canvas.boundingBox())!.width, ...scrolls };
+}
+
+/** The drawing's scroll region, which is a named group only while it scrolls. */
+const scrollRegion = (page: Page) => page.getByRole("group", { name: "The Network → Activated Pathways" });
+
+test("the canvas fills a 980 px panel, as an iPad's standalone layout leaves, at full size", async ({ page }) => {
+  // The frame's 16 px gutters and the panel's borders leave 980 for the canvas.
+  expect(await canvasIn(page, 1014)).toEqual({ width: 980, page: false, drawing: false });
+  await expect(scrollRegion(page)).toHaveCount(0);
+});
+
+test("a narrower frame scrolls the canvas sideways rather than scaling it down", async ({ page }) => {
+  // 909 is the narrowest the canvas is laid out.
+  expect(await canvasIn(page, 600)).toEqual({ width: 909, page: false, drawing: true });
+});
+
+test("the keyboard can reach and scroll a canvas too wide for its frame", async ({ page }) => {
+  await canvasIn(page, 600);
+  await page.getByRole("button", { name: "Reset" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(scrollRegion(page)).toBeFocused();
+  await expect(scrollRegion(page)).toHaveAttribute("tabindex", "0");
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => scrollRegion(page).evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
 });
 
 test("three collections give three deck columns", async ({ page }) => {

@@ -1,9 +1,24 @@
-import { deckPosition, extractGeometry, MIN_CANVAS_WIDTH } from "./extract-geometry";
+import { deckPosition, extractGeometry, minCanvasWidth } from "./extract-geometry";
+import { MAX_COLLECTED } from "./extract-steps";
 
 const SIZES = [10, 8, 6, 2];
 
+describe("minCanvasWidth", () => {
+  it("is the network plus two strips that each hold the deck's ten columns, 10 clear", () => {
+    expect(minCanvasWidth(SIZES)).toBe(909);
+    const g = extractGeometry(SIZES, 0);
+    const last = deckPosition(g.deck, MAX_COLLECTED - 1, 0);
+    expect(last.x - g.deck.r).toBeCloseTo(10);
+  });
+
+  it("is narrower than the 980 px an iPad's standalone layout leaves, where the prototype fits", () => {
+    expect(minCanvasWidth(SIZES)).toBeLessThan(980);
+  });
+});
+
 describe("extractGeometry", () => {
-  const g = extractGeometry(SIZES, MIN_CANVAS_WIDTH);
+  // The width the prototype's canvas had in the window it was built in.
+  const g = extractGeometry(SIZES, 995);
 
   it("centers the 537-wide network with a strip each side", () => {
     expect(g.width).toBe(995);
@@ -13,9 +28,10 @@ describe("extractGeometry", () => {
     expect(g.network.radius).toBe(12);
   });
 
-  it("keeps its minimum layout on a narrow host, to be scaled down, and widens on a wide one", () => {
-    expect(extractGeometry(SIZES, 600).width).toBe(995);
-    expect(extractGeometry(SIZES, 600).networkX).toBe(229);
+  it("lays out at the host's width in whole pixels, but no narrower than its minimum", () => {
+    expect(extractGeometry(SIZES, 600).width).toBe(909);
+    expect(extractGeometry(SIZES, 600).networkX).toBe(186);
+    expect(extractGeometry(SIZES, 980.6).width).toBe(980);
     const wide = extractGeometry(SIZES, 1300);
     expect(wide.width).toBe(1300);
     expect(wide.networkX).toBe(382);
@@ -41,11 +57,6 @@ describe("extractGeometry", () => {
     expect(g.deck.x).toBe(115);
     const deepest = deckPosition(g.deck, 19, 13);
     expect(deepest.y + g.deck.r).toBeCloseTo(430);
-  });
-
-  it("keeps the ten columns collected by hand inside the left strip", () => {
-    const tenth = deckPosition(g.deck, 9, 0);
-    expect(tenth.x - g.deck.r).toBeGreaterThan(0);
   });
 });
 

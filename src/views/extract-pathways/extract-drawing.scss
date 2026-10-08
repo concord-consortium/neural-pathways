@@ -1,17 +1,13 @@
 @use "../../core/colors" as colors;
 
-// Scrolls sideways when the panel is narrower than the canvas at MIN_CANVAS_SCALE.
+// The canvas is drawn at full size and never scaled; see minCanvasWidth for why it scrolls instead.
 .extract-drawing {
   width: 100%;
   overflow-x: auto;
 }
 
-// Laid out at least MIN_CANVAS_WIDTH wide; a narrower panel scales the whole canvas down, to the
-// min-width the drawing sets.
 .extract-drawing__svg {
   display: block;
-  width: 100%;
-  height: auto;
   overflow: visible;
 }
 
