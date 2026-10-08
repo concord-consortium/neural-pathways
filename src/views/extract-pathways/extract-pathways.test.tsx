@@ -176,7 +176,7 @@ describe("ExtractPathways", () => {
       expect(drawing(collectedLabel(1))).toBeInTheDocument();
     });
 
-    it("doesn't re-render the view's body while a step plays", async () => {
+    it("doesn't re-render the view's body while a run plays", async () => {
       showView();
       await screen.findByRole("img", { name: "The network." });
       // The body reads the view's state on every render.
@@ -208,7 +208,7 @@ describe("ExtractPathways", () => {
       expect(jest.getTimerCount()).toBe(0);
     });
 
-    it("drops a step that is playing when the view goes away, keeping where it started", async () => {
+    it("drops a run that is playing when the view goes away, keeping where it started", async () => {
       const state = new ExtractPathwaysState({ setupDone: true, collected: 1 });
       const { unmount } = showView(state);
       await screen.findByRole("img", { name: collectedLabel(1) });
