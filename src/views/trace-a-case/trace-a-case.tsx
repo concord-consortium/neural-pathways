@@ -12,6 +12,7 @@ import { ForwardPass } from "../../core/network/forward";
 import { indexPasses } from "../../core/network/index-passes";
 import { NetworkScales } from "../../core/network/network-scales";
 import { toyNetwork } from "../../core/network/toy-network";
+import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
 import { validConversationId } from "../../core/state/conversation";
 import { TraceACaseState } from "./trace-a-case-state";
@@ -24,6 +25,9 @@ import "./trace-a-case.scss";
 
 /** Units in each drawn layer. Fixed, as StepPlayer requires. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
+
+/** Gives the stylesheet the diagram's smallest layout, which it sizes the network panel from. */
+const LAYOUT_STYLE = { "--diagram-min-height": `${MIN_HEIGHT}px` } as React.CSSProperties;
 
 /** Follow one conversation through the network, a layer at a time. */
 export const TraceACase: React.FC = observer(function TraceACase() {
@@ -84,7 +88,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
   // card says so, and the steps and the network are left out.
   return (
-    <div className="trace-a-case__layout">
+    <div className="trace-a-case__layout" style={LAYOUT_STYLE}>
       <div className="trace-a-case__filter">
         <FilterBar {...bar} />
       </div>

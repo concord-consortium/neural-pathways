@@ -2,6 +2,13 @@
 @use "../../core/colors" as colors;
 @use "../../core/panel";
 
+// The network panel's head: the card's head holds 44 px buttons, and with the head's 9 + 8 px
+// padding and 1 px rule that is 62 px.
+$network-head-height: 62px;
+$diagram-padding: 8px;
+// The network panel's height around the diagram: its head, the diagram's padding and its border.
+$network-chrome: $network-head-height + 2 * $diagram-padding + 2px;
+
 // At least the window's height, so the layout below the title can fill what is left of it.
 .trace-a-case {
   display: flex;
@@ -18,16 +25,19 @@
 // start on the same line.
 //
 // The layout takes the height the title leaves, and the panel row grows into it, up to 800 px so a
-// very tall window doesn't leave the network floating in empty space. It stops at 380 px, the
-// network's smallest (see .trace-a-case__diagram); below that the panels run past the window and
-// the page scrolls. min-height: 0 because the browser measures the layout's content height with
-// the row at its 800 px most, which would otherwise be its minimum.
+// very tall window doesn't leave the network floating in empty space. It stops at the network
+// panel's smallest, 380 px: the diagram's smallest layout plus $network-chrome. Below that the
+// panels run past the window and the page scrolls. min-height: 0 because the browser measures the
+// layout's content height with the row at its 800 px most, which would otherwise be its minimum.
+//
+// --diagram-min-height is MIN_HEIGHT from layout.ts, set on this element by the view, so the
+// diagram's smallest layout is written down once.
 .trace-a-case__layout {
   display: grid;
   flex: 1 1 0;
   min-height: 0;
   grid-template-columns: 447px minmax(400px, 1fr);
-  grid-template-rows: auto minmax(380px, 800px);
+  grid-template-rows: auto minmax(calc(var(--diagram-min-height) + #{$network-chrome}), 800px);
   grid-template-areas:
     "filter steps"
     "case   network";
@@ -74,23 +84,21 @@
   align-self: stretch;
 }
 
-// The card's head holds 44 px buttons; with the head's 9 + 8 px padding and 1 px rule that is
-// 62 px. A minimum, so a head can still grow if its controls wrap.
+// The same height as the card's head. A minimum, so a head can still grow if its controls wrap.
 .trace-a-case__network-head {
   @include panel.panel-head;
-  min-height: 62px;
+  min-height: $network-head-height;
 }
 
-// 440 px tall on its own, and otherwise the panel's height less the head. At least 300 px, the
-// diagram's smallest layout (MIN_HEIGHT in layout.ts): with the 62 px head, the padding and the
-// panel's border that makes the network panel's smallest 380 px.
+// 440 px tall when the panel's height comes from its content (stacked), and otherwise the panel's
+// height less the head. Never smaller than the diagram's smallest layout.
 .trace-a-case__diagram {
   flex: 1 1 440px;
   width: 100%;
   max-width: 537px;
-  min-height: 300px;
+  min-height: var(--diagram-min-height);
   margin: 0 auto;
-  padding: 8px 0;
+  padding: $diagram-padding 0;
 }
 
 .step-row {

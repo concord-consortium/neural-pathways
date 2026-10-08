@@ -265,7 +265,10 @@ test.describe("the card and network panels", () => {
     const { card, network } = panels(page);
     await expect(card.getByRole("listitem")).toHaveCount(5);
     expect((await rect(card)).height).toBeCloseTo(380, 0);
-    expect((await rect(network)).height).toBeCloseTo(380, 0);
+    const networkBox = await rect(network);
+    expect(networkBox.height).toBeCloseTo(380, 0);
+    // The drawing still fits in the panel at its smallest.
+    expect((await rect(network.locator("svg").first())).bottom).toBeLessThanOrEqual(networkBox.bottom);
     const view = page.getByRole("main");
     expect(await view.evaluate(el => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0);
   });
