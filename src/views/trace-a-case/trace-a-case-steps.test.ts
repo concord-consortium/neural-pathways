@@ -12,9 +12,9 @@ const timeline = traceTimeline(SIZES);
 function makeState() {
   const state = new TraceACaseState({});
   const playerFor = (conversationId: string) => new StepPlayer(timeline, traceProgress(state, conversationId));
-  /** The markers saved, by conversation. */
-  const saved = () => ({ ...state.markerByConversation });
-  return { playerFor, saved };
+  /** The markers stored, by conversation. */
+  const stored = () => ({ ...state.markerByConversation });
+  return { playerFor, stored };
 }
 
 /** Presses Step `step` as the step row does. */
@@ -73,24 +73,24 @@ describe("Trace a Case's steps on the step player", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("saves the step before while a step plays, and the step only once it ends", () => {
-    const { playerFor, saved } = makeState();
+  it("stores the step before while a step plays, and the step only once it ends", () => {
+    const { playerFor, stored } = makeState();
     const player = playerFor("a");
     press(player, 2);
-    expect(saved()).toEqual({ a: 1 });
+    expect(stored()).toEqual({ a: 1 });
     jest.advanceTimersByTime(1000);
-    expect(saved()).toEqual({ a: 1 });
+    expect(stored()).toEqual({ a: 1 });
     jest.advanceTimersByTime(3000);
-    expect(saved()).toEqual({ a: 2 });
+    expect(stored()).toEqual({ a: 2 });
   });
 
-  it("saves no steps done on reset", () => {
+  it("stores no steps done on reset", () => {
     setReducedMotion(true);
-    const { playerFor, saved } = makeState();
+    const { playerFor, stored } = makeState();
     const player = playerFor("a");
     press(player, 3);
     player.reset();
-    expect(saved()).toEqual({});
+    expect(stored()).toEqual({});
   });
 
   it("a player for a conversation not stepped yet starts with nothing done", () => {
@@ -102,7 +102,7 @@ describe("Trace a Case's steps on the step player", () => {
     expect(other.scene).toEqual(emptyScene(SIZES));
   });
 
-  it("a new player for a conversation shows the steps saved for it", () => {
+  it("a new player for a conversation shows the steps stored for it", () => {
     setReducedMotion(true);
     const { playerFor } = makeState();
     press(playerFor("a"), 4);

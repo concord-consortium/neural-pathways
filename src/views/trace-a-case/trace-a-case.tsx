@@ -65,7 +65,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
     () => (shownId === undefined ? undefined : new StepPlayer(TIMELINE, traceProgress(state, shownId))),
     [state, shownId]);
   // Stop the old player when the conversation changes or the view unmounts. A layout effect, so its
-  // run can't play another frame, and save, after the change is committed.
+  // run can't finish and store its marker after the change is committed.
   useLayoutEffect(() => () => player?.stop(), [player]);
 
   if (index.items.length === 0) {

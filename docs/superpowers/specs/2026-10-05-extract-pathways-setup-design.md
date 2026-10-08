@@ -30,7 +30,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 | Animate, speed and About | Not in this story. The steps always animate, at the prototype's Med timings. | The Animate and speed controls (NPW-38, NPW-44) aren't built yet, and NPW-48 comes before them. NPW-24 adds both, and the activation legend, to the view. |
 | The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 put the network diagram and its timing in core once a second view needed them, and this is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
 | Button rules | Each button says which segment it plays at the marker the timeline rests at (none when it is unavailable), and can say whether it is current there. The step row works out unavailable and current from those. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
-| Progress | One marker: a point on the view's timeline where the scene rests and progress is saved. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
+| Progress | One marker: a point on the view's timeline where the scene rests and progress is stored. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
 | Markers and segments | The timeline's resting points are markers, and the animation between two is a segment, as in Lottie (`playSegments`) and After Effects. "Step" stays with the buttons and the row. | A button isn't a step of the timeline: Collect a Conversation plays a different segment each press, and Collect All will play across many. Trace a Case's Step *k* happens to play the segment to marker *k*. "Keyframe" would suggest in-betweens filled in for us, and `network-drawing.tsx` already uses it for the pill's pop. |
 | Press rules in this story | Trace a Case's: any available button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but unavailable. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
 | `extracted` | Renamed `setupDone`. | It means "Setup has been done". "Extract Pathways" is a later step, so the old name would mislead. Nothing has shipped. |
@@ -47,7 +47,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 Trace a Case's `StepPlayer`, made generic. It knows nothing about networks or state models.
 
 ```ts
-/** A point on a view's timeline where the scene rests and progress is saved. 0 is the start. */
+/** A point on a view's timeline where the scene rests and progress is stored. 0 is the start. */
 type Marker = number;
 /** The animation between two markers. */
 interface Segment {
@@ -86,10 +86,10 @@ class StepPlayer<S> {
 }
 ```
 
-- **`play`:** stops any run, saves `from`, then runs the requestAnimationFrame clock. At
-  `t >= duration(segment)` it stops and saves `to`. A run in progress is never saved.
-- **Reduced motion:** `play` saves `to` straight away.
-- **`reset`:** stops and saves 0.
+- **`play`:** stops any run, stores `from`, then runs the requestAnimationFrame clock. At
+  `t >= duration(segment)` it stops and stores `to`. A run in progress is never stored.
+- **Reduced motion:** `play` stores `to` straight away.
+- **`reset`:** stops and stores 0.
 - **`stop`:** cancels the clock and drops the run. Progress keeps `from`. The player can play
   again afterward.
 - The cleanup rules don't change: only the run is held, the clock runs only while it plays, and
@@ -212,7 +212,7 @@ export class ExtractPathwaysState extends Model({
   /** How many conversations have been collected into the deck. */
   collected: tProp(countType, 0),
 }) {
-  /** One action sets both fields, so the saved pair is never half updated. */
+  /** One action sets both fields, so the stored pair is never half updated. */
   @modelAction setProgress(setupDone: boolean, collected: number): void;
 }
 ```
@@ -435,11 +435,11 @@ as in the prototype, where `setNodeLevel` has no transition.
 
 - **`step-player.test.ts`** (new and generic; plain calls with fake timers and a stand-in
   timeline):
-  - `play` saves `from`, runs, then saves `to`;
-  - a press during a run drops it, so its `to` is never saved;
-  - reduced motion saves `to` straight away;
+  - `play` stores `from`, runs, then stores `to`;
+  - a press during a run drops it, so its `to` is never stored;
+  - reduced motion stores `to` straight away;
   - `stop()` cancels the clock, and the player plays again afterward;
-  - `reset()` saves 0.
+  - `reset()` stores 0.
 - **`step-row.test.tsx`** (RTL):
   - the current button comes from the running button, or from `showAsCurrentWhenAt` when idle;
   - a button is unavailable when `segmentToPlayWhenAt(marker)` is undefined, but never while it
