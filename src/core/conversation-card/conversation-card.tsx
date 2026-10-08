@@ -1,38 +1,47 @@
 import React from "react";
-import { conversationWords } from "../conversation-text";
-import { S3Item } from "../types/s3-data";
 import "./conversation-card.scss";
 
 interface ConversationCardProps {
-  conversation: S3Item;
   /** The conversation's 0-based position in the list being stepped through. */
   position: number;
+  /** How many conversations the list has. 0 shows the empty state. */
   total: number;
   onPrev: () => void;
   onNext: () => void;
+  /** The body: the parts in this folder a view chooses. Not shown when total is 0. */
+  children?: React.ReactNode;
 }
 
 /**
- * The conversation panel, minimal version: which conversation of how many, previous and next, and
- * its words. The full card, with the label chip, observation notes and attribute icons, will build
- * on this.
+ * The conversation panel every view shares: which conversation of how many, previous and next,
+ * and a body the view fills from the parts in this folder. With no conversations it says nothing
+ * matches instead.
  */
 export const ConversationCard: React.FC<ConversationCardProps> = ({
-  conversation, position, total, onPrev, onNext,
+  position, total, onPrev, onNext, children,
 }) => {
-  // One paragraph, as in the prototype.
-  const words = conversationWords(conversation.text).join(" ");
+  const empty = total === 0;
   return (
     <section className="conversation-card" aria-label="Conversation">
-      <div className="conversation-card__head">
-        <h2 className="conversation-card__title">Conversation</h2>
-        <span className="conversation-card__count">{`${position + 1} / ${total}`}</span>
-        <div className="conversation-card__nav">
-          <NavButton label="Previous conversation" direction="previous" disabled={position <= 0} onClick={onPrev} />
-          <NavButton label="Next conversation" direction="next" disabled={position >= total - 1} onClick={onNext} />
-        </div>
-      </div>
-      <p className="conversation-card__text">{words}</p>
+      {/* Mounted whether or not there are conversations: a live region only announces reliably
+          once it is in the page. */}
+      <span className="conversation-card__status" role="status">
+        {empty ? "" : `Conversation ${position + 1} of ${total}`}
+      </span>
+      {empty && <p className="conversation-card__empty">No conversations match that search.</p>}
+      {!empty &&
+        <div className="conversation-card__head">
+          <h2 className="conversation-card__title">Conversation</h2>
+          {/* The status says this in words. */}
+          <span className="conversation-card__count" aria-hidden="true">{`${position + 1} / ${total}`}</span>
+          <div className="conversation-card__nav">
+            <NavButton label="Previous conversation" direction="previous" disabled={position <= 0}
+              onClick={onPrev} />
+            <NavButton label="Next conversation" direction="next" disabled={position >= total - 1}
+              onClick={onNext} />
+          </div>
+        </div>}
+      {!empty && <div className="conversation-card__body">{children}</div>}
     </section>
   );
 };

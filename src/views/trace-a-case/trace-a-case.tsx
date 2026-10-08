@@ -1,6 +1,7 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
+import { ConversationWords } from "../../core/conversation-card/conversation-words";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
 import { conversationFilterFor, idsFor } from "../../core/filter/conversation-filter";
 import { FilterBar } from "../../core/filter/filter-bar";
@@ -83,8 +84,10 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const conversation = player && place !== undefined && (
     <>
       <div className="trace-a-case__case">
-        <ConversationCard conversation={index.items[place]} position={listPosition} total={ids.length}
-          onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)} />
+        <ConversationCard position={listPosition} total={ids.length}
+          onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)}>
+          <ConversationWords text={index.items[place].text} />
+        </ConversationCard>
       </div>
       <div className="trace-a-case__steps">
         <PlayerStepRow player={player} />

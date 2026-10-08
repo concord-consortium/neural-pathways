@@ -1,9 +1,11 @@
 @use "../button";
 @use "../colors" as colors;
 @use "../panel";
+@use "../visually-hidden";
 
 .conversation-card {
   @include panel.panel;
+  position: relative;
 }
 
 .conversation-card__head {
@@ -64,12 +66,23 @@
   }
 }
 
-.conversation-card__text {
-  margin: 0;
+.conversation-card__status {
+  @include visually-hidden.visually-hidden;
+}
+
+// The parts a view puts in the card, top to bottom.
+.conversation-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   padding: 12px 14px;
-  color: colors.$ink;
-  font-family: "Lato", sans-serif;
-  font-size: 13px;
-  line-height: 1.85;
-  word-break: break-word;
+}
+
+// In place of the header and body when nothing matches, as in the prototype's .nnm-empty.
+.conversation-card__empty {
+  margin: 0;
+  padding: 24px 14px;
+  color: colors.$ink-3;
+  font-size: 15px;
+  text-align: center;
 }

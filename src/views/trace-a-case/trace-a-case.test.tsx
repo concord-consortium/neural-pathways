@@ -53,6 +53,7 @@ function setReducedMotion() {
 const filterBox = () => screen.getByRole("textbox", { name: "Filter" });
 const typeQuery = (text: string) => fireEvent.change(filterBox(), { target: { value: text } });
 const wordsOf = (i: number) => items[i].text.split(/\s+/).join(" ");
+const card = () => screen.getByRole("region", { name: "Conversation" });
 
 describe("TraceACase", () => {
   beforeEach(() => {
@@ -70,7 +71,7 @@ describe("TraceACase", () => {
     expect(screen.getByRole("heading", { name: "Trace a Case" })).toBeInTheDocument();
     expect(screen.getByText("Loading conversations…")).toBeInTheDocument();
     expect(await screen.findByText("1 / 3")).toBeInTheDocument();
-    expect(screen.getByText(items[0].text.split(/\s+/).join(" "))).toBeInTheDocument();
+    expect(card()).toHaveTextContent(wordsOf(0));
     expect(screen.getByRole("heading", { name: "The Network" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Network diagram" })).toBeInTheDocument();
   });
@@ -86,6 +87,7 @@ describe("TraceACase", () => {
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Conversation 2 of 3");
     expect(shared.conversationId).toBe(ids[1]);
     fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
     expect(shared.conversationId).toBe(ids[0]);
@@ -285,7 +287,7 @@ describe("TraceACase", () => {
       typeQuery("n:>1");
       expect(filterBox()).toHaveAccessibleDescription("2 of 3");
       expect(screen.getByText("1 / 2")).toBeInTheDocument();
-      expect(screen.getByText(wordsOf(1))).toBeInTheDocument();
+      expect(card()).toHaveTextContent(wordsOf(1));
       expect(shared.query).toBeUndefined();
       expect(shared.conversationId).toBe(ids[0]);
     });
@@ -311,7 +313,7 @@ describe("TraceACase", () => {
     it("shows the matching conversation's own words, not the one at its place in the list", async () => {
       showView(new SharedState({ query: "n:3" }));
       await screen.findByText("1 / 1");
-      expect(screen.getByText(wordsOf(2))).toBeInTheDocument();
+      expect(card()).toHaveTextContent(wordsOf(2));
     });
 
     it("draws the network for the matching conversation, not the one at its place in the list", async () => {

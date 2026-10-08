@@ -1,36 +1,53 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ConversationCard } from "./conversation-card";
-import { S3Item } from "../types/s3-data";
 
-const conversation: S3Item = {
-  id: "361e65b1002a",
-  sources: { alien3: [0] },
-  text: "yandor quissa\nblikka murrash\naloven sooma nimbar",
-  target: 0,
-  target_label: "wait",
-  pathway_scores: {},
-  pathway_variance_fractions: {},
-};
+const noop = () => undefined;
+
+function card(position: number, total = 3, handlers = { onPrev: noop, onNext: noop }) {
+  return (
+    <ConversationCard position={position} total={total} onPrev={handlers.onPrev} onNext={handlers.onNext}>
+      <p>The body</p>
+    </ConversationCard>
+  );
+}
 
 function renderCard(position: number, total = 3) {
   const onPrev = jest.fn();
   const onNext = jest.fn();
-  render(<ConversationCard conversation={conversation} position={position} total={total}
-    onPrev={onPrev} onNext={onNext} />);
-  return { onPrev, onNext };
+  const view = render(card(position, total, { onPrev, onNext }));
+  return { ...view, onPrev, onNext };
 }
 
 describe("ConversationCard", () => {
-  it("shows which conversation of how many", () => {
+  it("shows which conversation of how many, and says it to screen readers", () => {
     renderCard(0);
     expect(screen.getByRole("heading", { name: "Conversation" })).toBeInTheDocument();
-    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+    // The visual count is hidden from screen readers; the status says it in words instead.
+    expect(screen.getByText("1 / 3")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByRole("status")).toHaveTextContent("Conversation 1 of 3");
   });
 
-  it("shows the words as one paragraph", () => {
+  it("shows its body", () => {
     renderCard(0);
-    expect(screen.getByText("yandor quissa blikka murrash aloven sooma nimbar")).toBeInTheDocument();
+    expect(screen.getByText("The body")).toBeInTheDocument();
+  });
+
+  it("updates the same status when the conversation changes, so it is announced", () => {
+    const { rerender } = renderCard(0);
+    const status = screen.getByRole("status");
+    rerender(card(1));
+    expect(screen.getByRole("status")).toBe(status);
+    expect(status).toHaveTextContent("Conversation 2 of 3");
+  });
+
+  it("keeps focus on Next while stepping", () => {
+    const { rerender } = renderCard(0);
+    const next = screen.getByRole("button", { name: "Next conversation" });
+    next.focus();
+    rerender(card(1));
+    expect(screen.getByRole("button", { name: "Next conversation" })).toBe(next);
+    expect(next).toHaveFocus();
   });
 
   it("can't go back from the first conversation", () => {
@@ -77,5 +94,26 @@ describe("ConversationCard", () => {
     fireEvent.click(next);
     expect(onPrev).not.toHaveBeenCalled();
     expect(onNext).not.toHaveBeenCalled();
+  });
+
+  describe("with no conversations", () => {
+    it("says nothing matches, in place of the header and body", () => {
+      renderCard(-1, 0);
+      expect(screen.getByRole("region", { name: "Conversation" }))
+        .toHaveTextContent("No conversations match that search.");
+      expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+      expect(screen.queryByText("The body")).not.toBeInTheDocument();
+    });
+
+    it("keeps the status, empty, so the change to and from it is announced", () => {
+      const { rerender } = renderCard(0);
+      const status = screen.getByRole("status");
+      rerender(card(-1, 0));
+      expect(screen.getByRole("status")).toBe(status);
+      expect(status.textContent).toBe("");
+      rerender(card(0));
+      expect(status).toHaveTextContent("Conversation 1 of 3");
+    });
   });
 });
