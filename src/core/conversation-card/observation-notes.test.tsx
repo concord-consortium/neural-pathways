@@ -76,6 +76,13 @@ describe("ObservationNotes", () => {
     expect(items().map(badge)).toEqual(["–", "–"]);
   });
 
+  // null is how the data says a value is missing, so it gets the dash, not the blank that means no.
+  it("says a null value wasn't recorded", () => {
+    render(<ObservationNotes attributes={[water]} values={{ near_water: null }} />);
+    expect(spokenText(items()[0])).toBe("Near water: not recorded");
+    expect(badge(items()[0])).toBe("–");
+  });
+
   it("draws each attribute's mark", () => {
     render(<ObservationNotes attributes={[voices, group]} values={{ voices_raised: 1, group_size: 3 }} />);
     expect(items().map(item => item.innerHTML.includes("<svg"))).toEqual([true, true]);

@@ -8,7 +8,7 @@ interface ObservationNotesProps {
   /** The attributes to mark, in the order to show them. */
   attributes: AttributeDefinition[];
   /** The conversation's values, keyed by attribute key. */
-  values?: Record<string, number>;
+  values?: Record<string, number | null>;
 }
 
 /**
@@ -37,7 +37,7 @@ export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation,
 
 interface MarkProps {
   attribute: AttributeDefinition;
-  value: number | undefined;
+  value: number | null | undefined;
 }
 
 /** Label, drawing, answer: the order a field sheet reads in. A screen reader hears "Label: value". */
@@ -50,8 +50,8 @@ const Mark: React.FC<MarkProps> = ({ attribute, value }) => (
   </li>
 );
 
-function spokenValue(attribute: AttributeDefinition, value: number | undefined): string {
-  if (value === undefined) return "not recorded";
+function spokenValue(attribute: AttributeDefinition, value: number | null | undefined): string {
+  if (value == null) return "not recorded";
   return attribute.valueLabels?.[value] ?? String(value);
 }
 
@@ -60,8 +60,8 @@ function spokenValue(attribute: AttributeDefinition, value: number | undefined):
  * so a blank can't be mistaken for "not recorded". Anything else shows its number. The tick is
  * followed by a variation selector so no platform draws it as an emoji.
  */
-function badgeText(attribute: AttributeDefinition, value: number | undefined): string {
-  if (value === undefined) return "–";
+function badgeText(attribute: AttributeDefinition, value: number | null | undefined): string {
+  if (value == null) return "–";
   if (attribute.type === "binary") return value === 1 ? "✔︎" : "";
   return String(value);
 }
