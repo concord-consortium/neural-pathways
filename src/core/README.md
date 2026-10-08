@@ -73,6 +73,9 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   at a marker, and `StepRow` draws them with Reset. The player's scene changes on every frame of a
   run, so a view reads `player.scene` only inside a small `<Observer>` around its drawing; the
   rest of the view then doesn't re-render while a run plays.
+- `animation-controls/`: the Animate checkbox and the Slow/Med/Fast speed slider, for any view
+  whose state is `Animated`. The step player reads the same two values, so a view only places the
+  control.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words (`conversationWords`). Items are plain data, so this is a function that takes the text, not
