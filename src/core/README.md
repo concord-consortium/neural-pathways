@@ -59,12 +59,12 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   Use the word for the side you are on, and "neuron" in anything a student sees.
 - `network-diagram/`: the shared network diagram. A view says what to show as a `Scene`, and
   `NetworkDiagram` draws it. `layout.ts` is its geometry; `easing.ts` has the timing curves.
-- `conversation-card/`: the conversation panel every view shares. `ConversationCard` is the shell:
-  the count, previous and next, a screen-reader status, and "No conversations match that search."
-  when the list is empty. A view fills its body from the parts beside it: `ConversationWords` (the
-  words, one span each), `ActualLabel` (the true answer as a chip) and `ObservationNotes` (the
-  observer's notes with a mark for each attribute it is given). A view that needs a different body
-  adds a part rather than a flag on the shell.
+- `conversation-card/`: the conversation panel the lesson's views share. `ConversationCard` is the
+  shell: the count, previous and next, a screen-reader status, and "No conversations match that
+  search." when the list is empty. A view fills its body from the parts beside it:
+  `ConversationWords` (the words, one span each), `ActualLabel` (the true answer as a chip) and
+  `ObservationNotes` (the observer's notes with a mark for each attribute it is given). A view that
+  needs a different body adds a part rather than a flag on the shell.
 - `alien-marks.tsx`: `AlienMark`, the drawing for each alien attribute, in the parent's color.
 - `visually-hidden.scss`: the `visually-hidden` mixin, for text only screen readers read.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
