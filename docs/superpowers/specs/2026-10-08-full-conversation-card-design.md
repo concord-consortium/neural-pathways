@@ -165,13 +165,13 @@ export function AlienIcon({ attributeKey, size }: { attributeKey: string; size: 
     <>
       <ConversationWords text={shown.text} />
       <ActualLabel target={shown.target} labels={alien3Dataset.classificationLabels} />
-      <ObservationNotes observation={shown.observation} attributes={markedAttributes}
+      <ObservationNotes observation={shown.observation} attributes={indicatorAttributes}
         values={shown.attributes} />
     </>}
 </ConversationCard>
 ```
 
-- **`markedAttributes`:** `index.metadata.attributes` without the `hidden` ones, memoized on the
+- **`indicatorAttributes`:** `index.metadata.attributes` without the `hidden` ones, memoized on the
   index. These are the generated attributes in the data's order, so the derived `target`,
   `prediction` and `model_correct` aren't among them. For alien3 that is `voices_raised`,
   `engaged_in_task`, `group_size`, `near_water` and `food_present`.
