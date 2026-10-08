@@ -11,7 +11,7 @@
 // when the row wraps.
 .extract-pathways__steps {
   display: flex;
-  // `safe` keeps the button reachable by scrolling when even one button is wider than the panel.
+  // `safe` keeps a button reachable by scrolling when it alone is wider than the panel.
   justify-content: safe center;
   min-width: 0;
   overflow-x: auto;
