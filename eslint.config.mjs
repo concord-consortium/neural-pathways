@@ -281,6 +281,21 @@ export default defineConfig(
     }
   },
   {
+    // A Jest transform, which Node loads as CommonJS.
+    name: "jest svg transform",
+    files: ["jest/svg-transform.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-var-requires": "off",
+      "quotes": ["error", "single"],
+    }
+  },
+  {
     name: "postcss",
     files: ["postcss.config.js"],
     languageOptions: {

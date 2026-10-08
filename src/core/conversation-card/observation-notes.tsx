@@ -1,5 +1,5 @@
 import React, { useId } from "react";
-import { AlienIcon } from "../alien-icons";
+import { AlienIcon } from "../alien-icons/alien-icon";
 import { AttributeDefinition } from "../types/attributes";
 import "./observation-notes.scss";
 

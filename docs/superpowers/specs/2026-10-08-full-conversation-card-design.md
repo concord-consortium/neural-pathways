@@ -140,7 +140,7 @@ interface ObservationNotesProps {
 
 The view decides which attributes get indicators. Trace a Case passes the visible ones; see below.
 
-## The icons: `src/core/alien-icons.tsx`
+## The icons: `src/core/alien-icons/`
 
 ```tsx
 export function AlienIcon({ attributeKey, size }: { attributeKey: string; size: number }): JSX.Element | null;
@@ -149,11 +149,20 @@ export function AlienIcon({ attributeKey, size }: { attributeKey: string; size: 
 - The prototype's nine `ALIEN_A1` drawings, one per attribute key: `voices_raised`,
   `engaged_in_task`, `group_size`, `near_water`, `food_present`, `resource_stressed`,
   `gestures_repeated`, `young_present`, `carrying_burden`.
-- Written as JSX elements rather than HTML strings, so nothing needs `dangerouslySetInnerHTML`.
-- An `svg` with a 32 × 32 viewBox, `fill="none"`, `stroke="currentColor"`, a 1.7 stroke, round caps
-  and joins, `aria-hidden="true"` and `focusable="false"`. The color comes from the parent.
-- A key with no drawing returns `null`, names on `Object.prototype` such as `toString` included:
-  the drawings are kept in a `Map`. Its indicator then shows the label and badge without an icon.
+- Each is an `.svg` file named by its key (`near_water.svg`), so it can be opened and edited as a
+  drawing: a 32 × 32 viewBox, `fill="none"`, `stroke="currentColor"`, a 1.7 stroke, and round caps
+  and joins. The color comes from the parent.
+- `alien-icon-files.ts` finds every `.svg` in the folder with webpack's `require.context`, and the
+  starter's SVGR loader turns each into a React component. A new attribute's icon needs only its
+  file. The loader's `issuer: /\.tsx?$/` test is dropped, since a file found this way is imported
+  by webpack's context module, not a `.ts` file. SVGO, as configured in the starter, merges each
+  icon's paths; the drawings look the same.
+- `AlienIcon` looks the key up and adds the size, `aria-hidden="true"` and `focusable="false"`. A
+  key with no file returns `null`, names on `Object.prototype` such as `toString` included: the
+  icons are kept in a `Map`. Its indicator then shows the label and badge without an icon.
+- Jest has no `require.context` and doesn't run webpack's loaders. `src/test/alien-icon-files.ts`
+  stands in for `alien-icon-files.ts`, reading the folder, and `jest/svg-transform.js` runs SVGR
+  on each file, without SVGO.
 
 ## Trace a Case
 
@@ -278,7 +287,7 @@ tests under [Panel heights](#panel-heights):
 ## Docs
 
 - `src/core/README.md`: the `conversation-card/` entry describes the shell and its parts instead of
-  "the minimal conversation card"; new entries for `alien-icons.tsx` and `visually-hidden.scss`.
+  "the minimal conversation card"; new entries for `alien-icons/` and `visually-hidden.scss`.
 - `src/views/trace-a-case/README.md`: drop "the label chip, observation notes and attribute icons"
   and "the filter" from the list of what is still to come, and say the card shows an attribute
   indicator for each attribute that isn't hidden.

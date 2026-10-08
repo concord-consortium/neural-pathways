@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "@testing-library/react";
-import { AlienIcon } from "./alien-icons";
+import { AlienIcon } from "./alien-icon";
 
 const KEYS = [
   "voices_raised", "engaged_in_task", "group_size", "near_water", "food_present",
