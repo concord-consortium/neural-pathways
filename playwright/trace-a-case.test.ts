@@ -241,12 +241,19 @@ test.describe("the card and network panels", () => {
     expect(await overflow(card)).toBeLessThanOrEqual(0);
   });
 
-  test("keep their natural height when stacked", async ({ page }) => {
+  test("keep their natural height when stacked, with the view's padding below", async ({ page }) => {
     await page.setViewportSize({ width: 600, height: 500 });
     await page.goto("/");
-    const notes = panels(page).card.getByRole("region", { name: "Observation notes" });
+    const { card, network } = panels(page);
+    const notes = card.getByRole("region", { name: "Observation notes" });
     await expect(notes).toBeVisible();
     expect(await notes.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(0);
+    // The box ends its 10 px padding below the marks, so nothing stretched it.
+    const below = await notes.evaluate(el =>
+      el.getBoundingClientRect().bottom - el.querySelector("ul")!.getBoundingClientRect().bottom);
+    expect(below).toBeCloseTo(10, 0);
+    await page.getByRole("main").evaluate(el => el.scrollTo(0, el.scrollHeight));
+    expect((await rect(network)).bottom).toBeCloseTo(500 - 16, 0);
   });
 
   test("stop shrinking at 380 px, and the page scrolls instead", async ({ page }) => {
