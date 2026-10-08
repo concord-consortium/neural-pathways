@@ -53,4 +53,7 @@ it scroll sideways in its own region, and keep the page from scrolling.
 
 **Check it.** Zoom to 200% in a frame as narrow as the lesson will be embedded in, and compare a
 label's rendered size with its size at 100%: it should be twice as big. A Playwright context can
-stand in for zoom: a viewport half as wide with `deviceScaleFactor: 2`.
+stand in for 200% zoom: a viewport half as wide and half as tall, with `deviceScaleFactor: 2`.
+Zoom shrinks both dimensions in CSS pixels, so halving only the width would let text sized in `vh`
+pass when it shouldn't. Compare in device pixels, a CSS size times the `deviceScaleFactor`,
+against a context at the full size with `deviceScaleFactor: 1`.
