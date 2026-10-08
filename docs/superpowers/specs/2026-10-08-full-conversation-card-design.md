@@ -30,7 +30,7 @@ The two meet in one place, the empty state; see [Merging with the filter](#mergi
 | Attribute colors (`ATTR_COLOUR`) | Not added. Left to the first story that draws them, with their soft and faint tints. | The Trace a Case card draws its marks in plain ink (`--nnm-ink-2`). The colors' first users are Investigate Unknown Pathway's pills and the Correlations headings. |
 | Where the empty state lives | In the card: `total === 0` shows the message in place of the header and body. | The ticket lists it as common to every card, so every view gets it without writing its own. |
 | Empty-state wording | "No conversations match that search." | As in the ticket and the prototype. |
-| The panels' height | The card and the network are the same height, filling the window below the toolbars, from 380 px up to 800 px. The notes box scrolls when the card is too short. Their heads are the same height. | As in the prototype. Changed after a look at the app: the panels had been their natural heights. See [Panel heights](#panel-heights). |
+| The panels' height | The card and the network are the same height, filling the window below the toolbars, from 380 px up to 800 px. The notes box scrolls when the card is too short. Their heads are the same height. | As in the prototype, so the two panels read as one row. See [Panel heights](#panel-heights). |
 
 ## The shell: `ConversationCard`
 
@@ -50,7 +50,7 @@ interface ConversationCardProps {
 }
 ```
 
-The shell no longer takes the conversation. Only the body parts read it, so a view writes
+The shell doesn't take the conversation. Only the body parts read it, so a view writes
 `{item && <>…parts…</>}` as the card's children.
 
 - **The panel:** `<section aria-label="Conversation">` with the existing panel look.
@@ -110,7 +110,7 @@ interface ObservationNotesProps {
   /** The attributes to mark, in the order to show them. */
   attributes: AttributeDefinition[];
   /** The conversation's values, keyed by attribute key. */
-  values?: Record<string, number>;
+  values?: Record<string, number | null>;
 }
 ```
 
@@ -125,15 +125,14 @@ interface ObservationNotesProps {
   - **the badge,** 18 px square, Lato 700 12 px, `$ink`:
     - an integer attribute shows its number;
     - a binary attribute shows ✔ (U+2714 followed by U+FE0E, so no platform draws it as an emoji)
-      for 1, and nothing for 0. Every note states every attribute, so a blank can't be confused
-      with "not recorded";
-    - a missing value shows "–". The data never has one, but the card shouldn't say "no" when it
-      doesn't know.
+      for 1, and nothing for 0;
+    - a missing or `null` value shows "–", so a blank always means 0. The data never has one, but
+      the card shouldn't say "no" when it doesn't know.
 - **For screen readers,** each item reads as its label, a colon and the value: "Voices raised:
   yes", "Group size: 2". The value is the attribute's `valueLabels` entry, falling back to the raw
-  number, or "not recorded" when missing. The colon and value are visually hidden; the icon and
-  badge are `aria-hidden`. A list, rather than the prototype's `role="img"` on each cell, because
-  the role can't sit on an `li`, and the list says how many there are.
+  number, or "not recorded" when missing or `null`. The colon and value are visually hidden; the
+  icon and badge are `aria-hidden`. A list, rather than the prototype's `role="img"` on each cell,
+  because the role can't sit on an `li`, and the list says how many there are.
 - **Layout:** the cells share the row's width equally, so a label like "Engaged in a task" wraps to
   two lines instead of pushing the row wider. Labels align to the top of their cell and icons and
   badges to the bottom (the prototype's `margin-bottom: auto` on the label), so every icon shares
@@ -153,17 +152,22 @@ export function AlienMark({ attributeKey, size }: { attributeKey: string; size: 
 - Written as JSX elements rather than HTML strings, so nothing needs `dangerouslySetInnerHTML`.
 - An `svg` with a 32 × 32 viewBox, `fill="none"`, `stroke="currentColor"`, a 1.7 stroke, round caps
   and joins, `aria-hidden="true"` and `focusable="false"`. The color comes from the parent.
-- A key with no drawing returns `null`. Its mark then shows the label and badge without an icon.
+- A key with no drawing returns `null`, names on `Object.prototype` such as `toString` included:
+  the drawings are kept in a `Map`. Its mark then shows the label and badge without an icon.
 
 ## Trace a Case
 
 `src/views/trace-a-case/trace-a-case.tsx` composes the card:
 
 ```tsx
-<ConversationCard position={position} total={ids.length} onPrev={…} onNext={…}>
-  <ConversationWords text={item.text} />
-  <ActualLabel target={item.target} labels={alien3Dataset.classificationLabels} />
-  <ObservationNotes observation={item.observation} attributes={markedAttributes} values={item.attributes} />
+<ConversationCard position={listPosition} total={ids.length} onPrev={…} onNext={…}>
+  {shown &&
+    <>
+      <ConversationWords text={shown.text} />
+      <ActualLabel target={shown.target} labels={alien3Dataset.classificationLabels} />
+      <ObservationNotes observation={shown.observation} attributes={markedAttributes}
+        values={shown.attributes} />
+    </>}
 </ConversationCard>
 ```
 
@@ -184,16 +188,19 @@ CSS only, with no measuring in code and no offset for what sits above the panels
 - **The view** is at least the window's height (`100vh`, which in the Activity Player is the
   iframe's). Its grid takes the height the title leaves (`flex: 1 1 0`, with `min-height: 0`
   because the browser measures its content with the panel row at its largest).
-- **The panel row** is `minmax(380px, 800px)`, and both panels stretch to it.
+- **The panel row** runs from the network panel's smallest height, 380 px, up to 800 px, and both
+  panels stretch to it.
   - 800 px keeps the network from floating in the middle of a very tall window, with room for
     controls added later.
-  - 380 px is the network's smallest: the diagram's 300 px minimum layout plus the head, padding
-    and border. Below it the panels run past the window and the page scrolls; on such a short
-    wide window the view's bottom padding no longer shows below them.
+  - 380 px is the network panel's smallest: the diagram's smallest layout (`MIN_HEIGHT` in
+    `layout.ts`, 300 px) plus the 62 px head, the diagram's padding and the panel's border. The
+    view sets `MIN_HEIGHT` on the layout as `--diagram-min-height`, and the stylesheet adds the
+    rest, so the 300 px is written down once. Below it the panels run past the window and the
+    page scrolls; on such a short wide window the view's bottom padding doesn't show below them.
 - **The network head** has a 62 px minimum, the card's head with its 44 px buttons, so the heads
   match and either can still grow if its controls wrap.
-- **The diagram** is `flex: 1 1 440px` with a 300 px minimum, so it fills the panel and the layout
-  centers the drawing.
+- **The diagram** is `flex: 1 1 440px` with `--diagram-min-height` as its minimum, so it fills the
+  panel and the layout centers the drawing.
 - **The card** is `height: 100%`, so it fills a cell with a set height and is its natural height
   elsewhere. The body and the notes flex to fill it; the notes box scrolls, with the prototype's
   70 px minimum. On a tall window the box grows, so its background reaches the bottom of the card.
@@ -203,7 +210,8 @@ CSS only, with no measuring in code and no offset for what sits above the panels
   nothing fills or scrolls.
 
 Playwright checks the heads, the matching and filling at 1280×800, the cap at 1280×1400, the notes
-scrolling at 1280×620, the floor and page scroll at 1280×450, and the stacked layout.
+scrolling at 1280×620, the floor, the drawing fitting the panel and the page scroll at 1280×450,
+and, stacked, the card's natural height and the view's padding below the panels.
 
 ## Merging with the filter
 
@@ -227,40 +235,52 @@ conversation is now shown, so both stay. Check the pair with a screen reader at 
 
 - **`ConversationCard`:**
   - the visual count is `aria-hidden`, and the status reads "Conversation 2 of 3";
+  - the status is the same element after the conversation changes, and focus stays on Next;
   - the existing tests for the disabled ends and the clicks still pass;
   - with `total` 0 it shows the message and no header, buttons or children, and the status is in
     the document and empty.
 - **`ConversationWords`:** one span per word; extra spaces and line breaks are dropped; the
   paragraph's text is the words joined by single spaces.
-- **`ActualLabel`:** approach and wait each show their text and their own modifier class; `null`
-  renders nothing.
+- **`ActualLabel`:** approach and wait each show their text and their own modifier class; a value
+  with no label shows its number; `null` renders nothing.
 - **`ObservationNotes`:**
-  - the prose, or the fallback when there is none;
+  - the prose, or the fallback when the notes are missing or empty;
+  - the notes are a region named "Observation notes" that the keyboard can reach;
   - the items follow the order of `attributes`, not of `values`;
-  - badges: ✔ for 1, empty for 0, the number for an integer, "–" when missing;
+  - badges: ✔ for 1, empty for 0, the number for an integer (0 included), "–" when missing or
+    `null`;
   - each item's accessible text: "Voices raised: yes", "Near water: no", "Group size: 4", the raw
-    number for an attribute without `valueLabels`, and "…: not recorded" for a missing value.
-- **`AlienMark`:** each of the nine keys renders an `svg`; an unknown key renders nothing.
+    number for an attribute without `valueLabels`, and "…: not recorded" for a missing or `null`
+    value.
+- **`AlienMark`:** each of the nine keys renders an `svg`, no two the same; an unknown key, or a
+  name on `Object.prototype`, renders nothing.
 - **Trace a Case:** the current conversation's label, notes and marks show, with no mark for a
-  hidden attribute; next updates the status. The existing test that finds the words by their full
-  text changes to check the paragraph's text content, since the words are now separate spans.
+  hidden attribute; next updates the status. When nothing matches, the card shows its empty state
+  and its status stays the same element. The tests that found the words by their full text,
+  including the filter's, check the card's text content instead, since the words are now separate
+  spans.
 
 ### Playwright (`playwright/trace-a-case.test.ts`)
 
-One new test against the real alien3 data, written so each check can fail:
+Two new tests against the real alien3 data, written so each check can fail, besides the panel
+tests under [Panel heights](#panel-heights):
 
-- conversation 1 shows a "wait" chip, notes starting "At least one juvenile was present.", and
-  five marks: "Voices raised: no", "Engaged in a task: yes", "Group size: 2", "Near water: yes",
-  "Food present: no";
-- no mark is named for a hidden attribute, such as "Resource stressed";
-- after Next, the status reads "Conversation 2 of 800" and the chip says "approach".
+- the card:
+  - conversation 1 shows a "wait" chip, notes starting "At least one juvenile was present.", and
+    five marks: "Voices raised: no", "Engaged in a task: yes", "Group size: 2", "Near water: yes",
+    "Food present: no";
+  - each mark has a drawing, and the five share the row equally;
+  - no mark is named for a hidden attribute, such as "Resource stressed";
+  - after Next, the status reads "Conversation 2 of 800" and the chip says "approach";
+- in the stacked layout, the card doesn't scroll sideways.
 
 ## Docs
 
 - `src/core/README.md`: the `conversation-card/` entry describes the shell and its parts instead of
   "the minimal conversation card"; new entries for `alien-marks.tsx` and `visually-hidden.scss`.
 - `src/views/trace-a-case/README.md`: drop "the label chip, observation notes and attribute icons"
-  from the list of what is still to come.
+  and "the filter" from the list of what is still to come, and say the card marks each attribute
+  that isn't hidden.
 
 ## Out of scope
 
