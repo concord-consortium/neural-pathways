@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { toyNetwork } from "../../core/network/toy-network";
 import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
+import { signColor } from "../../core/colors";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
@@ -42,15 +43,25 @@ function scaleOf(element: Element): number {
   return Number(/scale\(([-\d.e]+)\)/.exec(element.getAttribute("transform") ?? "")![1]);
 }
 
-/** Each copy's gauge in deck column `column`, as its height and y, or undefined where none is drawn. */
-function deckGauges(column: number): ({ height: number; y: number } | undefined)[] {
+interface Gauge {
+  height: number;
+  y: number;
+  fill: string | null;
+}
+
+/** Each copy's gauge in deck column `column`, or undefined where none is drawn. */
+function deckGauges(column: number): (Gauge | undefined)[] {
   // eslint-disable-next-line testing-library/no-node-access -- copies are groups with only a test id
   const copies = screen.getByTestId(`deck-column-${column}`).querySelectorAll("[data-testid^='copy-']");
   return [...copies].map(copy => {
     // eslint-disable-next-line testing-library/no-node-access -- the gauge is an unlabeled rect in a copy
     const gauge = copy.querySelector("rect");
     return gauge
-      ? { height: Number(gauge.getAttribute("height")), y: Number(gauge.getAttribute("y")) }
+      ? {
+        height: Number(gauge.getAttribute("height")),
+        y: Number(gauge.getAttribute("y")),
+        fill: gauge.getAttribute("fill"),
+      }
       : undefined;
   });
 }
@@ -64,6 +75,15 @@ describe("ExtractDrawing", () => {
     expect(screen.queryAllByTestId(/^deck-column-/)).toHaveLength(0);
   });
 
+  it("draws the canvas at full size, one drawing unit to a pixel, so its text zooms with the page", () => {
+    renderDrawing(restScene(SIZES, 0));
+    const width = String(minCanvasWidth(SIZES));
+    const svg = screen.getByRole("img", { name: "The network." });
+    expect(svg).toHaveAttribute("width", width);
+    expect(svg).toHaveAttribute("height", "440");
+    expect(svg).toHaveAttribute("viewBox", `0 0 ${width} 440`);
+  });
+
   it("stands the 14 lifted copies in their column once Setup is done, named by their neurons", () => {
     renderDrawing(restScene(SIZES, 1));
     expect(screen.getByRole("img", { name: "The network, with its 14 hidden neurons lifted out." }))
@@ -75,15 +95,6 @@ describe("ExtractDrawing", () => {
     expect(copies).toHaveLength(14);
     // eslint-disable-next-line testing-library/no-node-access -- a copy's name is its <title> child
     expect(copies[0].querySelector("title")).toHaveTextContent("Hidden Layer 1 Neuron 1");
-  it("draws the canvas at full size, one drawing unit to a pixel, so its text zooms with the page", () => {
-    renderDrawing(restScene(SIZES, 0));
-    const width = String(minCanvasWidth(SIZES));
-    const svg = screen.getByRole("img", { name: "The network." });
-    expect(svg).toHaveAttribute("width", width);
-    expect(svg).toHaveAttribute("height", "440");
-    expect(svg).toHaveAttribute("viewBox", `0 0 ${width} 440`);
-  });
-
     // eslint-disable-next-line testing-library/no-node-access -- a copy's name is its <title> child
     expect(copies[13].querySelector("title")).toHaveTextContent("Hidden Layer 2 Neuron 6");
     expect(placeOf(copies[0])).toEqual({ x: geometry.lifted.x, y: geometry.lifted.ys[0] });
@@ -101,7 +112,7 @@ describe("ExtractDrawing", () => {
     expect(placeOf(first)).toEqual(geometry.hidden[0]);
   });
 
-  it("draws each collected conversation as a deck column of its hidden activations", () => {
+  it("draws a deck column for each collected conversation, under the last one's label", () => {
     renderDrawing(restScene(SIZES, 4));
     expect(screen.getByRole(
       "img", { name: "The network, with its 14 hidden neurons lifted out and 3 conversations collected." },
@@ -110,13 +121,13 @@ describe("ExtractDrawing", () => {
     expect(screen.getAllByTestId(/^deck-column-/)).toHaveLength(3);
   });
 
-  it("draws each deck column from its own conversation, positive gauges up and negative down", () => {
+  it("draws each deck column from its own conversation, its gauges up or down and colored by sign", () => {
     renderDrawing(restScene(SIZES, 3));
     [0, 1].forEach(column => {
       const values = [...passes[column].layers[1], ...passes[column].layers[2]];
       const expected = values.map(v => {
         const height = geometry.deck.r * Math.min(1, Math.abs(v));
-        return height >= MIN_GAUGE ? { height, y: v >= 0 ? -height : 0 } : undefined;
+        return height >= MIN_GAUGE ? { height, y: v >= 0 ? -height : 0, fill: signColor(v) } : undefined;
       });
       expect(deckGauges(column)).toEqual(expected);
     });

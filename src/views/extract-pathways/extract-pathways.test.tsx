@@ -71,6 +71,7 @@ describe("ExtractPathways", () => {
     expect(screen.getByText("Loading conversations…")).toBeInTheDocument();
     expect(await screen.findByRole("img", { name: "The network." })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Network → Activated Pathways" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "The Network → Activated Pathways" })).toBeInTheDocument();
     expect(button("Setup")).toHaveAttribute("aria-disabled", "false");
     expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "false");
     expect(button("Collect All Conversations")).toHaveAttribute("aria-disabled", "true");
