@@ -20,8 +20,8 @@ function items() {
   return screen.getAllByRole("listitem");
 }
 
-/** The badge is the only text in an attribute indicator that screen readers don't read, and it comes last. */
-function badge(item: HTMLElement) {
+/** The shown value is the only text in an attribute indicator that screen readers don't read, and it comes last. */
+function shownValue(item: HTMLElement) {
   return (item.textContent ?? "").slice(spokenText(item).length);
 }
 
@@ -54,14 +54,14 @@ describe("ObservationNotes", () => {
 
   it("ticks a binary attribute that is 1 and leaves one that is 0 blank", () => {
     render(<ObservationNotes attributes={[voices, water]} values={{ voices_raised: 1, near_water: 0 }} />);
-    expect(badge(items()[0])).toBe("✔︎");
-    expect(badge(items()[1])).toBe("");
+    expect(shownValue(items()[0])).toBe("✔︎");
+    expect(shownValue(items()[1])).toBe("");
   });
 
   // Only a binary 0 is blank: a count of 0 is still a count.
   it.each([[4, "4"], [0, "0"]])("shows an integer attribute's value %p as %p", (value, shown) => {
     render(<ObservationNotes attributes={[group]} values={{ group_size: value }} />);
-    expect(badge(items()[0])).toBe(shown);
+    expect(shownValue(items()[0])).toBe(shown);
     expect(spokenText(items()[0])).toBe(`Group size: ${shown}`);
   });
 
@@ -73,14 +73,14 @@ describe("ObservationNotes", () => {
   it("says a missing value wasn't recorded", () => {
     render(<ObservationNotes attributes={[voices, group]} values={{}} />);
     expect(items().map(spokenText)).toEqual(["Voices raised: not recorded", "Group size: not recorded"]);
-    expect(items().map(badge)).toEqual(["–", "–"]);
+    expect(items().map(shownValue)).toEqual(["–", "–"]);
   });
 
   // null is how the data says a value is missing, so it gets the dash, not the blank that means no.
   it("says a null value wasn't recorded", () => {
     render(<ObservationNotes attributes={[water]} values={{ near_water: null }} />);
     expect(spokenText(items()[0])).toBe("Near water: not recorded");
-    expect(badge(items()[0])).toBe("–");
+    expect(shownValue(items()[0])).toBe("–");
   });
 
   it("draws an icon in each attribute indicator", () => {

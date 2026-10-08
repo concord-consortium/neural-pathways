@@ -65,7 +65,7 @@
   color: colors.$ink-2;
 }
 
-// margin-bottom: auto pushes the icon and badge to the foot of the indicator, so they share a
+// margin-bottom: auto pushes the icon and value to the foot of the indicator, so they share a
 // baseline across the row however the labels wrapped.
 .observation-notes__label {
   margin-bottom: auto;
@@ -87,7 +87,7 @@
   @include visually-hidden.visually-hidden;
 }
 
-.observation-notes__badge {
+.observation-notes__value {
   display: flex;
   align-items: center;
   justify-content: center;

@@ -41,13 +41,13 @@ interface AttributeIndicatorProps {
   value: number | null | undefined;
 }
 
-/** Label, icon, badge: the order a field sheet reads in. A screen reader hears "Label: value". */
+/** Label, icon, value: the order a field sheet reads in. A screen reader hears "Label: value". */
 const AttributeIndicator: React.FC<AttributeIndicatorProps> = ({ attribute, value }) => (
   <li className="observation-notes__indicator">
     <span className="observation-notes__label">{attribute.label}</span>
     <span className="observation-notes__spoken">{`: ${spokenValue(attribute, value)}`}</span>
     <AlienIcon attributeKey={attribute.key} size={34} />
-    <b className="observation-notes__badge" aria-hidden="true">{badgeText(attribute, value)}</b>
+    <b className="observation-notes__value" aria-hidden="true">{shownValue(attribute, value)}</b>
   </li>
 );
 
@@ -61,7 +61,7 @@ function spokenValue(attribute: AttributeDefinition, value: number | null | unde
  * blank always means 0. Anything else shows its number. The tick is followed by a variation
  * selector so no platform draws it as an emoji.
  */
-function badgeText(attribute: AttributeDefinition, value: number | null | undefined): string {
+function shownValue(attribute: AttributeDefinition, value: number | null | undefined): string {
   if (value == null) return "–";
   if (attribute.type === "binary") return value === 1 ? "✔︎" : "";
   return String(value);
