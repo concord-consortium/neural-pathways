@@ -111,6 +111,19 @@ describe("collectSceneAt", () => {
     expect(collectSceneAt(SIZES, 4, QUICK_DONE).network.answer).toBe(1);
   });
 
+  it("quick swap: clears everything at once, then refills a layer at a time, its lines snapping in", () => {
+    // 100 ms in, the inputs fill 16 ms apart, so units 0 to 6 are in.
+    const filling = collectSceneAt(SIZES, 4, UNDIM + 100).network;
+    expect(filling.nodeFill[0]).toEqual([1, 1, 1, 1, 1, 1, 1, 0, 0, 0]);
+    expect(filling.nodeFill.slice(1).every(column => column.every(x => x === 0))).toBe(true);
+    expect(filling.edgeDraw.every(gap => gap.every(x => x === 0))).toBe(true);
+    expect(filling.answer).toBe(0);
+    // The inputs' lines snap in 20 ms after their last gauge, at 164 ms; the next layer's haven't.
+    const snapped = collectSceneAt(SIZES, 4, UNDIM + 164).network;
+    expect(snapped.edgeDraw[0].every(x => x === 1)).toBe(true);
+    expect(snapped.edgeDraw[1].every(x => x === 0)).toBe(true);
+  });
+
   it("spotlights the hidden neurons and dims the lifted column for the flight, and leaves them so", () => {
     const flightStart = QUICK_DONE + 550;
     expect(collectSceneAt(SIZES, 4, flightStart).network.hiddenLayerSpotlight).toBe(0);
