@@ -161,6 +161,9 @@ test("the card shows the conversation's label, notes and marks", async ({ page }
   await expect(marks).toHaveCount(5);
   // Each of the data's attributes has a drawing.
   await expect(marks.locator("svg")).toHaveCount(5);
+  // The cells share the row equally, so a long label wraps rather than widening its cell.
+  const widths = await marks.evaluateAll(items => items.map(item => Math.round(item.getBoundingClientRect().width)));
+  expect(new Set(widths).size).toBe(1);
   // What a screen reader reads of each mark: the tick or count beside it is hidden from it.
   const spoken = () => marks.evaluateAll(items => items.map(item => {
     const copy = item.cloneNode(true) as Element;
