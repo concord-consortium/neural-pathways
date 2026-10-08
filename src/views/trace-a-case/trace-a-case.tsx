@@ -2,6 +2,8 @@ import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { ConversationWords } from "../../core/conversation-card/conversation-words";
+import { ActualLabel } from "../../core/conversation-card/actual-label";
+import { ObservationNotes } from "../../core/conversation-card/observation-notes";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
 import { conversationFilterFor, idsFor } from "../../core/filter/conversation-filter";
 import { FilterBar } from "../../core/filter/filter-bar";
@@ -54,6 +56,9 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // A conversation's place among all of them, which its pass is stored by. Its place in `ids`
   // changes with the query.
   const placeById = useMemo(() => new Map(index.items.map((item, i) => [item.id, i])), [index]);
+  // The generated attributes a student can see. The derived target, prediction and
+  // model_correct aren't among them, and the hidden ones wait to be commissioned.
+  const markedAttributes = useMemo(() => (index.metadata.attributes ?? []).filter(a => !a.hidden), [index]);
   const { passes, scales } = indexPasses(toyNetwork, index);
   const networkHeadId = useId();
   // Shown even before the store's correction lands, and while a query is being typed, so an id
@@ -73,6 +78,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   }
   const goTo = (to: number) => shared.setConversationId(ids[to]);
   const place = shownId === undefined ? undefined : placeById.get(shownId);
+  const shown = place === undefined ? undefined : index.items[place];
 
   const noMatch = (
     <div className="trace-a-case__case">
@@ -81,12 +87,14 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   );
   // The card comes before the steps, so the tab order matches the stacked layout as well as the
   // wide one.
-  const conversation = player && place !== undefined && (
+  const conversation = player && shown && place !== undefined && (
     <>
       <div className="trace-a-case__case">
         <ConversationCard position={listPosition} total={ids.length}
           onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)}>
-          <ConversationWords text={index.items[place].text} />
+          <ConversationWords text={shown.text} />
+          <ActualLabel target={shown.target} labels={alien3Dataset.classificationLabels} />
+          <ObservationNotes observation={shown.observation} attributes={markedAttributes} values={shown.attributes} />
         </ConversationCard>
       </div>
       <div className="trace-a-case__steps">

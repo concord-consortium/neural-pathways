@@ -150,3 +150,40 @@ test("the filter bar shows focus in forced-colors mode", async ({ page }) => {
   await page.getByRole("textbox", { name: "Filter" }).focus();
   expect(await outline()).toBe("solid");
 });
+
+test("the card shows the conversation's label, notes and marks", async ({ page }) => {
+  await page.goto("/");
+  const card = page.getByRole("region", { name: "Conversation", exact: true });
+  await expect(card.getByRole("status")).toHaveText("Conversation 1 of 800");
+  await expect(card.getByText("wait", { exact: true })).toBeVisible();
+  await expect(card.getByText(/^At least one juvenile was present\./)).toBeVisible();
+  const marks = card.getByRole("listitem");
+  await expect(marks).toHaveCount(5);
+  // What a screen reader reads of each mark: the tick or count beside it is hidden from it.
+  const spoken = () => marks.evaluateAll(items => items.map(item => {
+    const copy = item.cloneNode(true) as Element;
+    copy.querySelectorAll('[aria-hidden="true"]').forEach(hidden => hidden.remove());
+    return copy.textContent;
+  }));
+  expect(await spoken()).toEqual([
+    "Voices raised: no", "Engaged in a task: yes", "Group size: 2", "Near water: yes", "Food present: no",
+  ]);
+  // A hidden attribute gets no mark until it is commissioned.
+  await expect(card.getByText("Resource stressed")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Next conversation" }).click();
+  await expect(card.getByRole("status")).toHaveText("Conversation 2 of 800");
+  await expect(card.getByText("approach", { exact: true })).toBeVisible();
+  expect(await spoken()).toEqual([
+    "Voices raised: yes", "Engaged in a task: no", "Group size: 3", "Near water: yes", "Food present: yes",
+  ]);
+});
+
+test("the card fits the stacked layout without scrolling sideways", async ({ page }) => {
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.goto("/");
+  const card = page.getByRole("region", { name: "Conversation", exact: true });
+  await expect(card.getByRole("listitem")).toHaveCount(5);
+  const overflow = await card.evaluate(el => el.scrollWidth - el.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});

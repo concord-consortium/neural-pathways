@@ -1,11 +1,13 @@
 import React from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { spokenText } from "../../core/conversation-card/__fixtures__/spoken-text";
 import * as conversationCard from "../../core/conversation-card/conversation-card";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import { SharedState } from "../../core/state/shared-state";
 import { TraceACaseState } from "./trace-a-case-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
+import { AttributeDefinition } from "../../core/types/attributes";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { clearDatasetIndexCache } from "../../core/use-dataset-index";
 import { TraceACase } from "./trace-a-case";
@@ -13,21 +15,32 @@ import { TraceACase } from "./trace-a-case";
 jest.mock("../../core/data-loader", () => ({ fetchIndex: jest.fn() }));
 const mockedFetchIndex = fetchIndex as jest.MockedFunction<typeof fetchIndex>;
 
-function item(id: string, text: string, classification: number): S3Item {
+function item(id: string, text: string, classification: number, groupSize: number): S3Item {
   return {
     id, text, classification,
     sources: { alien3: [0] },
     target: classification,
     target_label: null,
+    observation: `Notes on ${id}.`,
+    attributes: { voices_raised: classification, group_size: groupSize, resource_stressed: 1 },
     pathway_scores: {},
     pathway_variance_fractions: {},
   };
 }
 
+const YES_NO = { 0: "no", 1: "yes" };
+// One of each kind, and a hidden one, which gets no mark.
+const attributes: AttributeDefinition[] = [
+  { key: "voices_raised", label: "Voices raised", description: "", type: "binary", valueLabels: YES_NO },
+  { key: "group_size", label: "Group size", description: "", type: "integer", min: 1, max: 6 },
+  { key: "resource_stressed", label: "Resource stressed", description: "", type: "binary", hidden: true },
+];
+
 // The first and third are classified Wait, the second Approach.
-const items = [0, 6, 1].map(i => fixture.conversations[i]).map(c => item(c.id, c.text, c.classification));
+const items = [0, 6, 1].map(i => fixture.conversations[i])
+  .map((c, i) => item(c.id, c.text, c.classification, i + 2));
 const ids = items.map(i => i.id);
-const index: S3Index = { metadata: { fa_fits: {}, review_sets: {} }, items };
+const index: S3Index = { metadata: { fa_fits: {}, review_sets: {}, attributes }, items };
 
 function viewWith(shared: SharedState, state = new TraceACaseState({})) {
   return (
@@ -91,6 +104,18 @@ describe("TraceACase", () => {
     expect(shared.conversationId).toBe(ids[1]);
     fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
     expect(shared.conversationId).toBe(ids[0]);
+  });
+
+  it("shows the conversation's label, notes and marks, with no mark for a hidden attribute", async () => {
+    showView();
+    await screen.findByText("1 / 3");
+    expect(within(card()).getByText("wait")).toHaveClass("actual-label__pill");
+    expect(within(card()).getByText(`Notes on ${ids[0]}.`)).toBeInTheDocument();
+    expect(within(card()).getAllByRole("listitem").map(spokenText)).toEqual(["Voices raised: no", "Group size: 2"]);
+    fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
+    expect(within(card()).getByText("approach")).toHaveClass("actual-label__pill");
+    expect(within(card()).getByText(`Notes on ${ids[1]}.`)).toBeInTheDocument();
+    expect(within(card()).getAllByRole("listitem").map(spokenText)).toEqual(["Voices raised: yes", "Group size: 3"]);
   });
 
   it("draws the network for the conversation shown", async () => {
