@@ -122,20 +122,21 @@ interface ObservationNotesProps {
   - **the label,** `attribute.label`, in Barlow Condensed 400, 12 px, `$ink-3`. The app's font
     link loads only weight 600 today, so it gains 400.
   - **the icon,** `AlienIcon` at 34 px, stroked in `$ink-2`;
-  - **the badge,** 18 px square, Lato 700 12 px, `$ink`:
+  - **the value,** 18 px square, Lato 700 12 px, `$ink`:
     - an integer attribute shows its number;
     - a binary attribute shows ✔ (U+2714 followed by U+FE0E, so no platform draws it as an emoji)
       for 1, and nothing for 0;
     - a missing or `null` value shows "–", so a blank always means 0. The data never has one, but
       the card shouldn't say "no" when it doesn't know.
-- **For screen readers,** each item reads as its label, a colon and the value: "Voices raised:
-  yes", "Group size: 2". The value is the attribute's `valueLabels` entry, falling back to the raw
-  number, or "not recorded" when missing or `null`. The colon and value are visually hidden; the
-  icon and badge are `aria-hidden`. A list, rather than the prototype's `role="img"` on each cell,
-  because the role can't sit on an `li`, and the list says how many there are.
+- **For screen readers,** each item reads as its label, a colon and the spoken value: "Voices
+  raised: yes", "Group size: 2". The spoken value is the attribute's `valueLabels` entry, falling
+  back to the raw number, or "not recorded" when missing or `null`. The colon and spoken value are
+  visually hidden; the icon and shown value are `aria-hidden`. A list, rather than the prototype's
+  `role="img"` on each cell, because the role can't sit on an `li`, and the list says how many
+  there are.
 - **Layout:** the indicators share the row's width equally, so a label like "Engaged in a task"
   wraps to two lines instead of pushing the row wider. Labels align to the top of their indicator
-  and icons and badges to the bottom (the prototype's `margin-bottom: auto` on the label), so every
+  and icons and values to the bottom (the prototype's `margin-bottom: auto` on the label), so every
   icon shares a baseline whichever labels wrapped. 12 px above the row.
 
 The view decides which attributes get indicators. Trace a Case passes the visible ones; see below.
@@ -159,7 +160,7 @@ export function AlienIcon({ attributeKey, size }: { attributeKey: string; size: 
   icon's paths; the drawings look the same.
 - `AlienIcon` looks the key up and adds the size, `aria-hidden="true"` and `focusable="false"`. A
   key with no file returns `null`, names on `Object.prototype` such as `toString` included: the
-  icons are kept in a `Map`. Its indicator then shows the label and badge without an icon.
+  icons are kept in a `Map`. Its indicator then shows the label and value without an icon.
 - Jest has no `require.context` and doesn't run webpack's loaders. `src/test/alien-icon-files.ts`
   stands in for `alien-icon-files.ts`, reading the folder, and `jest/svg-transform.js` runs SVGR
   on each file, without SVGO.
@@ -257,8 +258,8 @@ conversation is now shown, so both stay. Check the pair with a screen reader at 
   - the prose, or the fallback when the notes are missing or empty;
   - the notes are a region named "Observation notes" that the keyboard can reach;
   - the items follow the order of `attributes`, not of `values`;
-  - badges: ✔ for 1, empty for 0, the number for an integer (0 included), "–" when missing or
-    `null`;
+  - shown values: ✔ for 1, empty for 0, the number for an integer (0 included), "–" when missing
+    or `null`;
   - each item's accessible text: "Voices raised: yes", "Near water: no", "Group size: 4", the raw
     number for an attribute without `valueLabels`, and "…: not recorded" for a missing or `null`
     value.
