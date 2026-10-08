@@ -6,7 +6,7 @@ import { TraceACaseState } from "./trace-a-case-state";
 
 /**
  * Step 1 to Step 4. Each jumps to the marker before its own and plays, as in the prototype, so none
- * is ever disabled. The button for the marker the timeline rests at is current.
+ * is ever unavailable. The button for the marker the timeline rests at is current.
  */
 export const TRACE_BUTTONS: readonly StepButton[] = PHASES.map(phase => ({
   key: `step-${phase}`,

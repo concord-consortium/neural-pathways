@@ -5,6 +5,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { SharedState } from "../../core/state/shared-state";
 import * as viewStateContext from "../../core/state/view-state-context";
 import { ViewStateProvider } from "../../core/state/view-state-context";
+import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { clearDatasetIndexCache } from "../../core/use-dataset-index";
 import { collectDuration } from "./collect-timeline";
@@ -40,14 +41,6 @@ function showView(state = new ExtractPathwaysState({})) {
   return { state, ...utils };
 }
 
-function setReducedMotion() {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    writable: true,
-    value: jest.fn().mockReturnValue({ matches: true }),
-  });
-}
-
 const button = (name: string) => screen.getByRole("button", { name });
 const drawing = (name: string) => screen.getByRole("img", { name });
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
@@ -62,7 +55,7 @@ describe("ExtractPathways", () => {
   });
 
   afterEach(() => {
-    delete (window as any).matchMedia;
+    clearReducedMotion();
   });
 
   it("shows loading, then the step row and the blank network", async () => {
@@ -93,7 +86,7 @@ describe("ExtractPathways", () => {
   });
 
   it("lifts the hidden neurons out with Setup, and keeps it in the view's state", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
     fireEvent.click(button("Setup"));
@@ -103,7 +96,7 @@ describe("ExtractPathways", () => {
   });
 
   it("jumps Setup to its end when Collect a Conversation comes first", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
     fireEvent.click(button("Collect a Conversation"));
@@ -114,7 +107,7 @@ describe("ExtractPathways", () => {
   });
 
   it("stops collecting by hand after ten", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     showView();
     await screen.findByRole("img", { name: "The network." });
     for (let i = 0; i < 10; i++) {
@@ -125,7 +118,7 @@ describe("ExtractPathways", () => {
   });
 
   it("collects no more conversations than were loaded", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     mockedFetchIndex.mockResolvedValue({ ...index, items: items.slice(0, 3) });
     showView();
     await screen.findByRole("img", { name: "The network." });
@@ -143,7 +136,7 @@ describe("ExtractPathways", () => {
   });
 
   it("resets to the blank network", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
     fireEvent.click(button("Collect a Conversation"));
@@ -154,10 +147,8 @@ describe("ExtractPathways", () => {
   });
 
   describe("animated", () => {
-    beforeEach(async () => {
-      Object.defineProperty(window, "matchMedia", {
-        configurable: true, writable: true, value: jest.fn().mockReturnValue({ matches: false }),
-      });
+    beforeEach(() => {
+      setReducedMotion(false);
     });
 
     afterEach(() => {
