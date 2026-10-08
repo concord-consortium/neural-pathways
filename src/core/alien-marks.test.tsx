@@ -30,8 +30,8 @@ describe("AlienMark", () => {
     expect(new Set(drawings).size).toBe(KEYS.length);
   });
 
-  it("draws nothing for an attribute it has no drawing for", () => {
-    const { container } = renderMark("bogus");
+  it.each(["bogus", "toString", "constructor"])("draws nothing for %p, which has no drawing", key => {
+    const { container } = renderMark(key);
     expect(container).toBeEmptyDOMElement();
   });
 });
