@@ -163,11 +163,11 @@ test("the card shows the conversation's label, notes and attribute indicators", 
   const icons = indicators.locator("svg");
   await expect(icons).toHaveCount(5);
   expect(await icons.evaluateAll(svgs => svgs.map(svg => svg.childElementCount > 0))).toEqual(Array(5).fill(true));
-  // The cells share the row equally, so a long label wraps rather than widening its cell.
+  // The indicators share the row equally, so a long label wraps rather than widening its indicator.
   const widths = await indicators.evaluateAll(items =>
     items.map(item => Math.round(item.getBoundingClientRect().width)));
   expect(new Set(widths).size).toBe(1);
-  // What a screen reader reads of each indicator; the check mark or count is hidden from it.
+  // What a screen reader reads of each indicator; the value shown is hidden from it.
   const spoken = () => indicators.evaluateAll(items => items.map(item => {
     const copy = item.cloneNode(true) as Element;
     copy.querySelectorAll('[aria-hidden="true"]').forEach(hidden => hidden.remove());

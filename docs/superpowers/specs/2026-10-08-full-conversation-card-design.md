@@ -17,8 +17,8 @@ a Case). Line numbers below refer to that file: the card's DOM at 11036–11098,
 12252–12320, `paintMarks` at 12331–12371, the indicators' CSS at 1851–1924, and the icon
 artwork `ALIEN_A1` at 4646–4758.
 
-The branch started on `main` before the filter (NPW-35, PR #38) merged, and was rebased onto it.
-The two meet in one place, the empty state; see [Merging with the filter](#merging-with-the-filter).
+The card meets the filter (NPW-35, PR #38) in one place, the empty state; see
+[Merging with the filter](#merging-with-the-filter).
 
 ## Decisions
 
@@ -27,9 +27,9 @@ The two meet in one place, the empty state; see [Merging with the filter](#mergi
 | How the card is extended | A shell plus parts. `ConversationCard` owns the panel, header, status and empty state, and renders its children as the body. The body is built from exported parts: `ConversationWords`, `ActualLabel`, `ObservationNotes`. | The prototype has three copies of this card. NPW-37's card keeps the header but replaces the body with one tinted reading per pathway (`buildCasePanel`, line 6070), so the body is what varies. Parts compose without the shell growing a flag per story. |
 | Which attributes get an indicator | Only those not marked `hidden` in the data: the five visible ones. | Matches the filter (NPW-35), which keeps the four hidden attributes out until they are commissioned. The prototype shows all nine. NPW-41's scope now includes adding indicators for commissioned attributes. |
 | The icon artwork | All nine of the prototype's `ALIEN_A1` drawings go into `src/core/`, though only five are drawn for now. | One set of artwork. NPW-41 and Investigate Unknown Pathway need the other four. |
-| Attribute colors (`ATTR_COLOUR`) | Not added. Left to the first story that draws them, with their soft and faint tints. | The Trace a Case card draws its icons in plain ink (`--nnm-ink-2`). The colors' first users are Investigate Unknown Pathway's pills and the Correlations headings. |
-| Where the empty state lives | In the card: `total === 0` shows the message in place of the header and body. | The ticket lists it as common to every card, so every view gets it without writing its own. |
-| Empty-state wording | "No conversations match that search." | As in the ticket and the prototype. |
+| Attribute colors (`ATTR_COLOR`, the prototype's `ATTR_COLOUR`) | Not added. Left to the first story that draws them, with their soft and faint tints. | The Trace a Case card draws its icons in plain ink (`--nnm-ink-2`). The colors' first users are Investigate Unknown Pathway's pills and the Correlations headings. |
+| Where the empty state lives | In the card: `total === 0` shows the message in place of the header and body. | It is common to every card, so every view gets it without writing its own. |
+| Empty-state wording | "No conversations match that search." | As in NPW-36 and the prototype. |
 | The panels' height | The card and the network are the same height, filling the window below the toolbars, from 380 px up to 800 px. The notes box scrolls when the card is too short. Their heads are the same height. | As in the prototype, so the two panels read as one row. See [Panel heights](#panel-heights). |
 
 ## The shell: `ConversationCard`
@@ -94,9 +94,9 @@ this order, as in the prototype.
 
 `labels` is the dataset's `classificationLabels`, e.g. `{ 0: "wait", 1: "approach" }`.
 
-- One line: an "Actual Label" caption, then a pill holding `labels[target]`.
+- One line: an "Actual Label" caption, then a chip holding `labels[target]`.
   - **Caption:** Barlow Condensed 600, 11 px, uppercase, `$ink-2`.
-  - **Pill:** Barlow Condensed 600, 13 px, uppercase by CSS, a 2 px border, fully rounded.
+  - **Chip:** Barlow Condensed 600, 13 px, uppercase by CSS, a 2 px border, fully rounded.
     Approach (1) uses `$approach-text` on `$approach-soft` with an `$approach` border; wait (0)
     uses the `$wait-*` set. These are the pair the network's output pill uses.
 - With a `target` of `null` it renders nothing. alien3 always has one.
@@ -120,7 +120,7 @@ interface ObservationNotesProps {
 - **The attribute indicators,** inside the box under the prose: a `<ul>` with one `<li>` per
   attribute, in the order given. Each has, top to bottom:
   - **the label,** `attribute.label`, in Barlow Condensed 400, 12 px, `$ink-3`. The app's font
-    link loads only weight 600 today, so it gains 400.
+    link loads Barlow Condensed 400 for it.
   - **the icon,** `AlienIcon` at 34 px, stroked in `$ink-2`;
   - **the value,** 18 px square, Lato 700 12 px, `$ink`. The font link loads Lato 700 for it:
     - an integer attribute shows its number;
@@ -132,7 +132,7 @@ interface ObservationNotesProps {
   raised: yes", "Group size: 2". The spoken value is the attribute's `valueLabels` entry, falling
   back to the raw number, or "not recorded" when missing or `null`. The colon and spoken value are
   visually hidden; the icon and shown value are `aria-hidden`. A list, rather than the prototype's
-  `role="img"` on each cell, because the role can't sit on an `li`, and the list says how many
+  `role="img"` on each indicator, because the role can't sit on an `li`, and the list says how many
   there are.
 - **Layout:** the indicators share the row's width equally, so a label like "Engaged in a task"
   wraps to two lines instead of pushing the row wider. Labels align to the top of their indicator
@@ -242,7 +242,8 @@ After rebasing on it, this branch:
 
 After the merge a change of query updates two polite live regions: the filter bar's count ("64 of
 800") and the card's status ("Conversation 1 of 64"). The second tells a listener which
-conversation is now shown, so both stay. Check the pair with a screen reader at merge time.
+conversation is now shown, so both stay. How the pair sounds, while typing too, is for NPW-49 to
+check with a screen reader.
 
 ## Testing
 
@@ -301,7 +302,7 @@ tests under [Panel heights](#panel-heights):
 ## Out of scope
 
 - Animate and speed, About, neuron hover, Step 1's word flights and the activation legend.
-- `ATTR_COLOUR` and its tints: the first story that draws attribute colors.
+- `ATTR_COLOR` and its tints: the first story that draws attribute colors.
 - Attribute indicators for commissioned attributes (NPW-41).
 - Word contributions colored by pathway (NPW-37).
 - The card in Investigate Pathways and the other views: their own stories.

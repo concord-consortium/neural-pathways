@@ -13,7 +13,7 @@ interface ObservationNotesProps {
 
 /**
  * What the observer wrote about the conversation, and under it an attribute indicator for each
- * attribute the notes record: the sentence is the evidence and the indicator sums it up. The
+ * attribute it is given: the sentence is the evidence and the indicator sums it up. The
  * indicators keep the order they are given, so an attribute's indicator is in the same place for
  * every conversation.
  */
@@ -58,7 +58,7 @@ function spokenValue(attribute: AttributeDefinition, value: number | null | unde
 
 /**
  * A check mark for a binary attribute that is 1 and a blank for 0. A missing value shows a dash,
- * so a blank always means 0. Anything else shows its number. The check mark is followed by a
+ * so a blank always means 0. An integer attribute shows its number. The check mark is followed by a
  * variation selector so no platform draws it as an emoji.
  */
 function shownValue(attribute: AttributeDefinition, value: number | null | undefined): string {
