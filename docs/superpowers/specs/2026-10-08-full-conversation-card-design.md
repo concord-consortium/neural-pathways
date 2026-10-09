@@ -252,7 +252,7 @@ check with a screen reader.
 - **`ConversationCard`:**
   - the visual count is `aria-hidden`, and the status reads "Conversation 2 of 3";
   - the status is the same element after the conversation changes, and focus stays on Next;
-  - the existing tests for the disabled ends and the clicks still pass;
+  - the existing tests for the unavailable ends and the clicks still pass;
   - with `total` 0 it shows the message and no header, buttons or children, and the status is in
     the document and empty.
 - **`ConversationWords`:** one span per word; extra spaces and line breaks are dropped; the
@@ -279,7 +279,7 @@ check with a screen reader.
 
 ### Playwright (`playwright/trace-a-case.test.ts`)
 
-Two new tests against the real alien3 data, written so each check can fail, besides the panel
+Three new tests against the real alien3 data, written so each check can fail, besides the panel
 tests under [Panel heights](#panel-heights):
 
 - the card:
@@ -289,6 +289,7 @@ tests under [Panel heights](#panel-heights):
   - each indicator has an icon with something drawn in it, and the five share the row equally;
   - no indicator is named for a hidden attribute, such as "Resource stressed";
   - after Next, the status reads "Conversation 2 of 800" and the chip says "approach";
+- in forced-colors mode, the unavailable Previous arrow is painted differently from Next;
 - in the stacked layout, neither the card nor its notes box scrolls sideways.
 
 ## Docs

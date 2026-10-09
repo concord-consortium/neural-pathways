@@ -187,6 +187,17 @@ test("the card shows the conversation's label, notes and attribute indicators", 
   ]);
 });
 
+test("the card's unavailable arrow looks unavailable in forced-colors mode", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  // The arrow is the button's only face, so compare what it is filled with.
+  const fill = (name: string) =>
+    page.getByRole("button", { name }).locator("path").evaluate(element => getComputedStyle(element).fill);
+  // On the first conversation Previous is unavailable and Next isn't.
+  expect(await fill("Previous conversation")).not.toBe(await fill("Next conversation"));
+});
+
 test("the card fits the stacked layout without scrolling sideways", async ({ page }) => {
   await page.setViewportSize({ width: 600, height: 900 });
   await page.goto("/");

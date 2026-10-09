@@ -61,3 +61,23 @@ stand in for 200% zoom: a viewport half as wide and half as tall, with `deviceSc
 Zoom shrinks both dimensions in CSS pixels, so halving only the width would let text sized in `vh`
 pass when it shouldn't. Compare in device pixels, a CSS size times the `deviceScaleFactor`,
 against a context at the full size with `deviceScaleFactor: 1`.
+
+## Keep unavailable buttons in the tab order
+
+A button that can't act right now, such as Previous on the first conversation or Reset with
+nothing to reset, is *unavailable*: mark it `aria-disabled="true"`, not with the `disabled`
+attribute.
+
+**Why.** A `disabled` button leaves the tab order, and if it has the focus when it becomes
+disabled, the browser drops the focus to the page body. A keyboard user stepping with Next would
+lose their place at the last conversation, which works against
+[2.4.3 Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) (A). An
+`aria-disabled` button keeps the focus, and a screen reader still finds it and says it is
+unavailable ("dimmed"), so the controls read the same at the ends as in the middle.
+
+**What it takes.** `aria-disabled` only changes what assistive technology hears; the button still
+gets clicks, Enter and Space.
+- Ignore the press while it is unavailable, as the card's `NavButton` does with `onClick`.
+- Style it with the `unavailable` mixin in `src/core/button.scss`. Only its face fades, so its
+  focus ring stays clear, and in forced-colors mode it is painted `GrayText`, as a native disabled
+  button is. WCAG's contrast minimums don't apply to inactive controls, so the fade is allowed.
