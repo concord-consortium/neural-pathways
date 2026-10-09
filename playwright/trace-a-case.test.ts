@@ -204,14 +204,18 @@ test.describe("the card and network panels", () => {
     return { top, bottom, height };
   });
 
-  test("have heads of the same height", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 1000 });
-    await page.goto("/");
-    const { card, network } = panels(page);
-    const cardHead = await rect(card.getByRole("heading", { name: "Conversation" }).locator(".."));
-    const networkHead = await rect(network.getByRole("heading", { name: "The Network" }));
-    expect(networkHead.height).toBeCloseTo(cardHead.height, 0);
-  });
+  // On a short window the card's body has to give up height, and its head mustn't.
+  for (const height of [1000, 450]) {
+    test(`have heads of the same height on a ${height} px window`, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height });
+      await page.goto("/");
+      const { card, network } = panels(page);
+      await expect(card.getByRole("listitem")).toHaveCount(5);
+      const cardHead = await rect(card.getByRole("heading", { name: "Conversation" }).locator(".."));
+      const networkHead = await rect(network.getByRole("heading", { name: "The Network" }));
+      expect(networkHead.height).toBeCloseTo(cardHead.height, 0);
+    });
+  }
 
   test("match each other and fill the window", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });

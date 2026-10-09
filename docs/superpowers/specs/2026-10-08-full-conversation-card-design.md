@@ -207,8 +207,9 @@ CSS only, with no measuring in code and no offset for what sits above the panels
     view sets `MIN_HEIGHT` on the layout as `--diagram-min-height`, and the stylesheet adds the
     rest, so the 300 px is written down once. Below it the panels run past the window and the
     page scrolls; on such a short wide window the view's bottom padding doesn't show below them.
-- **The network head** has a 62 px minimum, the card's head with its 44 px buttons, so the heads
-  match and either can still grow if its controls wrap.
+- **The heads** are at least as tall as a 44 px control plus their padding and rule, 62 px, by
+  one rule in the `panel-head` mixin, so they match and either can still grow if its controls
+  wrap. Neither shrinks: on a short window the card's body gives up the room.
 - **The diagram** is `flex: 1 1 440px` with `--diagram-min-height` as its minimum, so it fills the
   panel and the layout centers the drawing.
 - **The card** is `height: 100%`, so it fills a cell with a set height and is its natural height

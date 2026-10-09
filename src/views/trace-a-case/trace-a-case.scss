@@ -2,12 +2,9 @@
 @use "../../core/colors" as colors;
 @use "../../core/panel";
 
-// The network panel's head: the card's head holds 44 px buttons, and with the head's 9 + 8 px
-// padding and 1 px rule that is 62 px.
-$network-head-height: 62px;
 $diagram-padding: 8px;
 // The network panel's height around the diagram: its head, the diagram's padding and its border.
-$network-chrome: $network-head-height + 2 * $diagram-padding + 2px;
+$network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
 
 // At least the window's height, so the layout below the title can fill what is left of it.
 .trace-a-case {
@@ -84,10 +81,8 @@ $network-chrome: $network-head-height + 2 * $diagram-padding + 2px;
   align-self: stretch;
 }
 
-// The same height as the card's head. A minimum, so a head can still grow if its controls wrap.
 .trace-a-case__network-head {
   @include panel.panel-head;
-  min-height: $network-head-height;
 }
 
 // 440 px tall when the panel's height comes from its content (stacked), and otherwise the panel's
