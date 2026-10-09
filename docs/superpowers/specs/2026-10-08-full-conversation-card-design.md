@@ -222,9 +222,10 @@ CSS only, with no measuring in code and no offset for what sits above the panels
 - **Stacked** (narrower than 857 px), the rows and the layout are their content's height, and
   nothing fills or scrolls.
 
-Playwright checks the heads, the matching and filling at 1280×800, the cap at 1280×1400, the notes
-scrolling at 1280×620, the floor, the drawing fitting the panel and the page scroll at 1280×450,
-and, stacked, the card's natural height and the view's padding below the panels.
+Playwright checks the heads at 1280×1000 and 1280×450, the matching and filling at 1280×800, the
+cap at 1280×1400, the notes scrolling, the floor, the drawing fitting the panel, the page scroll
+and the card's content staying inside it with the text alone doubled at 1280×450, and, stacked,
+the card's natural height and the view's padding below the panels.
 
 ## Merging with the filter
 
@@ -287,7 +288,7 @@ tests under [Panel heights](#panel-heights):
   - each indicator has an icon with something drawn in it, and the five share the row equally;
   - no indicator is named for a hidden attribute, such as "Resource stressed";
   - after Next, the status reads "Conversation 2 of 800" and the chip says "approach";
-- in the stacked layout, the card doesn't scroll sideways.
+- in the stacked layout, neither the card nor its notes box scrolls sideways.
 
 ## Docs
 

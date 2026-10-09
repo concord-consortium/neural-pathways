@@ -192,8 +192,11 @@ test("the card fits the stacked layout without scrolling sideways", async ({ pag
   await page.goto("/");
   const card = page.getByRole("region", { name: "Conversation", exact: true });
   await expect(card.getByRole("listitem")).toHaveCount(5);
-  const overflow = await card.evaluate(el => el.scrollWidth - el.clientWidth);
-  expect(overflow).toBeLessThanOrEqual(0);
+  // The notes box scrolls on its own, so what overflows inside it doesn't widen the card.
+  const notes = card.getByRole("region", { name: "Observation notes" });
+  for (const box of [card, notes]) {
+    expect(await box.evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+  }
 });
 
 test.describe("the card and network panels", () => {
@@ -241,7 +244,7 @@ test.describe("the card and network panels", () => {
   });
 
   test("scroll the notes, not the card, on a short window", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 620 });
+    await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card } = panels(page);
     const notes = card.getByRole("region", { name: "Observation notes" });
