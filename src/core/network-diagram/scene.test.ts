@@ -20,4 +20,9 @@ describe("scenes", () => {
     expect(scene.weightLabel).toEqual([true, true, true]);
     expect(scene.answer).toBe(1);
   });
+
+  it("draws both scenes without a spotlight on the hidden layers", () => {
+    expect(emptyScene(sizes).hiddenLayerSpotlight).toBe(0);
+    expect(fullScene(sizes).hiddenLayerSpotlight).toBe(0);
+  });
 });

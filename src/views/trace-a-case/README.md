@@ -8,14 +8,13 @@ The lesson's first view: follow one conversation through the network, a layer at
   valid, and lays out the filter bar over the conversation card and the step row over the network.
   Prev/next step through the conversations the filter matches. When nothing matches, the card's
   place says so, and the steps and the network are left out.
-- `step-timeline.ts`: what Steps 1–4 draw at any moment, as a pure function of time.
-- `step-player.ts`: `StepPlayer`, a MobX class that plays the steps for one conversation and gives
-  the view the scene to draw. Under `prefers-reduced-motion` a step jumps straight to its end. Its
-  tests need no React.
-- `step-row.tsx`: the Step 1–4 and Reset buttons. Reset clears the conversation shown.
-- `trace-a-case-state.ts`: the view's saved state, `TraceACaseState`: the steps done for each
-  conversation, so they survive moving between conversations and switching views. Only this view
-  uses it, so it lives here rather than in `src/core/state/`.
+- `trace-a-case-steps.ts`: Trace a Case on the shared step system in `src/core/steps/`: the Step
+  1–4 buttons; the timeline, where Step *k* plays phase *k* of
+  `src/core/network-diagram/forward-pass-phases.ts`; and the progress, the marker each conversation
+  rests at in `TraceACaseState`. Reset clears the conversation shown.
+- `trace-a-case-state.ts`: the view's saved state, `TraceACaseState`: the marker each
+  conversation rests at, so it survives moving between conversations and switching views. Only
+  this view uses it, so it lives here rather than in `src/core/state/`.
 
 The network, the diagram, the conversation card and the data loading live in `src/core/`, where
 Extract Pathways and Investigate Pathways can use them.

@@ -50,7 +50,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   - **unit:** one element of a layer, in the network's math (`network.ts`, and the `[unit]` and
     `[source unit]` indexes of a `Scene`). This is the textbook term, and the one Keras uses.
   - **node:** that unit's circle in the diagram (`network-diagram/`), with its gauge. A node's
-    drawn row and its unit index can differ: `unitAt` in `network-diagram.tsx` maps one to the
+    drawn row and its unit index can differ: `unitAt` in `network-drawing.tsx` maps one to the
     other.
   - **neuron:** what the lesson, the students and the activation analysis call it. It is the
     usual word in interpretability work, which studies what each one responds to, and the word
@@ -58,7 +58,16 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 
   Use the word for the side you are on, and "neuron" in anything a student sees.
 - `network-diagram/`: the shared network diagram. A view says what to show as a `Scene`, and
-  `NetworkDiagram` draws it. `layout.ts` is its geometry; `easing.ts` has the timing curves.
+  `NetworkDiagram` draws it at the size of its container. `NetworkDrawing` is the same drawing as
+  an SVG group, for a view that draws more around the network. `layout.ts` is its geometry;
+  `easing.ts` has the timing curves; `forward-pass-phases.ts` is the four phases of a
+  conversation's forward pass through the network as a function of time, which Trace a Case plays
+  as its steps and Extract Pathways will replay.
+- `steps/`: the step system views share. A view's timeline rests at markers, points where the
+  scene is still and progress is stored, and plays segments between them. `StepPlayer` plays the
+  segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. A view
+  lists its buttons as `StepButton`s, each saying which segment it plays when the timeline rests
+  at a marker, and `StepRow` draws them with Reset.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words (`conversationWords`). Items are plain data, so this is a function that takes the text, not

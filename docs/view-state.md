@@ -75,12 +75,12 @@ an undo step.
 
 ## Each view's state
 
-Only Trace a Case's is built so far, and only its steps done for each conversation. Animate and
+Only Trace a Case's is built so far, and only the marker each conversation rests at. Animate and
 speed arrive with their controls. The target, with what is built marked:
 
 | View | Model | Keeps |
 |---|---|---|
-| Trace a Case | `npw/TraceACaseState` | Steps done for each conversation, by id (built); Animate on/off; speed (0 slow, 1 normal, 2 fast) |
+| Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id (built); Animate on/off; speed (0 slow, 1 normal, 2 fast) |
 | Extract Pathways | `npw/ExtractPathwaysState` | Animate; speed; the extraction stages completed (`extracted`, `collected`, `cubeDone`, `pathwaysDone`) |
 | Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
 | Prediction Chain | `npw/PredictionChainState` | The step each conversation is on (0 to 4), by id; Animate; speed |
@@ -128,14 +128,14 @@ the life of the page, in `SharedState.queryDraft`.
 - **Type checking is on everywhere, production included.** `src/core/state/setup.ts` sets
   `modelAutoTypeChecking` to `AlwaysOn`, and every model file imports it, so any code that uses the
   models gets it. Every load and write is checked against the types, including values inside
-  arrays, records and objects, and refinements such as "a step from 0 to 4". A bad value throws
+  arrays, records and objects, and refinements such as "a marker from 0 to 4". A bad value throws
   where it is written, so it never reaches saved student state. The trees are small, so the cost
   is negligible.
 
   Keystone's default, `DevModeOnly`, would turn these checks off in production builds, which is
   where saved student state is loaded. With the checks off, bad data loads silently:
   `commissioned: [5]`,
-  `stepsByConversation: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`, so
+  `markerByConversation: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`, so
   the first change to it crashes).
 
 ## Where initial state comes from

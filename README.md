@@ -18,6 +18,9 @@ it may import from `src/lab/` or `scripts/`. ESLint enforces this. See
 The code works with three datasets: real Yelp reviews and two generated alien-conversation
 datasets. See [doc/datasets.md](doc/datasets.md) for what each one is and why it exists.
 
+The names the code and docs use for things, such as a marker or a step, and to store or to save,
+are in [docs/glossary.md](docs/glossary.md). Use them, and add to it when you settle a new one.
+
 ## URLs
 
 | URL | Shows |

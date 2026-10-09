@@ -10,17 +10,20 @@ import { indexPasses } from "../../core/network/index-passes";
 import { NetworkScales } from "../../core/network/network-scales";
 import { toyNetwork } from "../../core/network/toy-network";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
+import { Scene } from "../../core/network-diagram/scene";
 import { validConversationId } from "../../core/state/conversation";
 import { TraceACaseState } from "./trace-a-case-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
-import { StepRow } from "./step-row";
-import { StepPlayer } from "./step-player";
+import { StepPlayer } from "../../core/steps/step-player";
+import { StepRow } from "../../core/steps/step-row";
+import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
 import "./trace-a-case.scss";
 
-/** Units in each drawn layer. Fixed, as StepPlayer requires. */
+/** Units in each drawn layer. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
+const TIMELINE = traceTimeline(COLUMN_SIZES);
 
 /** Follow one conversation through the network, a layer at a time. */
 export const TraceACase: React.FC = observer(function TraceACase() {
@@ -62,9 +65,10 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // No conversation is shown when nothing matches: the empty list leaves the stored id in place.
   const shownId = listPosition < 0 ? undefined : currentId;
   const player = useMemo(
-    () => (shownId === undefined ? undefined : new StepPlayer(COLUMN_SIZES, state, shownId)), [state, shownId]);
-  // Stop the old player when the conversation changes or the view unmounts. A layout effect, so no
-  // frame of its step can run, and save, after the change is committed.
+    () => (shownId === undefined ? undefined : new StepPlayer(TIMELINE, traceProgress(state, shownId))),
+    [state, shownId]);
+  // Stop the old player when the conversation changes or the view unmounts. A layout effect, so its
+  // run can't finish and store its marker after the change is committed.
   useLayoutEffect(() => () => player?.stop(), [player]);
 
   if (index.items.length === 0) {
@@ -74,7 +78,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const place = shownId === undefined ? undefined : placeById.get(shownId);
 
   const noMatch = (
-    <div className="trace-a-case__case">
+    <div className="trace-a-case__conversation">
       <p className="trace-a-case__no-match">No conversations match the filter.</p>
     </div>
   );
@@ -82,12 +86,12 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // wide one.
   const conversation = player && place !== undefined && (
     <>
-      <div className="trace-a-case__case">
+      <div className="trace-a-case__conversation">
         <ConversationCard conversation={index.items[place]} position={listPosition} total={ids.length}
           onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)} />
       </div>
       <div className="trace-a-case__steps">
-        <PlayerStepRow player={player} />
+        <StepRow player={player} buttons={TRACE_BUTTONS} />
       </div>
       <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
         <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
@@ -109,14 +113,8 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   );
 });
 
-// The player is read only in these two observers, so a step playing re-renders them and not the card.
-
-const PlayerStepRow = observer(function PlayerStepRow({ player }: { player: StepPlayer }) {
-  return <StepRow shownStep={player.shownStep} onStep={step => player.play(step)} onReset={() => player.reset()} />;
-});
-
 interface PlayerDiagramProps {
-  player: StepPlayer;
+  player: StepPlayer<Scene>;
   pass: ForwardPass;
   scales: NetworkScales;
 }

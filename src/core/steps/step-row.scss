@@ -1,0 +1,48 @@
+@use "../button";
+@use "../colors" as colors;
+
+.step-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.step-row__step,
+.step-row__reset {
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 2px solid colors.$rule;
+  border-radius: 5px;
+  background: #fff;
+  color: colors.$ink-2;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="step"]) {
+    background: colors.$surface;
+  }
+
+  &:focus-visible {
+    outline: 2px solid colors.$wait;
+    outline-offset: 1px;
+  }
+}
+
+.step-row__step[aria-current="step"] {
+  border-color: colors.$ink;
+  background: colors.$ink;
+  color: #fff;
+}
+
+// The same faded face for a disabled step and an unavailable Reset. Reset stays focusable, so only
+// its face may fade, not its focus ring.
+.step-row__step:disabled,
+.step-row__reset[aria-disabled="true"] {
+  @include button.unavailable;
+}

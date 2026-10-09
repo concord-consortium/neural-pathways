@@ -1,4 +1,3 @@
-@use "../../core/button";
 @use "../../core/colors" as colors;
 @use "../../core/panel";
 
@@ -17,8 +16,8 @@
   display: grid;
   grid-template-columns: 447px minmax(400px, 1fr);
   grid-template-areas:
-    "filter steps"
-    "case   network";
+    "filter       steps"
+    "conversation network";
   align-items: start;
   gap: 9px 10px;
 }
@@ -29,7 +28,7 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "filter"
-      "case"
+      "conversation"
       "steps"
       "network";
   }
@@ -45,8 +44,8 @@
   min-width: 0;
 }
 
-.trace-a-case__case {
-  grid-area: case;
+.trace-a-case__conversation {
+  grid-area: conversation;
   min-width: 0;
 }
 
@@ -75,47 +74,4 @@
   height: 440px;
   margin: 0 auto;
   padding: 8px 0;
-}
-
-.step-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.step-row__step,
-.step-row__reset {
-  height: 44px;
-  box-sizing: border-box;
-  padding: 0 8px;
-  border: 2px solid colors.$rule;
-  border-radius: 5px;
-  background: #fff;
-  color: colors.$ink-2;
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  cursor: pointer;
-
-  &:hover:not([aria-disabled="true"]):not([aria-current="step"]) {
-    background: colors.$surface;
-  }
-
-  &:focus-visible {
-    outline: 2px solid colors.$wait;
-    outline-offset: 1px;
-  }
-}
-
-.step-row__step[aria-current="step"] {
-  border-color: colors.$ink;
-  background: colors.$ink;
-  color: #fff;
-}
-
-.step-row__reset[aria-disabled="true"] {
-  @include button.unavailable;
 }
