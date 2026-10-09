@@ -58,6 +58,16 @@ test("the keyboard can reach and scroll a canvas too wide for its frame", async 
   await expect.poll(() => scrollRegion(page).evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
 });
 
+test("unavailable steps look unavailable in forced-colors mode", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await open(page);
+  const color = (name: string) =>
+    page.getByRole("button", { name }).evaluate(element => getComputedStyle(element).color);
+  // Setup is available; Collect All Conversations and Reset aren't, at the start.
+  expect(await color("Collect All Conversations")).not.toBe(await color("Setup"));
+  expect(await color("Reset")).toBe(await color("Collect All Conversations"));
+});
+
 test("three collections give three deck columns", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Setup" }).click();
