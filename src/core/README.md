@@ -50,7 +50,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   - **unit:** one element of a layer, in the network's math (`network.ts`, and the `[unit]` and
     `[source unit]` indexes of a `Scene`). This is the textbook term, and the one Keras uses.
   - **node:** that unit's circle in the diagram (`network-diagram/`), with its gauge. A node's
-    drawn row and its unit index can differ: `unitAt` in `network-diagram.tsx` maps one to the
+    drawn row and its unit index can differ: `unitAt` in `network-drawing.tsx` maps one to the
     other.
   - **neuron:** what the lesson, the students and the activation analysis call it. It is the
     usual word in interpretability work, which studies what each one responds to, and the word
@@ -58,7 +58,18 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 
   Use the word for the side you are on, and "neuron" in anything a student sees.
 - `network-diagram/`: the shared network diagram. A view says what to show as a `Scene`, and
-  `NetworkDiagram` draws it. `layout.ts` is its geometry; `easing.ts` has the timing curves.
+  `NetworkDiagram` draws it at the size of its container. `NetworkDrawing` is the same drawing as
+  an SVG group, for a view that draws more around the network. `layout.ts` is its geometry;
+  `easing.ts` has the timing curves; `forward-pass-phases.ts` is the four phases of a
+  conversation's forward pass through the network as a function of time, which Trace a Case plays
+  as its steps and Extract Pathways replays.
+- `steps/`: the step system views share. A view's timeline rests at markers, points where the
+  scene is still and progress is stored, and plays segments between them. `StepPlayer` plays the
+  segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. A view
+  lists its buttons as `StepButton`s, each saying which segment it plays when the timeline rests
+  at a marker, and `StepRow` draws them with Reset. The player's scene changes on every frame of a
+  run, so a view reads `player.scene` only inside a small `<Observer>` around its drawing; the
+  rest of the view then doesn't re-render while a run plays.
 - `conversation-card/`: the conversation panel the lesson's views share. `ConversationCard` is the
   shell: the count, previous and next, a screen-reader status, and "No conversations match that
   search." when the list is empty. A view fills its body from the parts beside it:

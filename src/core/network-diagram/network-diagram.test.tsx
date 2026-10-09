@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { DIAGRAM_DEFAULT_SIZE, NetworkDiagram, popScale } from "./network-diagram";
+import { DIAGRAM_DEFAULT_SIZE, NetworkDiagram } from "./network-diagram";
+import { popScale } from "./network-drawing";
 import { layoutNetwork } from "./layout";
 import { emptyScene, fullScene, Scene } from "./scene";
 import { toyNetwork } from "../network/toy-network";

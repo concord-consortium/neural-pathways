@@ -2,6 +2,7 @@ import React from "react";
 import type { AnyModel, ModelClass } from "mobx-keystone";
 import { TraceACaseState } from "../views/trace-a-case/trace-a-case-state";
 import { TraceACase } from "../views/trace-a-case/trace-a-case";
+import { ExtractPathwaysState } from "../views/extract-pathways/extract-pathways-state";
 import { ExtractPathways } from "../views/extract-pathways/extract-pathways";
 import { InvestigatePathways } from "../views/investigate-pathways/investigate-pathways";
 import { PredictionChain } from "../views/prediction-chain/prediction-chain";
@@ -21,7 +22,10 @@ export interface ViewDef {
 /** The lesson's views, in lesson order. This order is the navigation order. */
 export const VIEWS: readonly ViewDef[] = [
   { id: "trace-a-case", title: "Trace a Case", component: TraceACase, stateModel: TraceACaseState },
-  { id: "extract-pathways", title: "Extract Pathways", component: ExtractPathways },
+  {
+    id: "extract-pathways", title: "Extract Pathways", component: ExtractPathways,
+    stateModel: ExtractPathwaysState,
+  },
   { id: "investigate-pathways", title: "Investigate Pathways", component: InvestigatePathways },
   { id: "prediction-chain", title: "Prediction Chain", component: PredictionChain },
   { id: "correlations", title: "Correlations", component: Correlations },

@@ -1,5 +1,5 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
-import { observer } from "mobx-react-lite";
+import { Observer, observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { ConversationWords } from "../../core/conversation-card/conversation-words";
 import { ActualLabel } from "../../core/conversation-card/actual-label";
@@ -8,9 +8,7 @@ import { alien3Dataset } from "../../core/datasets/alien3-dataset";
 import { conversationFilterFor, idsFor } from "../../core/filter/conversation-filter";
 import { FilterBar } from "../../core/filter/filter-bar";
 import { useConversationFilter } from "../../core/filter/use-conversation-filter";
-import { ForwardPass } from "../../core/network/forward";
 import { indexPasses } from "../../core/network/index-passes";
-import { NetworkScales } from "../../core/network/network-scales";
 import { toyNetwork } from "../../core/network/toy-network";
 import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
@@ -19,12 +17,14 @@ import { TraceACaseState } from "./trace-a-case-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
-import { StepRow } from "./step-row";
-import { StepPlayer } from "./step-player";
+import { StepPlayer } from "../../core/steps/step-player";
+import { StepRow } from "../../core/steps/step-row";
+import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
 import "./trace-a-case.scss";
 
-/** Units in each drawn layer. Fixed, as StepPlayer requires. */
+/** Units in each drawn layer. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
+const TIMELINE = traceTimeline(COLUMN_SIZES);
 
 /** Gives the stylesheet the diagram's smallest layout, which it sizes the network panel from. */
 const LAYOUT_STYLE = { "--diagram-min-height": `${MIN_HEIGHT}px` } as React.CSSProperties;
@@ -72,9 +72,10 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // No conversation is shown when nothing matches: the empty list leaves the stored id in place.
   const shownId = listPosition < 0 ? undefined : currentId;
   const player = useMemo(
-    () => (shownId === undefined ? undefined : new StepPlayer(COLUMN_SIZES, state, shownId)), [state, shownId]);
-  // Stop the old player when the conversation changes or the view unmounts. A layout effect, so no
-  // frame of its step can run, and save, after the change is committed.
+    () => (shownId === undefined ? undefined : new StepPlayer(TIMELINE, traceProgress(state, shownId))),
+    [state, shownId]);
+  // Stop the old player when the conversation changes or the view unmounts. A layout effect, so its
+  // run can't finish and store its marker after the change is committed.
   useLayoutEffect(() => () => player?.stop(), [player]);
 
   if (index.items.length === 0) {
@@ -92,7 +93,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
       <div className="trace-a-case__filter">
         <FilterBar {...bar} />
       </div>
-      <div className="trace-a-case__case">
+      <div className="trace-a-case__conversation">
         <ConversationCard position={listPosition} total={ids.length}
           onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)}>
           {shown &&
@@ -107,34 +108,20 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
       {player && place !== undefined &&
         <>
           <div className="trace-a-case__steps">
-            <PlayerStepRow player={player} />
+            <StepRow player={player} buttons={TRACE_BUTTONS} />
           </div>
           <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
             <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
             <div className="trace-a-case__diagram">
-              <PlayerDiagram player={player} pass={passes[place]} scales={scales} />
+              <Observer>
+                {() => (
+                  <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
+                    outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+                )}
+              </Observer>
             </div>
           </section>
         </>}
     </div>
-  );
-});
-
-// The player is read only in these two observers, so a step playing re-renders them and not the card.
-
-const PlayerStepRow = observer(function PlayerStepRow({ player }: { player: StepPlayer }) {
-  return <StepRow shownStep={player.shownStep} onStep={step => player.play(step)} onReset={() => player.reset()} />;
-});
-
-interface PlayerDiagramProps {
-  player: StepPlayer;
-  pass: ForwardPass;
-  scales: NetworkScales;
-}
-
-const PlayerDiagram = observer(function PlayerDiagram({ player, pass, scales }: PlayerDiagramProps) {
-  return (
-    <NetworkDiagram network={toyNetwork} pass={pass} scales={scales}
-      outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
   );
 });

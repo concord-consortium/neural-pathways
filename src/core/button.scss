@@ -8,4 +8,11 @@
   border-color: color.change(colors.$rule, $alpha: 0.35);
   color: color.change(colors.$ink-2, $alpha: 0.35);
   cursor: default;
+
+  // Forced colors repaints the faded colors in the button's own, so it would look available.
+  // GrayText is the color forced colors gives a native disabled button.
+  @media (forced-colors: active) {
+    border-color: GrayText;
+    color: GrayText;
+  }
 }

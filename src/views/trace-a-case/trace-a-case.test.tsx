@@ -7,6 +7,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { SharedState } from "../../core/state/shared-state";
 import { TraceACaseState } from "./trace-a-case-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
+import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
 import { AttributeDefinition } from "../../core/types/attributes";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { clearDatasetIndexCache } from "../../core/use-dataset-index";
@@ -55,14 +56,6 @@ function showView(shared = new SharedState({}), state = new TraceACaseState({}))
   return shared;
 }
 
-function setReducedMotion() {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    writable: true,
-    value: jest.fn().mockReturnValue({ matches: true }),
-  });
-}
-
 const filterBox = () => screen.getByRole("textbox", { name: "Filter" });
 const typeQuery = (text: string) => fireEvent.change(filterBox(), { target: { value: text } });
 const wordsOf = (i: number) => items[i].text.split(/\s+/).join(" ");
@@ -76,7 +69,7 @@ describe("TraceACase", () => {
   });
 
   afterEach(() => {
-    delete (window as any).matchMedia;
+    clearReducedMotion();
   });
 
   it("shows loading, then the first conversation and the network", async () => {
@@ -89,7 +82,7 @@ describe("TraceACase", () => {
     expect(screen.getByRole("img", { name: "Network diagram" })).toBeInTheDocument();
   });
 
-  it("sets the shared conversation once the conversations arrive", async () => {
+  it("stores the shared conversation once the conversations arrive", async () => {
     const shared = showView();
     await screen.findByText("1 / 3");
     expect(shared.conversationId).toBe(ids[0]);
@@ -119,7 +112,7 @@ describe("TraceACase", () => {
   });
 
   it("draws the network for the conversation shown", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     showView();
     await screen.findByText("1 / 3");
     const stepToAnswer = () => fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
@@ -185,7 +178,7 @@ describe("TraceACase", () => {
   });
 
   it("reveals the network's answer at Step 4", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     showView();
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
@@ -194,7 +187,7 @@ describe("TraceACase", () => {
   });
 
   it("starts a conversation not stepped yet with nothing done", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     showView();
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
@@ -205,7 +198,7 @@ describe("TraceACase", () => {
   });
 
   it("brings a conversation's steps back when returning to it", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     showView();
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
@@ -216,17 +209,17 @@ describe("TraceACase", () => {
   });
 
   it("keeps the steps done for each conversation in the view's state", async () => {
-    setReducedMotion();
+    setReducedMotion(true);
     const state = new TraceACaseState({});
     showView(new SharedState({}), state);
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 3" }));
     fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
     fireEvent.click(screen.getByRole("button", { name: "Step 1" }));
-    expect(state.stepsByConversation).toEqual({ [ids[0]]: 3, [ids[1]]: 1 });
+    expect(state.markerByConversation).toEqual({ [ids[0]]: 3, [ids[1]]: 1 });
   });
 
-  it("drops a step that is playing when the conversation changes, keeping the step before", async () => {
+  it("drops a run that is playing when the conversation changes, keeping the marker before", async () => {
     const state = new TraceACaseState({});
     showView(new SharedState({}), state);
     await screen.findByText("1 / 3");
@@ -237,7 +230,7 @@ describe("TraceACase", () => {
       fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
       expect(jest.getTimerCount()).toBe(0);
       act(() => jest.advanceTimersByTime(5000));
-      expect(state.stepsByConversation).toEqual({ [ids[0]]: 1 });
+      expect(state.markerByConversation).toEqual({ [ids[0]]: 1 });
       fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
       expect(screen.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-current", "step");
     } finally {
@@ -246,8 +239,8 @@ describe("TraceACase", () => {
   });
 
   it("resets the conversation shown, and only that one", async () => {
-    setReducedMotion();
-    const state = new TraceACaseState({ stepsByConversation: { [ids[1]]: 2 } });
+    setReducedMotion(true);
+    const state = new TraceACaseState({ markerByConversation: { [ids[1]]: 2 } });
     showView(new SharedState({}), state);
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 3" }));
@@ -256,10 +249,10 @@ describe("TraceACase", () => {
       expect(screen.getByRole("button", { name: `Step ${step}` })).not.toHaveAttribute("aria-current");
     }
     expect(screen.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
-    expect(state.stepsByConversation).toEqual({ [ids[1]]: 2 });
+    expect(state.markerByConversation).toEqual({ [ids[1]]: 2 });
   });
 
-  it("stops a step that is playing when the view unmounts, keeping the step before", async () => {
+  it("stops a run that is playing when the view unmounts, keeping the marker before", async () => {
     const state = new TraceACaseState({});
     const { unmount } = render(viewWith(new SharedState({}), state));
     await screen.findByText("1 / 3");
@@ -270,13 +263,13 @@ describe("TraceACase", () => {
       unmount();
       expect(jest.getTimerCount()).toBe(0);
       act(() => jest.advanceTimersByTime(5000));
-      expect(state.stepsByConversation).toEqual({ [ids[0]]: 1 });
+      expect(state.markerByConversation).toEqual({ [ids[0]]: 1 });
     } finally {
       jest.useRealTimers();
     }
   });
 
-  it("doesn't re-render the conversation card while a step plays", async () => {
+  it("doesn't re-render the conversation card while a run plays", async () => {
     showView();
     await screen.findByText("1 / 3");
     const cardRenders = jest.spyOn(conversationCard, "ConversationCard");
@@ -293,8 +286,8 @@ describe("TraceACase", () => {
     }
   });
 
-  it("opens a conversation at the steps saved for it", async () => {
-    showView(new SharedState({}), new TraceACaseState({ stepsByConversation: { [ids[0]]: 2 } }));
+  it("opens a conversation at the marker stored for it", async () => {
+    showView(new SharedState({}), new TraceACaseState({ markerByConversation: { [ids[0]]: 2 } }));
     await screen.findByText("1 / 3");
     expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-current", "step");
   });
@@ -342,7 +335,7 @@ describe("TraceACase", () => {
     });
 
     it("draws the network for the matching conversation, not the one at its place in the list", async () => {
-      setReducedMotion();
+      setReducedMotion(true);
       showView(new SharedState({ query: "n:2" }));
       await screen.findByText("1 / 1");
       fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
@@ -377,8 +370,8 @@ describe("TraceACase", () => {
       expect(shared.conversationId).toBe(ids[0]);
     });
 
-    it("brings the same conversation back, at its step, when the query is cleared", async () => {
-      setReducedMotion();
+    it("brings the same conversation back, at its marker, when the query is cleared", async () => {
+      setReducedMotion(true);
       const shared = showView(new SharedState({ conversationId: ids[1] }));
       await screen.findByText("2 / 3");
       fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
@@ -429,7 +422,7 @@ describe("TraceACase", () => {
       expect(filterBox()).toHaveAccessibleDescription("Incomplete query");
     });
 
-    it("stops a step playing on a conversation the draft hides, keeping the step before", async () => {
+    it("stops a run playing on a conversation the draft hides, keeping the marker before", async () => {
       const state = new TraceACaseState({});
       showView(new SharedState({}), state);
       await screen.findByText("1 / 3");
@@ -440,7 +433,7 @@ describe("TraceACase", () => {
         typeQuery("n:>1");
         expect(jest.getTimerCount()).toBe(0);
         act(() => jest.advanceTimersByTime(5000));
-        expect(state.stepsByConversation).toEqual({ [ids[0]]: 1 });
+        expect(state.markerByConversation).toEqual({ [ids[0]]: 1 });
       } finally {
         jest.useRealTimers();
       }
