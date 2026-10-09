@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react-lite";
-import { StepButton } from "./step-buttons";
+import { StepButton } from "./step-button";
 import { StepPlayer } from "./step-player";
 import "./step-row.scss";
 

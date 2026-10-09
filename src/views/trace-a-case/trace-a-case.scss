@@ -16,8 +16,8 @@
   display: grid;
   grid-template-columns: 447px minmax(400px, 1fr);
   grid-template-areas:
-    "filter steps"
-    "case   network";
+    "filter       steps"
+    "conversation network";
   align-items: start;
   gap: 9px 10px;
 }
@@ -28,7 +28,7 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "filter"
-      "case"
+      "conversation"
       "steps"
       "network";
   }
@@ -44,8 +44,8 @@
   min-width: 0;
 }
 
-.trace-a-case__case {
-  grid-area: case;
+.trace-a-case__conversation {
+  grid-area: conversation;
   min-width: 0;
 }
 

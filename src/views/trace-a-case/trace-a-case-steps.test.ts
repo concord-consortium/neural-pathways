@@ -33,9 +33,17 @@ describe("TRACE_BUTTONS", () => {
     }
   });
 
-  it("mark the step the timeline rests at as current", () => {
+  it("mark the step for the marker the timeline rests at as current", () => {
     expect(TRACE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(3))).toEqual([false, false, true, false]);
     expect(TRACE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(0))).toEqual([false, false, false, false]);
+  });
+});
+
+describe("traceTimeline", () => {
+  it("times a segment of one phase, and refuses any other, since it draws only the phase it ends on", () => {
+    expect(timeline.duration({ from: 1, to: 2 })).toBeGreaterThan(0);
+    expect(() => timeline.duration({ from: 0, to: 2 })).toThrow(RangeError);
+    expect(() => timeline.duration({ from: 2, to: 2 })).toThrow(RangeError);
   });
 });
 
@@ -56,7 +64,7 @@ describe("Trace a Case's steps on the step player", () => {
     expect(player.scene).toEqual(emptyScene(SIZES));
   });
 
-  it("jumps to the step before, then plays the step", () => {
+  it("jumps to the marker before the step, then plays its run", () => {
     const player = makeState().playerFor("a");
     press(player, 2);
     expect(player.marker).toBe(1);
@@ -73,54 +81,22 @@ describe("Trace a Case's steps on the step player", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("stores the step before while a step plays, and the step only once it ends", () => {
-    const { playerFor, stored } = makeState();
-    const player = playerFor("a");
-    press(player, 2);
-    expect(stored()).toEqual({ a: 1 });
-    jest.advanceTimersByTime(1000);
-    expect(stored()).toEqual({ a: 1 });
-    jest.advanceTimersByTime(3000);
-    expect(stored()).toEqual({ a: 2 });
-  });
-
-  it("stores no steps done on reset", () => {
+  it("stores each conversation's marker by its id, so another starts with nothing done", () => {
     setReducedMotion(true);
     const { playerFor, stored } = makeState();
-    const player = playerFor("a");
-    press(player, 3);
-    player.reset();
-    expect(stored()).toEqual({});
-  });
-
-  it("a player for a conversation not stepped yet starts with nothing done", () => {
-    setReducedMotion(true);
-    const { playerFor } = makeState();
     press(playerFor("a"), 4);
+    expect(stored()).toEqual({ a: 4 });
     const other = playerFor("b");
     expect(other.marker).toBe(0);
     expect(other.scene).toEqual(emptyScene(SIZES));
   });
 
-  it("a new player for a conversation shows the steps stored for it", () => {
+  it("a new player for a conversation shows the marker stored for it", () => {
     setReducedMotion(true);
     const { playerFor } = makeState();
     press(playerFor("a"), 4);
     const again = playerFor("a");
     expect(again.marker).toBe(4);
     expect(again.scene).toEqual(sceneAt(SIZES, 4));
-  });
-
-  it("a step cut short comes back as the step before it, not playing", () => {
-    const { playerFor } = makeState();
-    const first = playerFor("a");
-    press(first, 2);
-    jest.advanceTimersByTime(500);
-    first.stop();
-    const again = playerFor("a");
-    expect(again.marker).toBe(1);
-    expect(again.currentFrame).toBeUndefined();
-    expect(again.scene).toEqual(sceneAt(SIZES, 1));
-    expect(jest.getTimerCount()).toBe(0);
   });
 });

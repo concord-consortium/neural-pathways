@@ -1,4 +1,4 @@
-import { StepButton } from "../../core/steps/step-buttons";
+import { StepButton } from "../../core/steps/step-button";
 import { Marker, StepProgress } from "../../core/steps/step-player";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 

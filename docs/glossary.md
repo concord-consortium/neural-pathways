@@ -7,18 +7,19 @@ one thing, or one name for two things, settle it and add it here.
 ## State
 
 - **store:** write a value into the state tree, through a model action, as when the filter bar
-  stores a finished query or the step player stores a marker. Undo records it. Not "commit" or
-  "set" in prose, though `onCommit` stays the filter bar's event name.
+  stores a finished query or the step player stores a marker. Undo, once built, will record it.
+  Not "commit" or "set" in prose, though `onCommit` stays the filter bar's event name.
 - **save:** keep the state tree as the student's data, so it can be loaded again: the Activity
   Player's save and load. A value stored in the tree is saved with it. Not "store" for this.
 - **saved form:** the JSON a model saves as, which the rules in `view-state.md` protect. Not
   "saved shape".
-- **draft:** the query being typed, not yet stored. It is volatile: never saved and never undone.
+- **draft:** the query being typed, not yet stored. It is volatile: never saved, and not for undo
+  to record.
 
 ## Conversations
 
-- **conversation:** one item of the dataset. Not "case", which appears only in the view's name,
-  Trace a Case.
+- **conversation:** one item of the dataset. Not "case" for a conversation: that word appears only
+  in the view's name, Trace a Case.
 - **place:** a conversation's index among all of them, in index order. Passes are kept by place.
 - **position:** a conversation's index in the list being stepped through, which the filter decides
   (`listPosition` in Trace a Case, `position` on the conversation card).
