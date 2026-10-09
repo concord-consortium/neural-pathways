@@ -68,6 +68,17 @@ test("unavailable steps look unavailable in forced-colors mode", async ({ page }
   expect(await color("Reset")).toBe(await color("Collect All Conversations"));
 });
 
+test("the drawing keeps the focus when its frame widens and it stops scrolling", async ({ page }) => {
+  await canvasIn(page, 600);
+  await scrollRegion(page).focus();
+  await page.setViewportSize({ width: 1300, height: 900 });
+  await expect.poll(() => page.locator(".extract-drawing").evaluate(e => e.scrollWidth > e.clientWidth)).toBe(false);
+  await expect(scrollRegion(page)).toBeFocused();
+  // Once the focus leaves, there's nothing to scroll, so it's no longer a Tab stop.
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.locator(".extract-drawing")).not.toHaveAttribute("tabindex");
+});
+
 test("three collections give three deck columns", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Setup" }).click();

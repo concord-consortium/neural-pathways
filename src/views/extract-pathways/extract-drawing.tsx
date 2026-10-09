@@ -1,4 +1,4 @@
-import React, { useId, useMemo } from "react";
+import React, { useCallback, useId, useMemo } from "react";
 import { signColor } from "../../core/colors";
 import { ForwardPass } from "../../core/network/forward";
 import { Network } from "../../core/network/network";
@@ -6,6 +6,7 @@ import { NetworkScales } from "../../core/network/network-scales";
 import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { COLUMN_CAPTIONS, MIN_GAUGE, NetworkDrawing } from "../../core/network-diagram/network-drawing";
 import { useElementSize } from "../../core/use-element-size";
+import { useKeyboardScrollable } from "../../core/use-keyboard-scrollable";
 import {
   CANVAS_HEIGHT, deckPosition, extractGeometry, LABEL_Y, NETWORK_WIDTH,
 } from "./extract-geometry";
@@ -101,14 +102,21 @@ interface ExtractDrawingProps {
 /**
  * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, the
  * deck in the left, drawn as `scene` says. Drawn at full size and as wide as its container, but
- * never narrower than `minCanvasWidth`; a narrower container scrolls it sideways. While it scrolls,
- * the container is a named group in the tab order, so the keyboard can scroll it in any browser.
+ * never narrower than `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard
+ * can reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, not
+ * a region, since the panel around it is already a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
   network, passes, scales, outputLabels, scene, headingId,
 }) => {
   // Until the host is measured, and in jsdom, which can't measure it: the narrowest layout.
   const [hostRef, size] = useElementSize<HTMLDivElement>({ width: 0, height: CANVAS_HEIGHT });
+  const [scrollerRef, scrollerProps] =
+    useKeyboardScrollable<HTMLDivElement>({ role: "group", "aria-labelledby": headingId });
+  const ref = useCallback((element: HTMLDivElement | null) => {
+    hostRef(element);
+    scrollerRef(element);
+  }, [hostRef, scrollerRef]);
   const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
   const geometry = useMemo(() => extractGeometry(columnSizes, size.width), [columnSizes, size.width]);
   const names = useMemo(() => hiddenNames(columnSizes), [columnSizes]);
@@ -124,11 +132,9 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
     from, to: deckPosition(deck, column, k), fromR: layout.radius, toR: deck.r,
   }));
   const pass = passes[(scene.shown ?? 1) - 1];
-  const scrolls = size.width > 0 && size.width < width;
 
   return (
-    <div ref={hostRef} className="extract-drawing"
-      {...(scrolls && { tabIndex: 0, role: "group", "aria-labelledby": headingId })}>
+    <div ref={ref} className="extract-drawing" {...scrollerProps}>
       <svg role="img" aria-label={describeScene(scene, hidden.length)} className="extract-drawing__svg"
         width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         <defs>
