@@ -14,7 +14,7 @@ export interface ExtractScene {
   network: Scene;
   /** Which conversation the network shows, 1-based; undefined until the first collection starts. */
   shown: number | undefined;
-  /** "Conversation n" over the network, and how far its bounce has got, 0–1. */
+  /** "Conversation n" over the network, and how far its bounce has gone, 0–1. */
   label: { n: number; bounce: number } | undefined;
   /** The lifted column, once its copies have left. `flight` is ms since they left. */
   lifted: { flight: number; opacity: number; labelOpacity: number } | undefined;
