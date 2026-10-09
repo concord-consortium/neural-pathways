@@ -16,7 +16,7 @@ export const TRACE_BUTTONS: readonly StepButton[] = PHASES.map(phase => ({
 }));
 
 /**
- * The forward pass's phases as Trace a Case plays them: Step k is phase k, so marker k is k phases
+ * The forward pass's phases as Trace a Case plays them: Step k is phase k, so marker k is k steps
  * done, and the segment to it plays phase k.
  */
 export function traceTimeline(columnSizes: readonly number[]): StepTimeline<Scene> {

@@ -33,7 +33,7 @@ describe("TRACE_BUTTONS", () => {
     }
   });
 
-  it("mark the step the timeline rests at as current", () => {
+  it("mark the step for the marker the timeline rests at as current", () => {
     expect(TRACE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(3))).toEqual([false, false, true, false]);
     expect(TRACE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(0))).toEqual([false, false, false, false]);
   });
@@ -64,7 +64,7 @@ describe("Trace a Case's steps on the step player", () => {
     expect(player.scene).toEqual(emptyScene(SIZES));
   });
 
-  it("jumps to the step before, then plays the step", () => {
+  it("jumps to the marker before the step, then plays its run", () => {
     const player = makeState().playerFor("a");
     press(player, 2);
     expect(player.marker).toBe(1);
@@ -81,7 +81,7 @@ describe("Trace a Case's steps on the step player", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("stores the step before while a step plays, and the step only once it ends", () => {
+  it("stores the marker before while a run plays, and the step's own only once it ends", () => {
     const { playerFor, stored } = makeState();
     const player = playerFor("a");
     press(player, 2);
@@ -92,7 +92,7 @@ describe("Trace a Case's steps on the step player", () => {
     expect(stored()).toEqual({ a: 2 });
   });
 
-  it("stores no steps done on reset", () => {
+  it("stores the start on reset", () => {
     setReducedMotion(true);
     const { playerFor, stored } = makeState();
     const player = playerFor("a");
@@ -110,7 +110,7 @@ describe("Trace a Case's steps on the step player", () => {
     expect(other.scene).toEqual(emptyScene(SIZES));
   });
 
-  it("a new player for a conversation shows the steps stored for it", () => {
+  it("a new player for a conversation shows the marker stored for it", () => {
     setReducedMotion(true);
     const { playerFor } = makeState();
     press(playerFor("a"), 4);
@@ -119,7 +119,7 @@ describe("Trace a Case's steps on the step player", () => {
     expect(again.scene).toEqual(sceneAt(SIZES, 4));
   });
 
-  it("a step cut short comes back as the step before it, not playing", () => {
+  it("a run cut short comes back at the marker before it, not playing", () => {
     const { playerFor } = makeState();
     const first = playerFor("a");
     press(first, 2);
