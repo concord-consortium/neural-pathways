@@ -266,8 +266,9 @@ conversation is now shown, so both stay. Check the pair with a screen reader at 
   - each item's accessible text: "Voices raised: yes", "Near water: no", "Group size: 4", the raw
     number for an attribute without `valueLabels`, and "…: not recorded" for a missing or `null`
     value.
-- **`AlienIcon`:** each of the nine keys renders an `svg`, no two the same; an unknown key, or a
-  name on `Object.prototype`, renders nothing.
+- **`AlienIcon`:** each icon in the folder renders an `svg`, no two the same; an unknown key, or a
+  name on `Object.prototype`, renders nothing. The generator's tests check that each of its
+  attributes has an icon.
 - **Trace a Case:** the current conversation's label, notes and attribute indicators show, with
   none for a hidden attribute; next updates the status. When nothing matches, the card shows its
   empty state and its status stays the same element. The tests that found the words by their full
@@ -283,7 +284,7 @@ tests under [Panel heights](#panel-heights):
   - conversation 1 shows a "wait" chip, notes starting "At least one juvenile was present.", and
     five attribute indicators: "Voices raised: no", "Engaged in a task: yes", "Group size: 2",
     "Near water: yes", "Food present: no";
-  - each indicator has an icon, and the five share the row equally;
+  - each indicator has an icon with something drawn in it, and the five share the row equally;
   - no indicator is named for a hidden attribute, such as "Resource stressed";
   - after Next, the status reads "Conversation 2 of 800" and the chip says "approach";
 - in the stacked layout, the card doesn't scroll sideways.

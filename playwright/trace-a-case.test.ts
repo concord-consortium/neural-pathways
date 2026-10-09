@@ -159,8 +159,10 @@ test("the card shows the conversation's label, notes and attribute indicators", 
   await expect(card.getByText(/^At least one juvenile was present\./)).toBeVisible();
   const indicators = card.getByRole("listitem");
   await expect(indicators).toHaveCount(5);
-  // Each of the data's attributes has a drawing.
-  await expect(indicators.locator("svg")).toHaveCount(5);
+  // Each indicator has a drawing, and the drawing has something in it.
+  const icons = indicators.locator("svg");
+  await expect(icons).toHaveCount(5);
+  expect(await icons.evaluateAll(svgs => svgs.map(svg => svg.childElementCount > 0))).toEqual(Array(5).fill(true));
   // The cells share the row equally, so a long label wraps rather than widening its cell.
   const widths = await indicators.evaluateAll(items =>
     items.map(item => Math.round(item.getBoundingClientRect().width)));

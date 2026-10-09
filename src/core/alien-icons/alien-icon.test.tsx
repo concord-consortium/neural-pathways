@@ -1,11 +1,10 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { AlienIcon } from "./alien-icon";
+import { ICON_FILES } from "./alien-icon-files";
 
-const KEYS = [
-  "voices_raised", "engaged_in_task", "group_size", "near_water", "food_present",
-  "resource_stressed", "gestures_repeated", "young_present", "carrying_burden",
-];
+// Every icon in the folder. The generator's tests check there is one for each of its attributes.
+const KEYS = Array.from(ICON_FILES.keys());
 
 function renderIcon(attributeKey: string) {
   const { container } = render(<AlienIcon attributeKey={attributeKey} size={34} />);
