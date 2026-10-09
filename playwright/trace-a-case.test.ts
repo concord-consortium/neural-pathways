@@ -258,6 +258,9 @@ test.describe("the card and network panels", () => {
     await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card } = panels(page);
+    // A long conversation, so its attribute indicators sit well below the bottom of the card.
+    await page.getByRole("textbox", { name: "Filter" }).fill("n:500");
+    await expect(page.getByText("1 / 1", { exact: true })).toBeVisible();
     const notes = card.getByRole("region", { name: "Observation notes" });
     await expect(notes).toBeVisible();
     const overflow = (locator: Locator) => locator.evaluate(el => el.scrollHeight - el.clientHeight);

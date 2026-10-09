@@ -55,7 +55,11 @@
   list-style: none;
 }
 
+// Positioned so its hidden spoken value is placed within it, inside the scrolling notes box, which
+// clips it. Placed by the card instead, the 1 px span would escape the box and stretch the card's
+// overflow wherever the indicators had scrolled to.
 .observation-notes__indicator {
+  position: relative;
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
