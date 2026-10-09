@@ -104,7 +104,7 @@ describe("StepRow", () => {
     showRow(1, [{ key: "next", label: "Next", segmentToPlayWhenAt: segmentAt }]);
     fireEvent.click(button("Next"));
     const callsOnceStarted = segmentAt.mock.calls.length;
-    // Half way through the run: many frames, each a new `currentFrame`.
+    // Halfway through the run: many frames, each a new `currentFrame`.
     act(() => jest.advanceTimersByTime(500));
     expect(segmentAt).toHaveBeenCalledTimes(callsOnceStarted);
   });
