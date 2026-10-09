@@ -282,9 +282,9 @@ The rules that follow from this:
   is zoomed (WCAG 1.4.4). NPW-51 records this as a guideline for the whole repo.
 - It is never narrower than `minCanvasWidth`, 909: the network plus two strips that each hold the
   ten columns collected by hand, with 10 clear. A narrower panel scrolls the drawing sideways. While
-  it scrolls, the drawing's container is a group named by the panel heading, with `tabIndex` 0, so
-  the keyboard can reach and scroll it in any browser. The interactive is meant to be embedded wide
-  enough not to scroll; an iPad's standalone layout leaves 980.
+  it scrolls, or has the focus, the drawing's container is a group named by the panel heading, with
+  `tabIndex` 0, so the keyboard can reach and scroll it in any browser. The interactive is meant to
+  be embedded wide enough not to scroll.
 - The network is laid out by `layoutNetwork` at 537 × 440 and centered. The strips are what is
   left on each side.
 
@@ -499,9 +499,10 @@ as in the prototype, where `setNodeLevel` has no transition.
 - Switching to Trace a Case and back keeps the stage.
 - Collect a Conversation is unavailable after 10, and keeps the focus.
 - Reset clears everything.
-- A 980 px panel, as an iPad's standalone layout leaves, holds the canvas at full size without
-  scrolling. A 600 px frame scrolls the drawing sideways, not the page, and the keyboard can tab to
-  the drawing and scroll it.
+- A frame just wide enough for the 909 px canvas holds it at full size without scrolling, a wider
+  one widens it, and one a pixel narrower scrolls it. A 600 px frame scrolls the drawing sideways,
+  not the page, and the keyboard can tab to the drawing and scroll it. Widening the frame while
+  the drawing has the focus keeps the focus there.
 
 The existing Trace a Case tests still pass.
 
