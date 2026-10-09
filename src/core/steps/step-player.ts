@@ -93,6 +93,9 @@ export class StepPlayer<S> {
     const { from, to } = segment;
     // First, so a timeline that throws for this segment leaves the player as it was.
     const duration = this.timeline.duration(segment);
+    if (!Number.isFinite(duration)) {
+      throw new RangeError(`A segment can't take ${duration} ms: the clock would never end it`);
+    }
     this.stop();
     if (prefersReducedMotion()) {
       this.progress.setMarker(to);

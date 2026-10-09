@@ -89,7 +89,7 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
   const { radius } = layout;
   const winner = predictedClass(pass);
   /** What everything but the hidden layers' nodes fades to under the spotlight. */
-  const surroundOpacity = 1 - scene.hiddenLayerSpotlight;
+  const surroundOpacity = 1 - clamp01(scene.hiddenLayerSpotlight);
 
   const nodeValue = (column: number, unit: number) =>
     column === lastColumn ? pass.layers[column][unit] / scales.logitScale : pass.layers[column][unit];

@@ -39,6 +39,14 @@ describe("TRACE_BUTTONS", () => {
   });
 });
 
+describe("traceTimeline", () => {
+  it("times a segment of one phase, and refuses any other, since it draws only the phase it ends on", () => {
+    expect(timeline.duration({ from: 1, to: 2 })).toBeGreaterThan(0);
+    expect(() => timeline.duration({ from: 0, to: 2 })).toThrow(RangeError);
+    expect(() => timeline.duration({ from: 2, to: 2 })).toThrow(RangeError);
+  });
+});
+
 describe("Trace a Case's steps on the step player", () => {
   beforeEach(() => {
     jest.useFakeTimers();

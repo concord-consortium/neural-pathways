@@ -21,7 +21,13 @@ export const TRACE_BUTTONS: readonly StepButton[] = PHASES.map(phase => ({
  */
 export function traceTimeline(columnSizes: readonly number[]): StepTimeline<Scene> {
   return {
-    duration: ({ to }) => phaseDuration(toPhase(to), columnSizes),
+    duration: ({ from, to }) => {
+      // sceneAt draws only the phase a run ends on, so a run must be that one phase.
+      if (from !== to - 1) {
+        throw new RangeError(`Trace a Case plays one phase at a time, not ${from} to ${to}`);
+      }
+      return phaseDuration(toPhase(to), columnSizes);
+    },
     sceneAt: (marker, frame) => sceneAt(columnSizes, marker, frame && { phase: toPhase(frame.to), t: frame.t }),
   };
 }

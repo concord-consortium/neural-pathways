@@ -127,6 +127,15 @@ describe("StepPlayer", () => {
     expect(progress.marker).toBe(0);
   });
 
+  it.each([NaN, Infinity])("refuses a duration of %p, which the clock can't end, changing nothing", duration => {
+    const progress = new TestProgress(2);
+    const player = new StepPlayer({ ...timeline, duration: () => duration }, progress);
+    expect(() => player.play("a", { from: 2, to: 3 })).toThrow(RangeError);
+    expect(progress.marker).toBe(2);
+    expect(player.currentFrame).toBeUndefined();
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
   it("changes nothing when the timeline can't time a segment", () => {
     const progress = new TestProgress(2);
     const strict: StepTimeline<TestScene> = {
