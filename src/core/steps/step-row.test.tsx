@@ -71,7 +71,6 @@ describe("StepRow", () => {
     // eslint-disable-next-line testing-library/render-result-naming-convention -- showRow returns StepPlayer
     const player = showRow();
     const play = jest.spyOn(player, "play");
-    // Not disabled, so it stays in the tab order.
     expect(button("Later")).toBeEnabled();
     fireEvent.click(button("Later"));
     expect(play).not.toHaveBeenCalled();

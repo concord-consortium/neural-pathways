@@ -4,8 +4,7 @@ import { flightDuration } from "./flight";
 
 /**
  * How strongly the hidden neurons are spotlit while copies of them fly out of the network:
- * everything else fades to half strength. During a collection, the lifted column's copies fade with
- * it.
+ * everything else fades to half strength.
  */
 export const SPOTLIGHT = 0.5;
 
@@ -30,9 +29,8 @@ export function hiddenCount(columnSizes: readonly number[]): number {
 
 /**
  * The scene resting at `marker`, with nothing running: the blank network; then the lifted
- * column; then the last conversation collected in full, under its label, with the deck. Once a
- * conversation is collected, the hidden neurons stay spotlit, and the lifted column's copies faded,
- * as its flight left them, until the next collection brings them back.
+ * column; then the last conversation collected in full, under its label, with the deck, spotlit as
+ * its flight left it (see `collectSceneAt`).
  */
 export function restScene(columnSizes: readonly number[], marker: Marker): ExtractScene {
   const collected = Math.max(0, marker - 1);

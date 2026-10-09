@@ -170,9 +170,8 @@ function quickNetwork(columnSizes: readonly number[], plan: QuickPlan, t: number
 }
 
 /**
- * When the network part begins. The first conversation follows Setup, which leaves no spotlight on
- * the network. Every later one first lifts the spotlight the last flight left, bringing the lifted
- * column back with it.
+ * When the network part begins: at once for the first conversation, and after lifting the last
+ * flight's spotlight for every later one.
  */
 function networkStart(n: number): number {
   return n === 1 ? 0 : UNDIM_MS;
