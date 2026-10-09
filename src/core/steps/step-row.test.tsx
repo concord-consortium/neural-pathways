@@ -83,6 +83,9 @@ describe("StepRow", () => {
     fireEvent.click(button("Next"));
     act(() => jest.advanceTimersByTime(1100));
     expect(button("Next")).toHaveAttribute("aria-disabled", "true");
+    // jsdom doesn't move the focus off a button that becomes disabled, as a browser does, so this
+    // checks it isn't; the Playwright tests check the focus stays in a browser.
+    expect(button("Next")).toBeEnabled();
     expect(button("Next")).toHaveFocus();
   });
 
