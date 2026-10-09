@@ -4,6 +4,13 @@
 .extract-drawing {
   width: 100%;
   overflow-x: auto;
+
+  // The ring the step row and the conversation card use, drawn inside: the drawing fills its panel
+  // edge to edge, so a ring outside it would be cut off at the sides.
+  &:focus-visible {
+    outline: 2px solid colors.$wait;
+    outline-offset: -2px;
+  }
 }
 
 .extract-drawing__svg {
