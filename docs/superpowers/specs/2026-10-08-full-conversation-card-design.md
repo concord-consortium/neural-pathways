@@ -122,7 +122,7 @@ interface ObservationNotesProps {
   - **the label,** `attribute.label`, in Barlow Condensed 400, 12 px, `$ink-3`. The app's font
     link loads only weight 600 today, so it gains 400.
   - **the icon,** `AlienIcon` at 34 px, stroked in `$ink-2`;
-  - **the value,** 18 px square, Lato 700 12 px, `$ink`:
+  - **the value,** 18 px square, Lato 700 12 px, `$ink`. The font link loads Lato 700 for it:
     - an integer attribute shows its number;
     - a binary attribute shows ✔ (U+2714 followed by U+FE0E, so no platform draws it as an emoji)
       for 1, and nothing for 0;
