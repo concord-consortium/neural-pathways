@@ -53,8 +53,11 @@ describe("StepRow", () => {
       .toEqual(["One", "Next", "Later", "Reset"]);
   });
 
-  it("disables a button with no segment, and makes Reset unavailable at the start", () => {
+  it("marks no button as current at the start, disables one with no segment, and makes Reset unavailable", () => {
     showRow();
+    for (const name of ["One", "Next", "Later"]) {
+      expect(button(name)).not.toHaveAttribute("aria-current");
+    }
     expect(button("Later")).toBeDisabled();
     expect(button("Next")).toBeEnabled();
     expect(button("Reset")).toHaveAttribute("aria-disabled", "true");
