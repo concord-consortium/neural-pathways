@@ -95,7 +95,7 @@ class StepPlayer<S> {
 - The cleanup rules don't change: only the run is held, the clock runs only while it plays, and
   the view calls `stop()` when it drops a player.
 
-### `step-buttons.ts`
+### `step-button.ts`
 
 ```ts
 interface StepButton {

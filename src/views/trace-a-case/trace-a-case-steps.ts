@@ -1,6 +1,6 @@
 import { phaseDuration, PHASES, sceneAt, toPhase } from "../../core/network-diagram/forward-pass-phases";
 import { Scene } from "../../core/network-diagram/scene";
-import { StepButton } from "../../core/steps/step-buttons";
+import { StepButton } from "../../core/steps/step-button";
 import { Marker, StepProgress, StepTimeline } from "../../core/steps/step-player";
 import { TraceACaseState } from "./trace-a-case-state";
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { StepButton } from "./step-buttons";
+import { StepButton } from "./step-button";
 import { StepPlayer, StepTimeline } from "./step-player";
 import { StepRow } from "./step-row";
 import { clearReducedMotion, setReducedMotion, TestProgress } from "./test-helpers";
