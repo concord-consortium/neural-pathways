@@ -30,8 +30,8 @@ fails it the same way, and WCAG lists that as a failure,
 
 Scaling *up* to fill a wide container counts too. At 200% zoom the container is half as wide, the
 factor halves, and the text stays the size it was. A floor or ceiling on the factor only limits
-the damage: a canvas scaled down to no less than 0.75, in a 1000 px frame, grows its captions
-1.54× at 200% zoom, not 2×.
+the damage: a canvas scaled down to no less than 0.75 can grow its captions as little as 1.5× at
+200% zoom, not 2×.
 
 **What's fine.**
 - Graphics with no text, such as the lab's histogram bars (`preserveAspectRatio="none"`).
@@ -45,11 +45,15 @@ it scroll sideways in its own region, and keep the page from scrolling.
   content that needs a two-dimensional layout, such as diagrams. Text and controls around the
   drawing still have to reflow at 320 CSS px wide.
 - The scroll region must work from the keyboard
-  ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). Chromium
-  makes a scroll region with nothing focusable in it reachable by Tab; other browsers may not. If
-  it holds nothing focusable, give it `tabIndex={0}` and an accessible name while it overflows.
+  ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). Chromium and
+  Firefox make a scroll region with nothing focusable in it reachable by Tab; Safari doesn't. If
+  it holds nothing focusable, give it `tabIndex={0}`, `role="region"` and an `aria-label` while it
+  overflows.
 - Size the narrowest layout from what it must hold, not from one window's measurement, and say in
   a comment what sets it.
+
+The network diagram doesn't do this yet. Below its narrowest layout (`MIN_WIDTH` in
+`src/core/network-diagram/layout.ts`) the page scrolls sideways, not the diagram.
 
 **Check it.** Zoom to 200% in a frame as narrow as the lesson will be embedded in, and compare a
 label's rendered size with its size at 100%: it should be twice as big. A Playwright context can
