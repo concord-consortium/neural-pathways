@@ -28,7 +28,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 | Decision | Choice | Why |
 |---|---|---|
 | Animate, speed and About | Not in this story. The steps always animate, at the prototype's Med timings. | The Animate and speed controls (NPW-38, NPW-44) aren't built yet, and NPW-48 comes before them. NPW-24 adds both, and the activation legend, to the view. |
-| The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 put the network diagram and its timing in core once a second view needed them, and this is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
+| The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 put the network diagram in core for the views that share it, but kept its timing and steps in Trace a Case until a second view needed them. This is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
 | Button rules | Each button says which segment it plays at the marker the timeline rests at (none when it is disabled), and can say whether it is current there. The step row works out disabled and current from those. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
 | Progress | One marker: a point on the view's timeline where the scene rests and progress is stored. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
 | Markers and segments | The timeline's resting points are markers, and the animation between two is a segment, as in Lottie (`playSegments`) and After Effects. "Step" stays with the buttons and the row. | A button isn't a step of the timeline: Collect a Conversation plays a different segment each press, and Collect All will play across many. Trace a Case's Step *k* happens to play the segment to marker *k*. "Keyframe" would suggest in-betweens filled in for us, and `network-drawing.tsx` already uses it for the pill's pop. |
@@ -86,8 +86,10 @@ class StepPlayer<S> {
 }
 ```
 
-- **`play`:** stops any run, stores `from`, then runs the requestAnimationFrame clock. At
-  `t >= duration(segment)` it stops and stores `to`. A run in progress is never stored.
+- **`play`:** reads `duration(segment)` first, so a timeline that throws, or gives a duration that
+  isn't finite, leaves the player as it was. Then it stops any run, stores `from`, and runs the
+  requestAnimationFrame clock. At `t >= duration` it stops and stores `to`. A run in progress is
+  never stored.
 - **Reduced motion:** `play` stores `to` straight away.
 - **`reset`:** stops and stores 0.
 - **`stop`:** cancels the clock and drops the run. Progress keeps `from`. The player can play
@@ -423,10 +425,13 @@ as in the prototype, where `setNodeLevel` has no transition.
   - `play` stores `from`, runs, then stores `to`;
   - a press during a run drops it, so its `to` is never stored;
   - reduced motion stores `to` straight away;
+  - a run that has ended plays again from its `from`;
   - `stop()` cancels the clock, and the player plays again afterward;
-  - `reset()` stores 0.
+  - `reset()` stores 0;
+  - a timeline that throws for a segment, or gives a duration that isn't finite, changes nothing.
 - **`step-row.test.tsx`** (RTL):
-  - the current button comes from the running button, or from `showAsCurrentWhenAt` when idle;
+  - the current button comes from the running button, or from `showAsCurrentWhenAt` when idle,
+    and none is current at marker 0;
   - a button is disabled when `segmentToPlayWhenAt(marker)` is undefined, but never while it runs,
     and pressing it then replays its run;
   - Reset is `aria-disabled` at 0 and stays focusable;
@@ -438,12 +443,13 @@ as in the prototype, where `setNodeLevel` has no transition.
   changed no behavior. Its timeline tests move with the timeline to `forward-pass-phases.test.ts`,
   and its player tests become `trace-a-case-steps.test.ts`, which runs them on the shared player.
 - Its button list: `segmentToPlayWhenAt` and `showAsCurrentWhenAt` for each step.
+- Its timeline times a segment of one phase and refuses any other.
 
 **The diagram**
 
 - `network-diagram.test.tsx` keeps passing.
 - `hiddenLayerSpotlight`: it fades everything but the hidden layers' nodes to 1 − its strength,
-  and defaults to 0.
+  taken as 0–1, and `emptyScene` and `fullScene` set it to 0.
 - `forward-pass-phases.test.ts`, the moved timeline tests.
 
 **Extract Pathways**
@@ -498,7 +504,7 @@ Two stacked PRs, so the shared system is reviewed before the view that uses it. 
 its tests move to core in a commit of their own, so git shows them as renames. The core player and
 row are written new, and Trace a Case's are removed once it uses them.
 
-1. **The shared step system and the diagram split** (about 20 files): `src/core/steps/`, Trace a
+1. **The shared step system and the diagram split** (about 35 files): `src/core/steps/`, Trace a
    Case moved onto it, `forward-pass-phases.ts`, `Scene.hiddenLayerSpotlight` and
    `NetworkDrawing`. Nothing a user sees changes.
 2. **The Extract Pathways view** (about 22 files): state, buttons, drawing, flights, timelines,
