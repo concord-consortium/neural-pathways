@@ -29,15 +29,15 @@ The work is two stacked PRs (see [PRs](#prs)).
 |---|---|---|
 | Animate, speed and About | Not in this story. The steps always animate, at the prototype's Med timings. | The Animate and speed controls (NPW-38, NPW-44) aren't built yet, and NPW-48 comes before them. NPW-24 adds both, and the activation legend, to the view. |
 | The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 put the network diagram in core for the views that share it, but kept its timing and steps in Trace a Case until a second view needed them. This is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
-| Button rules | Each button says which segment it plays at the marker the timeline rests at (none when it is disabled), and can say whether it is current there. The step row works out disabled and current from those. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
+| Button rules | Each button says which segment it plays at the marker the timeline rests at (none when it is unavailable), and can say whether it is current there. The step row works out unavailable and current from those. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
 | Progress | One marker: a point on the view's timeline where the scene rests and progress is stored. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
 | Markers and segments | The timeline's resting points are markers, and the animation between two is a segment, as in Lottie (`playSegments`) and After Effects. "Step" stays with the buttons and the row. | A button isn't a step of the timeline: Collect a Conversation plays a different segment each press, and Collect All will play across many. Trace a Case's Step *k* happens to play the segment to marker *k*. "Keyframe" would suggest in-betweens filled in for us, and `network-drawing.tsx` already uses it for the pill's pop. |
-| Press rules in this story | Trace a Case's: any enabled button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but disabled. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
+| Press rules in this story | Trace a Case's: any available button stops a running step, jumps to where the pressed step starts, and plays it. Collect All Conversations and Extract Pathways are shown but unavailable. | Simple, and already what the prototype does for the two steps built here. NPW-48 adds the rules for the other two. |
 | `extracted` | Renamed `setupDone`. | It means "Setup has been done". "Extract Pathways" is a later step, so the old name would mislead. Nothing has shipped. |
 | Collect a Conversation's network animation | All three of the prototype's versions: a replay of Trace a Case's steps for the first conversation, a swap for the next two, and a quick swap after that. | The replay ties the deck back to Trace a Case. The slower swaps make each new conversation visible before they turn into shorthand. |
 | The end of a collection | Everything but the hidden neurons, and the lifted column, stay dimmed once the column lands, until the next collection starts. Coming back to the view shows the same. | As in the prototype (`collectOne` and `flyColumn`, lines 15161–15215). The prototype rebuilds a returned-to screen at full strength (`restoreRun`, lines 14746–14778), but a pure `sceneAt(marker)` must match the end of the run that reached it, so here it comes back as it was left. |
 | Which conversations | The first ten in dataset order. Extract Pathways doesn't read or change the shared conversation. | The prototype does the same (`cases`, line 10622, with `idx` 0). The view has no conversation panel. |
-| The canvas | One SVG as wide as the panel, never narrower than 995 drawing units: the network in a 537-wide middle, the deck in the left strip, the lifted column in the right. | Before Setup the strips are just empty. This replaces the prototype's widen-and-shift (`widenForLift`, lines 13371–13411). 995 is the prototype's width at its 537 cap plus its two 229 strips, which the 20-column deck needs once NPW-48 adds it. |
+| The canvas | One SVG as wide as the panel, at full size, never narrower than 909: the network in a 537-wide middle, the deck in the left strip, the lifted column in the right. A narrower panel scrolls it rather than scaling it, so its text grows when the page is zoomed. | Before Setup the strips are just empty. This replaces the prototype's widen-and-shift (`widenForLift`, lines 13371–13411), which widens to whatever the panel has; its comments' 229 strips are just the width of the window it was built in. 909 is the narrowest canvas whose left strip holds the ten columns collected by hand. Collect All's 20-column deck would need 352-wide strips, a 1,241 canvas, if it started in the same place; the prototype instead re-centers the deck between the canvas's left edge and the lifted column as it grows (`centreCube`, line 13804), so NPW-48 sets the width that needs. |
 | The activation legend | Left out. | It's in NPW-24's scope, and NPW-23 adds the same key to Trace a Case. |
 
 ## The shared step system: `src/core/steps/`
@@ -105,7 +105,7 @@ interface StepButton {
   label: string;
   /**
    * The segment this button plays when the timeline rests at `marker`, or undefined if it should be
-   * disabled at this marker.
+   * unavailable at this marker.
    */
   segmentToPlayWhenAt(marker: Marker): Segment | undefined;
   /** Whether it is marked as the current step while nothing plays. */
@@ -115,8 +115,8 @@ interface StepButton {
 
 - **Current:** the button whose run is playing. When nothing runs, the button whose
   `showAsCurrentWhenAt(marker)` is true.
-- **Disabled:** `segmentToPlayWhenAt(marker)` is undefined. The running button is never disabled:
-  when it gives no segment, pressing it replays its run.
+- **Unavailable:** `segmentToPlayWhenAt(marker)` is undefined. The running button is never
+  unavailable: when it gives no segment, pressing it replays its run.
 
 ### `step-row.tsx`
 
@@ -128,8 +128,11 @@ interface StepButton {
   frame, as NPW-32's review made Trace a Case's row do.
 - A press calls `player.play(key, segment)` with that button's segment.
 - The current button has `aria-current="step"`, as NPW-32's review settled for Trace a Case:
-  pressing it again replays it, so it isn't a toggle and `aria-pressed` would mislead. Disabled
-  buttons have `disabled`.
+  pressing it again replays it, so it isn't a toggle and `aria-pressed` would mislead.
+- Unavailable buttons have `aria-disabled="true"`, not `disabled`, and stay in the tab order. A
+  button that becomes unavailable while it has focus, as Collect a Conversation does at its limit,
+  keeps the focus instead of dropping it to the page. Reset and the conversation card's buttons
+  already work this way. Pressing an unavailable button does nothing.
 - Reset is `aria-disabled` at marker 0 with nothing running, and stays in the tab order.
 - The step-row styles move here, to `step-row.scss`, from `trace-a-case.scss`.
 
@@ -222,7 +225,7 @@ export class ExtractPathwaysState extends Model({
 
 **Progress adapter.**
 
-- `marker = setupDone ? 1 + collected : 0`.
+- `marker = setupDone ? 1 + min(collected, limit) : 0`, where `limit` is the collect limit below.
 - `setMarker(m)` sets `setupDone = m >= 1` and `collected = max(0, m − 1)`. So Reset and Setup both
   clear the deck.
 - Unlike Trace a Case, the state keeps the stages, not the marker. The collect limit depends on how
@@ -230,7 +233,7 @@ export class ExtractPathwaysState extends Model({
   would mean different things for different datasets.
 - A saved state with `collected > 0` but `setupDone` false reads as 0.
 
-### The buttons: `EXTRACT_BUTTONS`
+### The buttons: `extractButtons(limit)`
 
 | Button | `segmentToPlayWhenAt(marker)` |
 |---|---|
@@ -274,8 +277,14 @@ The rules that follow from this:
 
 **Canvas.**
 
-- The SVG is the panel's width and 440 tall, like Trace a Case's diagram.
-- Below 995 wide it lays out at 995 and scales down through its `viewBox`.
+- The SVG is the panel's width and 440 tall, like Trace a Case's diagram, drawn at full size: one
+  drawing unit to a CSS pixel, never scaled to fit: text scaled to fit stops growing when the page
+  is zoomed (WCAG 1.4.4). NPW-51 records this as a guideline for the whole repo.
+- It is never narrower than `minCanvasWidth`, 909: the network plus two strips that each hold the
+  ten columns collected by hand, with 10 clear. A narrower panel scrolls the drawing sideways. While
+  it scrolls, or has the focus, the drawing's container is a group named by the panel heading, with
+  `tabIndex` 0, so the keyboard can reach and scroll it in any browser. The interactive is meant to
+  be embedded wide enough not to scroll.
 - The network is laid out by `layoutNetwork` at 537 × 440 and centered. The strips are what is
   left on each side.
 
@@ -380,8 +389,11 @@ its network part starts when that ends.
 
 - "Conversation 1" bounces in over 520 ms with `cubic-bezier(.34,1.56,.64,1)`, the opacity over
   the first 45%.
-- At 540 ms, phase 1 of the forward pass plays at its normal speed. Phases 2–4 follow at 0.26 of
-  their normal durations. A 110 ms gap follows each phase, the last included: `runSteps` (line
+- At 540 ms, phase 1 of the forward pass plays at its normal speed, as Trace a Case plays it: each
+  input gauge eases in over 180 ms, and the phase lasts 675 ms, to 1,215 ms. The prototype's recap
+  (`fillInputs`, line 15350) sets each gauge with no transition and moves on after 710 ms. The 35 ms
+  is too small to see, and reusing the phase needs no code of its own. Phases 2–4 follow at 0.26
+  of their normal durations. A 110 ms gap follows each phase, the last included: `runSteps` (line
   15365) waits `STEP_GAP` after every step, then calls itself for the next.
 - A 700 ms rest follows that last gap, so 810 ms pass between the end of the answer and the
   flight's dim.
@@ -399,9 +411,12 @@ its network part starts when that ends.
 
 **Quick swap (*n* = 4–10)**, about 460 ms, from `setConversation` (lines 15097–15118):
 
-- Everything clears at once, and the label bounces over 0.7 × 520 ms.
+- Everything clears at once, the answer with it, and the label bounces over 0.7 × 520 ms.
 - Layer by layer, the gauges fill 16 ms apart, and each layer's lines snap in.
 - The answer is shown 40 ms after the last layer.
+- The prototype keeps the old answer highlighted until the new one is shown: its quick branch
+  never calls `revealAnswer(false)`. Here it is hidden, so an answer is never shown beside a
+  conversation it doesn't belong to.
 
 After a swap or quick swap there's a 550 ms hold (`NEXT_HOLD`). The gauges in both swaps jump,
 as in the prototype, where `setNodeLevel` has no transition.
@@ -432,8 +447,10 @@ as in the prototype, where `setNodeLevel` has no transition.
 - **`step-row.test.tsx`** (RTL):
   - the current button comes from the running button, or from `showAsCurrentWhenAt` when idle,
     and none is current at marker 0;
-  - a button is disabled when `segmentToPlayWhenAt(marker)` is undefined, but never while it runs,
-    and pressing it then replays its run;
+  - a button is unavailable when `segmentToPlayWhenAt(marker)` is undefined, but never while it
+    runs, and pressing it then replays its run;
+  - an unavailable button stays focusable, keeps the focus when it becomes unavailable, and does
+    nothing when pressed;
   - Reset is `aria-disabled` at 0 and stays focusable;
   - a press calls `play` with that button's segment.
 
@@ -460,7 +477,7 @@ as in the prototype, where `setNodeLevel` has no transition.
 - **Progress adapter:** the marker to `setupDone` and `collected` and back, including a saved state
   with `collected > 0` but `setupDone` false.
 - **Buttons:** `segmentToPlayWhenAt` for each button at 0, 1, 5 and 11. Collect a Conversation is
-  disabled at 11, and the last two are always disabled.
+  unavailable at 11, and the last two are always unavailable.
 - **`flight.ts`:** the start and end positions and radius, the overshoot point, and landing order
   top to bottom.
 - **Timelines:**
@@ -473,15 +490,19 @@ as in the prototype, where `setNodeLevel` has no transition.
   - Setup, then Collect a Conversation, with fake timers;
   - leaving the view and coming back shows the same stage.
 
-### Playwright (dev server, with reduced motion so steps are instant)
+### Playwright (dev server, with reduced motion except where a test checks the animation)
 
 `playwright/extract-pathways.test.ts`:
 
 - Setup shows the lifted column.
 - Three collections give three deck columns and "Conversation 3".
 - Switching to Trace a Case and back keeps the stage.
-- Collect a Conversation is disabled after 10.
+- Collect a Conversation is unavailable after 10, and keeps the focus.
 - Reset clears everything.
+- A frame just wide enough for the 909 px canvas holds it at full size without scrolling, a wider
+  one widens it, and one a pixel narrower scrolls it. A 600 px frame scrolls the drawing sideways,
+  not the page, and the keyboard can tab to the drawing and scroll it. Widening the frame while
+  the drawing has the focus keeps the focus there.
 
 The existing Trace a Case tests still pass.
 
@@ -498,6 +519,10 @@ The existing Trace a Case tests still pass.
 - **`src/core/README.md`:** add `steps/` to "What's here".
 - **`src/views/trace-a-case/README.md`:** its step row and player now come from core.
 - **`src/views/extract-pathways/README.md`:** new, with "What's here" and "Still to come".
+- **`docs/undo.md`:** item 7 says Extract Pathways stores its progress through the shared step
+  player, so each Setup or collection writes twice, and item 8's remedies apply.
+- **`src/core/README.md`:** `steps/` says a view reads `player.scene` only inside an `<Observer>`
+  around its drawing.
 
 ## PRs
 
@@ -508,8 +533,10 @@ row are written new, and Trace a Case's are removed once it uses them.
 1. **The shared step system and the diagram split** (about 35 files): `src/core/steps/`, Trace a
    Case moved onto it, `forward-pass-phases.ts`, `Scene.hiddenLayerSpotlight` and
    `NetworkDrawing`. Nothing a user sees changes.
-2. **The Extract Pathways view** (about 22 files): state, buttons, drawing, flights, timelines,
-   tests and docs.
+2. **The Extract Pathways view** (about 40 files): state, buttons, drawing, flights, timelines,
+   tests and docs. It also changes the shared system where the view needs it: unavailable step
+   buttons become `aria-disabled`, both views read the player's scene in an `<Observer>` around
+   their drawing, and core exports `edgeDrawAt` and `MIN_GAUGE`.
 
 ## Out of scope
 

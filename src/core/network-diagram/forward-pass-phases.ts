@@ -58,6 +58,16 @@ function progress(t: number, start: number, duration: number): number {
   return clamp01((t - start) / duration);
 }
 
+/**
+ * How far a unit's edges are drawn when `unitProgress`, 0–1, of the unit's time has passed: the
+ * near half eased over the first half of the time, the far half over the second.
+ */
+export function edgeDrawAt(unitProgress: number): number {
+  return unitProgress <= 0.5
+    ? edgeEase(unitProgress * 2) / 2
+    : 0.5 + edgeEase(unitProgress * 2 - 1) / 2;
+}
+
 export function phaseDuration(phase: Phase, columnSizes: readonly number[]): number {
   if (phase === 1) {
     return (columnSizes[0] - 1) * FILL_GAP + FILL_DURATION;
@@ -91,9 +101,8 @@ function applyPhase(scene: Scene, columnSizes: readonly number[], phase: Phase, 
   const target = phase - 1;
   const ends = unitEnds(columnSizes[gap]);
   scene.edgeDraw[gap] = ends.map((end, k) => {
-    const p = progress(t, end - unitDuration(k), unitDuration(k));
-    // Near half over the unit's first half, far half over its second, each eased.
-    return p <= 0.5 ? edgeEase(p * 2) / 2 : 0.5 + edgeEase(p * 2 - 1) / 2;
+    const unitProgress = progress(t, end - unitDuration(k), unitDuration(k));
+    return edgeDrawAt(unitProgress);
   });
   // Each unit that lands adds its share to every target gauge, eased in. Summed before dividing
   // so a finished fan comes to exactly 1.

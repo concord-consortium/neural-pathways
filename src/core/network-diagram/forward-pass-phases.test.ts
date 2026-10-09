@@ -1,6 +1,7 @@
 import { emptyScene, fullScene } from "./scene";
 import {
-  ANSWER_DELAY, ANSWER_DURATION, FILL_DURATION, phaseDuration, sceneAt, toPhase, unitDuration,
+  ANSWER_DELAY, ANSWER_DURATION, edgeDrawAt, FILL_DURATION, phaseDuration, sceneAt, toPhase,
+  unitDuration,
 } from "./forward-pass-phases";
 
 const SIZES = [10, 8, 6, 2];
@@ -99,5 +100,19 @@ describe("sceneAt", () => {
 
   it("leaves the answer hidden in the earlier phases", () => {
     expect(sceneAt(SIZES, 3).answer).toBe(0);
+  });
+});
+
+describe("edgeDrawAt", () => {
+  it("draws the near half over the first half of the time and the far half over the second", () => {
+    expect(edgeDrawAt(0)).toBe(0);
+    expect(edgeDrawAt(0.5)).toBe(0.5);
+    expect(edgeDrawAt(1)).toBe(1);
+  });
+
+  it("eases each half on the edge curve, cubic-bezier(.3,.05,.4,1)", () => {
+    // Halfway through either half, the curve is at about 0.698, so that half has added 0.349.
+    expect(edgeDrawAt(0.25)).toBeCloseTo(0.3491, 4);
+    expect(edgeDrawAt(0.75)).toBeCloseTo(0.8491, 4);
   });
 });

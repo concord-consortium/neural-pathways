@@ -62,12 +62,14 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   an SVG group, for a view that draws more around the network. `layout.ts` is its geometry;
   `easing.ts` has the timing curves; `forward-pass-phases.ts` is the four phases of a
   conversation's forward pass through the network as a function of time, which Trace a Case plays
-  as its steps and Extract Pathways will replay.
+  as its steps and Extract Pathways replays.
 - `steps/`: the step system views share. A view's timeline rests at markers, points where the
   scene is still and progress is stored, and plays segments between them. `StepPlayer` plays the
   segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. A view
   lists its buttons as `StepButton`s, each saying which segment it plays when the timeline rests
-  at a marker, and `StepRow` draws them with Reset.
+  at a marker, and `StepRow` draws them with Reset. The player's scene changes on every frame of a
+  run, so a view reads `player.scene` only inside a small `<Observer>` around its drawing; the
+  rest of the view then doesn't re-render while a run plays.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words (`conversationWords`). Items are plain data, so this is a function that takes the text, not

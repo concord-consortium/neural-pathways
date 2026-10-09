@@ -20,7 +20,7 @@ const EDGE_WIDTHS = [1, 2, 3];
 /** The winning pill grows by this much on every side. */
 const PILL_GROW = 3;
 /** Gauges shorter than this aren't drawn. */
-const MIN_GAUGE = 0.35;
+export const MIN_GAUGE = 0.35;
 /**
  * The prototype's d1a-pillpop keyframes, each stretch between them eased like its CSS animation.
  */

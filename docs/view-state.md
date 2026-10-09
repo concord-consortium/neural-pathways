@@ -22,8 +22,8 @@ Player (AP), each interactive will save `{ view, shared }`: its own view tree an
 
 ## How the state arrives
 
-The framework is in place: `SharedState`, `AppState`, and the context views use. Trace a Case is
-the first view with a state model. Each view's model, and each shared field, arrives with the
+The framework is in place: `SharedState`, `AppState`, and the context views use. Trace a Case and
+Extract Pathways have their state models. Each view's model, and each shared field, arrives with the
 story that first builds the UI using it, so it can be reviewed against that UI. The complete
 target is kept in draft [PR #29](https://github.com/concord-consortium/neural-pathways/pull/29).
 Bring a view's model over from it, and change the model if the UI turns out to need something
@@ -75,13 +75,14 @@ an undo step.
 
 ## Each view's state
 
-Only Trace a Case's is built so far, and only the marker each conversation rests at. Animate and
-speed arrive with their controls. The target, with what is built marked:
+Trace a Case's and Extract Pathways' are built so far: Trace a Case's with only the marker each
+conversation rests at, and Extract Pathways' with its first two stages. Animate and speed arrive
+with their controls. The target, with what is built marked:
 
 | View | Model | Keeps |
 |---|---|---|
 | Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id (built); Animate on/off; speed (0 slow, 1 normal, 2 fast) |
-| Extract Pathways | `npw/ExtractPathwaysState` | Animate; speed; the extraction stages completed (`extracted`, `collected`, `cubeDone`, `pathwaysDone`) |
+| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`) and how many conversations are collected (`collected`) (built); Animate; speed; the later stages (`cubeDone`, `pathwaysDone`) |
 | Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
 | Prediction Chain | `npw/PredictionChainState` | The step each conversation is on (0 to 4), by id; Animate; speed |
 | Correlations | `npw/CorrelationsState` | Measures or Graphs; the open detail card, by attribute key and pathway number |

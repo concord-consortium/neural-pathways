@@ -1,16 +1,13 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
-import { observer } from "mobx-react-lite";
+import { Observer, observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
 import { conversationFilterFor, idsFor } from "../../core/filter/conversation-filter";
 import { FilterBar } from "../../core/filter/filter-bar";
 import { useConversationFilter } from "../../core/filter/use-conversation-filter";
-import { ForwardPass } from "../../core/network/forward";
 import { indexPasses } from "../../core/network/index-passes";
-import { NetworkScales } from "../../core/network/network-scales";
 import { toyNetwork } from "../../core/network/toy-network";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
-import { Scene } from "../../core/network-diagram/scene";
 import { validConversationId } from "../../core/state/conversation";
 import { TraceACaseState } from "./trace-a-case-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
@@ -96,7 +93,12 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
       <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
         <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
         <div className="trace-a-case__diagram">
-          <PlayerDiagram player={player} pass={passes[place]} scales={scales} />
+          <Observer>
+            {() => (
+              <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
+                outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+            )}
+          </Observer>
         </div>
       </section>
     </>
@@ -110,18 +112,5 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
       </div>
       {conversation || noMatch}
     </div>
-  );
-});
-
-interface PlayerDiagramProps {
-  player: StepPlayer<Scene>;
-  pass: ForwardPass;
-  scales: NetworkScales;
-}
-
-const PlayerDiagram = observer(function PlayerDiagram({ player, pass, scales }: PlayerDiagramProps) {
-  return (
-    <NetworkDiagram network={toyNetwork} pass={pass} scales={scales}
-      outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
   );
 });
