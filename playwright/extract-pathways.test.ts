@@ -65,7 +65,8 @@ test("a much narrower frame scrolls only the canvas", async ({ page }) => {
 
 test("the keyboard can reach and scroll a canvas too wide for its frame", async ({ page }) => {
   await canvasIn(page, 600, 909);
-  await page.getByRole("button", { name: "Reset" }).focus();
+  // The speed slider is the last stop in the panel's head, just before the canvas.
+  await page.getByRole("slider", { name: "Animation speed" }).focus();
   await page.keyboard.press("Tab");
   await expect(scrollRegion(page)).toBeFocused();
   await expect(scrollRegion(page)).toHaveAttribute("tabindex", "0");
@@ -136,4 +137,24 @@ test("Reset clears everything", async ({ page }) => {
   await page.getByRole("button", { name: "Reset" }).click();
   await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
+});
+
+test("Animate and the speed survive switching views", async ({ page }) => {
+  await open(page, "no-preference");
+  const panel = page.getByRole("region", { name: "The Network → Activated Pathways" });
+  const animate = panel.getByRole("checkbox", { name: "Animate" });
+  const speed = panel.getByRole("slider", { name: "Animation speed" });
+  await speed.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(speed).toHaveAttribute("aria-valuetext", "Slow");
+  await animate.uncheck();
+  const nav = page.getByRole("navigation", { name: "Views" });
+  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await expect(page.getByText("1 / 800")).toBeVisible();
+  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await expect(animate).not.toBeChecked();
+  await expect(speed).toHaveAttribute("aria-valuetext", "Slow");
+  await page.getByRole("button", { name: "Setup" }).click();
+  // Animated, Setup takes a few seconds.
+  await expect(page.getByRole("img", { name: LIFTED })).toBeVisible({ timeout: 1_000 });
 });

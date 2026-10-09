@@ -36,9 +36,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `datasets/dataset-definition.ts`: what a dataset is, and attribute-key validation.
 - `datasets/alien3-dataset.ts`: the lesson's dataset, `alien3Dataset`.
 - `state/`: the mobx-keystone model for the shared state, any model more than one view uses, the
-  setup every model imports, and the context views use to reach their state. A model only one
-  view uses lives in that view's folder. What each view keeps, and the rules for changing a saved
-  form, are in `docs/view-state.md`.
+  setup every model imports, and the context views use to reach their state. `animation.ts` has
+  the Animate and speed props the animated views share, and the `Animated` interface their models
+  declare. A model only one view uses lives in that view's folder. What each view keeps, and the
+  rules for changing a saved form, are in `docs/view-state.md`.
 - `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
   it between views.
 - `network/`: the network types, the toy network Trace a Case uses until there is one built from
@@ -65,11 +66,17 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   as its steps and Extract Pathways replays.
 - `steps/`: the step system views share. A view's timeline rests at markers, points where the
   scene is still and progress is stored, and plays segments between them. `StepPlayer` plays the
-  segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. A view
-  lists its buttons as `StepButton`s, each saying which segment it plays when the timeline rests
-  at a marker, and `StepRow` draws them with Reset. The player's scene changes on every frame of a
+  segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. It
+  plays at the view's speed: a timeline is written in timeline time, at the prototype's Med speed,
+  and the player runs it slower or faster (`playback.ts`), or jumps each run to its end when
+  Animate is off. So no view defines its timeline more than once. A view lists its buttons as
+  `StepButton`s, each saying which segment it plays when the timeline rests at a marker, and
+  `StepRow` draws them with Reset. The player's scene changes on every frame of a
   run, so a view reads `player.scene` only inside a small `<Observer>` around its drawing; the
   rest of the view then doesn't re-render while a run plays.
+- `animation-controls/`: the Animate checkbox and the Slow/Med/Fast speed slider, for any view
+  whose state is `Animated`. The step player reads the same two values, so a view only places the
+  control.
 - `conversation-card/`: the minimal conversation card. The full card will build on it.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words (`conversationWords`). Items are plain data, so this is a function that takes the text, not

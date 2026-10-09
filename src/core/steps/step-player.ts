@@ -1,4 +1,5 @@
 import { action, computed, computedStruct, observableRef } from "mobx";
+import { durationScale, PlaybackSettings } from "./playback";
 
 /** A point on a view's timeline where the scene rests and progress is stored. 0 is the start. */
 export type Marker = number;
@@ -17,13 +18,16 @@ export interface Run extends Segment {
 
 /** A run at one moment: the run, and the time into it. */
 export interface Frame extends Run {
-  /** Milliseconds since the run started. */
+  /**
+   * Timeline time since the run started: milliseconds at normal speed, which the player stretches
+   * at slow speed and squeezes at fast.
+   */
   t: number;
 }
 
 /** What a view's timeline draws. Pure: the same marker and frame always give the same scene. */
 export interface StepTimeline<S> {
-  /** How long `segment` takes to play, in milliseconds. */
+  /** How long `segment` takes to play, in timeline time: milliseconds at normal speed. */
   duration(segment: Segment): number;
   /** The scene resting at `marker`, or at `frame` of the run playing. */
   sceneAt(marker: Marker, frame?: Frame): S;
@@ -40,9 +44,13 @@ function prefersReducedMotion(): boolean {
 }
 
 /**
- * Plays a view's segments on a requestAnimationFrame clock and keeps its marker in `progress`. A
- * run stores the marker it starts from when it starts, and the one it ends at when it ends, so a
- * run still playing is never stored. Playing, resetting or stopping during a run drops it.
+ * Plays a view's segments on a requestAnimationFrame clock, at the speed in `settings`, and keeps
+ * its marker in `progress`. The clock advances by the real time between frames divided by the
+ * speed's `durationScale`, so a timeline is written once, at normal speed, and a speed change
+ * during a run applies from the next frame without a jump. With Animate off a run jumps to its
+ * end, and turning Animate off during a run finishes it. A run stores the marker it starts from
+ * when it starts, and the one it ends at when it ends, so a run still playing is never stored.
+ * Playing, resetting or stopping during a run drops it.
  *
  * Only the run playing is held here, and the clock runs only while it plays. So `stop()` is all
  * the cleanup there is, and the player can play again after it. The constructor must not start
@@ -57,6 +65,7 @@ export class StepPlayer<S> {
   constructor(
     private readonly timeline: StepTimeline<S>,
     private readonly progress: StepProgress,
+    private readonly settings: PlaybackSettings,
   ) {}
 
   get marker(): Marker {
@@ -84,8 +93,8 @@ export class StepPlayer<S> {
   }
 
   /**
-   * Jumps to `segment.from`, then plays to `segment.to`. Under reduced motion, jumps straight to
-   * `to`.
+   * Jumps to `segment.from`, then plays to `segment.to`. With Animate off, or under reduced motion,
+   * jumps straight to `to`.
    */
   @action
   play(button: string, segment: Segment) {
@@ -96,17 +105,22 @@ export class StepPlayer<S> {
       throw new RangeError(`A segment can't take ${duration} ms: the clock would never end it`);
     }
     this.stop();
-    if (prefersReducedMotion()) {
+    if (!this.settings.animate || prefersReducedMotion()) {
       this.progress.setMarker(to);
       return;
     }
     this.progress.setMarker(from);
     this.frame = { button, from, to, t: 0 };
-    let start: number | undefined;
+    let t = 0;
+    let lastFrameAt: number | undefined;
     const tick = action((now: number) => {
-      start ??= now;
-      const t = now - start;
-      if (t >= duration) {
+      // Read on every frame, so a change to either setting applies to the run already playing.
+      const { animate, speed } = this.settings;
+      if (animate) {
+        t += (now - (lastFrameAt ?? now)) / durationScale(speed);
+        lastFrameAt = now;
+      }
+      if (!animate || t >= duration) {
         this.stop();
         this.progress.setMarker(to);
         return;

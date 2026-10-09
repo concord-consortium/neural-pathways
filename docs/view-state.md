@@ -75,22 +75,23 @@ an undo step.
 
 ## Each view's state
 
-Trace a Case's and Extract Pathways' are built so far: Trace a Case's with only the marker each
-conversation rests at, and Extract Pathways' with its first two stages. Animate and speed arrive
-with their controls. The target, with what is built marked:
+Trace a Case's and Extract Pathways' are built so far: Trace a Case's with the marker each
+conversation rests at, and Extract Pathways' with its first two stages, both with Animate and
+speed. The target, with what is built marked:
 
 | View | Model | Keeps |
 |---|---|---|
-| Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id (built); Animate on/off; speed (0 slow, 1 normal, 2 fast) |
-| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`) and how many conversations are collected (`collected`) (built); Animate; speed; the later stages (`cubeDone`, `pathwaysDone`) |
+| Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id (built); Animate on/off (built); speed (0 slow, 1 normal, 2 fast) (built) |
+| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`) and how many conversations are collected (`collected`) (built); Animate (built); speed (built); the later stages (`cubeDone`, `pathwaysDone`) |
 | Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
 | Prediction Chain | `npw/PredictionChainState` | The step each conversation is on (0 to 4), by id; Animate; speed |
 | Correlations | `npw/CorrelationsState` | Measures or Graphs; the open detail card, by attribute key and pathway number |
 | Investigate Unknown Pathway | `npw/InvestigateUnknownPathwayState` | The chips selected on each pane; pane 2's conversation |
 | Correlations Part 2 | `npw/CorrelationsState` | The same as Correlations, in its own tree |
 
-In the target, the three views with an Animate toggle share the `animate` and `speed` props and
-an `Animated` interface, so one set of controls can drive any of them.
+The views with an Animate toggle share the `animate` and `speed` props (`animationProps` in
+`src/core/state/animation.ts`) and the `Animated` interface, so one set of controls,
+`AnimationControls`, drives any of them. Prediction Chain will be the third.
 
 ## Deliberately not kept
 

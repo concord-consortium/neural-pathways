@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import * as conversationCard from "../../core/conversation-card/conversation-card";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
@@ -157,6 +157,34 @@ describe("TraceACase", () => {
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
     expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-current", "step");
+  });
+
+  it("shows Animate and the speed in the network's head", async () => {
+    showView();
+    await screen.findByText("1 / 3");
+    const network = screen.getByRole("region", { name: "The Network" });
+    expect(within(network).getByRole("checkbox", { name: "Animate" })).toBeChecked();
+    expect(within(network).getByRole("slider", { name: "Animation speed" })).toHaveAttribute("aria-valuetext", "Med");
+  });
+
+  it("stores Animate in the view's state", async () => {
+    const state = new TraceACaseState({});
+    showView(undefined, state);
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("checkbox", { name: "Animate" }));
+    expect(state.animate).toBe(false);
+    expect(screen.getByRole("slider", { name: "Animation speed" })).toBeDisabled();
+  });
+
+  it("jumps a step to its end with Animate off", async () => {
+    setReducedMotion(false);
+    const state = new TraceACaseState({});
+    state.setAnimate(false);
+    showView(undefined, state);
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
+    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
+    expect(state.marker(ids[0])).toBe(4);
   });
 
   it("starts a conversation not stepped yet with nothing done", async () => {

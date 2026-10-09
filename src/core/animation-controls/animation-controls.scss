@@ -1,0 +1,224 @@
+@use "../colors" as colors;
+
+// The Animate checkbox and the speed slider, from the prototype's .nnm-animtoggle and .nnm-speed.
+// The control pushes itself to the right end of the row it sits in.
+.animation-controls {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.animation-controls__animate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 4px;
+  border-radius: 4px;
+  color: colors.$ink-2;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    color: colors.$ink;
+  }
+
+  // The ring goes round the label and its box together, and only for keyboard focus.
+  &:has(input:focus-visible) {
+    outline: 2px solid colors.$wait;
+    outline-offset: 2px;
+  }
+
+  input {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: colors.$wait;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+}
+
+// 92 px wide with a 24 px thumb, so the thumb's center rests at 12, 46 and 80 px. The bar and the
+// stop names are placed from those three points.
+.animation-controls__speed {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 92px;
+
+  &--off {
+    opacity: 0.4;
+  }
+}
+
+.animation-controls__track {
+  position: relative;
+  height: 18px;
+
+  // The bar runs between the outer stops, not to the input's ends, which are half a thumb further
+  // out. 4 px thick, from 12 − 2 to 80 + 2.
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    width: 72px;
+    height: 4px;
+    margin-top: -2px;
+    border-radius: 2px;
+    background: #D3D8E0;
+    pointer-events: none;
+  }
+}
+
+@mixin each-thumb {
+  &::-webkit-slider-thumb {
+    @content;
+  }
+
+  &::-moz-range-thumb {
+    @content;
+  }
+}
+
+.animation-controls__slider {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 92px;
+  // Stretched over the bar and the names under it, so the whole control is a 44 px target and
+  // clicking a name moves to its stop. The bottom padding keeps the track on the bar.
+  height: 44px;
+  margin: 0;
+  padding: 0 0 26px;
+  background: transparent;
+  cursor: pointer;
+
+  &::-webkit-slider-runnable-track {
+    height: 4px;
+    background: transparent;
+  }
+
+  &::-moz-range-track {
+    height: 4px;
+    background: transparent;
+  }
+
+  @include each-thumb {
+    box-sizing: border-box;
+    width: 24px;
+    height: 24px;
+    border: 2px solid colors.$rule;
+    border-radius: 50%;
+    background: #fff;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    margin-top: -10px;
+  }
+
+  &:not(:disabled):hover {
+    @include each-thumb {
+      border-color: #A7B0BC;
+      background: colors.$surface;
+    }
+  }
+
+  &:not(:disabled):active {
+    @include each-thumb {
+      border-color: colors.$ink;
+      background: colors.$ink;
+      box-shadow: 0 0 0 4px rgba(30, 36, 44, 0.1);
+    }
+  }
+
+  // Keyboard focus marks the thumb rather than ringing the whole control over the names.
+  &:focus-visible {
+    outline: none;
+
+    @include each-thumb {
+      border-color: colors.$ink;
+      box-shadow: 0 0 0 3px rgba(30, 36, 44, 0.16);
+    }
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+// Forced colors repaints the thumb's border the same with or without focus, and drops its shadow,
+// so focus needs an outline.
+@media (forced-colors: active) {
+  .animation-controls__slider:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+.animation-controls__stops {
+  position: relative;
+  height: 17px;
+  color: colors.$ink-3;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+// Each name centered under where its stop's thumb rests, with a tick above it.
+.animation-controls__stop {
+  position: absolute;
+  top: 0;
+  padding-top: 6px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+
+  &:nth-child(1) {
+    left: 12px;
+  }
+
+  &:nth-child(2) {
+    left: 46px;
+  }
+
+  &:nth-child(3) {
+    left: 80px;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 4px;
+    margin-left: -0.5px;
+    background: #B9C0CA;
+  }
+
+  &--current {
+    color: colors.$ink;
+
+    &::before {
+      background: colors.$ink;
+    }
+  }
+}

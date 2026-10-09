@@ -68,6 +68,11 @@
   @include panel.panel-head;
 }
 
+.trace-a-case__network-title {
+  margin: 0;
+  font: inherit;
+}
+
 .trace-a-case__diagram {
   width: 100%;
   max-width: 537px;

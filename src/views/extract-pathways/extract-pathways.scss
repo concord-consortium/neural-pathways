@@ -29,6 +29,11 @@
   @include panel.panel-head;
 }
 
+.extract-pathways__network-title {
+  margin: 0;
+  font: inherit;
+}
+
 .extract-pathways__drawing {
   padding: 8px 0;
 }
