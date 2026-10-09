@@ -81,30 +81,11 @@ describe("Trace a Case's steps on the step player", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("stores the marker before while a run plays, and the step's own only once it ends", () => {
-    const { playerFor, stored } = makeState();
-    const player = playerFor("a");
-    press(player, 2);
-    expect(stored()).toEqual({ a: 1 });
-    jest.advanceTimersByTime(1000);
-    expect(stored()).toEqual({ a: 1 });
-    jest.advanceTimersByTime(3000);
-    expect(stored()).toEqual({ a: 2 });
-  });
-
-  it("stores the start on reset", () => {
+  it("stores each conversation's marker by its id, so another starts with nothing done", () => {
     setReducedMotion(true);
     const { playerFor, stored } = makeState();
-    const player = playerFor("a");
-    press(player, 3);
-    player.reset();
-    expect(stored()).toEqual({});
-  });
-
-  it("a player for a conversation not stepped yet starts with nothing done", () => {
-    setReducedMotion(true);
-    const { playerFor } = makeState();
     press(playerFor("a"), 4);
+    expect(stored()).toEqual({ a: 4 });
     const other = playerFor("b");
     expect(other.marker).toBe(0);
     expect(other.scene).toEqual(emptyScene(SIZES));
@@ -117,18 +98,5 @@ describe("Trace a Case's steps on the step player", () => {
     const again = playerFor("a");
     expect(again.marker).toBe(4);
     expect(again.scene).toEqual(sceneAt(SIZES, 4));
-  });
-
-  it("a run cut short comes back at the marker before it, not playing", () => {
-    const { playerFor } = makeState();
-    const first = playerFor("a");
-    press(first, 2);
-    jest.advanceTimersByTime(500);
-    first.stop();
-    const again = playerFor("a");
-    expect(again.marker).toBe(1);
-    expect(again.currentFrame).toBeUndefined();
-    expect(again.scene).toEqual(sceneAt(SIZES, 1));
-    expect(jest.getTimerCount()).toBe(0);
   });
 });

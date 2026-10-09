@@ -440,8 +440,9 @@ as in the prototype, where `setNodeLevel` has no transition.
 **Trace a Case**
 
 - Its view tests keep passing with only the state field's new name changed, which shows the move
-  changed no behavior. Its timeline tests move with the timeline to `forward-pass-phases.test.ts`,
-  and its player tests become `trace-a-case-steps.test.ts`, which runs them on the shared player.
+  changed no behavior. Its timeline tests move with the timeline to `forward-pass-phases.test.ts`.
+  Its player tests that need its adapter, such as a marker stored for each conversation, move to
+  `trace-a-case-steps.test.ts`; the rest become the core player's tests.
 - Its button list: `segmentToPlayWhenAt` and `showAsCurrentWhenAt` for each step.
 - Its timeline times a segment of one phase and refuses any other.
 
