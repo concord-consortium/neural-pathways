@@ -156,7 +156,7 @@ behind, and the student's original conversation is lost.
    recorded change, so the order matters.
 7. **Extract Pathways stores its progress through the shared step player,** so each Setup or
    collection writes twice, as item 8 describes. Decide whether an extraction can be undone at
-   all. If it can, run it as a `@modelFlow` or group it with `withGroupFlow` or `createGroup`.
+   all. If it can, item 8's remedies apply.
 8. **A step press writes twice.** The shared step player (`StepPlayer` in
    `src/core/steps/step-player.ts`) stores the marker a run starts from when a step button is
    pressed, and the marker it ends at from a `requestAnimationFrame` tick when it finishes. Trace a

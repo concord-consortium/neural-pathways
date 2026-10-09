@@ -13,7 +13,7 @@ export const SPOTLIGHT = 0.5;
 export interface ExtractScene {
   /** The network: its fills, edges, answer and spotlight. */
   network: Scene;
-  /** Which conversation the network shows, 1-based; undefined before any is collected. */
+  /** Which conversation the network shows, 1-based; undefined until the first collection starts. */
   shown: number | undefined;
   /** "Conversation n" over the network, and how far its bounce has got, 0–1. */
   label: { n: number; bounce: number } | undefined;

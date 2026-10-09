@@ -48,7 +48,7 @@ const REFILL_GAP = 16;
 const SNAP_DELAY = 20;
 const QUICK_TAIL = 40;
 
-/** After a swap, before the flight. */
+/** After a swap or a quick swap, before the flight. */
 const NEXT_HOLD = 550;
 
 /** Conversation 1 replays the pass, 2 and 3 swap, and the rest take the quick swap. */
@@ -202,8 +202,8 @@ export function collectDuration(columnSizes: readonly number[], n: number): numb
  * Collecting conversation `n`, `t` ms in. After the first, it starts by lifting the spotlight the
  * last flight left. Then the network runs the conversation (see `CollectVersion`). Then a spotlight
  * falls on the hidden neurons, fading the rest of the network and the lifted column's copies, while
- * copies of the hidden neurons fly into deck column n. It stays until the next collection, as in
- * the prototype.
+ * copies of the hidden neurons fly into the nth deck column. It stays until the next collection,
+ * as in the prototype.
  */
 export function collectSceneAt(columnSizes: readonly number[], n: number, t: number): ExtractScene {
   const scene = restScene(columnSizes, n);

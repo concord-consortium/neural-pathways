@@ -390,8 +390,8 @@ its network part starts when that ends.
 - "Conversation 1" bounces in over 520 ms with `cubic-bezier(.34,1.56,.64,1)`, the opacity over
   the first 45%.
 - At 540 ms, phase 1 of the forward pass plays at its normal speed, as Trace a Case plays it: each
-  input gauge eases in over 180 ms, and the phase ends at 675 ms. The prototype's recap
-  (`fillInputs`, line 15350) sets each gauge with no transition and hands on at 710 ms. The 35 ms
+  input gauge eases in over 180 ms, and the phase lasts 675 ms, to 1,215 ms. The prototype's recap
+  (`fillInputs`, line 15350) sets each gauge with no transition and moves on after 710 ms. The 35 ms
   is too small to see, and reusing the phase needs no code of its own. Phases 2–4 follow at 0.26
   of their normal durations. A 110 ms gap follows each phase, the last included: `runSteps` (line
   15365) waits `STEP_GAP` after every step, then calls itself for the next.
@@ -518,8 +518,8 @@ The existing Trace a Case tests still pass.
 - **`src/core/README.md`:** add `steps/` to "What's here".
 - **`src/views/trace-a-case/README.md`:** its step row and player now come from core.
 - **`src/views/extract-pathways/README.md`:** new, with "What's here" and "Still to come".
-- **`docs/undo.md`:** item 7 says Extract Pathways saves through the shared step player, so each
-  Setup or collection writes twice, as item 8 describes.
+- **`docs/undo.md`:** item 7 says Extract Pathways stores its progress through the shared step
+  player, so each Setup or collection writes twice, and item 8's remedies apply.
 - **`src/core/README.md`:** `steps/` says a view reads `player.scene` only inside an `<Observer>`
   around its drawing.
 
