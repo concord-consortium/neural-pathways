@@ -1,6 +1,6 @@
 import { phaseDuration, PHASES, sceneAt, toPhase } from "../../core/network-diagram/forward-pass-phases";
 import { Scene } from "../../core/network-diagram/scene";
-import { StepButton } from "../../core/steps/step-buttons";
+import { StepButton } from "../../core/steps/step-button";
 import { Marker, StepProgress, StepTimeline } from "../../core/steps/step-player";
 import { TraceACaseState } from "./trace-a-case-state";
 
@@ -16,12 +16,18 @@ export const TRACE_BUTTONS: readonly StepButton[] = PHASES.map(phase => ({
 }));
 
 /**
- * The forward pass's phases as Trace a Case plays them: Step k is phase k, so marker k is k phases
+ * The forward pass's phases as Trace a Case plays them: Step k is phase k, so marker k is k steps
  * done, and the segment to it plays phase k.
  */
 export function traceTimeline(columnSizes: readonly number[]): StepTimeline<Scene> {
   return {
-    duration: ({ to }) => phaseDuration(toPhase(to), columnSizes),
+    duration: ({ from, to }) => {
+      // sceneAt draws only the phase a run ends on, so a run must be that one phase.
+      if (from !== to - 1) {
+        throw new RangeError(`Trace a Case plays one phase at a time, not ${from} to ${to}`);
+      }
+      return phaseDuration(toPhase(to), columnSizes);
+    },
     sceneAt: (marker, frame) => sceneAt(columnSizes, marker, frame && { phase: toPhase(frame.to), t: frame.t }),
   };
 }

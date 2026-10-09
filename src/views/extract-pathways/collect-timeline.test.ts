@@ -75,7 +75,7 @@ describe("collectSceneAt", () => {
     expect(blank.network.edgeDraw.every(gap => gap.every(x => x === 0))).toBe(true);
   });
 
-  it("swaps: drains a layer at a time, its lines clearing after its last gauge", () => {
+  it("swaps: drains a layer at a time, its edges clearing after its last gauge", () => {
     expect(collectSceneAt(SIZES, 2, UNDIM - 1).network.nodeFill[0][0]).toBe(1);
     const scene = collectSceneAt(SIZES, 2, UNDIM + 110);
     expect(scene.network.nodeFill[0].every(x => x === 0)).toBe(true);
@@ -84,7 +84,7 @@ describe("collectSceneAt", () => {
     expect(collectSceneAt(SIZES, 2, UNDIM + 128).network.edgeDraw[0].every(x => x === 0)).toBe(true);
   });
 
-  it("swaps: refills a layer, then sweeps all its lines in together", () => {
+  it("swaps: refills a layer, then sweeps all its edges in together", () => {
     const refill = BLANK + 420;
     expect(collectSceneAt(SIZES, 2, refill).network.nodeFill[0][0]).toBe(1);
     expect(collectSceneAt(SIZES, 2, refill).network.nodeFill[0][1]).toBe(0);
@@ -111,14 +111,14 @@ describe("collectSceneAt", () => {
     expect(collectSceneAt(SIZES, 4, QUICK_DONE).network.answer).toBe(1);
   });
 
-  it("quick swap: clears everything at once, then refills a layer at a time, its lines snapping in", () => {
+  it("quick swap: clears everything at once, then refills a layer at a time, its edges snapping in", () => {
     // 100 ms in, the inputs fill 16 ms apart, so units 0 to 6 are in.
     const filling = collectSceneAt(SIZES, 4, UNDIM + 100).network;
     expect(filling.nodeFill[0]).toEqual([1, 1, 1, 1, 1, 1, 1, 0, 0, 0]);
     expect(filling.nodeFill.slice(1).every(column => column.every(x => x === 0))).toBe(true);
     expect(filling.edgeDraw.every(gap => gap.every(x => x === 0))).toBe(true);
     expect(filling.answer).toBe(0);
-    // The inputs' lines snap in 20 ms after their last gauge, at 164 ms; the next layer's haven't.
+    // The inputs' edges snap in 20 ms after their last gauge, at 164 ms; the next layer's haven't.
     const snapped = collectSceneAt(SIZES, 4, UNDIM + 164).network;
     expect(snapped.edgeDraw[0].every(x => x === 1)).toBe(true);
     expect(snapped.edgeDraw[1].every(x => x === 0)).toBe(true);

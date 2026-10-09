@@ -18,7 +18,7 @@ import { DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
  *   Trace a Case, which it recalls.
  * - `swap`: drains the network a full layer at a time, holds it blank, then refills it with the new
  *   conversation a full layer at a time, so each new one is seen arriving.
- * - `quick`: clears everything at once and refills quickly with the lines snapped in, once the
+ * - `quick`: clears everything at once and refills quickly with the edges snapped in, once the
  *   swap's point has been made.
  */
 export type CollectVersion = "replay" | "swap" | "quick";
@@ -48,7 +48,7 @@ const REFILL_GAP = 16;
 const SNAP_DELAY = 20;
 const QUICK_TAIL = 40;
 
-/** After a swap, before the flight. */
+/** After a swap or a quick swap, before the flight. */
 const NEXT_HOLD = 550;
 
 /** Conversation 1 replays the pass, 2 and 3 swap, and the rest take the quick swap. */
@@ -92,13 +92,13 @@ function replayNetwork(columnSizes: readonly number[], t: number): Scene {
 interface SwapPlan {
   /** [layer][unit]: when each gauge empties. */
   drainAt: number[][];
-  /** [gap]: when the lines leaving each layer clear. */
+  /** [gap]: when the edges leaving each layer clear. */
   clearAt: number[];
   /** When the network is blank and takes the new conversation. */
   blank: number;
   /** [layer][unit]: when each gauge fills again. */
   fillAt: number[][];
-  /** [gap]: when the lines leaving each layer start to sweep in. */
+  /** [gap]: when the edges leaving each layer start to sweep in. */
   sweepAt: number[];
   answerAt: number;
   end: number;
@@ -170,9 +170,8 @@ function quickNetwork(columnSizes: readonly number[], plan: QuickPlan, t: number
 }
 
 /**
- * When the network part begins. The first conversation follows Setup, which leaves no spotlight on
- * the network. Every later one first lifts the spotlight the last flight left, bringing the lifted
- * column back with it.
+ * When the network part begins: at once for the first conversation, and after lifting the last
+ * flight's spotlight for every later one.
  */
 function networkStart(n: number): number {
   return n === 1 ? 0 : UNDIM_MS;
@@ -202,8 +201,8 @@ export function collectDuration(columnSizes: readonly number[], n: number): numb
  * Collecting conversation `n`, `t` ms in. After the first, it starts by lifting the spotlight the
  * last flight left. Then the network runs the conversation (see `CollectVersion`). Then a spotlight
  * falls on the hidden neurons, fading the rest of the network and the lifted column's copies, while
- * copies of the hidden neurons fly into deck column n. It stays until the next collection, as in
- * the prototype.
+ * copies of the hidden neurons fly into the nth deck column. It stays until the next collection,
+ * as in the prototype.
  */
 export function collectSceneAt(columnSizes: readonly number[], n: number, t: number): ExtractScene {
   const scene = restScene(columnSizes, n);

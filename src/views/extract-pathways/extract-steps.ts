@@ -1,4 +1,4 @@
-import { StepButton } from "../../core/steps/step-buttons";
+import { StepButton } from "../../core/steps/step-button";
 import { Marker, StepProgress } from "../../core/steps/step-player";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 
@@ -6,9 +6,9 @@ import { ExtractPathwaysState } from "./extract-pathways-state";
 export const MAX_COLLECTED = 10;
 
 /**
- * The marker, from Setup and the count kept in the state: 0 at the start, 1 once Setup is done, and
- * one more for each conversation collected. `limit` is how many can be collected; a saved count
- * above it reads as the limit.
+ * The marker, from Setup and the count stored in the state: 0 at the start, 1 once Setup is done,
+ * and one more for each conversation collected. `limit` is how many can be collected; a stored
+ * count above it reads as the limit.
  */
 export function extractProgress(state: ExtractPathwaysState, limit: number): StepProgress {
   return {

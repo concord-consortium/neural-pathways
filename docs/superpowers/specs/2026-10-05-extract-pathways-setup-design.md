@@ -28,7 +28,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 | Decision | Choice | Why |
 |---|---|---|
 | Animate, speed and About | Not in this story. The steps always animate, at the prototype's Med timings. | The Animate and speed controls (NPW-38, NPW-44) aren't built yet, and NPW-48 comes before them. NPW-24 adds both, and the activation legend, to the view. |
-| The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 put the network diagram and its timing in core once a second view needed them, and this is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
+| The step system | Move Trace a Case's `StepPlayer` and step row to `src/core/steps/`, generic over what is drawn and where progress is kept. Each view declares its buttons as data. | NPW-32 put the network diagram in core for the views that share it, but kept its timing and steps in Trace a Case until a second view needed them. This is the second view. NPW-48 and Prediction Chain then add only their own timelines and button rules. |
 | Button rules | Each button says which segment it plays at the marker the timeline rests at (none when it is unavailable), and can say whether it is current there. The step row works out unavailable and current from those. | The rules for each view sit in one list that can be tested as plain functions. The prototype makes the same point about `syncExRow` (line 10885): "One place that decides what can be pressed". |
 | Progress | One marker: a point on the view's timeline where the scene rests and progress is stored. Extract Pathways maps it to `setupDone` and `collected` in its state. | Trace a Case's steps already work this way. Setup is 0 → 1, and each collection is one more. |
 | Markers and segments | The timeline's resting points are markers, and the animation between two is a segment, as in Lottie (`playSegments`) and After Effects. "Step" stays with the buttons and the row. | A button isn't a step of the timeline: Collect a Conversation plays a different segment each press, and Collect All will play across many. Trace a Case's Step *k* happens to play the segment to marker *k*. "Keyframe" would suggest in-betweens filled in for us, and `network-drawing.tsx` already uses it for the pill's pop. |
@@ -86,8 +86,10 @@ class StepPlayer<S> {
 }
 ```
 
-- **`play`:** stops any run, stores `from`, then runs the requestAnimationFrame clock. At
-  `t >= duration(segment)` it stops and stores `to`. A run in progress is never stored.
+- **`play`:** reads `duration(segment)` first, so a timeline that throws, or gives a duration that
+  isn't finite, leaves the player as it was. Then it stops any run, stores `from`, and runs the
+  requestAnimationFrame clock. At `t >= duration` it stops and stores `to`. A run in progress is
+  never stored.
 - **Reduced motion:** `play` stores `to` straight away.
 - **`reset`:** stops and stores 0.
 - **`stop`:** cancels the clock and drops the run. Progress keeps `from`. The player can play
@@ -95,7 +97,7 @@ class StepPlayer<S> {
 - The cleanup rules don't change: only the run is held, the clock runs only while it plays, and
   the view calls `stop()` when it drops a player.
 
-### `step-buttons.ts`
+### `step-button.ts`
 
 ```ts
 interface StepButton {
@@ -280,9 +282,9 @@ The rules that follow from this:
   is zoomed (WCAG 1.4.4). NPW-51 records this as a guideline for the whole repo.
 - It is never narrower than `minCanvasWidth`, 909: the network plus two strips that each hold the
   ten columns collected by hand, with 10 clear. A narrower panel scrolls the drawing sideways. While
-  it scrolls, the drawing's container is a group named by the panel heading, with `tabIndex` 0, so
-  the keyboard can reach and scroll it in any browser. The interactive is meant to be embedded wide
-  enough not to scroll; an iPad's standalone layout leaves 980.
+  it scrolls, or has the focus, the drawing's container is a group named by the panel heading, with
+  `tabIndex` 0, so the keyboard can reach and scroll it in any browser. The interactive is meant to
+  be embedded wide enough not to scroll.
 - The network is laid out by `layoutNetwork` at 537 × 440 and centered. The strips are what is
   left on each side.
 
@@ -388,8 +390,8 @@ its network part starts when that ends.
 - "Conversation 1" bounces in over 520 ms with `cubic-bezier(.34,1.56,.64,1)`, the opacity over
   the first 45%.
 - At 540 ms, phase 1 of the forward pass plays at its normal speed, as Trace a Case plays it: each
-  input gauge eases in over 180 ms, and the phase ends at 675 ms. The prototype's recap
-  (`fillInputs`, line 15350) sets each gauge with no transition and hands on at 710 ms. The 35 ms
+  input gauge eases in over 180 ms, and the phase lasts 675 ms, to 1,215 ms. The prototype's recap
+  (`fillInputs`, line 15350) sets each gauge with no transition and moves on after 710 ms. The 35 ms
   is too small to see, and reusing the phase needs no code of its own. Phases 2–4 follow at 0.26
   of their normal durations. A 110 ms gap follows each phase, the last included: `runSteps` (line
   15365) waits `STEP_GAP` after every step, then calls itself for the next.
@@ -438,10 +440,13 @@ as in the prototype, where `setNodeLevel` has no transition.
   - `play` stores `from`, runs, then stores `to`;
   - a press during a run drops it, so its `to` is never stored;
   - reduced motion stores `to` straight away;
+  - a run that has ended plays again from its `from`;
   - `stop()` cancels the clock, and the player plays again afterward;
-  - `reset()` stores 0.
+  - `reset()` stores 0;
+  - a timeline that throws for a segment, or gives a duration that isn't finite, changes nothing.
 - **`step-row.test.tsx`** (RTL):
-  - the current button comes from the running button, or from `showAsCurrentWhenAt` when idle;
+  - the current button comes from the running button, or from `showAsCurrentWhenAt` when idle,
+    and none is current at marker 0;
   - a button is unavailable when `segmentToPlayWhenAt(marker)` is undefined, but never while it
     runs, and pressing it then replays its run;
   - an unavailable button stays focusable, keeps the focus when it becomes unavailable, and does
@@ -452,15 +457,17 @@ as in the prototype, where `setNodeLevel` has no transition.
 **Trace a Case**
 
 - Its view tests keep passing with only the state field's new name changed, which shows the move
-  changed no behavior. Its timeline tests move with the timeline to `forward-pass-phases.test.ts`,
-  and its player tests become `trace-a-case-steps.test.ts`, which runs them on the shared player.
+  changed no behavior. Its timeline tests move with the timeline to `forward-pass-phases.test.ts`.
+  Its player tests that need its adapter, such as a marker stored for each conversation, move to
+  `trace-a-case-steps.test.ts`; the rest become the core player's tests.
 - Its button list: `segmentToPlayWhenAt` and `showAsCurrentWhenAt` for each step.
+- Its timeline times a segment of one phase and refuses any other.
 
 **The diagram**
 
 - `network-diagram.test.tsx` keeps passing.
 - `hiddenLayerSpotlight`: it fades everything but the hidden layers' nodes to 1 − its strength,
-  and defaults to 0.
+  taken as 0–1, and `emptyScene` and `fullScene` set it to 0.
 - `forward-pass-phases.test.ts`, the moved timeline tests.
 
 **Extract Pathways**
@@ -492,9 +499,10 @@ as in the prototype, where `setNodeLevel` has no transition.
 - Switching to Trace a Case and back keeps the stage.
 - Collect a Conversation is unavailable after 10, and keeps the focus.
 - Reset clears everything.
-- A 980 px panel, as an iPad's standalone layout leaves, holds the canvas at full size without
-  scrolling. A 600 px frame scrolls the drawing sideways, not the page, and the keyboard can tab to
-  the drawing and scroll it.
+- A frame just wide enough for the 909 px canvas holds it at full size without scrolling, a wider
+  one widens it, and one a pixel narrower scrolls it. A 600 px frame scrolls the drawing sideways,
+  not the page, and the keyboard can tab to the drawing and scroll it. Widening the frame while
+  the drawing has the focus keeps the focus there.
 
 The existing Trace a Case tests still pass.
 
@@ -511,8 +519,8 @@ The existing Trace a Case tests still pass.
 - **`src/core/README.md`:** add `steps/` to "What's here".
 - **`src/views/trace-a-case/README.md`:** its step row and player now come from core.
 - **`src/views/extract-pathways/README.md`:** new, with "What's here" and "Still to come".
-- **`docs/undo.md`:** item 7 says Extract Pathways saves through the shared step player, so each
-  Setup or collection writes twice, as item 8 describes.
+- **`docs/undo.md`:** item 7 says Extract Pathways stores its progress through the shared step
+  player, so each Setup or collection writes twice, and item 8's remedies apply.
 - **`src/core/README.md`:** `steps/` says a view reads `player.scene` only inside an `<Observer>`
   around its drawing.
 
@@ -522,7 +530,7 @@ Two stacked PRs, so the shared system is reviewed before the view that uses it. 
 its tests move to core in a commit of their own, so git shows them as renames. The core player and
 row are written new, and Trace a Case's are removed once it uses them.
 
-1. **The shared step system and the diagram split** (about 20 files): `src/core/steps/`, Trace a
+1. **The shared step system and the diagram split** (about 35 files): `src/core/steps/`, Trace a
    Case moved onto it, `forward-pass-phases.ts`, `Scene.hiddenLayerSpotlight` and
    `NetworkDrawing`. Nothing a user sees changes.
 2. **The Extract Pathways view** (about 40 files): state, buttons, drawing, flights, timelines,

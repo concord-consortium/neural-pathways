@@ -61,6 +61,16 @@ describe("NetworkDrawing", () => {
     expect(screen.getByTestId("disc-3-0")).not.toHaveAttribute("opacity");
   });
 
+  it("treats a spotlight above 1 as 1", () => {
+    renderDrawing(spotlit(1.5));
+    expect(screen.getByTestId("node-0-0")).toHaveAttribute("opacity", "0");
+  });
+
+  it("treats a spotlight below 0 as 0", () => {
+    renderDrawing(spotlit(-0.5));
+    expect(screen.getByTestId("node-0-0")).not.toHaveAttribute("opacity");
+  });
+
   it("updates node opacity when the same drawing rerenders with a new scene", () => {
     const { rerender } = renderDrawing(fullScene(SIZES));
     expect(screen.getByTestId("node-0-0")).not.toHaveAttribute("opacity");

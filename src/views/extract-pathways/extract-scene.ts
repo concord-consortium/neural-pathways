@@ -4,8 +4,7 @@ import { flightDuration } from "./flight";
 
 /**
  * How strongly the hidden neurons are spotlit while copies of them fly out of the network:
- * everything else fades to half strength. During a collection, the lifted column's copies fade with
- * it.
+ * everything else fades to half strength.
  */
 export const SPOTLIGHT = 0.5;
 
@@ -13,9 +12,9 @@ export const SPOTLIGHT = 0.5;
 export interface ExtractScene {
   /** The network: its fills, edges, answer and spotlight. */
   network: Scene;
-  /** Which conversation the network shows, 1-based; undefined before any is collected. */
+  /** Which conversation the network shows, 1-based; undefined until the first collection starts. */
   shown: number | undefined;
-  /** "Conversation n" over the network, and how far its bounce has got, 0–1. */
+  /** "Conversation n" over the network, and how far its bounce has gone, 0–1. */
   label: { n: number; bounce: number } | undefined;
   /** The lifted column, once its copies have left. `flight` is ms since they left. */
   lifted: { flight: number; opacity: number; labelOpacity: number } | undefined;
@@ -23,16 +22,15 @@ export interface ExtractScene {
   deck: { conversation: number; flight: number }[];
 }
 
-/** How many hidden units there are: every column but the first and last. */
+/** How many hidden units there are: every layer but the first and last. */
 export function hiddenCount(columnSizes: readonly number[]): number {
   return columnSizes.slice(1, -1).reduce((sum, n) => sum + n, 0);
 }
 
 /**
  * The scene resting at `marker`, with nothing running: the blank network; then the lifted
- * column; then the last conversation collected in full, under its label, with the deck. Once a
- * conversation is collected, the hidden neurons stay spotlit, and the lifted column's copies faded,
- * as its flight left them, until the next collection brings them back.
+ * column; then the last conversation collected in full, under its label, with the deck, spotlit as
+ * its flight left it (see `collectSceneAt`).
  */
 export function restScene(columnSizes: readonly number[], marker: Marker): ExtractScene {
   const collected = Math.max(0, marker - 1);

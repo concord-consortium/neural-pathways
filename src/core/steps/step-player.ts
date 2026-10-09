@@ -25,7 +25,7 @@ export interface Frame extends Run {
   t: number;
 }
 
-/** What a view's steps draw. Pure: the same marker and frame always give the same scene. */
+/** What a view's timeline draws. Pure: the same marker and frame always give the same scene. */
 export interface StepTimeline<S> {
   /** How long `segment` takes to play, in timeline time: milliseconds at normal speed. */
   duration(segment: Segment): number;
@@ -78,9 +78,8 @@ export class StepPlayer<S> {
   }
 
   /**
-   * The run playing, without its time. Compared by value, so it changes when a run starts or ends,
-   * not on every frame like `currentFrame`. The step row reads this, so it re-renders only when a
-   * run starts or ends.
+   * The run playing, without its time. Compared by value, so it changes only when a run starts or
+   * ends, not on every frame like `currentFrame`. The step row reads this rather than the frame.
    */
   @computedStruct
   get currentRun(): Run | undefined {
@@ -102,6 +101,9 @@ export class StepPlayer<S> {
     const { from, to } = segment;
     // First, so a timeline that throws for this segment leaves the player as it was.
     const duration = this.timeline.duration(segment);
+    if (!Number.isFinite(duration)) {
+      throw new RangeError(`A segment can't take ${duration} ms: the clock would never end it`);
+    }
     this.stop();
     if (!this.settings.animate || prefersReducedMotion()) {
       this.progress.setMarker(to);

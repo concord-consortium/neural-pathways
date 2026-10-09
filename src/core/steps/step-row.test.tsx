@@ -1,6 +1,6 @@
 import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { StepButton } from "./step-buttons";
+import { StepButton } from "./step-button";
 import { StepPlayer, StepTimeline } from "./step-player";
 import { StepRow } from "./step-row";
 import { clearReducedMotion, setReducedMotion, TestProgress, TestSettings } from "./test-helpers";
@@ -55,8 +55,11 @@ describe("StepRow", () => {
       .toEqual(["One", "Next", "Later", "Reset"]);
   });
 
-  it("makes a button with no segment unavailable, and Reset at the start", () => {
+  it("marks no button as current at the start, makes one with no segment unavailable, and Reset too", () => {
     showRow();
+    for (const name of ["One", "Next", "Later"]) {
+      expect(button(name)).not.toHaveAttribute("aria-current");
+    }
     expect(button("Later")).toHaveAttribute("aria-disabled", "true");
     expect(button("Next")).toHaveAttribute("aria-disabled", "false");
     expect(button("Reset")).toHaveAttribute("aria-disabled", "true");
@@ -68,7 +71,6 @@ describe("StepRow", () => {
     // eslint-disable-next-line testing-library/render-result-naming-convention -- showRow returns StepPlayer
     const player = showRow();
     const play = jest.spyOn(player, "play");
-    // Not disabled, so it stays in the tab order.
     expect(button("Later")).toBeEnabled();
     fireEvent.click(button("Later"));
     expect(play).not.toHaveBeenCalled();
@@ -80,6 +82,9 @@ describe("StepRow", () => {
     fireEvent.click(button("Next"));
     act(() => jest.advanceTimersByTime(1100));
     expect(button("Next")).toHaveAttribute("aria-disabled", "true");
+    // jsdom doesn't move the focus off a button that becomes disabled, as a browser does, so this
+    // checks it isn't; the Playwright tests check the focus stays in a browser.
+    expect(button("Next")).toBeEnabled();
     expect(button("Next")).toHaveFocus();
   });
 
@@ -122,7 +127,7 @@ describe("StepRow", () => {
     showRow(1, [{ key: "next", label: "Next", segmentToPlayWhenAt: segmentAt }]);
     fireEvent.click(button("Next"));
     const callsOnceStarted = segmentAt.mock.calls.length;
-    // Half way through the run: many frames, each a new `currentFrame`.
+    // Halfway through the run: many frames, each a new `currentFrame`.
     act(() => jest.advanceTimersByTime(500));
     expect(segmentAt).toHaveBeenCalledTimes(callsOnceStarted);
   });

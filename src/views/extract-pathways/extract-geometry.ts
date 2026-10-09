@@ -30,7 +30,7 @@ function deckRadius(nodeR: number): number {
 
 /**
  * The narrowest the canvas is laid out: the network, and a strip each side wide enough that the
- * deck's columns collected by hand fit in the left one, stepping left from its middle. A narrower
+ * deck's columns collected by hand fit in the left one (see `deckPosition`). A narrower
  * panel scrolls the drawing sideways rather than scaling it down, since text scaled to fit stops
  * growing when the page is zoomed (WCAG 1.4.4).
  *
@@ -39,7 +39,7 @@ function deckRadius(nodeR: number): number {
  */
 export function minCanvasWidth(columnSizes: readonly number[]): number {
   const nodeR = layoutNetwork(columnSizes, NETWORK_WIDTH, CANVAS_HEIGHT).radius;
-  // The deck's first column is centered in its strip, and each later one is a radius further left.
+  // The deck's first column is centered in its strip; deckPosition places the rest.
   const halfStrip = Math.ceil(MAX_COLLECTED * deckRadius(nodeR) + DECK_PAD_SIDE);
   return NETWORK_WIDTH + 4 * halfStrip;
 }
@@ -60,7 +60,7 @@ export interface ExtractGeometry {
   /** The hidden nodes in canvas coordinates: Hidden Layer 1's, then Hidden Layer 2's. */
   hidden: Point[];
   lifted: ColumnGeometry;
-  /** The deck's first column. Column c sits c radii left of it and c radii down. */
+  /** The deck's first column; `deckPosition` places the rest. */
   deck: ColumnGeometry;
 }
 
@@ -102,7 +102,10 @@ export function extractGeometry(columnSizes: readonly number[], hostWidth: numbe
   return { width, height, networkX, network, hidden, lifted, deck };
 }
 
-/** Where row `row` of deck column `column` sits: half a neuron left and down for each column before. */
+/**
+ * Where row `row` of deck column `column` sits: each column is a copy's radius left of and below the
+ * one before, so the deck steps down to the left from its first column.
+ */
 export function deckPosition(deck: ColumnGeometry, column: number, row: number): Point {
   return { x: deck.x - column * deck.r, y: deck.ys[row] + column * deck.r };
 }

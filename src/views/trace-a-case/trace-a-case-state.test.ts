@@ -38,7 +38,7 @@ describe("TraceACaseState", () => {
     expect(state.marker("7ca6475a5371")).toBe(0);
   });
 
-  it("sets one conversation's marker without touching the others", () => {
+  it("stores one conversation's marker without touching the others", () => {
     const state = fromSnapshot(TraceACaseState, fixture as any);
     state.setMarker("7b117e548ba4", 4);
     expect(savedJson(state)).toEqual({
@@ -46,7 +46,7 @@ describe("TraceACaseState", () => {
     });
   });
 
-  it("forgets a conversation set back to the start, so the saved form stays small", () => {
+  it("forgets a conversation back at the start, so the saved form stays small", () => {
     const state = fromSnapshot(TraceACaseState, fixture as any);
     state.setMarker("361e65b1002a", 0);
     expect(savedJson(state)).toEqual({ ...fixture, markerByConversation: { "7b117e548ba4": 1 } });

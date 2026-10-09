@@ -78,6 +78,21 @@ describe("StepPlayer", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
+  it("replays a run that has ended, from its `from`", () => {
+    const progress = new TestProgress();
+    const player = new StepPlayer(timeline, progress, new TestSettings());
+    player.play("a", { from: 1, to: 2 });
+    jest.advanceTimersByTime(1100);
+    expect(progress.marker).toBe(2);
+    player.play("a", { from: 1, to: 2 });
+    expect(progress.marker).toBe(1);
+    expect(player.currentFrame).toEqual({ button: "a", from: 1, to: 2, t: 0 });
+    jest.advanceTimersByTime(1100);
+    expect(progress.marker).toBe(2);
+    expect(player.currentFrame).toBeUndefined();
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
   it("stores `to` straight away under reduced motion", () => {
     setReducedMotion(true);
     const progress = new TestProgress();
@@ -111,6 +126,15 @@ describe("StepPlayer", () => {
     expect(player.currentFrame).toBeUndefined();
     jest.advanceTimersByTime(2000);
     expect(progress.marker).toBe(0);
+  });
+
+  it.each([NaN, Infinity])("refuses a duration of %p, which the clock can't end, changing nothing", duration => {
+    const progress = new TestProgress(2);
+    const player = new StepPlayer({ ...timeline, duration: () => duration }, progress, new TestSettings());
+    expect(() => player.play("a", { from: 2, to: 3 })).toThrow(RangeError);
+    expect(progress.marker).toBe(2);
+    expect(player.currentFrame).toBeUndefined();
+    expect(jest.getTimerCount()).toBe(0);
   });
 
   it("changes nothing when the timeline can't time a segment", () => {

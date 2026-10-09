@@ -85,7 +85,7 @@ describe("ExtractPathways", () => {
     expect(await screen.findByText("No conversations.")).toBeInTheDocument();
   });
 
-  it("lifts the hidden neurons out with Setup, and keeps it in the view's state", async () => {
+  it("lifts the hidden neurons out with Setup, and stores it in the view's state", async () => {
     setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
@@ -128,7 +128,7 @@ describe("ExtractPathways", () => {
     expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "true");
   });
 
-  it("opens at the stage saved, clamped to the conversations loaded", async () => {
+  it("opens at the stage stored, clamped to the conversations loaded", async () => {
     mockedFetchIndex.mockResolvedValue({ ...index, items: items.slice(0, 3) });
     showView(new ExtractPathwaysState({ setupDone: true, collected: 10 }));
     expect(await screen.findByRole("img", { name: collectedLabel(3) })).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe("ExtractPathways", () => {
       jest.useRealTimers();
     });
 
-    it("plays Setup, then a collection, saving each only when it ends", async () => {
+    it("plays Setup, then a collection, storing each only when it ends", async () => {
       const { state } = showView();
       await screen.findByRole("img", { name: "The network." });
       jest.useFakeTimers();

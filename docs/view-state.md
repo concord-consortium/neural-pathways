@@ -130,7 +130,7 @@ the life of the page, in `SharedState.queryDraft`.
 - **Type checking is on everywhere, production included.** `src/core/state/setup.ts` sets
   `modelAutoTypeChecking` to `AlwaysOn`, and every model file imports it, so any code that uses the
   models gets it. Every load and write is checked against the types, including values inside
-  arrays, records and objects, and refinements such as "a step from 0 to 4". A bad value throws
+  arrays, records and objects, and refinements such as "a marker from 0 to 4". A bad value throws
   where it is written, so it never reaches saved student state. The trees are small, so the cost
   is negligible.
 

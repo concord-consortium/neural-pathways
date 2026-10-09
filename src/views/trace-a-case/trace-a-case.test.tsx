@@ -68,7 +68,7 @@ describe("TraceACase", () => {
     expect(screen.getByRole("img", { name: "Network diagram" })).toBeInTheDocument();
   });
 
-  it("sets the shared conversation once the conversations arrive", async () => {
+  it("stores the shared conversation once the conversations arrive", async () => {
     const shared = showView();
     await screen.findByText("1 / 3");
     expect(shared.conversationId).toBe(ids[0]);
@@ -220,7 +220,7 @@ describe("TraceACase", () => {
     expect(state.markerByConversation).toEqual({ [ids[0]]: 3, [ids[1]]: 1 });
   });
 
-  it("drops a step that is playing when the conversation changes, keeping the step before", async () => {
+  it("drops a run that is playing when the conversation changes, keeping the marker before", async () => {
     const state = new TraceACaseState({});
     showView(new SharedState({}), state);
     await screen.findByText("1 / 3");
@@ -253,7 +253,7 @@ describe("TraceACase", () => {
     expect(state.markerByConversation).toEqual({ [ids[1]]: 2 });
   });
 
-  it("stops a step that is playing when the view unmounts, keeping the step before", async () => {
+  it("stops a run that is playing when the view unmounts, keeping the marker before", async () => {
     const state = new TraceACaseState({});
     const { unmount } = render(viewWith(new SharedState({}), state));
     await screen.findByText("1 / 3");
@@ -270,7 +270,7 @@ describe("TraceACase", () => {
     }
   });
 
-  it("doesn't re-render the conversation card while a step plays", async () => {
+  it("doesn't re-render the conversation card while a run plays", async () => {
     showView();
     await screen.findByText("1 / 3");
     const cardRenders = jest.spyOn(conversationCard, "ConversationCard");
@@ -287,7 +287,7 @@ describe("TraceACase", () => {
     }
   });
 
-  it("opens a conversation at the steps saved for it", async () => {
+  it("opens a conversation at the marker stored for it", async () => {
     showView(new SharedState({}), new TraceACaseState({ markerByConversation: { [ids[0]]: 2 } }));
     await screen.findByText("1 / 3");
     expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-current", "step");
@@ -368,7 +368,7 @@ describe("TraceACase", () => {
       expect(shared.conversationId).toBe(ids[0]);
     });
 
-    it("brings the same conversation back, at its step, when the query is cleared", async () => {
+    it("brings the same conversation back, at its marker, when the query is cleared", async () => {
       setReducedMotion(true);
       const shared = showView(new SharedState({ conversationId: ids[1] }));
       await screen.findByText("2 / 3");
@@ -420,7 +420,7 @@ describe("TraceACase", () => {
       expect(filterBox()).toHaveAccessibleDescription("Incomplete query");
     });
 
-    it("stops a step playing on a conversation the draft hides, keeping the step before", async () => {
+    it("stops a run playing on a conversation the draft hides, keeping the marker before", async () => {
       const state = new TraceACaseState({});
       showView(new SharedState({}), state);
       await screen.findByText("1 / 3");

@@ -76,7 +76,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   const place = shownId === undefined ? undefined : placeById.get(shownId);
 
   const noMatch = (
-    <div className="trace-a-case__case">
+    <div className="trace-a-case__conversation">
       <p className="trace-a-case__no-match">No conversations match the filter.</p>
     </div>
   );
@@ -84,7 +84,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // wide one.
   const conversation = player && place !== undefined && (
     <>
-      <div className="trace-a-case__case">
+      <div className="trace-a-case__conversation">
         <ConversationCard conversation={index.items[place]} position={listPosition} total={ids.length}
           onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)} />
       </div>
