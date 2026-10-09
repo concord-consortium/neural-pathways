@@ -1,12 +1,16 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
+import { ConversationWords } from "../../core/conversation-card/conversation-words";
+import { ActualLabel } from "../../core/conversation-card/actual-label";
+import { ObservationNotes } from "../../core/conversation-card/observation-notes";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
 import { conversationFilterFor, idsFor } from "../../core/filter/conversation-filter";
 import { FilterBar } from "../../core/filter/filter-bar";
 import { useConversationFilter } from "../../core/filter/use-conversation-filter";
 import { indexPasses } from "../../core/network/index-passes";
 import { toyNetwork } from "../../core/network/toy-network";
+import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
 import { validConversationId } from "../../core/state/conversation";
 import { TraceACaseState } from "./trace-a-case-state";
@@ -21,6 +25,9 @@ import "./trace-a-case.scss";
 /** Units in each drawn layer. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
 const TIMELINE = traceTimeline(COLUMN_SIZES);
+
+/** Gives the stylesheet the diagram's smallest layout, which it sizes the network panel from. */
+const LAYOUT_STYLE = { "--diagram-min-height": `${MIN_HEIGHT}px` } as React.CSSProperties;
 
 /** Follow one conversation through the network, a layer at a time. */
 export const TraceACase: React.FC = observer(function TraceACase() {
@@ -53,6 +60,9 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // A conversation's place among all of them, which its pass is stored by. Its place in `ids`
   // changes with the query.
   const placeById = useMemo(() => new Map(index.items.map((item, i) => [item.id, i])), [index]);
+  // The generated attributes a student can see. The derived target, prediction and
+  // model_correct aren't among them, and the hidden ones wait to be commissioned.
+  const indicatorAttributes = useMemo(() => (index.metadata.attributes ?? []).filter(a => !a.hidden), [index]);
   const { passes, scales } = indexPasses(toyNetwork, index);
   const networkHeadId = useId();
   // Shown even before the store's correction lands, and while a query is being typed, so an id
@@ -73,44 +83,45 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   }
   const goTo = (to: number) => shared.setConversationId(ids[to]);
   const place = shownId === undefined ? undefined : placeById.get(shownId);
+  const shown = place === undefined ? undefined : index.items[place];
 
-  const noMatch = (
-    <div className="trace-a-case__conversation">
-      <p className="trace-a-case__no-match">No conversations match the filter.</p>
-    </div>
-  );
-  // The card comes before the steps, so the tab order matches the stacked layout as well as the
-  // wide one.
-  const conversation = player && place !== undefined && (
-    <>
-      <div className="trace-a-case__conversation">
-        <ConversationCard conversation={index.items[place]} position={listPosition} total={ids.length}
-          onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)} />
-      </div>
-      <div className="trace-a-case__steps">
-        <StepRow player={player} buttons={TRACE_BUTTONS} />
-      </div>
-      <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
-        <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
-        <div className="trace-a-case__diagram">
-          <Observer>
-            {() => (
-              <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
-                outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
-            )}
-          </Observer>
-        </div>
-      </section>
-    </>
-  );
-
-  // The filter comes first: it sits over the card in both layouts.
+  // The filter comes first: it sits over the card in both layouts. The card comes before the steps,
+  // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
+  // card says so, and the steps and the network are left out.
   return (
-    <div className="trace-a-case__layout">
+    <div className="trace-a-case__layout" style={LAYOUT_STYLE}>
       <div className="trace-a-case__filter">
         <FilterBar {...bar} />
       </div>
-      {conversation || noMatch}
+      <div className="trace-a-case__conversation">
+        <ConversationCard position={listPosition} total={ids.length}
+          onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)}>
+          {shown &&
+            <>
+              <ConversationWords text={shown.text} />
+              <ActualLabel target={shown.target} labels={alien3Dataset.classificationLabels} />
+              <ObservationNotes observation={shown.observation} attributes={indicatorAttributes}
+                values={shown.attributes} />
+            </>}
+        </ConversationCard>
+      </div>
+      {player && place !== undefined &&
+        <>
+          <div className="trace-a-case__steps">
+            <StepRow player={player} buttons={TRACE_BUTTONS} />
+          </div>
+          <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
+            <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
+            <div className="trace-a-case__diagram">
+              <Observer>
+                {() => (
+                  <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
+                    outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+                )}
+              </Observer>
+            </div>
+          </section>
+        </>}
     </div>
   );
 });

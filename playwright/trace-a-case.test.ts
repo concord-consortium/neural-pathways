@@ -1,5 +1,5 @@
 import { test } from "./lib/base-url";
-import { expect } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 test("Trace a Case steps through the 800 conversations", async ({ page }) => {
   await page.goto("/");
@@ -149,4 +149,170 @@ test("the filter bar shows focus in forced-colors mode", async ({ page }) => {
   expect(await outline()).toBe("none");
   await page.getByRole("textbox", { name: "Filter" }).focus();
   expect(await outline()).toBe("solid");
+});
+
+test("the card shows the conversation's label, notes and attribute indicators", async ({ page }) => {
+  await page.goto("/");
+  const card = page.getByRole("region", { name: "Conversation", exact: true });
+  await expect(card.getByRole("status")).toHaveText("Conversation 1 of 800");
+  await expect(card.getByText("wait", { exact: true })).toBeVisible();
+  await expect(card.getByText(/^At least one juvenile was present\./)).toBeVisible();
+  const indicators = card.getByRole("listitem");
+  await expect(indicators).toHaveCount(5);
+  // Each indicator has a drawing, and the drawing has something in it.
+  const icons = indicators.locator("svg");
+  await expect(icons).toHaveCount(5);
+  expect(await icons.evaluateAll(svgs => svgs.map(svg => svg.childElementCount > 0))).toEqual(Array(5).fill(true));
+  // The indicators share the row equally, so a long label wraps rather than widening its indicator.
+  const widths = await indicators.evaluateAll(items =>
+    items.map(item => Math.round(item.getBoundingClientRect().width)));
+  expect(new Set(widths).size).toBe(1);
+  // What a screen reader reads of each indicator; the value shown is hidden from it.
+  const spoken = () => indicators.evaluateAll(items => items.map(item => {
+    const copy = item.cloneNode(true) as Element;
+    copy.querySelectorAll('[aria-hidden="true"]').forEach(hidden => hidden.remove());
+    return copy.textContent;
+  }));
+  expect(await spoken()).toEqual([
+    "Voices raised: no", "Engaged in a task: yes", "Group size: 2", "Near water: yes", "Food present: no",
+  ]);
+  // A hidden attribute gets no attribute indicator until it is commissioned.
+  await expect(card.getByText("Resource stressed")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Next conversation" }).click();
+  await expect(card.getByRole("status")).toHaveText("Conversation 2 of 800");
+  await expect(card.getByText("approach", { exact: true })).toBeVisible();
+  expect(await spoken()).toEqual([
+    "Voices raised: yes", "Engaged in a task: no", "Group size: 3", "Near water: yes", "Food present: yes",
+  ]);
+});
+
+test("the card's unavailable arrow looks unavailable in forced-colors mode", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  // The arrow is the button's only face, so compare what it is filled with.
+  const fill = (name: string) =>
+    page.getByRole("button", { name }).locator("path").evaluate(element => getComputedStyle(element).fill);
+  // On the first conversation Previous is unavailable and Next isn't.
+  expect(await fill("Previous conversation")).not.toBe(await fill("Next conversation"));
+});
+
+test("the card fits the stacked layout without scrolling sideways", async ({ page }) => {
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.goto("/");
+  const card = page.getByRole("region", { name: "Conversation", exact: true });
+  await expect(card.getByRole("listitem")).toHaveCount(5);
+  // The notes box scrolls on its own, so what overflows inside it doesn't widen the card.
+  const notes = card.getByRole("region", { name: "Observation notes" });
+  for (const box of [card, notes]) {
+    expect(await box.evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+  }
+});
+
+test.describe("the card and network panels", () => {
+  const panels = (page: Page) => ({
+    card: page.getByRole("region", { name: "Conversation", exact: true }),
+    network: page.getByRole("region", { name: "The Network" }),
+  });
+  const rect = (locator: Locator) => locator.evaluate(el => {
+    const { top, bottom, height } = el.getBoundingClientRect();
+    return { top, bottom, height };
+  });
+
+  // On a short window the card's body has to give up height, and its head mustn't.
+  for (const height of [1000, 450]) {
+    test(`have heads of the same height on a ${height} px window`, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height });
+      await page.goto("/");
+      const { card, network } = panels(page);
+      await expect(card.getByRole("listitem")).toHaveCount(5);
+      const cardHead = await rect(card.getByRole("heading", { name: "Conversation" }).locator(".."));
+      const networkHead = await rect(network.getByRole("heading", { name: "The Network" }));
+      expect(networkHead.height).toBeCloseTo(cardHead.height, 0);
+    });
+  }
+
+  test("match each other and fill the window", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    const { card, network } = panels(page);
+    await expect(card.getByRole("listitem")).toHaveCount(5);
+    const cardBox = await rect(card);
+    const networkBox = await rect(network);
+    expect(networkBox.height).toBeCloseTo(cardBox.height, 0);
+    // The view's 16 px bottom padding is all that's left below them.
+    expect(cardBox.bottom).toBeCloseTo(800 - 16, 0);
+  });
+
+  test("stop growing at 800 px on a tall window", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1400 });
+    await page.goto("/");
+    const { card, network } = panels(page);
+    await expect(card.getByRole("listitem")).toHaveCount(5);
+    expect((await rect(card)).height).toBeCloseTo(800, 0);
+    expect((await rect(network)).height).toBeCloseTo(800, 0);
+  });
+
+  test("scroll the notes, not the card, on a short window", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 450 });
+    await page.goto("/");
+    const { card } = panels(page);
+    // A long conversation, so its attribute indicators sit well below the bottom of the card.
+    await page.getByRole("textbox", { name: "Filter" }).fill("n:500");
+    await expect(page.getByText("1 / 1", { exact: true })).toBeVisible();
+    const notes = card.getByRole("region", { name: "Observation notes" });
+    await expect(notes).toBeVisible();
+    const overflow = (locator: Locator) => locator.evaluate(el => el.scrollHeight - el.clientHeight);
+    expect(await overflow(notes)).toBeGreaterThan(0);
+    expect(await overflow(card)).toBeLessThanOrEqual(0);
+  });
+
+  // Like Firefox's "Zoom text only": every font twice its size, nothing else.
+  test("keep the card's content inside it when only the text is zoomed", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 450 });
+    await page.goto("/");
+    const { card } = panels(page);
+    await expect(card.getByRole("listitem")).toHaveCount(5);
+    await page.evaluate(() => {
+      const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
+      const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
+      elements.forEach((element, i) => { element.style.fontSize = `${sizes[i] * 2}px`; });
+    });
+    await card.evaluate(el => el.scrollIntoView({ block: "start" }));
+    const inCardBelowIt = await card.evaluate(el => {
+      const { left, bottom } = el.getBoundingClientRect();
+      return el.contains(document.elementFromPoint(left + 20, bottom + 10));
+    });
+    expect(inCardBelowIt).toBe(false);
+  });
+
+  test("keep their natural height when stacked, with the view's padding below", async ({ page }) => {
+    await page.setViewportSize({ width: 600, height: 500 });
+    await page.goto("/");
+    const { card, network } = panels(page);
+    const notes = card.getByRole("region", { name: "Observation notes" });
+    await expect(notes).toBeVisible();
+    expect(await notes.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(0);
+    // The box ends its 10 px padding below the attribute indicators, so nothing stretched it.
+    const below = await notes.evaluate(el =>
+      el.getBoundingClientRect().bottom - el.querySelector("ul")!.getBoundingClientRect().bottom);
+    expect(below).toBeCloseTo(10, 0);
+    await page.getByRole("main").evaluate(el => el.scrollTo(0, el.scrollHeight));
+    expect((await rect(network)).bottom).toBeCloseTo(500 - 16, 0);
+  });
+
+  test("stop shrinking at 380 px, and the page scrolls instead", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 450 });
+    await page.goto("/");
+    const { card, network } = panels(page);
+    await expect(card.getByRole("listitem")).toHaveCount(5);
+    expect((await rect(card)).height).toBeCloseTo(380, 0);
+    const networkBox = await rect(network);
+    expect(networkBox.height).toBeCloseTo(380, 0);
+    // The drawing still fits in the panel at its smallest.
+    expect((await rect(network.locator("svg").first())).bottom).toBeLessThanOrEqual(networkBox.bottom);
+    const view = page.getByRole("main");
+    expect(await view.evaluate(el => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0);
+  });
 });

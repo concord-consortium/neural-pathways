@@ -106,7 +106,9 @@ module.exports = (env, argv) => {
               type: 'asset',
             },
             {
-              issuer: /\.tsx?$/,
+              // Any other importer gets a React component. No issuer test here: an .svg found by
+              // require.context (src/core/alien-icons) is imported by webpack's context module,
+              // not by a .ts file.
               loader: '@svgr/webpack',
               options: {
                 svgoConfig: {

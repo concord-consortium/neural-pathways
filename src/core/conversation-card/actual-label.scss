@@ -1,0 +1,38 @@
+@use "../colors" as colors;
+
+.actual-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.actual-label__caption {
+  color: colors.$ink-2;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.actual-label__pill {
+  padding: 2px 9px;
+  border: 2px solid colors.$rule;
+  border-radius: 999px;
+  color: colors.$ink;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.actual-label__pill--approach {
+  border-color: colors.$approach;
+  background: colors.$approach-soft;
+  color: colors.$approach-text;
+}
+
+.actual-label__pill--wait {
+  border-color: colors.$wait;
+  background: colors.$wait-soft;
+  color: colors.$wait-text;
+}

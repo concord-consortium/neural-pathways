@@ -1,10 +1,17 @@
 @use "../../core/colors" as colors;
 @use "../../core/panel";
 
+$diagram-padding: 8px;
+// The network panel's height around the diagram: its head, the diagram's padding and its border.
+$network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
+
+// At least the window's height, so the layout below the title can fill what is left of it.
 .trace-a-case {
   display: flex;
   flex-direction: column;
   gap: 9px;
+  box-sizing: border-box;
+  min-height: 100vh;
   padding-bottom: 16px;
   container-type: inline-size;
 }
@@ -12,20 +19,36 @@
 // Two columns, each a toolbar over a panel, as in the prototype: the filter over the
 // conversation card, the steps over the network. The toolbars share a row, so the two panels
 // start on the same line.
+//
+// The layout takes the height the title leaves, and the panel row grows into it, up to 800 px so a
+// very tall window doesn't leave the network floating in empty space. It stops at the network
+// panel's smallest, 380 px: the diagram's smallest layout plus $network-chrome. Below that the
+// panels run past the window and the page scrolls. min-height: 0 because the browser measures the
+// layout's content height with the row at its 800 px most, which would otherwise be its minimum.
+//
+// --diagram-min-height is MIN_HEIGHT from layout.ts, set on this element by the view, so the
+// diagram's smallest layout is written down once.
 .trace-a-case__layout {
   display: grid;
+  flex: 1 1 0;
+  min-height: 0;
   grid-template-columns: 447px minmax(400px, 1fr);
+  grid-template-rows: auto minmax(calc(var(--diagram-min-height) + #{$network-chrome}), 800px);
   grid-template-areas:
     "filter       steps"
     "conversation network";
+  align-content: start;
   align-items: start;
   gap: 9px 10px;
 }
 
-// Too narrow for both columns: stack them, keeping each toolbar above its panel.
+// Too narrow for both columns: stack them, keeping each toolbar above its panel. Each panel is as
+// tall as its content, and the layout as tall as the panels.
 @container (width < 857px) {
   .trace-a-case__layout {
+    flex: none;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
     grid-template-areas:
       "filter"
       "conversation"
@@ -44,34 +67,30 @@
   min-width: 0;
 }
 
+// The two panels stretch to their row, so they are the same height.
 .trace-a-case__conversation {
   grid-area: conversation;
+  align-self: stretch;
   min-width: 0;
-}
-
-// In the card's place when nothing matches, so the layout keeps its shape.
-.trace-a-case__no-match {
-  @include panel.panel;
-  margin: 0;
-  padding: 24px 14px;
-  color: colors.$ink-3;
-  font-size: 15px;
-  text-align: center;
 }
 
 .trace-a-case__network {
   @include panel.panel;
   grid-area: network;
+  align-self: stretch;
 }
 
 .trace-a-case__network-head {
   @include panel.panel-head;
 }
 
+// 440 px tall when the panel's height comes from its content (stacked), and otherwise the panel's
+// height less the head. Never smaller than the diagram's smallest layout.
 .trace-a-case__diagram {
+  flex: 1 1 440px;
   width: 100%;
   max-width: 537px;
-  height: 440px;
+  min-height: var(--diagram-min-height);
   margin: 0 auto;
-  padding: 8px 0;
+  padding: $diagram-padding 0;
 }

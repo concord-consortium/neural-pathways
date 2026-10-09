@@ -70,7 +70,17 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   at a marker, and `StepRow` draws them with Reset. The player's scene changes on every frame of a
   run, so a view reads `player.scene` only inside a small `<Observer>` around its drawing; the
   rest of the view then doesn't re-render while a run plays.
-- `conversation-card/`: the minimal conversation card. The full card will build on it.
+- `conversation-card/`: the conversation panel the lesson's views share. `ConversationCard` is the
+  shell: the count, previous and next, a screen-reader status, and "No conversations match that
+  search." when the list is empty. A view fills its body from the parts beside it:
+  `ConversationWords` (the words, one span each), `ActualLabel` (the true answer as a chip) and
+  `ObservationNotes` (the observer's notes with an attribute indicator for each attribute it is
+  given). A view that needs a different body adds a part rather than a flag on the shell.
+- `alien-icons/`: `AlienIcon` and the alien attributes' icons, one `.svg` file per attribute,
+  named by its key and drawn in the parent's color. webpack finds the files with `require.context`
+  (`alien-icon-files.ts`) and SVGR makes each a React component, so a new icon needs only its file.
+  Under Jest, `src/test/alien-icon-files.ts` stands in, and `jest/svg-transform.js` runs SVGR.
+- `visually-hidden.scss`: the `visually-hidden` mixin, for text only screen readers read.
 - `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
   words (`conversationWords`). Items are plain data, so this is a function that takes the text, not
   a getter on a model.

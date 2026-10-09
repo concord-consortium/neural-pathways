@@ -24,6 +24,13 @@ one thing, or one name for two things, settle it and add it here.
 - **position:** a conversation's index in the list being stepped through, which the filter decides
   (`listPosition` in Trace a Case, `position` on the conversation card).
 
+## The conversation card
+
+- **attribute indicator:** how the card shows one of a conversation's attributes, under the
+  observation notes: the attribute's label, its icon, and its value (a check mark, a blank, a
+  number, or a dash when the value is missing). Not "mark". The value, under the icon, is not a
+  "badge".
+
 ## The step system
 
 - **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup and
