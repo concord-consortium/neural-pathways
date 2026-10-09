@@ -5,7 +5,7 @@ const SIZES = [10, 8, 6, 2];
 const LANDED = 2166;
 
 describe("hiddenCount", () => {
-  it("counts the units of every column but the first and last", () => {
+  it("counts the units of every layer but the first and last", () => {
     expect(hiddenCount(SIZES)).toBe(14);
   });
 });

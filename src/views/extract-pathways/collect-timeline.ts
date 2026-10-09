@@ -18,7 +18,7 @@ import { DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
  *   Trace a Case, which it recalls.
  * - `swap`: drains the network a full layer at a time, holds it blank, then refills it with the new
  *   conversation a full layer at a time, so each new one is seen arriving.
- * - `quick`: clears everything at once and refills quickly with the lines snapped in, once the
+ * - `quick`: clears everything at once and refills quickly with the edges snapped in, once the
  *   swap's point has been made.
  */
 export type CollectVersion = "replay" | "swap" | "quick";
@@ -92,13 +92,13 @@ function replayNetwork(columnSizes: readonly number[], t: number): Scene {
 interface SwapPlan {
   /** [layer][unit]: when each gauge empties. */
   drainAt: number[][];
-  /** [gap]: when the lines leaving each layer clear. */
+  /** [gap]: when the edges leaving each layer clear. */
   clearAt: number[];
   /** When the network is blank and takes the new conversation. */
   blank: number;
   /** [layer][unit]: when each gauge fills again. */
   fillAt: number[][];
-  /** [gap]: when the lines leaving each layer start to sweep in. */
+  /** [gap]: when the edges leaving each layer start to sweep in. */
   sweepAt: number[];
   answerAt: number;
   end: number;

@@ -23,7 +23,7 @@ export interface ExtractScene {
   deck: { conversation: number; flight: number }[];
 }
 
-/** How many hidden units there are: every column but the first and last. */
+/** How many hidden units there are: every layer but the first and last. */
 export function hiddenCount(columnSizes: readonly number[]): number {
   return columnSizes.slice(1, -1).reduce((sum, n) => sum + n, 0);
 }

@@ -41,6 +41,8 @@ one thing, or one name for two things, settle it and add it here.
 
 ## The network diagram
 
+- **column:** a drawn layer of the network, as in `columnSizes` and `nodeFill[column]`. Say
+  "layer" in prose, since Extract Pathways also has the lifted column and the deck's columns.
 - **unit:** a neuron as an index in a layer or column, as in `nodeFill[column][unit]`.
 - **node:** a unit's drawn circle, with its gauge.
 - **edge:** a drawn connection between two nodes, colored and weighted by its signal.
@@ -48,7 +50,8 @@ one thing, or one name for two things, settle it and add it here.
 - **phase:** one of the four parts of a conversation's forward pass: the input fill, then a fan of
   edges into each later column. Trace a Case's Step *k* plays phase *k*.
 - **spotlight:** `hiddenLayerSpotlight`, how strongly the hidden layers' nodes are picked out;
-  everything else fades to 1 − its strength. Not "dim" for the field.
+  everything else fades to 1 − its strength. Not "dim" for the field. "Dim" and "undim" name the
+  spotlight rising and falling, as in the prototype's `dimRest` and `undim`.
 
 ## Extract Pathways
 
@@ -57,3 +60,6 @@ one thing, or one name for two things, settle it and add it here.
 - **copy:** one flown circle in the lifted column or the deck.
 - **collection:** one press of Collect a Conversation, from the network running the conversation
   to its column landing in the deck. `collected` counts the ones done.
+- **stage:** a part of the extraction whose completion is stored: Setup (`setupDone`), the
+  collections (`collected`), and later the cube and the pathways. A stage still playing isn't
+  stored.
