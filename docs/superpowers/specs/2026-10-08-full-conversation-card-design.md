@@ -210,6 +210,8 @@ CSS only, with no measuring in code and no offset for what sits above the panels
 - **The heads** are at least as tall as a 44 px control plus their padding and rule, 62 px, by
   one rule in the `panel-head` mixin, so they match and either can still grow if its controls
   wrap. Neither shrinks: on a short window the card's body gives up the room.
+- **The card's body** scrolls as a last resort, once the notes box is at its smallest and the rest
+  still doesn't fit, as when only the text is zoomed.
 - **The diagram** is `flex: 1 1 440px` with `--diagram-min-height` as its minimum, so it fills the
   panel and the layout centers the drawing.
 - **The card** is `height: 100%`, so it fills a cell with a set height and is its natural height

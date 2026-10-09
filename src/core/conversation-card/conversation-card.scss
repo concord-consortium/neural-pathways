@@ -74,12 +74,14 @@
   @include visually-hidden.visually-hidden;
 }
 
-// The parts a view puts in the card, top to bottom.
+// The parts a view puts in the card, top to bottom. It scrolls only when the notes box is at its
+// smallest and the rest still doesn't fit, as when the text alone is zoomed.
 .conversation-card__body {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
+  overflow-y: auto;
   gap: 10px;
   padding: 12px 14px;
 }

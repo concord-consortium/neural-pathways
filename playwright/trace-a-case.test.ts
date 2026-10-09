@@ -249,6 +249,25 @@ test.describe("the card and network panels", () => {
     expect(await overflow(card)).toBeLessThanOrEqual(0);
   });
 
+  // Like Firefox's "Zoom text only": every font twice its size, nothing else.
+  test("keep the card's content inside it when only the text is zoomed", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 450 });
+    await page.goto("/");
+    const { card } = panels(page);
+    await expect(card.getByRole("listitem")).toHaveCount(5);
+    await page.evaluate(() => {
+      const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
+      const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
+      elements.forEach((element, i) => { element.style.fontSize = `${sizes[i] * 2}px`; });
+    });
+    await card.evaluate(el => el.scrollIntoView({ block: "start" }));
+    const inCardBelowIt = await card.evaluate(el => {
+      const { left, bottom } = el.getBoundingClientRect();
+      return el.contains(document.elementFromPoint(left + 20, bottom + 10));
+    });
+    expect(inCardBelowIt).toBe(false);
+  });
+
   test("keep their natural height when stacked, with the view's padding below", async ({ page }) => {
     await page.setViewportSize({ width: 600, height: 500 });
     await page.goto("/");
