@@ -11,8 +11,10 @@ describe("minCanvasWidth", () => {
     expect(last.x - g.deck.r).toBeCloseTo(10);
   });
 
-  it("is narrower than the 980 px an iPad's standalone layout leaves, where the prototype fits", () => {
-    expect(minCanvasWidth(SIZES)).toBeLessThan(980);
+  it("lays out a host one pixel narrower at the minimum, and one pixel wider at its own width", () => {
+    expect(extractGeometry(SIZES, 908).width).toBe(909);
+    expect(extractGeometry(SIZES, 909).width).toBe(909);
+    expect(extractGeometry(SIZES, 910).width).toBe(910);
   });
 });
 
