@@ -20,6 +20,15 @@ The lesson's first view: follow one conversation through the network, a layer at
 The network, the diagram, the conversation card and the data loading live in `src/core/`, where
 Extract Pathways and Investigate Pathways can use them.
 
+## Widths
+
+The view's own width, inside the app's 16 px gutters:
+- From 857 px, two columns: the card's 447 px, a 10 px gap, and the network panel's 400 px.
+- Narrower, one column, down to 382 px: the diagram's narrowest layout, 380 px, and the network
+  panel's border. That is the narrowest width the view is designed for.
+- Narrower still, the diagram scrolls sideways inside its panel. Everything else wraps or stacks,
+  and the page doesn't scroll sideways even when the view is embedded on its own 320 px wide.
+
 ## Still to come
 
 The view still needs:
