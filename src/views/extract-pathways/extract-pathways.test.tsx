@@ -2,6 +2,7 @@ import React from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import { SPEED } from "../../core/state/animation";
 import { SharedState } from "../../core/state/shared-state";
 import * as viewStateContext from "../../core/state/view-state-context";
 import { ViewStateProvider } from "../../core/state/view-state-context";
@@ -193,6 +194,18 @@ describe("ExtractPathways", () => {
       fireEvent.click(button("Setup"));
       expect(state.setupDone).toBe(true);
       expect(drawing(LIFTED)).toBeInTheDocument();
+    });
+
+    it("plays Setup at the speed in the view's state", async () => {
+      const state = new ExtractPathwaysState({});
+      state.setSpeed(SPEED.fast);
+      showView(state);
+      await screen.findByRole("img", { name: "The network." });
+      jest.useFakeTimers();
+      fireEvent.click(button("Setup"));
+      // Fast takes 0.6 of the Med duration, so the run is done well before Med's would be.
+      act(() => jest.advanceTimersByTime(setupDuration(SIZES) * 0.7));
+      expect(state.setupDone).toBe(true);
     });
 
     it("finishes Setup when Animate is turned off while it plays", async () => {
