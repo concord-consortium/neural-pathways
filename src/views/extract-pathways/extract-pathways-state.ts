@@ -6,9 +6,8 @@ import { Animated, animationProps, Speed } from "../../core/state/animation";
 const countType = types.refinement(types.integer, n => n >= 0, "non-negative integer");
 
 /**
- * Extract Pathways' own state: the extraction stages completed so far. A stage in progress is not
- * kept. See docs/view-state.md for the fields still to come and the rules on changing the saved
- * form.
+ * Extract Pathways' own state. A stage still playing isn't stored. See docs/view-state.md for the
+ * fields still to come and the rules on changing the saved form.
  */
 @model("npw/ExtractPathwaysState")
 export class ExtractPathwaysState extends Model({
