@@ -46,11 +46,10 @@ function prefersReducedMotion(): boolean {
 /**
  * Plays a view's segments on a requestAnimationFrame clock, at the speed in `settings`, and keeps
  * its marker in `progress`. The clock advances by the real time between frames divided by the
- * speed's `durationScale`, so a timeline is written once, at normal speed, and a speed change
- * during a run applies from the next frame without a jump. With Animate off a run jumps to its
- * end, and turning Animate off during a run finishes it. A run stores the marker it starts from
- * when it starts, and the one it ends at when it ends, so a run still playing is never stored.
- * Playing, resetting or stopping during a run drops it.
+ * speed's `durationScale`, so a speed change during a run applies from the next frame. With
+ * Animate off a run jumps to its end; turning Animate off during a run finishes it. A run stores
+ * the marker it starts from when it starts, and the one it ends at when it ends, so a run still
+ * playing is never stored. Playing, resetting or stopping during a run drops it.
  *
  * Only the run playing is held here, and the clock runs only while it plays. So `stop()` is all
  * the cleanup there is, and the player can play again after it. The constructor must not start
