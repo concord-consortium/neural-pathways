@@ -1,9 +1,6 @@
 import { Speed, SPEED } from "../state/animation";
 
-/**
- * What the step player needs from a view's animation settings. Any `Animated` model is one. Reads
- * must be observable, such as a mobx-keystone model's.
- */
+/** What the step player needs from a view's animation settings. Any `Animated` model is one. */
 export interface PlaybackSettings {
   readonly animate: boolean;
   readonly speed: Speed;
