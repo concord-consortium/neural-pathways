@@ -1,13 +1,12 @@
 @use "../colors" as colors;
 
 // The Animate checkbox and the speed slider, from the prototype's .nnm-animtoggle and .nnm-speed.
-// The control pushes itself to the right end of the row it sits in.
+// Where it sits in its row is up to the row.
 .animation-controls {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   gap: 10px;
-  margin-left: auto;
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 600;
   text-transform: uppercase;

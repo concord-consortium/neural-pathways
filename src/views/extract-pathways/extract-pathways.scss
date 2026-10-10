@@ -31,8 +31,9 @@
   flex-wrap: wrap;
 }
 
+// The title takes the row's slack, pushing what follows it, Animate and the speed, to the right.
 .extract-pathways__network-title {
-  margin: 0;
+  margin: 0 auto 0 0;
   font: inherit;
 }
 

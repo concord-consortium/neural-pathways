@@ -229,3 +229,12 @@ test("in a narrow window, Animate and the speed wrap below the network's title",
   expect(controls!.x + controls!.width).toBeLessThanOrEqual(head!.x + head!.width);
   expect(controls!.y).toBeGreaterThanOrEqual(title!.y + title!.height);
 });
+
+test("Animate and the speed sit at the right end of the network's head", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const head = await page.locator(".trace-a-case__network-head").boundingBox();
+  const controls = await page.locator(".animation-controls").boundingBox();
+  // The head's 14 px padding and 1 px border are all that's to the right of the control.
+  expect(head!.x + head!.width - (controls!.x + controls!.width)).toBeLessThanOrEqual(15);
+});
