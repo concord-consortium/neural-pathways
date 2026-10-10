@@ -96,7 +96,7 @@ describe("ExtractPathways", () => {
     expect(button("Reset")).toHaveAttribute("aria-disabled", "false");
   });
 
-  it("jumps Setup to its end when Collect a Conversation comes first", async () => {
+  it("stores Setup as done when Collect a Conversation comes first", async () => {
     setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
@@ -186,7 +186,7 @@ describe("ExtractPathways", () => {
       expect(drawing(collectedLabel(1))).toBeInTheDocument();
     });
 
-    it("jumps Setup to its end with Animate off", async () => {
+    it("stores Setup as done at once with Animate off", async () => {
       const state = new ExtractPathwaysState({});
       state.setAnimate(false);
       showView(state);
@@ -196,7 +196,7 @@ describe("ExtractPathways", () => {
       expect(drawing(LIFTED)).toBeInTheDocument();
     });
 
-    it("plays Setup at the speed in the view's state", async () => {
+    it("plays Setup's run at the speed in the view's state", async () => {
       const state = new ExtractPathwaysState({});
       state.setSpeed(SPEED.fast);
       showView(state);
@@ -208,7 +208,7 @@ describe("ExtractPathways", () => {
       expect(state.setupDone).toBe(true);
     });
 
-    it("finishes Setup when Animate is turned off while it plays", async () => {
+    it("finishes Setup's run when Animate is turned off during it", async () => {
       const { state } = showView();
       await screen.findByRole("img", { name: "The network." });
       jest.useFakeTimers();

@@ -178,7 +178,7 @@ describe("TraceACase", () => {
     expect(screen.getByRole("slider", { name: "Animation speed" })).toBeDisabled();
   });
 
-  it("jumps a step to its end with Animate off", async () => {
+  it("stores a step's end marker at once with Animate off", async () => {
     setReducedMotion(false);
     const state = new TraceACaseState({});
     state.setAnimate(false);
@@ -189,7 +189,7 @@ describe("TraceACase", () => {
     expect(state.marker(ids[0])).toBe(4);
   });
 
-  it("plays a step at the speed in the view's state", async () => {
+  it("plays a step's run at the speed in the view's state", async () => {
     const state = new TraceACaseState({});
     state.setSpeed(SPEED.fast);
     showView(undefined, state);
