@@ -67,6 +67,20 @@ function deckGauges(column: number): (Gauge | undefined)[] {
 }
 
 describe("ExtractDrawing", () => {
+  // jsdom never overflows, so this is the drawing when it doesn't scroll: still a group, but not a Tab stop.
+  it("is a group named by its panel's heading, and not a Tab stop while it doesn't scroll", () => {
+    render(
+      <>
+        <h2 id="panel-head">The Network → Activated Pathways</h2>
+        <ExtractDrawing network={toyNetwork} passes={passes} scales={scales} outputLabels={LABELS}
+          scene={restScene(SIZES, 0)} headingId="panel-head" />
+      </>,
+    );
+    const group = screen.getByRole("group", { name: "The Network → Activated Pathways" });
+    expect(group).toContainElement(screen.getByRole("img"));
+    expect(group).not.toHaveAttribute("tabindex");
+  });
+
   it("draws only the network before Setup", () => {
     renderDrawing(restScene(SIZES, 0));
     expect(screen.getByRole("img", { name: "The network." })).toBeInTheDocument();

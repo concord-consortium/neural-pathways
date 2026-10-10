@@ -3,8 +3,8 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useKeyboardScrollable } from "./use-keyboard-scrollable";
 
 const Scroller: React.FC = () => {
-  const [ref, props] = useKeyboardScrollable<HTMLDivElement>({ role: "region", "aria-label": "Notes" });
-  return <div ref={ref} data-testid="scroller" {...props}><p>Some notes</p></div>;
+  const [ref, props] = useKeyboardScrollable<HTMLDivElement>();
+  return <div ref={ref} role="region" aria-label="Notes" data-testid="scroller" {...props}><p>Some notes</p></div>;
 };
 
 const scroller = () => screen.getByTestId("scroller");
@@ -19,7 +19,6 @@ describe("useKeyboardScrollable", () => {
   it("is never a Tab stop where ResizeObserver is missing", () => {
     render(<Scroller />);
     expect(scroller()).not.toHaveAttribute("tabindex");
-    expect(screen.queryByRole("region")).not.toBeInTheDocument();
   });
 
   describe("with ResizeObserver", () => {
@@ -49,18 +48,17 @@ describe("useKeyboardScrollable", () => {
       expect(observeMock).toHaveBeenCalledWith(scroller().firstElementChild);
     });
 
-    it("is a named Tab stop only while its content overflows", () => {
+    it("is a Tab stop only while its content overflows", () => {
       render(<Scroller />);
       setWidths(300, 300);
       act(() => resized());
       expect(scroller()).not.toHaveAttribute("tabindex");
       setWidths(600, 300);
       act(() => resized());
-      expect(screen.getByRole("region", { name: "Notes" })).toHaveAttribute("tabindex", "0");
+      expect(scroller()).toHaveAttribute("tabindex", "0");
       setWidths(300, 300);
       act(() => resized());
       expect(scroller()).not.toHaveAttribute("tabindex");
-      expect(screen.queryByRole("region")).not.toBeInTheDocument();
     });
 
     it("stays a Tab stop while it has the focus, after it stops overflowing", () => {
@@ -70,7 +68,7 @@ describe("useKeyboardScrollable", () => {
       act(() => scroller().focus());
       setWidths(300, 300);
       act(() => resized());
-      expect(screen.getByRole("region", { name: "Notes" })).toHaveFocus();
+      expect(scroller()).toHaveFocus();
       expect(scroller()).toHaveAttribute("tabindex", "0");
       fireEvent.blur(scroller());
       expect(scroller()).not.toHaveAttribute("tabindex");

@@ -116,7 +116,8 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
               <Observer>
                 {() => (
                   <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
-                    outputLabels={alien3Dataset.classificationLabels} scene={player.scene} />
+                    outputLabels={alien3Dataset.classificationLabels} scene={player.scene}
+                    headingId={networkHeadId} />
                 )}
               </Observer>
             </div>

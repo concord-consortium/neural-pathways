@@ -95,7 +95,7 @@ interface ExtractDrawingProps {
   scales: NetworkScales;
   outputLabels: Record<number, string>;
   scene: ExtractScene;
-  /** The id of the heading that names the drawing's panel; it names the drawing while it scrolls. */
+  /** The id of the heading that names the drawing's panel, which names the drawing too. */
   headingId: string;
 }
 
@@ -111,8 +111,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
 }) => {
   // Until the host is measured, and in jsdom, which can't measure it: the narrowest layout.
   const [hostRef, size] = useElementSize<HTMLDivElement>({ width: 0, height: CANVAS_HEIGHT });
-  const [scrollerRef, scrollerProps] =
-    useKeyboardScrollable<HTMLDivElement>({ role: "group", "aria-labelledby": headingId });
+  const [scrollerRef, scrollerProps] = useKeyboardScrollable<HTMLDivElement>();
   const ref = useCallback((element: HTMLDivElement | null) => {
     hostRef(element);
     scrollerRef(element);
@@ -134,7 +133,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
   const pass = passes[(scene.shown ?? 1) - 1];
 
   return (
-    <div ref={ref} className="extract-drawing" {...scrollerProps}>
+    <div ref={ref} className="extract-drawing" role="group" aria-labelledby={headingId} {...scrollerProps}>
       <svg role="img" aria-label={describeScene(scene, hidden.length)} className="extract-drawing__svg"
         width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         <defs>
