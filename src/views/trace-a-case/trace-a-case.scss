@@ -64,8 +64,10 @@
   grid-area: network;
 }
 
+// Wraps, so in a narrow panel Animate and the speed drop below the title instead of being cut off.
 .trace-a-case__network-head {
   @include panel.panel-head;
+  flex-wrap: wrap;
 }
 
 .trace-a-case__network-title {

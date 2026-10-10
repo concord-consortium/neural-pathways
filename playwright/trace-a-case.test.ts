@@ -218,3 +218,14 @@ test("with Animate off, Step 4 shows the answer at once", async ({ page }) => {
   await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
     .toBeVisible({ timeout: 1_000 });
 });
+
+test("in a narrow window, Animate and the speed wrap below the network's title", async ({ page }) => {
+  await page.setViewportSize({ width: 480, height: 900 });
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const head = await page.locator(".trace-a-case__network-head").boundingBox();
+  const controls = await page.locator(".animation-controls").boundingBox();
+  const title = await page.getByRole("heading", { name: "The Network" }).boundingBox();
+  expect(controls!.x + controls!.width).toBeLessThanOrEqual(head!.x + head!.width);
+  expect(controls!.y).toBeGreaterThanOrEqual(title!.y + title!.height);
+});
