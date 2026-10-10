@@ -18,7 +18,8 @@ $network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
 
 // Two columns, each a toolbar over a panel, as in the prototype: the filter over the
 // conversation card, the steps over the network. The toolbars share a row, so the two panels
-// start on the same line.
+// start on the same line. They take at least 857 px: the card's 447, the 10 px gap, and the
+// network panel's 400.
 //
 // The layout takes the height the title leaves, and the panel row grows into it, up to 800 px so a
 // very tall window doesn't leave the network floating in empty space. It stops at the network
@@ -43,7 +44,9 @@ $network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
 }
 
 // Too narrow for both columns: stack them, keeping each toolbar above its panel. Each panel is as
-// tall as its content, and the layout as tall as the panels.
+// tall as its content, and the layout as tall as the panels. The view's narrowest designed width is
+// this layout at 382 px: the diagram's smallest layout (MIN_WIDTH in layout.ts) and the panel's
+// border. Narrower, the diagram scrolls sideways inside its panel.
 @container (width < 857px) {
   .trace-a-case__layout {
     flex: none;

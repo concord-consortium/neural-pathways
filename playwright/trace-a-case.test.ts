@@ -320,3 +320,54 @@ test.describe("the card and network panels", () => {
     expect(await view.evaluate(el => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0);
   });
 });
+
+/** What a frame takes from the diagram's width: its 16 px gutters and the network panel's borders. */
+const FRAME_EXTRA = 34;
+
+/**
+ * Opens the view alone in a frame `width` wide, waits until the diagram is laid out at
+ * `diagramWidth`, and returns what scrolls, and whether anything runs past the network panel's
+ * border. The frame's gutter would hide a small spill from the page.
+ */
+async function diagramIn(page: Page, width: number, diagramWidth: number) {
+  await page.setViewportSize({ width, height: 900 });
+  await page.goto("/?interactive=trace-a-case");
+  const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
+  await expect(diagram).toHaveAttribute("width", String(diagramWidth));
+  return page.evaluate(() => {
+    const scrollsSideways = (element: Element) => element.scrollWidth > element.clientWidth;
+    return {
+      page: scrollsSideways(document.documentElement),
+      panel: scrollsSideways(document.querySelector(".trace-a-case__network")!),
+      diagram: scrollsSideways(document.querySelector(".network-diagram")!),
+    };
+  });
+}
+
+/** The diagram's scroll region: a group named by its panel's heading. */
+const diagramGroup = (page: Page) => page.getByRole("group", { name: "The Network" });
+
+// 380 is the narrowest the diagram is laid out (MIN_WIDTH in layout.ts).
+
+test("a frame just wide enough holds the diagram without scrolling", async ({ page }) => {
+  expect(await diagramIn(page, 380 + FRAME_EXTRA, 380)).toEqual({ page: false, panel: false, diagram: false });
+  await expect(diagramGroup(page)).not.toHaveAttribute("tabindex");
+});
+
+test("a frame a pixel too narrow scrolls the diagram inside its panel, not the page", async ({ page }) => {
+  expect(await diagramIn(page, 379 + FRAME_EXTRA, 380)).toEqual({ page: false, panel: false, diagram: true });
+  await expect(diagramGroup(page)).toHaveAttribute("tabindex", "0");
+});
+
+test("a 320 px frame scrolls only the diagram", async ({ page }) => {
+  expect(await diagramIn(page, 320, 380)).toEqual({ page: false, panel: false, diagram: true });
+});
+
+test("the keyboard can reach and scroll a diagram too wide for its frame", async ({ page }) => {
+  await diagramIn(page, 320, 380);
+  await page.getByRole("button", { name: "Reset" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(diagramGroup(page)).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => diagramGroup(page).evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+});

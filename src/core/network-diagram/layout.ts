@@ -42,6 +42,12 @@ const PILL_PAD_LEFT = 4;
 /** From an output node's rim to its label. */
 export const PILL_GAP = 7;
 const PILL_PAD_RIGHT = 13;
+/**
+ * Room right of the pills. The winning pill pops to about 1.1 times its size about its center,
+ * which takes its edge and stroke about 7 px further right, and the drawing mustn't spill out of
+ * its scroller.
+ */
+const PILL_POP_ROOM = 7;
 /** Between the two output pills: room for the caption over the lower one. */
 const OUTPUT_CAPTION_GAP = 30;
 /** The first column sits this far right of the even spread, so it doesn't look clipped. */
@@ -63,7 +69,7 @@ export function layoutNetwork(columnSizes: readonly number[], width: number, hei
   const leftGutter = Math.max(0, FIRST_CAPTION_HALF - radius);
   const rightGutter = PILL_GAP + PILL_LABEL_WIDTH + PILL_PAD_RIGHT;
   const xFirst = PAD + leftGutter + radius;
-  const xLast = Math.max(xFirst + 60, W - PAD - rightGutter - radius);
+  const xLast = Math.max(xFirst + 60, W - PILL_POP_ROOM - rightGutter - radius);
   const columnX = columnSizes.map((_, i) =>
     xFirst + ((xLast - xFirst) * i) / last + (i === 0 ? FIRST_COLUMN_NUDGE : 0));
 
