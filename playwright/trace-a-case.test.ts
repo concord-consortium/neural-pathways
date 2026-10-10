@@ -266,6 +266,8 @@ test.describe("the card and network panels", () => {
     const overflow = (locator: Locator) => locator.evaluate(el => el.scrollHeight - el.clientHeight);
     expect(await overflow(notes)).toBeGreaterThan(0);
     expect(await overflow(card)).toBeLessThanOrEqual(0);
+    // It scrolls, so the keyboard can reach it.
+    await expect(notes).toHaveAttribute("tabindex", "0");
   });
 
   // Like Firefox's "Zoom text only": every font twice its size, nothing else.
@@ -294,6 +296,8 @@ test.describe("the card and network panels", () => {
     const notes = card.getByRole("region", { name: "Observation notes" });
     await expect(notes).toBeVisible();
     expect(await notes.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(0);
+    // Nothing to scroll, so it isn't a Tab stop.
+    await expect(notes).not.toHaveAttribute("tabindex");
     // The box ends its 10 px padding below the attribute indicators, so nothing stretched it.
     const below = await notes.evaluate(el =>
       el.getBoundingClientRect().bottom - el.querySelector("ul")!.getBoundingClientRect().bottom);

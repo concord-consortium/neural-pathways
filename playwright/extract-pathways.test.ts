@@ -40,14 +40,14 @@ async function canvasIn(page: Page, width: number, canvasWidth: number) {
   });
 }
 
-/** The drawing's scroll region, which is a named group only while it scrolls. */
+/** The drawing's scroll region: a group named by its panel's heading. */
 const scrollRegion = (page: Page) => page.getByRole("group", { name: "The Network → Activated Pathways" });
 
 // 909 is the narrowest the canvas is laid out (minCanvasWidth).
 
 test("a frame just wide enough holds the canvas at full size without scrolling", async ({ page }) => {
   expect(await canvasIn(page, 909 + FRAME_EXTRA, 909)).toEqual({ page: false, drawing: false });
-  await expect(scrollRegion(page)).toHaveCount(0);
+  await expect(scrollRegion(page)).not.toHaveAttribute("tabindex");
 });
 
 test("a wider frame widens the canvas to fill it", async ({ page }) => {
