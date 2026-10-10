@@ -162,7 +162,8 @@ behind, and the student's original conversation is lost.
    pressed, and the marker it ends at from a `requestAnimationFrame` tick when it finishes. Trace a
    Case's steps work this way. Unchanged, one press is two undo steps, and the second isn't tied to
    anything the student did. Group the two writes, make the completion `withoutUndo`, or record
-   only the press.
+   only the press. With Animate off a press writes once. Unchecking Animate during a run stores its
+   end from the next frame, a write that follows the checkbox, not a press.
 9. **Settings versus work.** Decide which fields are undoable:
    - `animate` and `speed` look like preferences;
    - Correlations' `mode` and `openDetail` look like navigation.
