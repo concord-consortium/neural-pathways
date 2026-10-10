@@ -12,8 +12,8 @@ written in the prototype's Med timings, and the player runs it on a clock that g
 faster than real time. No view defines a timeline per speed.
 
 Jira: [NPW-38](https://concord-consortium.atlassian.net/browse/NPW-38). It builds on NPW-33
-(Extract Pathways' first half and the shared step system), PRs #36 and #37, and is stacked on
-`NPW-33-2-extract-view`. Prediction Chain (NPW-26) gets the control in its own story.
+(Extract Pathways' first half and the shared step system), PRs #36 and #37. Prediction Chain
+(NPW-26) gets the control in its own story.
 
 The source is `index.html` on the `neural-net-maker` branch of the demos repo
 ([live](https://models-resources.concord.org/demos/branch/neural-net-maker/)). Line numbers below
@@ -43,8 +43,8 @@ screen it reaches:
   are multiplied (lines 12676, 12889, 12894). Three short timings don't change: the gauges' fill
   transition (`FILL_DURATION`, 180 ms) and the answer pill's pop (`ANSWER_DURATION`, 460 ms,
   line 2418) are fixed CSS, and the 60 ms wait before the answer (`ANSWER_DELAY`, line 12943) isn't
-  multiplied. Scaling them too keeps every step within 10% of the prototype's length at Slow and
-  at Fast. Step 4, where they are the largest share, takes about 6.0 s rather than 5.7 s at Slow,
+  multiplied. Scaling them too keeps Steps 2–4 within 10% of the prototype's length at Slow and at
+  Fast. (The prototype's Step 1 is the word flights, which this view doesn't draw.) Step 4, where they are the largest share, takes about 6.0 s rather than 5.7 s at Slow,
   and 2.1 s rather than 2.3 s at Fast.
 - **Prediction Chain**, for NPW-26: one beat, `SCAN_HOLD` (300 ms, line 9157), is damped to about a
   third of the speed change by `react()` (line 8909). At Slow it lasts 374 ms rather than 510 ms.
@@ -71,8 +71,7 @@ comment citing the prototype's `SPEEDS`.
 
 ### `step-player.ts`
 
-- The constructor takes the settings third: `new StepPlayer(timeline, progress, settings)`. Reads
-  of `settings` must be observable, as a keystone model's are.
+- The constructor takes the settings third: `new StepPlayer(timeline, progress, settings)`.
 - `play()` jumps to `to` when `!settings.animate`, or under reduced motion.
 - Each tick:
   1. If `settings.animate` has gone false, the run finishes: `stop()`, then `setMarker(to)`.
@@ -113,11 +112,22 @@ Keyboard focus shows through `:focus-visible`. The prototype instead cancels `mo
 checkbox's label so a click never focuses it. That isn't needed once the ring shows only for
 keyboard focus.
 
+- **The checkbox's ring** goes round the label and its box together where `:has()` works, as in
+  the prototype. Chrome 104 and earlier, which the browserslist still includes, don't support
+  `:has()`, so there the ring goes round the box alone. `@supports selector(:has(*))` chooses.
+- **In forced colors** the slider gets an outline on keyboard focus, since forced colors repaints
+  the thumb's border the same in every state and drops its shadow.
+
 ### Placement
 
 In both views the control sits at the right end of the network panel's head. The head becomes a
 `div` with the panel-head look, holding the view's `<h2>` and the control. The `<h2>` keeps its id,
-so `aria-labelledby` and Extract Pathways' `headingId` don't change. The prototype also puts the
+so `aria-labelledby` and Extract Pathways' `headingId` don't change.
+
+The head, not the control, decides where things sit: the title takes the row's slack
+(`margin-right: auto`), which pushes the control right. The legend that comes later then goes
+between them without overriding the control. The head wraps, so in a narrow panel the control
+drops below the title instead of being cut off. The prototype also puts the
 activation legend and a divider to the control's left. The legend isn't in this story, so the
 divider waits for it too.
 
@@ -148,14 +158,26 @@ divider waits for it too.
 - `trace-a-case-state.test.ts` and `extract-pathways-state.test.ts`: the defaults, the setters, and
   loading a saved form without the new fields.
 - `trace-a-case.test.tsx` and `extract-pathways.test.tsx`: the control is in the network panel's
-  head, and with Animate off a step button stores its end marker straight away.
+  head; with Animate off a step button stores its end marker straight away; a run at Fast ends well
+  before Med's would, so each view's speed reaches its player; and, in Extract Pathways, unchecking
+  Animate during Setup finishes it.
 - `step-row.test.tsx` and `trace-a-case-steps.test.ts` pass settings to the players they make.
 
 ### Playwright
 
-In `playwright/trace-a-case.test.ts` and `playwright/extract-pathways.test.ts`: the control is
-there; unchecking Animate disables the slider; and the unchecked box and a changed speed are
-still set after switching to another view and back.
+In `playwright/trace-a-case.test.ts` and `playwright/extract-pathways.test.ts`:
+- the arrow keys move the slider, and the unchecked box and a changed speed are still set after
+  switching to another view and back;
+- with Animate off, Trace a Case's Step 4 and Extract Pathways' Setup land within a second;
+- in a 480 px window, the control wraps below the title, inside the head.
+
+In `playwright/trace-a-case.test.ts` only:
+- clicking where "Slow" is moves the slider there;
+- the control ends at the head's right edge;
+- the checkbox shows keyboard focus, and the slider shows it in forced colors.
+
+Extract Pathways' keyboard-scrolling test tabs to the canvas from the speed slider, now the
+head's last stop.
 
 ### Manual, once, before the PR
 
