@@ -20,10 +20,11 @@ activations of conversations run through it, one column of the deck each.
 
 ## Widths
 
-The narrowest width the view is designed for is the canvas's narrowest layout, 909 px
-(`minCanvasWidth` in `extract-geometry.ts`): the network, and a strip each side wide enough for
-the deck's columns collected by hand. Embedded on its own, with the app's 16 px gutters and the
-panel's border, the view needs 943 px. Narrower, the canvas scrolls sideways inside its panel.
+The narrowest width the view is designed for is 911 px: the canvas's narrowest layout, 909 px
+(`minCanvasWidth` in `extract-geometry.ts`), and the panel's border. The canvas holds the network,
+and a strip each side wide enough for the deck's columns collected by hand. Embedded on its own,
+with the app's 16 px gutters, the view needs 943 px. Narrower, the canvas scrolls sideways inside
+its panel.
 
 ## Still to come
 
