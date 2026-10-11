@@ -30,7 +30,7 @@ refer to that file at commit `74d66f3`.
 | Animate turned off during a run | The run finishes: its end marker is stored on the next frame. | The student gets the step they pressed. The prototype is split: Extract Pathways finishes the run (line 11259), and Trace a Case drops back to where it started (`applyStepState(stepDone)`, line 11262). |
 | Extract Pathways | Gets the control in this story. | NPW-33 went to review without it, and with the player applying the speed it is only the model props and the control. |
 | Reduced motion | Unchanged: every run jumps to its end whatever the checkbox says, and the checkbox keeps the stored value. | As in the prototype (`motionOff`, lines 8862 and 11233). |
-| The state | `animationProps` and `Animated`, from the NPW-30 branch, spread into `TraceACaseState` and `ExtractPathwaysState`. Both stay at version 1. | The view-state rules: adding a field with a default doesn't change the version. |
+| The state | `animatedMixin`, a mobx-keystone mixin with the props and their setters, composed into `TraceACaseState` and `ExtractPathwaysState`. Both stay at version 1. | Each view writes no setters of its own, and a mixin combines with any others a view needs, where a shared base class wouldn't. The view-state rules: adding a field with a default doesn't change the version. |
 | The stored speeds | Slow −100, normal 0, fast 100: integer keys that only order the stops. | A stop can be added between two others, or beyond the ends, without renumbering the ones already saved. See [The stored speeds](#the-stored-speeds). |
 
 ## Matching the prototype
@@ -136,11 +136,14 @@ divider waits for it too.
 ## The state
 
 - `src/core/state/animation.ts` and `animation.test.ts` come over from the `NPW-30-view-state`
-  branch: `SPEED`, `Speed`, `Animated` and `animationProps`. The stored speeds change from 0, 1, 2
-  to −100, 0, 100: see [The stored speeds](#the-stored-speeds). The NPW-30 branch is rebased on
+  branch: `SPEED`, `Speed`, `Animated` and the props. The stored speeds change from 0, 1, 2 to
+  −100, 0, 100: see [The stored speeds](#the-stored-speeds). In place of the branch's
+  `animationProps`, which each model spread and then wrote its own setters for, the props and the
+  setters are one mixin, `animatedMixin` (`defineModelMixin`). The NPW-30 branch is rebased on
   `main` once this lands, so its copy matches.
-- `TraceACaseState` and `ExtractPathwaysState` spread `...animationProps`, declare
-  `implements Animated`, and add `setAnimate` and `setSpeed` as model actions.
+- `TraceACaseState` and `ExtractPathwaysState` extend
+  `ExtendedModel(composeMixins(animatedMixin), { ...their own props })`. The saved form lists a
+  view's own props first, then the mixin's, as the spread did.
 - Each view passes its state to its `StepPlayer` as the settings, and to `AnimationControls`.
 - The v1 fixtures gain `animate: false` and `speed: -100` (slow), so the round-trip tests cover
   the new fields. A saved form without them still loads, with Animate on at normal speed.
