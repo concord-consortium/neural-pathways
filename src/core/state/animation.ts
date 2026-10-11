@@ -21,24 +21,25 @@ export interface Animated {
   setSpeed(speed: Speed): void;
 }
 
-const animationProps = {
-  animate: tProp(types.boolean, true),
-  speed: tProp(types.enum(SPEED), SPEED.normal),
-};
-
 /**
  * Animate, the speed and their setters, for a view's state model. Compose it in, alongside any
  * other mixins: `extends ExtendedModel(composeMixins(animatedMixin), { ...the view's own props })`.
  * The saved form lists the view's own props first, then these.
  */
-export const animatedMixin = defineModelMixin(animationProps, Base => class extends Base implements Animated {
-  @modelAction
-  setAnimate(animate: boolean) {
-    this.animate = animate;
-  }
+export const animatedMixin = defineModelMixin(
+  {
+    animate: tProp(types.boolean, true),
+    speed: tProp(types.enum(SPEED), SPEED.normal),
+  },
+  Base => class extends Base implements Animated {
+    @modelAction
+    setAnimate(animate: boolean) {
+      this.animate = animate;
+    }
 
-  @modelAction
-  setSpeed(speed: Speed) {
-    this.speed = speed;
-  }
-});
+    @modelAction
+    setSpeed(speed: Speed) {
+      this.speed = speed;
+    }
+  },
+);
