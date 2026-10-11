@@ -46,11 +46,12 @@ export const NetworkDiagram: React.FC<NetworkDiagramProps> = ({
     scrollerRef(element);
   }, [hostRef, scrollerRef]);
   const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
-  // layoutNetwork rounds the size, so a sub-pixel resize keeps the same layout and the memoized layers.
-  const roundedWidth = Math.round(size.width);
-  const roundedHeight = Math.round(size.height);
+  // Whole pixels, rounded down: a sub-pixel resize keeps the same layout and the memoized layers, and
+  // the drawing is never a fraction of a pixel bigger than its box, which would make it scroll.
+  const flooredWidth = Math.floor(size.width);
+  const flooredHeight = Math.floor(size.height);
   const layout = useMemo(
-    () => layoutNetwork(columnSizes, roundedWidth, roundedHeight), [columnSizes, roundedWidth, roundedHeight]);
+    () => layoutNetwork(columnSizes, flooredWidth, flooredHeight), [columnSizes, flooredWidth, flooredHeight]);
   const title = scene.answer >= 1
     ? `Network diagram. The network predicts ${capitalize(outputLabels[predictedClass(pass)])}.`
     : "Network diagram";

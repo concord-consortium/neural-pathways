@@ -371,3 +371,23 @@ test("the keyboard can reach and scroll a diagram too wide for its frame", async
   await page.keyboard.press("ArrowRight");
   await expect.poll(() => diagramGroup(page).evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
 });
+
+// Classic scrollbars, as on Windows, take room from the box they appear in. A drawing a fraction of
+// a pixel bigger than its box would show them, shrink to fit the smaller box, lose them, and grow
+// back, every frame. The padding nudges move the panel's height through a whole pixel's fractions.
+test("the diagram is never drawn bigger than its box, even by a fraction of a pixel", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/?interactive=trace-a-case");
+  const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
+  await expect(diagram).toBeVisible();
+  for (const padding of [16.2, 16.4, 16.6, 16.8]) {
+    await page.locator(".trace-a-case").evaluate((el, px) => { el.style.paddingBottom = `${px}px`; }, padding);
+    await expect.poll(async () => {
+      const box = (await diagramGroup(page).boundingBox())!;
+      const width = Number(await diagram.getAttribute("width"));
+      const height = Number(await diagram.getAttribute("height"));
+      // Within a pixel of the box's height, so it has caught up with the new padding.
+      return width <= box.width && height <= box.height && box.height - height < 1;
+    }, { message: `with ${padding} px of padding` }).toBe(true);
+  }
+});
