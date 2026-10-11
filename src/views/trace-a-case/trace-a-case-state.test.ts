@@ -1,11 +1,11 @@
 import { fromSnapshot } from "mobx-keystone";
 import { TraceACaseState } from "./trace-a-case-state";
-import { savedJson } from "../../core/state/test-helpers";
-import { SPEEDS } from "../../core/state/animation";
+import { savedJson, speedNamed } from "../../core/state/test-helpers";
+import { NORMAL_SPEED } from "../../core/state/animation";
 import fixture from "./__fixtures__/trace-a-case-state.v1.json";
 
 const empty = {
-  version: 1, markerByConversation: {}, animate: true, speed: SPEEDS.normal.key, $modelType: "npw/TraceACaseState",
+  version: 1, markerByConversation: {}, animate: true, speed: NORMAL_SPEED, $modelType: "npw/TraceACaseState",
 };
 
 describe("TraceACaseState", () => {
@@ -56,15 +56,15 @@ describe("TraceACaseState", () => {
     const older = { version: 1, markerByConversation: fixture.markerByConversation };
     const state = fromSnapshot(TraceACaseState, older as any);
     expect(state.animate).toBe(true);
-    expect(state.speed).toBe(SPEEDS.normal.key);
+    expect(state.speed).toBe(NORMAL_SPEED);
     expect(state.marker("361e65b1002a")).toBe(3);
   });
 
   it("stores Animate and the speed", () => {
     const state = new TraceACaseState({});
     state.setAnimate(false);
-    state.setSpeed(SPEEDS.slow.key);
-    expect(savedJson(state)).toEqual({ ...empty, animate: false, speed: SPEEDS.slow.key });
+    state.setSpeed(speedNamed("Slow"));
+    expect(savedJson(state)).toEqual({ ...empty, animate: false, speed: speedNamed("Slow") });
   });
 
   it("rejects a saved speed that isn't one of the slider's stops", () => {

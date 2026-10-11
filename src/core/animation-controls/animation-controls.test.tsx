@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, isInaccessible, render, screen } from "@testing-library/react";
-import { SPEEDS } from "../state/animation";
+import { speedNamed } from "../state/test-helpers";
 import { TestSettings } from "../steps/test-helpers";
 import { AnimationControls } from "./animation-controls";
 
@@ -26,14 +26,14 @@ describe("AnimationControls", () => {
   });
 
   it("disables the slider while Animate is off, keeping the speed", () => {
-    render(<AnimationControls animated={new TestSettings({ animate: false, speed: SPEEDS.fast.key })} />);
+    render(<AnimationControls animated={new TestSettings({ animate: false, speed: speedNamed("Fast") })} />);
     expect(slider()).toBeDisabled();
     expect(slider()).toHaveAttribute("aria-valuetext", "Fast");
   });
 
   it.each([
-    [0, SPEEDS.slow.key, "Slow"],
-    [2, SPEEDS.fast.key, "Fast"],
+    [0, speedNamed("Slow"), "Slow"],
+    [2, speedNamed("Fast"), "Fast"],
   ] as const)("stores the speed at stop %p, %p, named %p, when the slider moves", (stop, speed, name) => {
     const settings = new TestSettings();
     render(<AnimationControls animated={settings} />);
@@ -44,7 +44,7 @@ describe("AnimationControls", () => {
   });
 
   it("names each stop under the slider, marking the current one, hidden from assistive tech", () => {
-    render(<AnimationControls animated={new TestSettings({ speed: SPEEDS.fast.key })} />);
+    render(<AnimationControls animated={new TestSettings({ speed: speedNamed("Fast") })} />);
     for (const name of ["Slow", "Med", "Fast"]) {
       expect(isInaccessible(screen.getByText(name))).toBe(true);
     }
