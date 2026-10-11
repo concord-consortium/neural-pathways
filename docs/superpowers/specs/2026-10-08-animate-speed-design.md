@@ -63,12 +63,12 @@ export interface PlaybackSettings {
   readonly speed: Speed;
 }
 
-/** How long a run takes at each speed, relative to normal (the prototype's Med). */
+/** How long a run takes at `speed`, relative to normal: the stop's `durationScale`. */
 export function durationScale(speed: Speed): number;
 ```
 
-`durationScale` returns 1.7, 1 and 0.6 for `SPEED.slow`, `SPEED.normal` and `SPEED.fast`, with a
-comment citing the prototype's `SPEEDS`.
+`durationScale` looks the stop up in `SPEED_STOPS` (see [The stored speeds](#the-stored-speeds)),
+which gives 1.7, 1 and 0.6 for slow, normal and fast. A speed that isn't a stop throws.
 
 ### `step-player.ts`
 
@@ -94,9 +94,9 @@ comment citing the prototype's `SPEEDS`.
 `AnimationControls({ animated }: { animated: Animated })`, an `observer`:
 
 - A checkbox labeled "Animate", bound to `animated.animate` and `setAnimate`.
-- A range input from 0 to 2 in steps of 1. Its value is the stop's index in the control's list
-  of stops, not the stored speed, since the stored speeds aren't evenly spaced. Changing it calls
-  `setSpeed` with that stop's speed. It has `aria-label="Animation speed"` and an `aria-valuetext`
+- A range input from 0 to 2 in steps of 1. Its value is the stop's index in `SPEED_STOPS`, not
+  the stored speed, so a stop added between two others gets its own place on the slider. Changing
+  it calls `setSpeed` with that stop's key. It has `aria-label="Animation speed"` and an `aria-valuetext`
   of "Slow", "Med" or "Fast".
 - "Slow / Med / Fast" under the stops, the current one emphasized. They are `aria-hidden`: the
   value text already says the speed.
@@ -136,7 +136,7 @@ divider waits for it too.
 ## The state
 
 - `src/core/state/animation.ts` and `animation.test.ts` come over from the `NPW-30-view-state`
-  branch: `SPEED`, `Speed`, `Animated` and the props. The stored speeds change from 0, 1, 2 to
+  branch: `Speed`, `Animated` and the props, with the branch's `SPEED` replaced by `SPEEDS`. The stored speeds change from 0, 1, 2 to
   −100, 0, 100: see [The stored speeds](#the-stored-speeds). In place of the branch's
   `animationProps`, which each model spread and then wrote its own setters for, the props and the
   setters are one mixin, `animatedMixin` (`defineModelMixin`). The NPW-30 branch is rebased on
@@ -150,16 +150,19 @@ divider waits for it too.
 
 ### The stored speeds
 
-The saved speed is a key for a stop on the slider, not a multiplier and not a name:
-`SPEED = { slow: -100, normal: 0, fast: 100 }`.
+Each stop on the slider is one entry in `SPEEDS`, in slider order: its stored `key`, the `name`
+shown under it and its `durationScale`. Slow is `{ key: -100, name: "Slow", durationScale: 1.7 }`,
+normal has key 0 and fast key 100. `SPEED_STOPS` is the entries in that order, which the control
+and `durationScale` read, so a new stop is one line. A test checks the keys increase down the list.
 
-- **Not the multiplier,** so how fast Slow plays can be retuned without changing saved data. The
-  multipliers stay in `playback.ts`.
+The saved speed is the stop's key, not a multiplier and not a name:
+
+- **Not the multiplier,** so how fast Slow plays can be retuned without changing saved data.
 - **Not names,** so a new stop doesn't need one invented that sorts correctly.
 - **Room between,** so a new stop takes any integer between its neighbors (−50 between slow and
   normal) or beyond the ends (−200), and no saved stop is renumbered. Integers rather than
   fractions avoid any doubt about exact matches and read cleanly in a URL param.
-- **Only an order.** −50 doesn't mean half as slow; the player's table decides.
+- **Only an order.** −50 doesn't mean half as slow; the stop's `durationScale` decides.
 - **Continuous speed** would be a new field, or a migration: ordered keys can't stand in for a
   real scale.
 
@@ -177,7 +180,11 @@ them.
   - with Animate off, `play` stores `to` with no frame and no timer;
   - turning Animate off mid-run stores `to` on the next frame and stops the clock;
   - reduced motion still stores `to` straight away.
-- `playback.test.ts`: the three multipliers.
+- `animation.test.ts`: the stops' keys, pinned since they're saved, and their order; and the
+  mixin, on a probe model with a prop of its own: the defaults after the model's own props, the
+  `Animated` setters, and a speed that isn't a stop rejected both when loading and through the
+  action.
+- `playback.test.ts`: the three multipliers, and a speed that isn't a stop refused.
 - `animation-controls.test.tsx`: the checkbox and slider call the setters; the slider is disabled
   while Animate is off; the value text follows the speed; the current label is emphasized.
 - `trace-a-case-state.test.ts` and `extract-pathways-state.test.ts`: the defaults, the setters, and
