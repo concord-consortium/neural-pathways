@@ -40,7 +40,7 @@ the damage: a canvas scaled down to no less than 0.75 can grow its captions as l
   `viewBox`), even if its layout widens to fill the container. The network diagram works this way.
 
 **When the container is too narrow.** Below the narrowest width a drawing can be laid out at, let
-it scroll sideways in its own region rather than scale it down. See
+it scroll sideways in its own scroller rather than scale it down. See
 [Design each view down to a narrowest width](#design-each-view-down-to-a-narrowest-width).
 
 **Check it.** Zoom to 200% in a frame as narrow as the lesson will be embedded in, and compare a
@@ -56,7 +56,7 @@ Each view has a narrowest width it is designed for, set by what it has to hold.
 
 1. A comment says what sets it, and the view's README gives the number.
 2. At that width or wider, nothing scrolls sideways and nothing is cut off.
-3. Below it, nothing may be cut off or unreachable. Drawings scroll sideways in their own region,
+3. Below it, nothing may be cut off or unreachable. Drawings scroll sideways in their own scroller,
    which the keyboard can reach. Text and controls wrap or stack where that's cheap. Scrolling down
    is fine.
 4. Text and controls reflowing down to 320 CSS px is a known gap, until the design covers narrow
@@ -72,21 +72,18 @@ do is design work. In Extract Pathways, for example, the step row would wrap int
 above the canvas, and the steps and the animation they start would no longer fit on screen
 together. Until the design covers narrow screens, this is the rule to build and review against.
 
-**Scroll regions.** A drawing's scroll region must work from the keyboard
+**Scrollers.** A drawing's scroller must work from the keyboard
 ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). Chromium and
-Firefox make a scroll region with nothing focusable in it reachable by Tab; Safari doesn't.
-- Use `useKeyboardScrollable` (`src/core/use-keyboard-scrollable.ts`). It makes the element a Tab
-  stop while it overflows, and while it has the focus, so a resize that ends the overflow doesn't
-  drop the focus to the page.
+Firefox make a scroller with nothing focusable in it reachable by Tab; Safari doesn't.
+- Use `useKeyboardScrollable` (`src/core/use-keyboard-scrollable.ts`). Its comment says when it
+  makes the element a Tab stop, and what it isn't for.
 - Give the element its role and name all the time, so they don't come and go with the window's
   size. It is a `group` when an enclosing landmark already has its name, as Extract Pathways'
   drawing and Trace a Case's network diagram are, inside panels named by the same heading. Otherwise
   it is a `region` named by its heading, as the observation notes are. A `region` inside a landmark
   with the same name would list the landmark twice.
-- It is only for a scroller with nothing focusable inside. Tab already reaches, and scrolls to,
-  anything that is.
-- A scroll region clips what is drawn outside it, so keep the drawing inside its own box. The
-  network diagram leaves room for its winning pill to grow as it pops.
+- A scroller clips what is drawn outside it, so keep the drawing inside its own box, down to a
+  fraction of a pixel. The network diagram leaves room for its winning pill to grow as it pops.
 
 ## Keep unavailable buttons in the tab order
 

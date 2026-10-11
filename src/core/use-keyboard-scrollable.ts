@@ -5,14 +5,11 @@ function overflows(element: Element): boolean {
 }
 
 /**
- * Makes an element that only sometimes scrolls reachable by the keyboard in every browser. Chromium
- * makes a scroller with nothing focusable inside it a Tab stop on its own; Safari doesn't. While
- * the element overflows, or has the focus, it is a Tab stop. Staying one while it has the focus
- * means a resize that ends the overflow doesn't drop the focus to the page, as Chromium's own does.
- *
- * The caller gives the element a role and a name all the time, so a screen reader can say what the
- * focus landed on, and the role doesn't come and go with the window's size: `region` when it is
- * what its heading names, `group` when an enclosing landmark already has that name.
+ * Makes an element that only sometimes scrolls reachable by the keyboard in every browser, Safari
+ * included. While the element overflows, or has the focus, it is a Tab stop. Staying one while it
+ * has the focus means a resize that ends the overflow doesn't drop the focus to the page, as
+ * Chromium's own scrollers do. The caller gives the element its role and name; docs/accessibility.md
+ * says which.
  *
  * Only for a scroller with nothing focusable inside: Tab already reaches, and scrolls to, anything
  * that is. Where there is no ResizeObserver (jsdom), the element never counts as overflowing.

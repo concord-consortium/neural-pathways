@@ -33,8 +33,8 @@ interface NetworkDiagramProps {
  * by passing new scenes.
  *
  * Never narrower than `MIN_WIDTH`; a narrower container scrolls it sideways, and the keyboard can
- * reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, not a
- * region, since the panel around it is already a region with that name.
+ * reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since the
+ * panel is already a region with that name.
  */
 export const NetworkDiagram: React.FC<NetworkDiagramProps> = ({
   network, pass, scales, outputLabels, scene, headingId,

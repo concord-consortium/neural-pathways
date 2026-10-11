@@ -103,8 +103,8 @@ interface ExtractDrawingProps {
  * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, the
  * deck in the left, drawn as `scene` says. Drawn at full size and as wide as its container, but
  * never narrower than `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard
- * can reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, not
- * a region, since the panel around it is already a region with that name.
+ * can reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since
+ * the panel is already a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
   network, passes, scales, outputLabels, scene, headingId,
