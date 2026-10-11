@@ -3,6 +3,6 @@
   "setupDone": true,
   "collected": 3,
   "animate": false,
-  "speed": 0,
+  "speed": -100,
   "$modelType": "npw/ExtractPathwaysState"
 }

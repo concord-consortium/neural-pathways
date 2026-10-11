@@ -23,8 +23,12 @@ describe("animationProps", () => {
     });
   });
 
-  it("rejects a saved speed that isn't one of the slider's three stops", () => {
-    expect(() => fromSnapshot(AnimatedProbe, { animate: true, speed: 3 } as any)).toThrow();
+  it("keeps each stop's saved key, with normal at 0 and room between the stops", () => {
+    expect(SPEED).toEqual({ slow: -100, normal: 0, fast: 100 });
+  });
+
+  it("rejects a saved speed that isn't one of the slider's stops", () => {
+    expect(() => fromSnapshot(AnimatedProbe, { animate: true, speed: 50 } as any)).toThrow();
   });
 
   it("can be driven through the Animated interface", () => {

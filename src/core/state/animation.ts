@@ -1,10 +1,12 @@
 import { tProp, types } from "mobx-keystone";
 
 /**
- * Animation speeds: the three stops of the prototype's slider. The values are stored in saved
- * student data: never change them.
+ * Animation speeds: the stops of the speed slider. The values are stored in saved student data:
+ * never change them. They only order the stops, with normal at 0; they aren't a scale, and how
+ * fast each stop plays is up to the step player. A new stop takes any integer between its
+ * neighbors, or beyond the ends, so no stop is ever renumbered.
  */
-export const SPEED = { slow: 0, normal: 1, fast: 2 } as const;
+export const SPEED = { slow: -100, normal: 0, fast: 100 } as const;
 export type Speed = typeof SPEED[keyof typeof SPEED];
 
 /**

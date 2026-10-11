@@ -32,13 +32,14 @@ describe("AnimationControls", () => {
   });
 
   it.each([
-    [SPEED.slow, "Slow"],
-    [SPEED.fast, "Fast"],
-  ] as const)("stores speed %p, named %p, when the slider moves", (speed, name) => {
+    [0, SPEED.slow, "Slow"],
+    [2, SPEED.fast, "Fast"],
+  ] as const)("stores the speed at stop %p, %p, named %p, when the slider moves", (stop, speed, name) => {
     const settings = new TestSettings();
     render(<AnimationControls animated={settings} />);
-    fireEvent.change(slider(), { target: { value: String(speed) } });
+    fireEvent.change(slider(), { target: { value: String(stop) } });
     expect(settings.speed).toBe(speed);
+    expect(slider().value).toBe(String(stop));
     expect(slider()).toHaveAttribute("aria-valuetext", name);
   });
 

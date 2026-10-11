@@ -12,13 +12,14 @@ const STOPS: readonly { speed: Speed; name: string }[] = [
 
 /**
  * The Animate checkbox and the speed slider, for any view whose state is `Animated`. The slider's
- * value is the speed itself, and it is disabled while Animate is off, since nothing animates.
+ * value is the stop's index in `STOPS`, since the stored speeds aren't evenly spaced. It is
+ * disabled while Animate is off, since nothing animates.
  */
 export const AnimationControls = observer(function AnimationControls({ animated }: { animated: Animated }) {
   const { animate, speed } = animated;
-  const current = STOPS.find(stop => stop.speed === speed);
+  const stopIndex = STOPS.findIndex(stop => stop.speed === speed);
   const onSpeedChange = (value: string) => {
-    const stop = STOPS.find(s => s.speed === Number(value));
+    const stop = STOPS[Number(value)];
     if (stop) {
       animated.setSpeed(stop.speed);
     }
@@ -32,8 +33,8 @@ export const AnimationControls = observer(function AnimationControls({ animated 
       </label>
       <div className={`animation-controls__speed${animate ? "" : " animation-controls__speed--off"}`}>
         <div className="animation-controls__track">
-          <input className="animation-controls__slider" type="range" min={SPEED.slow} max={SPEED.fast} step={1}
-            value={speed} disabled={!animate} aria-label="Animation speed" aria-valuetext={current?.name}
+          <input className="animation-controls__slider" type="range" min={0} max={STOPS.length - 1} step={1}
+            value={stopIndex} disabled={!animate} aria-label="Animation speed" aria-valuetext={STOPS[stopIndex]?.name}
             onChange={e => onSpeedChange(e.target.value)} />
         </div>
         <div className="animation-controls__stops" aria-hidden="true">
