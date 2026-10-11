@@ -70,3 +70,9 @@ one thing, or one name for two things, settle it and add it here.
 - **stage:** a part of the extraction whose completion is stored: Setup (`setupDone`), the
   collections (`collected`), and later the cube and the pathways. A stage still playing isn't
   stored.
+
+## Layout
+
+- **scroller:** an element that scrolls what it holds, such as a drawing wider than its panel.
+  `useKeyboardScrollable` makes it reachable by keyboard. Not "region" for the area: its role is
+  `group` or `region` (see `accessibility.md`), and "region" means the role.
