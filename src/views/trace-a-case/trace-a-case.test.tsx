@@ -5,7 +5,7 @@ import * as conversationCard from "../../core/conversation-card/conversation-car
 import { fetchIndex } from "../../core/data-loader";
 import { phaseDuration } from "../../core/network-diagram/forward-pass-phases";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
-import { SPEED } from "../../core/state/animation";
+import { SPEEDS } from "../../core/state/animation";
 import { SharedState } from "../../core/state/shared-state";
 import { TraceACaseState } from "./trace-a-case-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
@@ -218,7 +218,7 @@ describe("TraceACase", () => {
 
   it("plays a step's run at the speed in the view's state", async () => {
     const state = new TraceACaseState({});
-    state.setSpeed(SPEED.fast);
+    state.setSpeed(SPEEDS.fast.key);
     showView(undefined, state);
     await screen.findByText("1 / 3");
     jest.useFakeTimers();

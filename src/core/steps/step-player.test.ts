@@ -1,4 +1,4 @@
-import { SPEED } from "../state/animation";
+import { SPEEDS } from "../state/animation";
 import { Frame, Marker, StepPlayer, StepTimeline } from "./step-player";
 import { clearReducedMotion, setReducedMotion, TestProgress, TestSettings } from "./test-helpers";
 
@@ -160,7 +160,7 @@ describe("StepPlayer", () => {
   describe("speed", () => {
     it("plays a run 1.7 times as long at slow speed", () => {
       const progress = new TestProgress();
-      const player = new StepPlayer(timeline, progress, new TestSettings({ speed: SPEED.slow }));
+      const player = new StepPlayer(timeline, progress, new TestSettings({ speed: SPEEDS.slow.key }));
       player.play("a", { from: 0, to: 1 });
       jest.advanceTimersByTime(1650);
       expect(progress.marker).toBe(0);
@@ -171,7 +171,7 @@ describe("StepPlayer", () => {
 
     it("plays a run 0.6 times as long at fast speed", () => {
       const progress = new TestProgress();
-      const player = new StepPlayer(timeline, progress, new TestSettings({ speed: SPEED.fast }));
+      const player = new StepPlayer(timeline, progress, new TestSettings({ speed: SPEEDS.fast.key }));
       player.play("a", { from: 0, to: 1 });
       jest.advanceTimersByTime(580);
       expect(progress.marker).toBe(0);
@@ -187,7 +187,7 @@ describe("StepPlayer", () => {
       player.play("a", { from: 0, to: 1 });
       jest.advanceTimersByTime(500);
       const before = player.currentFrame!.t;
-      settings.setSpeed(SPEED.slow);
+      settings.setSpeed(SPEEDS.slow.key);
       // 340 ms of real time is 200 ms of the timeline at slow speed.
       jest.advanceTimersByTime(340);
       expect(player.currentFrame!.t).toBeGreaterThan(before + 180);

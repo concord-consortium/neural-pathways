@@ -1,4 +1,4 @@
-import { Speed, SPEED } from "../state/animation";
+import { Speed, SPEED_STOPS } from "../state/animation";
 
 /** What the step player needs from a view's animation settings. Any `Animated` model is one. */
 export interface PlaybackSettings {
@@ -6,17 +6,11 @@ export interface PlaybackSettings {
   readonly speed: Speed;
 }
 
-/**
- * How long a run takes at each speed, relative to normal. Normal is the prototype's Med, which its
- * timings were tuned at and every timeline is written in. Slow and Fast are the prototype's own
- * multipliers (`SPEEDS` in neural-net-maker's index.html).
- */
-const DURATION_SCALE: Record<Speed, number> = {
-  [SPEED.slow]: 1.7,
-  [SPEED.normal]: 1,
-  [SPEED.fast]: 0.6,
-};
-
+/** How long a run takes at `speed`, relative to normal: the stop's `durationScale`. */
 export function durationScale(speed: Speed): number {
-  return DURATION_SCALE[speed];
+  const stop = SPEED_STOPS.find(s => s.key === speed);
+  if (!stop) {
+    throw new RangeError(`There is no speed ${speed}`);
+  }
+  return stop.durationScale;
 }

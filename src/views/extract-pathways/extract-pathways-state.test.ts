@@ -1,11 +1,11 @@
 import { fromSnapshot } from "mobx-keystone";
 import { savedJson } from "../../core/state/test-helpers";
 import { ExtractPathwaysState } from "./extract-pathways-state";
-import { SPEED } from "../../core/state/animation";
+import { SPEEDS } from "../../core/state/animation";
 import fixture from "./__fixtures__/extract-pathways-state.v1.json";
 
 const empty = {
-  version: 1, setupDone: false, collected: 0, animate: true, speed: SPEED.normal,
+  version: 1, setupDone: false, collected: 0, animate: true, speed: SPEEDS.normal.key,
   $modelType: "npw/ExtractPathwaysState",
 };
 
@@ -36,15 +36,15 @@ describe("ExtractPathwaysState", () => {
     const older = { version: 1, setupDone: true, collected: 3 };
     const state = fromSnapshot(ExtractPathwaysState, older as any);
     expect(state.animate).toBe(true);
-    expect(state.speed).toBe(SPEED.normal);
+    expect(state.speed).toBe(SPEEDS.normal.key);
     expect(state.collected).toBe(3);
   });
 
   it("stores Animate and the speed", () => {
     const state = new ExtractPathwaysState({});
     state.setAnimate(false);
-    state.setSpeed(SPEED.fast);
-    expect(savedJson(state)).toEqual({ ...empty, animate: false, speed: SPEED.fast });
+    state.setSpeed(SPEEDS.fast.key);
+    expect(savedJson(state)).toEqual({ ...empty, animate: false, speed: SPEEDS.fast.key });
   });
 
   it("refuses a negative count and leaves Setup as it was", () => {

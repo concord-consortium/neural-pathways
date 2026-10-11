@@ -2,7 +2,7 @@ import React from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
-import { SPEED } from "../../core/state/animation";
+import { SPEEDS } from "../../core/state/animation";
 import { SharedState } from "../../core/state/shared-state";
 import * as viewStateContext from "../../core/state/view-state-context";
 import { ViewStateProvider } from "../../core/state/view-state-context";
@@ -198,7 +198,7 @@ describe("ExtractPathways", () => {
 
     it("plays Setup's run at the speed in the view's state", async () => {
       const state = new ExtractPathwaysState({});
-      state.setSpeed(SPEED.fast);
+      state.setSpeed(SPEEDS.fast.key);
       showView(state);
       await screen.findByRole("img", { name: "The network." });
       jest.useFakeTimers();

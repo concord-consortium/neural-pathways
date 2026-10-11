@@ -1,5 +1,5 @@
 import { action, makeObservable, observable } from "mobx";
-import { Animated, Speed, SPEED } from "../state/animation";
+import { Animated, Speed, SPEEDS } from "../state/animation";
 import { PlaybackSettings } from "./playback";
 import { Marker, StepProgress } from "./step-player";
 
@@ -22,7 +22,7 @@ export class TestSettings implements Animated {
   animate: boolean;
   speed: Speed;
 
-  constructor({ animate = true, speed = SPEED.normal }: Partial<PlaybackSettings> = {}) {
+  constructor({ animate = true, speed = SPEEDS.normal.key }: Partial<PlaybackSettings> = {}) {
     this.animate = animate;
     this.speed = speed;
     makeObservable(this, { animate: observable, speed: observable, setAnimate: action, setSpeed: action });
