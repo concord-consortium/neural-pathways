@@ -27,7 +27,7 @@ The view's own width, inside the app's 16 px gutters:
 - Narrower, one column, down to 382 px: the diagram's narrowest layout, 380 px, and the network
   panel's border. That is the narrowest width the view is designed for.
 - Narrower still, the diagram scrolls sideways inside its panel. Everything else wraps or stacks,
-  and the page doesn't scroll sideways even when the view is embedded on its own 320 px wide.
+  and the page doesn't scroll sideways even in an Interactive 320 px wide.
 
 ## Still to come
 

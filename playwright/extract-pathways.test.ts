@@ -17,11 +17,11 @@ test("Setup lifts the hidden neurons out of the network, animated", async ({ pag
   await expect(page.getByRole("img", { name: LIFTED })).toBeVisible({ timeout: 10_000 });
 });
 
-/** What a frame takes from the canvas's width: its 16 px gutters and the panel's borders. */
-const FRAME_EXTRA = 34;
+/** What an Interactive takes from the canvas's width: its 16 px gutters and the panel's borders. */
+const INTERACTIVE_EXTRA = 34;
 
 /**
- * Opens the view alone in a frame `width` wide, waits until the canvas is laid out at
+ * Opens the view as an Interactive `width` wide, waits until the canvas is laid out at
  * `canvasWidth` (the first frame is drawn before the panel is measured), and returns what scrolls.
  */
 async function canvasIn(page: Page, width: number, canvasWidth: number) {
@@ -45,25 +45,25 @@ const scrollRegion = (page: Page) => page.getByRole("group", { name: "The Networ
 
 // 909 is the narrowest the canvas is laid out (minCanvasWidth).
 
-test("a frame just wide enough holds the canvas at full size without scrolling", async ({ page }) => {
-  expect(await canvasIn(page, 909 + FRAME_EXTRA, 909)).toEqual({ page: false, drawing: false });
+test("an Interactive just wide enough holds the canvas at full size without scrolling", async ({ page }) => {
+  expect(await canvasIn(page, 909 + INTERACTIVE_EXTRA, 909)).toEqual({ page: false, drawing: false });
   await expect(scrollRegion(page)).not.toHaveAttribute("tabindex");
 });
 
-test("a wider frame widens the canvas to fill it", async ({ page }) => {
-  expect(await canvasIn(page, 1200 + FRAME_EXTRA, 1200)).toEqual({ page: false, drawing: false });
+test("a wider Interactive widens the canvas to fill it", async ({ page }) => {
+  expect(await canvasIn(page, 1200 + INTERACTIVE_EXTRA, 1200)).toEqual({ page: false, drawing: false });
 });
 
-test("a frame a pixel too narrow scrolls the canvas sideways rather than scaling it down", async ({ page }) => {
-  expect(await canvasIn(page, 908 + FRAME_EXTRA, 909)).toEqual({ page: false, drawing: true });
+test("an Interactive a pixel too narrow scrolls the canvas sideways rather than scaling it down", async ({ page }) => {
+  expect(await canvasIn(page, 908 + INTERACTIVE_EXTRA, 909)).toEqual({ page: false, drawing: true });
   await expect(scrollRegion(page)).toHaveAttribute("tabindex", "0");
 });
 
-test("a much narrower frame scrolls only the canvas", async ({ page }) => {
+test("a much narrower Interactive scrolls only the canvas", async ({ page }) => {
   expect(await canvasIn(page, 600, 909)).toEqual({ page: false, drawing: true });
 });
 
-test("the keyboard can reach and scroll a canvas too wide for its frame", async ({ page }) => {
+test("the keyboard can reach and scroll a canvas too wide for its Interactive", async ({ page }) => {
   await canvasIn(page, 600, 909);
   await page.getByRole("button", { name: "Reset" }).focus();
   await page.keyboard.press("Tab");
@@ -83,7 +83,7 @@ test("unavailable steps look unavailable in forced-colors mode", async ({ page }
   expect(await color("Reset")).toBe(await color("Collect All Conversations"));
 });
 
-test("the drawing keeps the focus when its frame widens and it stops scrolling", async ({ page }) => {
+test("the drawing keeps the focus when its Interactive widens and it stops scrolling", async ({ page }) => {
   await canvasIn(page, 600, 909);
   await scrollRegion(page).focus();
   await page.setViewportSize({ width: 1300, height: 900 });
