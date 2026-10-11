@@ -374,7 +374,8 @@ test("the keyboard can reach and scroll a diagram too wide for its Interactive",
 
 // Classic scrollbars, as on Windows, take room from the box they appear in. A drawing a fraction of
 // a pixel bigger than its box would show them, shrink to fit the smaller box, lose them, and grow
-// back, every frame. The padding nudges move the panel's height through a whole pixel's fractions.
+// back, on every animation frame. The padding nudges move the panel's height through a whole
+// pixel's fractions.
 test("the diagram is never drawn bigger than its box, even by a fraction of a pixel", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/?interactive=trace-a-case");

@@ -22,7 +22,8 @@ const INTERACTIVE_EXTRA = 34;
 
 /**
  * Opens the view as an Interactive `width` wide, waits until the canvas is laid out at
- * `canvasWidth` (the first frame is drawn before the panel is measured), and returns what scrolls.
+ * `canvasWidth` (the first animation frame is drawn before the panel is measured), and returns what
+ * scrolls.
  */
 async function canvasIn(page: Page, width: number, canvasWidth: number) {
   await page.setViewportSize({ width, height: 900 });
