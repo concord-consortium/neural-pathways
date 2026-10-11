@@ -37,10 +37,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `datasets/alien3-dataset.ts`: the lesson's dataset, `alien3Dataset`.
 - `state/`: the mobx-keystone model for the shared state, any model more than one view uses, the
   setup every model imports, and the context views use to reach their state. `animation.ts` has
-  `animatedMixin`, which gives an animated view's model Animate, the speed and their setters, and
-  the `Animated` interface the controls take. A model only one view uses lives in that view's
-  folder. What each view keeps, and the rules for changing a saved form, are in
-  `docs/view-state.md`.
+  `animatedMixin`, which gives an animated view's model Animate, the speed and their setters, the
+  `Animated` interface the controls take, and `SPEEDS`, the slider's stops. A model only one view
+  uses lives in that view's folder. What each view keeps, and the rules for changing a saved form,
+  are in `docs/view-state.md`.
 - `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
   it between views.
 - `network/`: the network types, the toy network Trace a Case uses until there is one built from
@@ -74,8 +74,8 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   inside a small `<Observer>` around its drawing; the rest of the view then doesn't re-render while
   a run plays.
 - `animation-controls/`: the Animate checkbox and the Slow/Med/Fast speed slider, for any view
-  whose state is `Animated`. The step player reads the same two values, so a view only places the
-  control.
+  whose state is `Animated`. The step player reads the same two values from the state the view
+  gives it, so a view places the control and passes its state to both.
 - `conversation-card/`: the conversation panel the lesson's views share. `ConversationCard` is the
   shell: the count, previous and next, a screen-reader status, and "No conversations match that
   search." when the list is empty. A view fills its body from the parts beside it:
