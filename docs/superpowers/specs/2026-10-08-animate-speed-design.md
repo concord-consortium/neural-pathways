@@ -136,7 +136,7 @@ divider waits for it too.
 ## The state
 
 - `src/core/state/animation.ts` and `animation.test.ts` come over from the `NPW-30-view-state`
-  branch: `Speed`, `Animated` and the props, with the branch's `SPEED` replaced by `SPEEDS`. The stored speeds change from 0, 1, 2 to
+  branch: `Speed`, `Animated` and the props, with the branch's `SPEED` replaced by `SPEED_STOPS`. The stored speeds change from 0, 1, 2 to
   −100, 0, 100: see [The stored speeds](#the-stored-speeds). In place of the branch's
   `animationProps`, which each model spread and then wrote its own setters for, the props and the
   setters are one mixin, `animatedMixin` (`defineModelMixin`). The NPW-30 branch is rebased on
@@ -150,10 +150,13 @@ divider waits for it too.
 
 ### The stored speeds
 
-Each stop on the slider is one entry in `SPEEDS`, in slider order: its stored `key`, the `name`
-shown under it and its `durationScale`. Slow is `{ key: -100, name: "Slow", durationScale: 1.7 }`,
-normal has key 0 and fast key 100. `SPEED_STOPS` is the entries in that order, which the control
-and `durationScale` read, so a new stop is one line. A test checks the keys increase down the list.
+Each stop on the slider is one entry in the array `SPEED_STOPS`, in slider order: its stored
+`key`, the `name` shown under it and its `durationScale`. Slow is
+`{ key: -100, name: "Slow", durationScale: 1.7 }`, normal has key 0 and fast key 100. The control
+and `durationScale` read the array, so a new stop is one line, with no identifier to invent. A test
+checks the keys increase down the list. The one stop the code names is `NORMAL_SPEED`, key 0: the
+default, and the stop that plays a timeline at its own durations. Tests find the others by the name
+the slider shows, with `speedNamed("Fast")`.
 
 The saved speed is the stop's key, not a multiplier and not a name:
 
@@ -180,7 +183,8 @@ them.
   - with Animate off, `play` stores `to` with no frame and no timer;
   - turning Animate off mid-run stores `to` on the next frame and stops the clock;
   - reduced motion still stores `to` straight away.
-- `animation.test.ts`: the stops' keys, pinned since they're saved, and their order; and the
+- `animation.test.ts`: the stops' keys, pinned since they're saved, and their order; that
+  `NORMAL_SPEED` is the stop with a `durationScale` of 1; `speedNamed`; and the
   mixin, on a probe model with a prop of its own: the defaults after the model's own props, the
   `Animated` setters, and a speed that isn't a stop rejected both when loading and through the
   action.
