@@ -174,7 +174,10 @@ In `playwright/trace-a-case.test.ts` and `playwright/extract-pathways.test.ts`:
 In `playwright/trace-a-case.test.ts` only:
 - clicking where "Slow" is moves the slider there;
 - the control ends at the head's right edge;
-- the checkbox shows keyboard focus, and the slider shows it in forced colors.
+- keyboard focus rings the checkbox's label and box, and the slider shows focus in forced colors.
+
+Every browser Playwright runs supports `:has()`, so the checkbox's fallback, a ring on the box
+alone, is checked by hand: force the `@supports` condition false and the box gets the ring.
 
 Extract Pathways' keyboard-scrolling test tabs to the canvas from the speed slider, now the
 head's last stop.
