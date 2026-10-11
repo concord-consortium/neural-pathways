@@ -1,5 +1,5 @@
 import { layoutNetwork, MIN_HEIGHT, MIN_WIDTH } from "./layout";
-import { popScale } from "./network-drawing";
+import { PILL_GROW, popScale } from "./network-drawing";
 
 const SIZES = [10, 8, 6, 2];
 /** The most the winning pill grows while it pops. */
@@ -62,10 +62,11 @@ describe.each([
     expect(layout.pills[1].y).toBeGreaterThanOrEqual(layout.pills[0].y + layout.pills[0].height + 12);
   });
 
-  // The pill pops about its own center, and a scroller around the drawing would clip what spills.
+  // The winning pill grows by PILL_GROW, then pops about its own center, and a scroller around the
+  // drawing would clip what spills.
   it("leaves room for the winning pill to pop without leaving the drawing", () => {
     for (const pill of layout.pills) {
-      const popped = (pill.width / 2 + HALF_STROKE) * POP_PEAK;
+      const popped = (pill.width / 2 + PILL_GROW + HALF_STROKE) * POP_PEAK;
       expect(pill.x + pill.width / 2 + popped).toBeLessThanOrEqual(layout.width);
     }
   });

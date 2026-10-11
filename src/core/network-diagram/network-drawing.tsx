@@ -18,7 +18,7 @@ export const OUTPUT_ORDER = [1, 0];
 /** Stroke widths for the thin, mid and thick bands. */
 const EDGE_WIDTHS = [1, 2, 3];
 /** The winning pill grows by this much on every side. */
-const PILL_GROW = 3;
+export const PILL_GROW = 3;
 /** Gauges shorter than this aren't drawn. */
 export const MIN_GAUGE = 0.35;
 /**

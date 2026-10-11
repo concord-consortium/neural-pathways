@@ -43,11 +43,11 @@ const PILL_PAD_LEFT = 4;
 export const PILL_GAP = 7;
 const PILL_PAD_RIGHT = 13;
 /**
- * Room right of the pills. The winning pill pops to about 1.1 times its size about its center,
- * which takes its edge and stroke about 7 px further right, and the drawing mustn't spill out of
- * its scroller.
+ * Room right of the pills. The winning pill grows 3 px each side (PILL_GROW in network-drawing.tsx)
+ * and pops to about 1.1 times that size about its center, which takes its edge and stroke about
+ * 10 px further right, and the drawing mustn't spill out of its scroller.
  */
-const PILL_POP_ROOM = 7;
+const PILL_POP_ROOM = 10;
 /** Between the two output pills: room for the caption over the lower one. */
 const OUTPUT_CAPTION_GAP = 30;
 /** The first column sits this far right of the even spread, so it doesn't look clipped. */
