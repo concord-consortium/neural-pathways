@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { BaseAttribute, BASE_ATTRIBUTES, withPathwayAssignments } from "./config-common";
 
 function base(key: string): BaseAttribute {
@@ -65,5 +67,12 @@ describe("BASE_ATTRIBUTES", () => {
       "voices_raised", "engaged_in_task", "group_size", "near_water", "food_present",
       "resource_stressed", "gestures_repeated", "young_present", "carrying_burden",
     ]);
+  });
+
+  // The card finds each attribute's icon by its key, so renaming a key means renaming its icon.
+  it("has an icon for each attribute in src/core/alien-icons", () => {
+    const folder = path.join(__dirname, "../../src/core/alien-icons");
+    const icons = fs.readdirSync(folder).filter(file => file.endsWith(".svg")).map(file => path.basename(file, ".svg"));
+    expect(icons.sort()).toEqual(BASE_ATTRIBUTES.map(a => a.key).sort());
   });
 });

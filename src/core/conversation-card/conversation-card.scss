@@ -1,9 +1,15 @@
 @use "../button";
 @use "../colors" as colors;
 @use "../panel";
+@use "../visually-hidden";
 
+// Fills a parent with a set height, so the notes scroll instead of the card growing. In a parent
+// without one, 100% is ignored and the card is as tall as its content.
 .conversation-card {
   @include panel.panel;
+  position: relative;
+  box-sizing: border-box;
+  height: 100%;
 }
 
 .conversation-card__head {
@@ -64,12 +70,27 @@
   }
 }
 
-.conversation-card__text {
-  margin: 0;
+.conversation-card__status {
+  @include visually-hidden.visually-hidden;
+}
+
+// The parts a view puts in the card, top to bottom. It scrolls only when the notes box is at its
+// smallest and the rest still doesn't fit, as when the text alone is zoomed.
+.conversation-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  gap: 10px;
   padding: 12px 14px;
-  color: colors.$ink;
-  font-family: "Lato", sans-serif;
-  font-size: 13px;
-  line-height: 1.85;
-  word-break: break-word;
+}
+
+// In place of the header and body when nothing matches, as in the prototype's .nnm-empty.
+.conversation-card__empty {
+  margin: 0;
+  padding: 24px 14px;
+  color: colors.$ink-3;
+  font-size: 15px;
+  text-align: center;
 }

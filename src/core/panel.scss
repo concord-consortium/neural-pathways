@@ -10,14 +10,23 @@
   min-width: 0;
 }
 
+// A head is at least as tall as a 44 px control, plus its padding and rule: 62 px. So heads match
+// whether or not they hold a control that tall.
+$head-control-height: 44px;
+$head-padding-top: 9px;
+$head-padding-bottom: 8px;
+$head-height: $head-control-height + $head-padding-top + $head-padding-bottom + 1px;
+
+// It doesn't shrink in a panel with a set height; the panel's body gives up the room instead.
 @mixin panel-head {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
-  box-sizing: border-box;
+  min-height: $head-control-height;
+  box-sizing: content-box;
   margin: 0;
-  padding: 9px 14px 8px;
+  padding: $head-padding-top 14px $head-padding-bottom;
   border-bottom: 1px solid colors.$rule-soft;
   border-radius: 7px 7px 0 0;
   background: colors.$surface;
