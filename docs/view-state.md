@@ -81,7 +81,7 @@ speed. The target, with what is built marked:
 
 | View | Model | Keeps |
 |---|---|---|
-| Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id (built); Animate on/off (built); speed (0 slow, 1 normal, 2 fast) (built) |
+| Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id (built); Animate on/off (built); speed (−100 slow, 0 normal, 100 fast) (built) |
 | Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`) and how many conversations are collected (`collected`) (built); Animate (built); speed (built); the later stages (`cubeDone`, `pathwaysDone`) |
 | Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
 | Prediction Chain | `npw/PredictionChainState` | The step each conversation is on (0 to 4), by id; Animate; speed |
@@ -151,7 +151,7 @@ interactive's shared tree. For each field, highest first:
 4. **The type's default.**
 
 URL param names start with the tree id and use dots for nested fields: `shared.query=…`,
-`shared.conversationId=…`, `trace-a-case.speed=0`, `correlations-part-2.mode=graphs`,
+`shared.conversationId=…`, `trace-a-case.speed=-100`, `correlations-part-2.mode=graphs`,
 `investigate-unknown-pathway.pane2.conversationId=…`. The params apply only when a tree is first
 created:
 

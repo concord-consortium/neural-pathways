@@ -31,6 +31,7 @@ refer to that file at commit `74d66f3`.
 | Extract Pathways | Gets the control in this story. | NPW-33 went to review without it, and with the player applying the speed it is only the model props and the control. |
 | Reduced motion | Unchanged: every run jumps to its end whatever the checkbox says, and the checkbox keeps the stored value. | As in the prototype (`motionOff`, lines 8862 and 11233). |
 | The state | `animationProps` and `Animated`, from the NPW-30 branch, spread into `TraceACaseState` and `ExtractPathwaysState`. Both stay at version 1. | The view-state rules: adding a field with a default doesn't change the version. |
+| The stored speeds | Slow −100, normal 0, fast 100: integer keys that only order the stops. | A stop can be added between two others, or beyond the ends, without renumbering the ones already saved. See [The stored speeds](#the-stored-speeds). |
 
 ## Matching the prototype
 
@@ -93,9 +94,10 @@ comment citing the prototype's `SPEEDS`.
 `AnimationControls({ animated }: { animated: Animated })`, an `observer`:
 
 - A checkbox labeled "Animate", bound to `animated.animate` and `setAnimate`.
-- A range input from 0 to 2 in steps of 1. Its value is the `Speed` itself, since `SPEED` is
-  already 0, 1, 2, and changing it calls `setSpeed`. It has `aria-label="Animation speed"` and an
-  `aria-valuetext` of "Slow", "Med" or "Fast".
+- A range input from 0 to 2 in steps of 1. Its value is the stop's index in the control's list
+  of stops, not the stored speed, since the stored speeds aren't evenly spaced. Changing it calls
+  `setSpeed` with that stop's speed. It has `aria-label="Animation speed"` and an `aria-valuetext`
+  of "Slow", "Med" or "Fast".
 - "Slow / Med / Fast" under the stops, the current one emphasized. They are `aria-hidden`: the
   value text already says the speed.
 - While Animate is off, the slider has the `disabled` attribute and the speed group is dimmed to
@@ -134,12 +136,32 @@ divider waits for it too.
 ## The state
 
 - `src/core/state/animation.ts` and `animation.test.ts` come over from the `NPW-30-view-state`
-  branch unchanged: `SPEED`, `Speed`, `Animated` and `animationProps`.
+  branch: `SPEED`, `Speed`, `Animated` and `animationProps`. The stored speeds change from 0, 1, 2
+  to −100, 0, 100: see [The stored speeds](#the-stored-speeds). The NPW-30 branch is rebased on
+  `main` once this lands, so its copy matches.
 - `TraceACaseState` and `ExtractPathwaysState` spread `...animationProps`, declare
   `implements Animated`, and add `setAnimate` and `setSpeed` as model actions.
 - Each view passes its state to its `StepPlayer` as the settings, and to `AnimationControls`.
-- The v1 fixtures gain `animate: false` and `speed: 0`, so the round-trip tests cover the new
-  fields. A saved form without them still loads, with Animate on at normal speed.
+- The v1 fixtures gain `animate: false` and `speed: -100` (slow), so the round-trip tests cover
+  the new fields. A saved form without them still loads, with Animate on at normal speed.
+
+### The stored speeds
+
+The saved speed is a key for a stop on the slider, not a multiplier and not a name:
+`SPEED = { slow: -100, normal: 0, fast: 100 }`.
+
+- **Not the multiplier,** so how fast Slow plays can be retuned without changing saved data. The
+  multipliers stay in `playback.ts`.
+- **Not names,** so a new stop doesn't need one invented that sorts correctly.
+- **Room between,** so a new stop takes any integer between its neighbors (−50 between slow and
+  normal) or beyond the ends (−200), and no saved stop is renumbered. Integers rather than
+  fractions avoid any doubt about exact matches and read cleanly in a URL param.
+- **Only an order.** −50 doesn't mean half as slow; the player's table decides.
+- **Continuous speed** would be a new field, or a migration: ordered keys can't stand in for a
+  real scale.
+
+The NPW-30 branch's copy had 0, 1, 2. Nothing saves or loads state yet, so no saved data used
+them.
 
 ## Testing
 
