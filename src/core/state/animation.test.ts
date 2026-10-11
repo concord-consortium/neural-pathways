@@ -1,25 +1,18 @@
 import "./setup";
-import { fromSnapshot, Model, model, modelAction } from "mobx-keystone";
-import { Animated, animationProps, Speed, SPEED } from "./animation";
+import { composeMixins, ExtendedModel, fromSnapshot, model, tProp, types } from "mobx-keystone";
+import { Animated, animatedMixin, SPEED } from "./animation";
 import { savedJson } from "./test-helpers";
 
+/** A model with a prop of its own, as a view's state has. */
 @model("test/AnimatedProbe")
-class AnimatedProbe extends Model({ ...animationProps }) implements Animated {
-  @modelAction
-  setAnimate(animate: boolean) {
-    this.animate = animate;
-  }
+class AnimatedProbe extends ExtendedModel(composeMixins(animatedMixin), {
+  name: tProp(types.string, ""),
+}) {}
 
-  @modelAction
-  setSpeed(speed: Speed) {
-    this.speed = speed;
-  }
-}
-
-describe("animationProps", () => {
-  it("starts animating at normal speed", () => {
+describe("animatedMixin", () => {
+  it("starts animating at normal speed, after the model's own props", () => {
     expect(savedJson(new AnimatedProbe({}))).toEqual({
-      animate: true, speed: SPEED.normal, $modelType: "test/AnimatedProbe",
+      name: "", animate: true, speed: SPEED.normal, $modelType: "test/AnimatedProbe",
     });
   });
 
@@ -37,5 +30,9 @@ describe("animationProps", () => {
     animated.setSpeed(SPEED.fast);
     expect(animated.animate).toBe(false);
     expect(animated.speed).toBe(SPEED.fast);
+  });
+
+  it("type-checks a speed set through the action", () => {
+    expect(() => new AnimatedProbe({}).setSpeed(50 as any)).toThrow();
   });
 });

@@ -1,6 +1,6 @@
 import "../../core/state/setup";
-import { Model, model, modelAction, tProp, types } from "mobx-keystone";
-import { Animated, animationProps, Speed } from "../../core/state/animation";
+import { composeMixins, ExtendedModel, model, modelAction, tProp, types } from "mobx-keystone";
+import { animatedMixin } from "../../core/state/animation";
 
 /** A marker on Trace a Case's timeline: how many of Steps 1–4 are done, 0 to 4. */
 const markerType = types.refinement(types.integer, n => n >= 0 && n <= 4, "marker, 0 to 4");
@@ -10,15 +10,14 @@ const markerType = types.refinement(types.integer, n => n >= 0 && n <= 4, "marke
  * the fields still to come and the rules on changing the saved form.
  */
 @model("npw/TraceACaseState")
-export class TraceACaseState extends Model({
+export class TraceACaseState extends ExtendedModel(composeMixins(animatedMixin), {
   version: tProp(types.literal(1), 1),
   /**
    * The marker each conversation rests at, by conversation id. A conversation at the start isn't
    * stored.
    */
   markerByConversation: tProp(types.record(markerType), () => ({})),
-  ...animationProps,
-}) implements Animated {
+}) {
   marker(conversationId: string): number {
     return this.markerByConversation[conversationId] ?? 0;
   }
@@ -30,15 +29,5 @@ export class TraceACaseState extends Model({
     } else {
       this.markerByConversation[conversationId] = marker;
     }
-  }
-
-  @modelAction
-  setAnimate(animate: boolean) {
-    this.animate = animate;
-  }
-
-  @modelAction
-  setSpeed(speed: Speed) {
-    this.speed = speed;
   }
 }
