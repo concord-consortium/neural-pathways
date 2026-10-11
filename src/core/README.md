@@ -38,9 +38,9 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `state/`: the mobx-keystone model for the shared state, any model more than one view uses, the
   setup every model imports, and the context views use to reach their state. `animation.ts` has
   `animatedMixin`, which gives an animated view's model Animate, the speed and their setters, the
-  `Animated` interface the controls take, and `SPEEDS`, the slider's stops. A model only one view
-  uses lives in that view's folder. What each view keeps, and the rules for changing a saved form,
-  are in `docs/view-state.md`.
+  `Animated` interface the controls take, and `SPEED_STOPS`, the slider's stops. A model only one
+  view uses lives in that view's folder. What each view keeps, and the rules for changing a saved
+  form, are in `docs/view-state.md`.
 - `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
   it between views.
 - `network/`: the network types, the toy network Trace a Case uses until there is one built from
