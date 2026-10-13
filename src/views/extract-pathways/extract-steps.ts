@@ -15,7 +15,9 @@ export function extractProgress(state: ExtractPathwaysState, limit: number): Ste
     get marker() {
       return state.setupDone ? 1 + Math.min(state.collected, limit) : 0;
     },
-    setMarker: (marker: Marker) => state.setProgress(marker >= 1, Math.max(0, marker - 1)),
+    setMarker: (marker: Marker) => state.setProgress({
+      setupDone: marker >= 1, collected: Math.max(0, marker - 1), deckDone: false, pathwaysDone: false,
+    }),
   };
 }
 
