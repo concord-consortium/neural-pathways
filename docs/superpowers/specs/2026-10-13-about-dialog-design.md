@@ -89,8 +89,9 @@ It owns the button, the `<dialog>`, and whether the dialog is open. Views can't 
   name.
 - **The look,** from the prototype's `.info-modal`: a 2 px `$ink-3` border (the prototype's `#6B7280` is its placeholder theme's gray,
 and `$ink-3` is the nearest token), 8 px corners, a
-  `0 4px 16px rgba(0, 0, 0, 0.25)` shadow, and a white ground. A 52 px header on `$surface` with a
-  1 px `$ink-3` rule below it. The heading in Lato 18 px bold. The body in Lato 16 px with 22 px lines and
+  `0 4px 16px rgba(0, 0, 0, 0.25)` shadow, and a white ground. A header at least 52 px tall, on `$surface`
+  with a 1 px `$ink-3` rule below it. It grows when a long title, such as "About Investigate
+  Unknown Pathway" in a narrow window, wraps. The heading in Lato 18 px bold. The body in Lato 16 px with 22 px lines and
   16 px 20 px 20 px padding, its `h3`s 16 px bold, 16 px above and 6 px below (none above the first),
   its paragraphs 12 px apart. No fade-in.
 
@@ -114,6 +115,10 @@ and `$ink-3` is the nearest token), 8 px corners, a
 About goes in `.trace-a-case__steps`, after the step row, pushed to the right edge
 (`margin-left: auto`). The cell wraps, so About can drop below the steps when the cell is too
 narrow for both. Tab order: filter, card, steps, About, network.
+
+About stays when the filter matches nothing and the view leaves out the steps and the network: the
+steps cell is still there, holding only About. Like the toolbars, About appears once the
+conversations have loaded.
 
 The two-column layout now needs the steps, Reset and About on one line, about 421 px: 329 px of
 steps, a 6 px gap and about 85 px for About. That is wider than the network panel's 400 px minimum,
