@@ -34,7 +34,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 | Markers | 12 is the deck done and 13 the pathways done, after the first half's 0 to 11. | The prototype's stages are one ordered sequence, so they stay one marker. |
 | Button rules | As the prototype's handlers and `syncExRow` (lines 10888–10915, 10972–11017): Collect All and Extract Pathways are always available, and each jumps to where its run starts. | Each button's segment is a plain function of the marker, which the step system already supports. |
 | How many conversations the deck holds | Every conversation loaded, up to 800, in sets of 20; the last set may be partial. | alien3 has exactly 800. The prototype instead forces at least 2 sets and repeats conversation 1 to fill them (`CB_NSETS`, line 14800, and `cases[n] \|\| cases[0]`, line 13905), which would show repeated data in the tests' smaller fixtures. |
-| The run's last frame | Collect All ends when the last set has closed, not when the prototype's final timer fires 12 ms earlier. | A pure `sceneAt(marker)` must equal the end of the run that reaches it. |
+| The run's last frame | Collect All ends when the last set has closed and finished fading in, not when the prototype's final timer fires up to 80 ms earlier. | A pure `sceneAt(marker)` must equal the end of the run that reaches it. The last set's 160 ms fade outlasts its 92 ms close. |
 | The deck's room on the narrowest canvas | The narrowest canvas grows from 909 to about 960 px, so the finished deck fits between the canvas's left edge and the lifted column with 10 px clear each side. | At 909, the 40-set deck is about 18 px wider than its room and would run under the lifted column, the one thing still saying what a row is. The first half's spec left this width for NPW-48 to set. 960 plus the panel's border and the gutters is 994, inside the 1024 designed width. |
 | Tooltips in the deck | Set 1's columns keep the neuron-name tooltips the hand-collected copies have; sets 2 to 40 have none. | As in the prototype (`makeFilled` has a title, `addColumn` doesn't, lines 13683 and 13904). Eleven thousand titles would add nothing a student could use. |
 | The lines' paint order | Under the bars and the boxes. | The prototype's comment asks for that ("a connector runs between two things and should not be drawn over either of them", line 14640), though its DOM order puts the lines over the bars. |
@@ -187,8 +187,8 @@ For set *k*, numbered from 0 as in the prototype, so set 3 is *k* = 2:
 - The count changes to "*n* Conversations", *n* = min(20 (*k* + 1), *D*), when the close ends.
 - The next set begins `gap(k) + hold(k)` after this one.
 
-The run ends when the last set's close ends (`cbSetEnter`, `cbSetGap`, `cbSetMove`, `cbSetHold`,
-`cbAddSet`, lines 14823–14958).
+The run ends when the last set has closed and finished fading in (`cbSetEnter`, `cbSetGap`,
+`cbSetMove`, `cbSetHold`, `cbAddSet`, lines 14823–14958).
 
 **Where the sets sit.** For a deck of *s* sets, set *k*'s offset is
 
