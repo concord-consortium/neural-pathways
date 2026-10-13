@@ -9,9 +9,11 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
-import { ExtractScene, restScene, stackRestScene } from "./extract-scene";
+import { ExtractScene, pathwaysRestScene, restScene, stackRestScene } from "./extract-scene";
 import { extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { flightDuration } from "./flight";
+import { extractPathwaysSceneAt } from "./pathways-timeline";
+import { pathwaysLayout } from "./pathways-layout";
 import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
@@ -226,5 +228,28 @@ describe("ExtractDrawing", () => {
     const labelOpacity = Number(screen.getByText("Conversation 3").parentElement!.getAttribute("opacity"));
     expect(labelOpacity).toBeGreaterThan(0);
     expect(labelOpacity).toBeLessThan(1);
+  });
+
+  it("draws the pathways beside the slid deck, and describes them, once Extract Pathways is done", () => {
+    renderDrawing(pathwaysRestScene(SIZES, 20));
+    expect(screen.getByRole("img", {
+      name: "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 conversations.",
+    })).toBeInTheDocument();
+    expect(screen.getAllByTestId("pathway-line")).toHaveLength(42);
+    const dx = pathwaysLayout(geometry, 20).liftedDx;
+    expect(screen.getByTestId("lifted-column")).toHaveAttribute("transform", `translate(${dx},0)`);
+  });
+
+  it("shows the particle canvas only while the particles fly", () => {
+    jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    try {
+      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, 3000));
+      expect(screen.getByTestId("particles")).toBeInTheDocument();
+      unmount();
+      renderDrawing(pathwaysRestScene(SIZES, 20));
+      expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
+    } finally {
+      jest.restoreAllMocks();
+    }
   });
 });

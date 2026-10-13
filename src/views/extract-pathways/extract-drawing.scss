@@ -2,6 +2,7 @@
 
 // The canvas is drawn at full size and never scaled; see minCanvasWidth for why it scrolls instead.
 .extract-drawing {
+  position: relative;
   width: 100%;
   overflow-x: auto;
 
@@ -44,4 +45,36 @@
 // The count over the deck, a size above the labels it replaces (the prototype's d1a-colhead).
 .extract-drawing__count {
   font-size: 15px;
+}
+
+// The particles in flight, over the SVG. They never take the pointer.
+.extract-drawing__particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+// The prototype's d1a-loadzero, d1a-loadwire, d1a-pathbox and d1a-pathlabel.
+.extract-drawing__zero {
+  stroke: colors.$rule;
+  stroke-width: 1;
+}
+
+.extract-drawing__line {
+  stroke: #909090;
+  stroke-width: 0.5;
+  fill: none;
+}
+
+.extract-drawing__box {
+  fill: #fff;
+  stroke: colors.$ink-2;
+  stroke-width: 2;
+}
+
+.extract-drawing__pathway {
+  font-family: "Lato", sans-serif;
+  font-size: 13px;
+  fill: colors.$ink;
 }

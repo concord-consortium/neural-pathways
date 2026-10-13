@@ -14,6 +14,8 @@ import {
 } from "./extract-geometry";
 import { ExtractScene } from "./extract-scene";
 import { Flight, flightDuration, Placed, placeCopy } from "./flight";
+import { ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
+import { pathwaysLayout } from "./pathways-layout";
 import "./extract-drawing.scss";
 
 /** The label's drop-in, overshooting as it lands (the prototype's bounceIn). */
@@ -36,6 +38,10 @@ const conversations = (n: number) => `${n} conversation${n === 1 ? "" : "s"}`;
 export function describeScene(scene: ExtractScene, hidden: number): string {
   const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
   const { stack } = scene;
+  if (scene.pathways?.done && stack) {
+    return `The ${hidden} hidden neurons, with their loadings on three pathways drawn from all `
+      + `${conversations(stack.collected)}.`;
+  }
   if (stack) {
     return stack.done
       ? `The network's ${hidden} hidden neurons lifted out, and all ${conversations(stack.collected)} collected.`
@@ -154,6 +160,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
   }, [hostRef, scrollerRef]);
   const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
   const geometry = useMemo(() => extractGeometry(columnSizes, size.width), [columnSizes, size.width]);
+  const pathways = useMemo(() => pathwaysLayout(geometry, deckSize), [geometry, deckSize]);
   const names = useMemo(() => hiddenNames(columnSizes), [columnSizes]);
   const clipId = `extract-deck-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const { width, height, networkX, network: layout, hidden, lifted, deck } = geometry;
@@ -187,7 +194,8 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
         )}
         {scene.lifted && (
           <LiftedColumn flights={liftedFlights} lifted={lifted} names={names} flight={scene.lifted.flight}
-            opacity={scene.lifted.opacity} labelOpacity={scene.lifted.labelOpacity} dx={0} />
+            opacity={scene.lifted.opacity} labelOpacity={scene.lifted.labelOpacity}
+            dx={scene.pathways ? scene.pathways.slide * pathways.liftedDx : 0} />
         )}
         {scene.stack
           ? (
@@ -206,12 +214,17 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
               </g>
             );
           })}
+        {scene.pathways && <PathwaysLayer pathways={scene.pathways} layout={pathways} />}
         {scene.label && scene.networkOpacity > 0 && (
           <g opacity={scene.networkOpacity < 1 ? scene.networkOpacity : undefined}>
             <ConversationLabel x={networkX + NETWORK_WIDTH / 2} n={scene.label.n} bounce={scene.label.bounce} />
           </g>
         )}
       </svg>
+      {scene.pathways?.particles !== undefined && (
+        <ParticleCanvas t={scene.pathways.particles} geometry={geometry} passes={passes} size={deckSize}
+          layout={pathways} />
+      )}
     </div>
   );
 };
