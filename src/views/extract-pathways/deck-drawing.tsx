@@ -119,7 +119,9 @@ interface DeckColumnProps {
  * One column of the deck: a conversation's 14 hidden activations, as gauges in the deck's rows.
  * Drawn at the deck's first column and placed by its transform, so its rows share one clip each.
  */
-function DeckColumn({ passes, deck, set, column, shade, clipPrefix, names, dx = 0, opacity = 1 }: DeckColumnProps) {
+const DeckColumn = React.memo(function DeckColumn(
+  { passes, deck, set, column, shade, clipPrefix, names, dx = 0, opacity = 1 }: DeckColumnProps
+) {
   const values = columnValues(passes, set, column);
   const { r, x: cx } = deck;
   const look = shading(faceOf(set, column), shade);
@@ -158,7 +160,7 @@ function DeckColumn({ passes, deck, set, column, shade, clipPrefix, names, dx = 
       </g>
     </g>
   );
-}
+});
 
 interface DeckSetProps {
   passes: readonly ForwardPass[];
@@ -173,13 +175,14 @@ interface DeckSetProps {
 
 /**
  * One set of the deck: up to 20 columns. Memoized, so a frame that only moves the set redraws none
- * of its columns.
+ * of its columns. Only the face columns take the shade, so a deeper shade redraws just those.
  */
-export const DeckSet = React.memo(function DeckSet({ columns, lastOpacity, ...props }: DeckSetProps) {
+export const DeckSet = React.memo(function DeckSet({ columns, lastOpacity, shade, ...props }: DeckSetProps) {
   return (
     <g data-testid={`deck-set-${props.set}`}>
       {Array.from({ length: columns }, (_, column) => (
-        <DeckColumn key={column} {...props} column={column} opacity={column === columns - 1 ? lastOpacity : 1} />
+        <DeckColumn key={column} {...props} column={column} shade={faceOf(props.set, column) === "inside" ? 0 : shade}
+          opacity={column === columns - 1 ? lastOpacity : 1} />
       ))}
     </g>
   );

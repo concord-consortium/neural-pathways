@@ -98,4 +98,17 @@ describe("DeckStack", () => {
       reads.mockRestore();
     }
   });
+
+  it("redraws only the face columns when the shade changes", () => {
+    const stack = deckStack(60);
+    const { rerender } = render(drawStack(stack));
+    const reads = jest.spyOn(deckLayout, "columnValues");
+    try {
+      rerender(drawStack({ ...stack, shade: stack.shade + 1 }));
+      // Set 0's 20 columns, and the last column of sets 1 and 2.
+      expect(reads).toHaveBeenCalledTimes(22);
+    } finally {
+      reads.mockRestore();
+    }
+  });
 });

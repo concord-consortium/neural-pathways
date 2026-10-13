@@ -320,6 +320,8 @@ describe("ExtractPathways", () => {
       fireEvent.click(button("Setup"));
       expect(state).toMatchObject({ setupDone: false, collected: 0, deckDone: false });
       expect(screen.queryByTestId("deck")).not.toBeInTheDocument();
+      act(() => jest.advanceTimersByTime(collectAllDuration(SIZES, 3, 20)));
+      expect(state).toMatchObject({ deckDone: false });
     });
 
     it("keeps where Collect All started when the view goes away during it", async () => {
