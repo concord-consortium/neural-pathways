@@ -87,6 +87,8 @@ export function pathwaysLayout(geometry: ExtractGeometry, size: number): Pathway
   const liftedDx = shownRight + COLUMN_GAP + lifted.r - lifted.x;
   const x = lifted.x + liftedDx;
   const zero = x + lifted.r + TRACK_GAP + BAR_MAX;
+  // LOADINGS has a row for each of the lifted column's 14 neurons, so lifted.ys[neuron] relies on the
+  // two matching. The real network's loadings must keep that.
   const bars = LOADINGS.flatMap((row, neuron) => row.map((loading, pathway) => ({
     neuron, pathway, loading, length: barLength(loading), zero, y: lifted.ys[neuron] + (pathway - 1) * BAR_PITCH,
   })));

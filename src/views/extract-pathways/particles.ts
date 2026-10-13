@@ -164,6 +164,7 @@ export function faceSources(geometry: ExtractGeometry, passes: readonly ForwardP
   for (let column = 0; column < columnsIn(0); column++) {
     deck.ys.forEach((_, row) => push(gauge(0, column, row)));
   }
+  // A partial last set has no full last column, so, like faceOf's shading, it adds no front-face sources.
   for (let set = 1; set < sets; set++) {
     if (columnsIn(set) === SET_SIZE) {
       deck.ys.forEach((_, row) => push(gauge(set, SET_SIZE - 1, row)));

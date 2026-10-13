@@ -9,8 +9,8 @@ import { setupDuration, setupSceneAt } from "./setup-timeline";
 /**
  * Extract Pathways' timeline, for a deck of `deckSize` conversations. The segment to marker 1 is
  * Setup; from n to n + 1, below the deck, collects conversation n; and a segment to DECK_MARKER is
- * Collect All Conversations, from wherever it starts,
- * and the segment to PATHWAYS_MARKER is Extract Pathways, from the deck.
+ * Collect All Conversations, from wherever it starts; and the segment to PATHWAYS_MARKER is
+ * Extract Pathways, from the deck.
  */
 export function extractTimeline(columnSizes: readonly number[], deckSize: number): StepTimeline<ExtractScene> {
   return {

@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useMemo, useRef } from "react";
-import { signColor } from "../../core/colors";
+import { RULE_COLOR, signColor } from "../../core/colors";
 import { ForwardPass } from "../../core/network/forward";
 import { cubicBezier } from "../../core/network-diagram/easing";
 import { ExtractGeometry } from "./extract-geometry";
@@ -9,8 +9,6 @@ import { faceSources, PARTICLE_R, particleAt, particlePlan, particleTarget, SOUR
 import { BAR_HEIGHT, BOX_SIDE, LABEL_GAP, PathwaysLayout } from "./pathways-layout";
 import { COPY_END_SCALE } from "./pathways-timeline";
 
-/** colors.scss's $rule: the gray a bar turns while its pathway is built from it. */
-const MUTED_COLOR = "#CCD3DD";
 /** The box's kick (the prototype's d1a-boxkick): keyframes of time and scale, each eased. */
 const KICK_KEYFRAMES: readonly [number, number][] = [[0, 1], [0.38, 1.1], [0.7, 0.98], [1, 1]];
 const kickEase = cubicBezier(0.34, 1.1, 0.5, 1);
@@ -76,7 +74,7 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
         return (
           <rect key={b} data-testid="loading-bar" x={bar.loading >= 0 ? bar.zero : bar.zero - width}
             y={bar.y - BAR_HEIGHT / 2} width={width} height={BAR_HEIGHT}
-            fill={mixColor(signColor(bar.loading), MUTED_COLOR, bars[b].muted)} />
+            fill={mixColor(signColor(bar.loading), RULE_COLOR, bars[b].muted)} />
         );
       })}
       {flying?.copies.map((copy, neuron) => {
@@ -101,7 +99,8 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
             <rect className="extract-drawing__box" x={box.x} y={box.cy - BOX_SIDE / 2} width={BOX_SIDE}
               height={BOX_SIDE} rx={BOX_CORNER}
               style={kick === undefined ? undefined : aboutCenter(`scale(${kickScale(kick)})`)} />
-            <text className="extract-drawing__pathway" x={box.x + BOX_SIDE + LABEL_GAP} y={box.cy + 4}>
+            <text className="extract-drawing__label extract-drawing__pathway" x={box.x + BOX_SIDE + LABEL_GAP}
+              y={box.cy + 4}>
               {`Pathway ${p + 1}`}
             </text>
           </g>
