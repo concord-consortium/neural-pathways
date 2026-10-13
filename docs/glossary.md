@@ -69,12 +69,16 @@ one thing, or one name for two things, settle it and add it here.
 
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
+- **set:** 20 columns of the deck that move as one. Collect All Conversations fills the first one a
+  column at a time and adds the rest behind it, up to 40.
+- **face:** one of the deck's visible surfaces: the right face is set 0's columns, the front face
+  is every set's last column, and the top is every column's top row.
 - **copy:** one flown circle in the lifted column or the deck.
 - **collection:** one press of Collect a Conversation, from the network running the conversation
   to its column landing in the deck. `collected` counts the ones done.
 - **stage:** a part of the extraction whose completion is stored: Setup (`setupDone`), the
-  collections (`collected`), and later the cube and the pathways. A stage still playing isn't
-  stored.
+  collections (`collected`), the deck (`deckDone`) and the pathways (`pathwaysDone`). A stage still
+  playing isn't stored.
 
 ## Layout
 

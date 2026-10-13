@@ -9,16 +9,22 @@ activations of conversations run through it, one column of the deck each.
   one full-width panel holding the drawing. The panel's head holds the shared Animate and speed
   control. There is no filter and no conversation panel.
 - `extract-pathways-state.ts`: the view's saved state, `ExtractPathwaysState`: whether Setup is
-  done, how many conversations are collected, and Animate and the speed. A Setup or collection
-  still playing isn't stored.
+  done, how many conversations are collected, whether the deck and the pathways are done, and
+  Animate and the speed. A stage still playing isn't stored.
 - `extract-steps.ts`: the buttons and the marker, on the shared step system in
   `src/core/steps/`.
-- `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `extract-timeline.ts`: what the
-  view draws at any moment, as pure functions of the marker and the time into a segment, at the
-  prototype's "Med" speed.
+- `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `collect-all-timeline.ts`,
+  `extract-timeline.ts`: what the view draws at any moment, as pure functions of the marker and the
+  time into a segment, at the prototype's "Med" speed.
 - `extract-geometry.ts`, `flight.ts`, `extract-drawing.tsx`: the canvas. The network sits in the
   middle, the lifted column in the right strip, the deck in the left. Copies of the hidden neurons
   fly on curved paths, landing in order and settling.
+- `deck-layout.ts`: the deck that Collect All Conversations builds: its size, its sets of 20, where
+  each set sits in deck radii, and the timings that depend on a column or a set.
+- `transitions.ts`: a value carried by CSS-style transitions, each starting from wherever the last
+  left it.
+- `deck-drawing.tsx`: the deck's sets, each memoized so a frame that only moves it redraws none of
+  its columns, with the depth shading of its faces.
 
 ## Size
 
@@ -37,7 +43,8 @@ title, the step row and the panel's head. In an Interactive 562 px tall, the pag
 ## Still to come
 
 The view still needs:
+- Extract Pathways;
+- picking a neuron or a pathway to see its loadings;
 - to fit the 562 px designed height;
-- Collect All Conversations and Extract Pathways;
 - the activation legend;
 - About.
