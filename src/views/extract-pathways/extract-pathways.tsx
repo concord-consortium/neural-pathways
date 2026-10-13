@@ -9,6 +9,7 @@ import { StepPlayer } from "../../core/steps/step-player";
 import { StepRow } from "../../core/steps/step-row";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
+import { deckSize } from "./deck-layout";
 import { ExtractDrawing } from "./extract-drawing";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 import { extractButtons, extractProgress, MAX_COLLECTED } from "./extract-steps";
@@ -39,8 +40,10 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
   const panelHeadId = useId();
   const { passes, scales } = indexPasses(toyNetwork, index);
   const limit = Math.min(MAX_COLLECTED, passes.length);
+  const size = deckSize(passes.length);
   const buttons = useMemo(() => extractButtons(limit), [limit]);
-  const player = useMemo(() => new StepPlayer(TIMELINE, extractProgress(state, limit), state), [state, limit]);
+  const player = useMemo(() => new StepPlayer(TIMELINE, extractProgress(state, limit, size), state),
+    [state, limit, size]);
   // Stop the player when the view unmounts. A layout effect, so no existing run can finish and
   // store its marker after the view is gone.
   useLayoutEffect(() => () => player.stop(), [player]);
