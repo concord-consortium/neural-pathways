@@ -9,12 +9,12 @@ const FIRST_LANDING = Math.round(LIFT_MS * 1.17);
 /** Between one copy landing and the next. */
 export const LAND_GAP = 80;
 /** How far a copy passes its mark before settling back. */
-const SETTLE_PX = 7;
+export const SETTLE_PX = 7;
 export const SETTLE_MS = 190;
 // x and y ease differently, so the path curves.
-const easeX = cubicBezier(0.7, 0, 0.75, 0.75);
+export const easeX = cubicBezier(0.7, 0, 0.75, 0.75);
 const easeY = cubicBezier(0.45, 0.05, 0.3, 1);
-const settleEase = cubicBezier(0.25, 0.9, 0.35, 1);
+export const settleEase = cubicBezier(0.25, 0.9, 0.35, 1);
 
 /** How long a flight of `count` copies takes, until the last has settled. */
 export function flightDuration(count: number): number {
