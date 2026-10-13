@@ -22,13 +22,14 @@ activations of conversations run through it, one column of the deck each.
 
 ## Size
 
-The minimum layout size (see `docs/accessibility.md`) is 943 × 679 px as an Interactive. Its width
+The minimum layout size (see `docs/accessibility.md`) is 993 × 679 px as an Interactive. Its width
 fits inside the designed size of 1024 × 562, but its height doesn't yet.
 
-The minimum layout width, 943 px, is the canvas's narrowest layout, 909 px (`minCanvasWidth` in
-`extract-geometry.ts`), with the panel's border and the app's 16 px gutters. The canvas holds the
-network, and a strip each side wide enough for the deck's columns collected by hand. Narrower, the
-canvas scrolls sideways inside its panel and the step row wraps, down to 320 px.
+The minimum layout width, 993 px, is the canvas's narrowest layout, 959 px (`minCanvasWidth` in
+`extract-geometry.ts`), with the panel's border and the app's 16 px gutters. At 959, the finished
+deck of 800 fits between the canvas's left edge and the lifted column with 10 px clear each side,
+and the left strip holds the deck's columns collected by hand. Narrower, the canvas scrolls
+sideways inside its panel and the step row wraps, down to 320 px.
 
 The minimum layout height, 679 px, comes from the canvas's 440 px (`CANVAS_HEIGHT`), below the
 title, the step row and the panel's head. In an Interactive 562 px tall, the page scrolls down.

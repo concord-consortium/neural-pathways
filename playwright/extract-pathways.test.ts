@@ -44,10 +44,10 @@ async function canvasIn(page: Page, width: number, canvasWidth: number) {
 /** The drawing's scroll region: a group named by its panel's heading. */
 const scrollRegion = (page: Page) => page.getByRole("group", { name: "The Network → Activated Pathways" });
 
-// 909 is the narrowest the canvas is laid out (minCanvasWidth).
+// 959 is the narrowest the canvas is laid out (minCanvasWidth): the finished deck needs the room.
 
 test("an Interactive just wide enough holds the canvas at full size without scrolling", async ({ page }) => {
-  expect(await canvasIn(page, 909 + INTERACTIVE_EXTRA, 909)).toEqual({ page: false, drawing: false });
+  expect(await canvasIn(page, 959 + INTERACTIVE_EXTRA, 959)).toEqual({ page: false, drawing: false });
   await expect(scrollRegion(page)).not.toHaveAttribute("tabindex");
 });
 
@@ -56,16 +56,16 @@ test("a wider Interactive widens the canvas to fill it", async ({ page }) => {
 });
 
 test("an Interactive a pixel too narrow scrolls the canvas sideways rather than scaling it down", async ({ page }) => {
-  expect(await canvasIn(page, 908 + INTERACTIVE_EXTRA, 909)).toEqual({ page: false, drawing: true });
+  expect(await canvasIn(page, 958 + INTERACTIVE_EXTRA, 959)).toEqual({ page: false, drawing: true });
   await expect(scrollRegion(page)).toHaveAttribute("tabindex", "0");
 });
 
 test("a much narrower Interactive scrolls only the canvas", async ({ page }) => {
-  expect(await canvasIn(page, 600, 909)).toEqual({ page: false, drawing: true });
+  expect(await canvasIn(page, 600, 959)).toEqual({ page: false, drawing: true });
 });
 
 test("the keyboard can reach and scroll a canvas too wide for its Interactive", async ({ page }) => {
-  await canvasIn(page, 600, 909);
+  await canvasIn(page, 600, 959);
   // The speed slider is the last stop in the panel's head, just before the canvas.
   await page.getByRole("slider", { name: "Animation speed" }).focus();
   await page.keyboard.press("Tab");
@@ -86,7 +86,7 @@ test("unavailable steps look unavailable in forced-colors mode", async ({ page }
 });
 
 test("the drawing keeps the focus when its Interactive widens and it stops scrolling", async ({ page }) => {
-  await canvasIn(page, 600, 909);
+  await canvasIn(page, 600, 959);
   await scrollRegion(page).focus();
   await page.setViewportSize({ width: 1300, height: 900 });
   await expect.poll(() => page.locator(".extract-drawing").evaluate(e => e.scrollWidth > e.clientWidth)).toBe(false);

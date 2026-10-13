@@ -1,4 +1,5 @@
 import { layoutNetwork, NetworkLayout, Point } from "../../core/network-diagram/layout";
+import { deckWidth, MAX_DECK } from "./deck-layout";
 import { MAX_COLLECTED } from "./extract-steps";
 
 export const CANVAS_HEIGHT = 440;
@@ -17,7 +18,7 @@ const LIFT_PAD_BOTTOM = 10;
 const DECK_BAND = 34;
 const DECK_PAD_TOP = 2;
 const DECK_PAD_BOTTOM = 10;
-/** Clear left of the last column collected by hand on the narrowest canvas, as below the deck. */
+/** Clear beside the deck: left of the last column collected by hand, and either side of the finished deck. */
 const DECK_PAD_SIDE = 10;
 /** With DECK_COLUMNS, what the prototype divides the height by to size the deck. */
 const DECK_ROWS_EXTRA = 27;
@@ -26,22 +27,6 @@ const DECK_ROWS_EXTRA = 27;
 function deckRadius(nodeR: number): number {
   const room = CANVAS_HEIGHT - DECK_BAND - DECK_PAD_TOP - DECK_PAD_BOTTOM;
   return Math.min(nodeR, Math.floor((room / (DECK_COLUMNS + DECK_ROWS_EXTRA)) * 10) / 10);
-}
-
-/**
- * The narrowest the canvas is laid out: the network, and a strip each side wide enough that the
- * deck's columns collected by hand fit in the left one (see `deckPosition`). A narrower
- * panel scrolls the drawing sideways rather than scaling it down, since text scaled to fit stops
- * growing when the page is zoomed (WCAG 1.4.4).
- *
- * The prototype has no minimum: it widens its canvas to whatever the panel has, so wherever the
- * panel is at least this wide, the two lay out alike.
- */
-export function minCanvasWidth(columnSizes: readonly number[]): number {
-  const nodeR = layoutNetwork(columnSizes, NETWORK_WIDTH, CANVAS_HEIGHT).radius;
-  // The deck's first column is centered in its strip; deckPosition places the rest.
-  const halfStrip = Math.ceil(MAX_COLLECTED * deckRadius(nodeR) + DECK_PAD_SIDE);
-  return NETWORK_WIDTH + 4 * halfStrip;
 }
 
 /** A column of the 14 copies: its center x, each row's y, and the radius. */
@@ -64,12 +49,8 @@ export interface ExtractGeometry {
   deck: ColumnGeometry;
 }
 
-/**
- * The canvas laid out for a host `hostWidth` wide: as wide as the host, in whole pixels so it never
- * overflows it, but no narrower than `minCanvasWidth`.
- */
-export function extractGeometry(columnSizes: readonly number[], hostWidth: number): ExtractGeometry {
-  const width = Math.max(minCanvasWidth(columnSizes), Math.floor(hostWidth));
+/** The canvas laid out at exactly `width`, with no minimum. `extractGeometry` is what the view uses. */
+export function canvasLayout(columnSizes: readonly number[], width: number): ExtractGeometry {
   const height = CANVAS_HEIGHT;
   const network = layoutNetwork(columnSizes, NETWORK_WIDTH, height);
   const networkX = Math.round((width - NETWORK_WIDTH) / 2);
@@ -100,6 +81,38 @@ export function extractGeometry(columnSizes: readonly number[], hostWidth: numbe
   };
 
   return { width, height, networkX, network, hidden, lifted, deck };
+}
+
+/**
+ * The canvas laid out for a host `hostWidth` wide: as wide as the host, in whole pixels so it never
+ * overflows it, but no narrower than `minCanvasWidth`.
+ */
+export function extractGeometry(columnSizes: readonly number[], hostWidth: number): ExtractGeometry {
+  return canvasLayout(columnSizes, Math.max(minCanvasWidth(columnSizes), Math.floor(hostWidth)));
+}
+
+/**
+ * The narrowest the canvas is laid out: wide enough for the network with a strip each side that
+ * holds the deck's columns collected by hand, and for the finished deck of 800 to fit its room, the
+ * canvas left of the lifted column, with DECK_PAD_SIDE clear each side. A narrower panel scrolls
+ * the drawing sideways rather than scaling it down, since text scaled to fit stops growing when
+ * the page is zoomed (WCAG 1.4.4).
+ *
+ * The prototype has no minimum: it widens its canvas to whatever the panel has.
+ */
+export function minCanvasWidth(columnSizes: readonly number[]): number {
+  const deckR = deckRadius(layoutNetwork(columnSizes, NETWORK_WIDTH, CANVAS_HEIGHT).radius);
+  // The deck's first column is centered in its strip; deckPosition places the rest.
+  const halfStrip = Math.ceil(MAX_COLLECTED * deckR + DECK_PAD_SIDE);
+  const needed = deckR * deckWidth(MAX_DECK) + 2 * DECK_PAD_SIDE;
+  let width = NETWORK_WIDTH + 4 * halfStrip;
+  for (;;) {
+    const { lifted } = canvasLayout(columnSizes, width);
+    if (lifted.x - lifted.r >= needed) {
+      return width;
+    }
+    width++;
+  }
 }
 
 /**
