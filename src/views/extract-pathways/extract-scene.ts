@@ -2,6 +2,7 @@ import { emptyScene, fullScene, Scene } from "../../core/network-diagram/scene";
 import { Marker } from "../../core/steps/step-player";
 import { restOffset, setCount, setSize } from "./deck-layout";
 import { flightDuration } from "./flight";
+import { barLengths, PATHWAYS } from "./pathways-layout";
 
 /**
  * How strongly the hidden neurons are spotlit while copies of them fly out of the network:
@@ -44,6 +45,22 @@ export interface StackScene {
   done: boolean;
 }
 
+/** What Extract Pathways adds to the scene. PathwaysLayer and ParticleCanvas draw it. */
+export interface PathwaysScene {
+  /** How far the lifted column has moved to make room, 0–1. */
+  slide: number;
+  /** Timeline time into the particles' flight, while they fly. */
+  particles: number | undefined;
+  /** The 42 bars, neuron by neuron, once the particles start: how far grown and how gray, each 0–1. */
+  bars: { grown: number; muted: number }[] | undefined;
+  /** The copies of one pathway's bars in flight to its box: each one's progress and opacity. */
+  flying: { pathway: number; copies: { progress: number; opacity: number }[] } | undefined;
+  /** Each box's opacity, and how far its latest kick has played, 0–1, while one plays. */
+  boxes: { opacity: number; kick: number | undefined }[];
+  lines: number;
+  done: boolean;
+}
+
 /** What Extract Pathways draws at one moment. The timelines build these; ExtractDrawing draws them. */
 export interface ExtractScene {
   /** The network: its fills, edges, answer and spotlight. */
@@ -60,6 +77,8 @@ export interface ExtractScene {
   deck: { conversation: number; flight: number }[];
   /** The deck once Collect All has started; the columns collected by hand are its first. */
   stack: StackScene | undefined;
+  /** What Extract Pathways adds, once it has started. */
+  pathways: PathwaysScene | undefined;
 }
 
 /** How many hidden units there are: every layer but the first and last. */
@@ -87,6 +106,7 @@ export function restScene(columnSizes: readonly number[], marker: Marker): Extra
     lifted: marker >= 1 ? { flight: landed, opacity: 1 - spotlight, labelOpacity: 1 } : undefined,
     deck: Array.from({ length: collected }, (_, c) => ({ conversation: c + 1, flight: landed })),
     stack: undefined,
+    pathways: undefined,
   };
 }
 
@@ -114,5 +134,26 @@ export function stackRestScene(columnSizes: readonly number[], size: number): Ex
   const scene = restScene(columnSizes, 1);
   scene.networkOpacity = 0;
   scene.stack = deckStack(size);
+  return scene;
+}
+
+/** The pathways when Extract Pathways is done. */
+export function finishedPathways(): PathwaysScene {
+  return {
+    slide: 1,
+    particles: undefined,
+    bars: barLengths().map(() => ({ grown: 1, muted: 0 })),
+    flying: undefined,
+    boxes: Array.from({ length: PATHWAYS }, () => ({ opacity: 1, kick: undefined })),
+    lines: 1,
+    done: true,
+  };
+}
+
+/** The scene resting at the pathways: the deck slid half off the canvas, and the finished pathways beside it. */
+export function pathwaysRestScene(columnSizes: readonly number[], size: number): ExtractScene {
+  const scene = stackRestScene(columnSizes, size);
+  scene.stack!.slide = 1;
+  scene.pathways = finishedPathways();
   return scene;
 }

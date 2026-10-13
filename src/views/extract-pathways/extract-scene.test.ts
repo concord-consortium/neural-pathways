@@ -1,6 +1,6 @@
 import { emptyScene, fullScene } from "../../core/network-diagram/scene";
 import { setOffset } from "./deck-layout";
-import { deckStack, hiddenCount, restScene, stackRestScene } from "./extract-scene";
+import { deckStack, hiddenCount, pathwaysRestScene, restScene, stackRestScene } from "./extract-scene";
 
 const SIZES = [10, 8, 6, 2];
 const LANDED = 2166;
@@ -63,5 +63,18 @@ describe("deckStack", () => {
   it("centers a lone set on its own columns", () => {
     expect(deckStack(7).sets).toEqual([{ offset: 3, shift: 0, opacity: 1, columns: 7, lastOpacity: 1 }]);
     expect(deckStack(7).shade).toBe(0);
+  });
+});
+
+describe("pathwaysRestScene", () => {
+  it("is the deck slid half off the canvas, and the finished pathways", () => {
+    const scene = pathwaysRestScene(SIZES, 800);
+    expect(scene.stack).toMatchObject({ slide: 1, done: true });
+    expect(scene.pathways).toMatchObject({
+      slide: 1, particles: undefined, flying: undefined, lines: 1, done: true,
+      boxes: [1, 2, 3].map(() => ({ opacity: 1, kick: undefined })),
+    });
+    expect(scene.pathways!.bars).toHaveLength(42);
+    expect(scene.pathways!.bars!.every(bar => bar.grown === 1 && bar.muted === 0)).toBe(true);
   });
 });
