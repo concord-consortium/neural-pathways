@@ -6,9 +6,10 @@ import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import { collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
-import { ExtractScene, restScene } from "./extract-scene";
+import { ExtractScene, restScene, stackRestScene } from "./extract-scene";
 import { extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { flightDuration } from "./flight";
 import { setupSceneAt } from "./setup-timeline";
@@ -196,5 +197,34 @@ describe("ExtractDrawing", () => {
     unmount();
     renderDrawing(restScene(SIZES, 2));
     expect(screen.getByText("Conversation 1")).not.toHaveAttribute("style");
+  });
+
+  it("draws the finished deck in place of the network once Collect All is done", () => {
+    renderDrawing(stackRestScene(SIZES, 20));
+    expect(screen.getByRole(
+      "img", { name: "The network's 14 hidden neurons lifted out, and all 20 conversations collected." },
+    )).toBeInTheDocument();
+    expect(screen.queryByTestId("node-1-0")).not.toBeInTheDocument();
+    expect(screen.getByText("20 Conversations")).toBeInTheDocument();
+    expect(screen.getAllByTestId(/^deck-0-/)).toHaveLength(20);
+    expect(screen.queryAllByTestId(/^deck-column-/)).toHaveLength(0);
+  });
+
+  it("describes the deck still filling by the conversations collected by hand", () => {
+    renderDrawing(collectAllSceneAt(SIZES, 3, 20, HANDOVER_MS + 100));
+    expect(screen.getByRole(
+      "img", { name: "The network, with its 14 hidden neurons lifted out and 3 conversations collected." },
+    )).toBeInTheDocument();
+  });
+
+  it("fades the network and its label as a whole while Collect All hides it", () => {
+    renderDrawing(collectAllSceneAt(SIZES, 3, 20, 650));
+    const opacity = Number(screen.getByTestId("network").getAttribute("opacity"));
+    expect(opacity).toBeGreaterThan(0);
+    expect(opacity).toBeLessThan(1);
+    // eslint-disable-next-line testing-library/no-node-access -- the label's fade is on its parent group
+    const labelOpacity = Number(screen.getByText("Conversation 3").parentElement!.getAttribute("opacity"));
+    expect(labelOpacity).toBeGreaterThan(0);
+    expect(labelOpacity).toBeLessThan(1);
   });
 });
