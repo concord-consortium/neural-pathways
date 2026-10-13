@@ -1,8 +1,7 @@
 import React from "react";
+import { ViewPlaceholder } from "../../core/view-placeholder/view-placeholder";
+import about from "./about.md";
 
 export const Correlations: React.FC = () => (
-  <div className="correlations">
-    <h1>Correlations</h1>
-    <p>Coming soon.</p>
-  </div>
+  <ViewPlaceholder className="correlations" title="Correlations" about={about} />
 );

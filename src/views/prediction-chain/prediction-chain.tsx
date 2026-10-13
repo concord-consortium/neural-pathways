@@ -1,8 +1,7 @@
 import React from "react";
+import { ViewPlaceholder } from "../../core/view-placeholder/view-placeholder";
+import about from "./about.md";
 
 export const PredictionChain: React.FC = () => (
-  <div className="prediction-chain">
-    <h1>Prediction Chain</h1>
-    <p>Coming soon.</p>
-  </div>
+  <ViewPlaceholder className="prediction-chain" title="Prediction Chain" about={about} />
 );

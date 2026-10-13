@@ -1,8 +1,7 @@
 import React from "react";
+import { ViewPlaceholder } from "../../core/view-placeholder/view-placeholder";
+import about from "./about.md";
 
 export const InvestigatePathways: React.FC = () => (
-  <div className="investigate-pathways">
-    <h1>Investigate Pathways</h1>
-    <p>Coming soon.</p>
-  </div>
+  <ViewPlaceholder className="investigate-pathways" title="Investigate Pathways" about={about} />
 );
