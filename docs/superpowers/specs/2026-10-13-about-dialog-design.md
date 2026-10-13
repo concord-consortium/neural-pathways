@@ -36,7 +36,7 @@ Line numbers below refer to that file:
 | Dragging | Not built. | The prototype's header drag and Alt+Arrow moves are more to build and test, and nothing in the lesson depends on them. |
 | The dialog's heading | "About" and the view's title, such as "About Trace a Case". | It matches the h1 the student sees above. The prototype's student-facing names ("Looking Inside a Neural Network") appear nowhere else in the app. |
 | Whether About reopens when the student returns to the view | No. Open or closed is React state, not view state. | The ticket's note: it is momentary state, and not worth keeping. |
-| How the text is written | Markdown, one `about.md` in each view's folder, rendered in the browser with `marked`. | Whoever writes the final copy edits markdown, not JSX. `marked` is small, has no dependencies and ships CommonJS, so Jest loads it as is. `react-markdown` would avoid `innerHTML`, but it and its dependencies are ESM-only. Rendering at build time would need a custom webpack loader and a matching Jest transform. |
+| How the text is written | Markdown, one `about.md` in each view's folder, rendered in the browser with `marked`. | Whoever writes the final copy edits markdown, not JSX. `marked` is small and has no dependencies. It has been ESM-only since v16, so Jest has to transform it, but that is one entry in `transformIgnorePatterns`. `react-markdown` would avoid `innerHTML`, but it and its many dependencies are ESM-only too, and each would need that entry. Rendering at build time would need a custom webpack loader and a matching Jest transform. |
 | The text itself | The prototype's `SIMS[...].about`, as is. | As the ticket says. That includes the "Placeholder." opening sentences and Trace a Case's mention of clicking neurons, which isn't built yet. The final copy is a change to the markdown alone. |
 
 ## The component: `AboutButton`
@@ -102,6 +102,8 @@ and `$ink-3` is the nearest token), 8 px corners, a
   at other text.
 - The dialog's title is the `h2`, so the files use `###` for their section headings, as the
   prototype's `h3`s.
+- `marked` is ESM-only, so Jest's `transformIgnorePatterns` lets it through to the transform:
+  `/node_modules/(?!marked/)`.
 - Webpack imports `.md` files as text (`type: 'asset/source'`). Jest gets a transform that does the
   same, beside the SVG one in `jest/`. A `declare module "*.md"` gives the import its type.
 
