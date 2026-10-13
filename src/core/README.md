@@ -41,6 +41,12 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   form, are in `docs/view-state.md`.
 - `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
   it between views.
+- `about/`: `AboutButton`, a view's About button and the modal dialog with its About text. Each
+  view keeps its text in an `about.md` beside its code, in markdown, and `marked` renders it. Webpack
+  imports an `.md` file as its text, and so does `jest/md-transform.js` under Jest. `markdown.d.ts`
+  types the import.
+- `view-placeholder/`: `ViewPlaceholder`, a view that isn't built yet: its title, its About button
+  and a note.
 - `network/`: the network types, the toy network Trace a Case uses until there is one built from
   the real alien3 activations (`toy-network.ts`), the forward pass, and the scales the diagram
   draws against (`network-scales.ts`). `index-passes.ts` computes a dataset index's passes and
