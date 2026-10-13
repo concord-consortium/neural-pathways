@@ -1,7 +1,8 @@
 # Extract Pathways
 
-The lesson's second view: lift the 14 hidden neurons out of the network, then collect the
-activations of conversations run through it, one column of the deck each.
+The lesson's second view: lift the 14 hidden neurons out of the network, collect the activations
+of conversations run through it into a deck, one column each, then draw the three pathways from
+the deck.
 
 ## What's here
 
@@ -14,8 +15,8 @@ activations of conversations run through it, one column of the deck each.
 - `extract-steps.ts`: the buttons and the marker, on the shared step system in
   `src/core/steps/`.
 - `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `collect-all-timeline.ts`,
-  `extract-timeline.ts`: what the view draws at any moment, as pure functions of the marker and the
-  time into a segment, at the prototype's "Med" speed.
+  `extract-timeline.ts`, `pathways-timeline.ts`: what the view draws at any moment, as pure
+  functions of the marker and the time into a segment, at the prototype's "Med" speed.
 - `extract-geometry.ts`, `flight.ts`, `extract-drawing.tsx`: the canvas. The network sits in the
   middle, the lifted column in the right strip, the deck in the left. Copies of the hidden neurons
   fly on curved paths, landing in order and settling.
@@ -25,6 +26,12 @@ activations of conversations run through it, one column of the deck each.
   left it.
 - `deck-drawing.tsx`: the deck's sets, each memoized so a frame that only moves it redraws none of
   its columns, with the depth shading of its faces.
+- `pathways-layout.ts`: the stand-in loadings, and where the loading bars, their zero rules and the
+  pathway boxes go once the deck and the lifted column have slid.
+- `particles.ts`: the particles that carry the deck's readings to the bars: a seeded plan of their
+  timing, their curves, and the gauges on the deck's faces they leave from.
+- `pathways-drawing.tsx`: the bars, the copies flying to the boxes, the boxes and the lines, in
+  SVG; and the particles, painted on a canvas over the SVG while they fly.
 
 ## Size
 
@@ -43,7 +50,6 @@ title, the step row and the panel's head. In an Interactive 562 px tall, the pag
 ## Still to come
 
 The view still needs:
-- Extract Pathways;
 - picking a neuron or a pathway to see its loadings;
 - to fit the 562 px designed height;
 - the activation legend;

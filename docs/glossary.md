@@ -81,6 +81,12 @@ one thing, or one name for two things, settle it and add it here.
 - **stage:** a part of the extraction whose completion is stored: Setup (`setupDone`), the
   collections (`collected`), the deck (`deckDone`) and the pathways (`pathwaysDone`). A stage still
   playing isn't stored.
+- **loading bar:** one loading, drawn beside the lifted column: three to a neuron, one per
+  pathway, growing from zero by its loading's size, in its sign's color.
+- **particle:** one dot carrying a reading from the deck's faces to a loading bar while Extract
+  Pathways builds the bars. Drawn on a canvas, not in the SVG.
+- **pathway box:** the square a pathway is drawn as, built from copies of its 14 loading bars.
+- **line:** a loading's connector, from its bar's zero to its pathway box.
 
 ## Layout
 
