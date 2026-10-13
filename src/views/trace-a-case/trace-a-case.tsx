@@ -1,5 +1,6 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
+import { AboutButton } from "../../core/about/about-button";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { ConversationWords } from "../../core/conversation-card/conversation-words";
 import { ActualLabel } from "../../core/conversation-card/actual-label";
@@ -20,6 +21,7 @@ import { useDatasetIndex } from "../../core/use-dataset-index";
 import { StepPlayer } from "../../core/steps/step-player";
 import { StepRow } from "../../core/steps/step-row";
 import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
+import about from "./about.md";
 import "./trace-a-case.scss";
 
 /** Units in each drawn layer. */
@@ -87,7 +89,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
 
   // The filter comes first: it sits over the card in both layouts. The card comes before the steps,
   // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
-  // card says so, and the steps and the network are left out.
+  // card says so, and the steps and the network are left out, but the steps cell stays to hold About.
   return (
     <div className="trace-a-case__layout" style={LAYOUT_STYLE}>
       <div className="trace-a-case__filter">
@@ -105,24 +107,25 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
             </>}
         </ConversationCard>
       </div>
+      <div className="trace-a-case__steps">
+        {player && place !== undefined && <StepRow player={player} buttons={TRACE_BUTTONS} />}
+        <div className="trace-a-case__about">
+          <AboutButton title="Trace a Case" markdown={about} />
+        </div>
+      </div>
       {player && place !== undefined &&
-        <>
-          <div className="trace-a-case__steps">
-            <StepRow player={player} buttons={TRACE_BUTTONS} />
+        <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
+          <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
+          <div className="trace-a-case__diagram">
+            <Observer>
+              {() => (
+                <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
+                  outputLabels={alien3Dataset.classificationLabels} scene={player.scene}
+                  headingId={networkHeadId} />
+              )}
+            </Observer>
           </div>
-          <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
-            <h2 id={networkHeadId} className="trace-a-case__network-head">The Network</h2>
-            <div className="trace-a-case__diagram">
-              <Observer>
-                {() => (
-                  <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
-                    outputLabels={alien3Dataset.classificationLabels} scene={player.scene}
-                    headingId={networkHeadId} />
-                )}
-              </Observer>
-            </div>
-          </section>
-        </>}
+        </section>}
     </div>
   );
 });

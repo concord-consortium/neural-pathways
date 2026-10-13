@@ -35,9 +35,13 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
       return;
     }
     const view = { width: document.documentElement.clientWidth, height: document.documentElement.clientHeight };
-    const { top, left } = placeDialog(button.getBoundingClientRect(), dialog.getBoundingClientRect(), view);
+    // Measured without the last placement's limit, which a resize may have outgrown.
+    dialog.style.maxHeight = "";
+    const { top, left, maxHeight } =
+      placeDialog(button.getBoundingClientRect(), dialog.getBoundingClientRect(), view);
     dialog.style.top = `${top}px`;
     dialog.style.left = `${left}px`;
+    dialog.style.maxHeight = `${maxHeight}px`;
   }, []);
 
   // The dialog's content renders with `open`, so it is there to measure and focus. Focus goes to

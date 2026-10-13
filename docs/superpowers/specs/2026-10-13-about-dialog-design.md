@@ -80,9 +80,11 @@ It owns the button, the `<dialog>`, and whether the dialog is open. Views can't 
   the About button explicitly. Safari doesn't focus a button when it is clicked, so leaving it to
   the browser would drop focus to the page there.
 - **Position:** fixed to the window, 6 px below the About button with right edges aligned, as in
-  the prototype. It is kept 10 px inside the window on every side: if it doesn't fit below the
-  button, it moves up until it does. It is placed when it opens and again when the window resizes.
-  The backdrop is clear, as the prototype has none.
+  the prototype, and kept 10 px inside the window on every side. While there are at least 200 px
+  below the button, it hangs there, no taller than that room, and its body scrolls, as the
+  prototype's does. With less room below, as when the button is near or past the window's bottom,
+  it moves up until it fits. It is placed when it opens and again when the window resizes. The
+  backdrop is clear, as the prototype has none.
 - **Size:** 400 px wide, but never wider than the window less 20 px, so it works at 320 px. Never
   taller than the window less 20 px. The header stays put and the body scrolls.
 - **The body** is a scroller (see `docs/accessibility.md`). It uses `useKeyboardScrollable`, so it

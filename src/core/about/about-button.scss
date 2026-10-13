@@ -27,8 +27,9 @@
   color: #fff;
 }
 
-// Placed by the script below its button, and kept inside the window: 400 px wide at most, and never
-// wider or taller than the window less its 10 px margins. Its body scrolls.
+// Placed by the script below its button, which also limits its height to the room there (see
+// place-dialog.ts). 400 px wide at most, and never wider or taller than the window less its 10 px
+// margins. Its body scrolls.
 .about-dialog {
   position: fixed;
   inset: auto;
