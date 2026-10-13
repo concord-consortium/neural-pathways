@@ -39,6 +39,12 @@ describe("placeDialog", () => {
       .toEqual({ top: 10, left: 600, maxHeight: 542 });
   });
 
+  // The page can scroll under a modal dialog, so a resize can find the button above the window.
+  it("keeps it inside the window when the button has scrolled above it", () => {
+    expect(placeDialog({ right: 1000, bottom: -579 }, dialog, view))
+      .toEqual({ top: 10, left: 600, maxHeight: 542 });
+  });
+
   it("puts it at the left margin when the window is narrower than it", () => {
     expect(placeDialog({ right: 300, bottom: 120 }, { width: 300, height: 300 }, { width: 320, height: 562 }))
       .toEqual({ top: 126, left: 10, maxHeight: 426 });

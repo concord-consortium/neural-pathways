@@ -74,7 +74,12 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
     const stops = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("button, [tabindex='0']"));
     const first = stops[0];
     const last = stops[stops.length - 1];
-    if (!event.shiftKey && document.activeElement === last) {
+    // A click on the text leaves focus on the dialog itself, outside its controls, so Tab starts at
+    // one end of them.
+    if (!stops.includes(document.activeElement as HTMLElement)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
       event.preventDefault();
       first.focus();
     } else if (event.shiftKey && document.activeElement === first) {

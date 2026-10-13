@@ -91,6 +91,14 @@ describe("AboutButton", () => {
     expect(close).toHaveFocus();
   });
 
+  // A click on the dialog's text moves focus to the dialog itself, which is neither of its controls.
+  it("keeps Tab inside it when focus is on none of its controls", () => {
+    open();
+    act(() => screen.getByRole("button", { name: "Close" }).blur());
+    expect(fireEvent.keyDown(dialog(), { key: "Tab", shiftKey: true })).toBe(false);
+    expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+  });
+
   it("leaves other keys alone", () => {
     open();
     expect(fireEvent.keyDown(screen.getByRole("button", { name: "Close" }), { key: "a" })).toBe(true);

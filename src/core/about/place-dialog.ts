@@ -18,7 +18,8 @@ const MIN_ROOM_BELOW = 200;
  */
 export function placeDialog(button: { right: number; bottom: number }, dialog: Size, view: Size) {
   const left = Math.max(MARGIN, Math.min(button.right - dialog.width, view.width - MARGIN - dialog.width));
-  const below = button.bottom + DROP;
+  // Never above the top margin: the page can scroll under the dialog, taking the button out of view.
+  const below = Math.max(MARGIN, button.bottom + DROP);
   const roomBelow = view.height - MARGIN - below;
   if (roomBelow >= MIN_ROOM_BELOW) {
     return { top: below, left, maxHeight: roomBelow };
