@@ -18,7 +18,6 @@ import "./extract-pathways.scss";
 
 /** Units in each drawn layer. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
-const TIMELINE = extractTimeline(COLUMN_SIZES);
 const PANEL_TITLE = "The Network → Activated Pathways";
 
 /** Lift the hidden neurons out of the network and collect conversations' activations from them. */
@@ -42,8 +41,9 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
   const limit = Math.min(MAX_COLLECTED, passes.length);
   const size = deckSize(passes.length);
   const buttons = useMemo(() => extractButtons(limit), [limit]);
-  const player = useMemo(() => new StepPlayer(TIMELINE, extractProgress(state, limit, size), state),
-    [state, limit, size]);
+  const timeline = useMemo(() => extractTimeline(COLUMN_SIZES, size), [size]);
+  const player = useMemo(() => new StepPlayer(timeline, extractProgress(state, limit, size), state),
+    [timeline, state, limit, size]);
   // Stop the player when the view unmounts. A layout effect, so no existing run can finish and
   // store its marker after the view is gone.
   useLayoutEffect(() => () => player.stop(), [player]);

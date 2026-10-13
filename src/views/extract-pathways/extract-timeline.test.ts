@@ -1,10 +1,11 @@
+import { collectAllDuration, collectAllSceneAt } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
-import { restScene } from "./extract-scene";
+import { restScene, stackRestScene } from "./extract-scene";
 import { extractTimeline } from "./extract-timeline";
 import { setupDuration, setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
-const timeline = extractTimeline(SIZES);
+const timeline = extractTimeline(SIZES, 20);
 
 describe("extractTimeline", () => {
   it("times the segment to 1 as Setup, and the segment to n + 1 as collecting conversation n", () => {
@@ -20,5 +21,19 @@ describe("extractTimeline", () => {
   it("draws a frame of the run playing from Setup's or the collection's timeline", () => {
     expect(timeline.sceneAt(0, { button: "setup", from: 0, to: 1, t: 900 })).toEqual(setupSceneAt(SIZES, 900));
     expect(timeline.sceneAt(2, { button: "collect", from: 2, to: 3, t: 900 })).toEqual(collectSceneAt(SIZES, 2, 900));
+  });
+
+  it("times a segment to the deck as Collect All, from where it starts", () => {
+    expect(timeline.duration({ from: 1, to: 12 })).toBe(collectAllDuration(SIZES, 0, 20));
+    expect(timeline.duration({ from: 5, to: 12 })).toBe(collectAllDuration(SIZES, 4, 20));
+  });
+
+  it("rests on the finished deck at the deck's marker", () => {
+    expect(timeline.sceneAt(12)).toEqual(stackRestScene(SIZES, 20));
+  });
+
+  it("draws a frame of Collect All from Collect All's timeline", () => {
+    expect(timeline.sceneAt(4, { button: "collect-all", from: 4, to: 12, t: 900 }))
+      .toEqual(collectAllSceneAt(SIZES, 3, 20, 900));
   });
 });

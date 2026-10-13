@@ -40,19 +40,19 @@ describe("extractButtons", () => {
   const buttons = extractButtons(MAX_COLLECTED);
   const segments = (marker: number) => buttons.map(b => b.segmentToPlayWhenAt(marker));
 
-  it("are Setup, Collect a Conversation and the two steps still to come", () => {
+  it("are Setup, Collect a Conversation, Collect All Conversations and Extract Pathways", () => {
     expect(buttons.map(b => b.label))
       .toEqual(["Setup", "Collect a Conversation", "Collect All Conversations", "Extract Pathways"]);
     expect(buttons.every(b => b.showAsCurrentWhenAt === undefined)).toBe(true);
   });
 
   it.each<[number, unknown[]]>([
-    [0, [{ from: 0, to: 1 }, { from: 1, to: 2 }, undefined, undefined]],
-    [1, [{ from: 0, to: 1 }, { from: 1, to: 2 }, undefined, undefined]],
-    [5, [{ from: 0, to: 1 }, { from: 5, to: 6 }, undefined, undefined]],
-    [11, [{ from: 0, to: 1 }, undefined, undefined, undefined]],
-    [DECK_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, undefined, undefined]],
-    [PATHWAYS_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, undefined, undefined]],
+    [0, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
+    [1, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
+    [5, [{ from: 0, to: 1 }, { from: 5, to: 6 }, { from: 5, to: DECK_MARKER }, undefined]],
+    [11, [{ from: 0, to: 1 }, undefined, { from: 11, to: DECK_MARKER }, undefined]],
+    [DECK_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
+    [PATHWAYS_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
   ])("at marker %p play %j", (marker, expected) => {
     expect(segments(marker)).toEqual(expected);
   });

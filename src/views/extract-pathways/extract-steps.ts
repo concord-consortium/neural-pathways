@@ -42,7 +42,8 @@ export function extractProgress(state: ExtractPathwaysState, limit: number, deck
 /**
  * Setup always starts over. Collect a Conversation collects the next one, jumping Setup to its end
  * first if it isn't done, until `limit` are in; from the deck or the pathways it starts the
- * collecting over. Collect All Conversations and Extract Pathways are not built yet.
+ * collecting over. Collect All Conversations builds the deck from wherever the collecting stopped, or
+ * from the start once the deck is done. Extract Pathways is not built yet.
  */
 export function extractButtons(limit: number): readonly StepButton[] {
   return [
@@ -58,7 +59,11 @@ export function extractButtons(limit: number): readonly StepButton[] {
         return from - 1 < limit ? { from, to: from + 1 } : undefined;
       },
     },
-    { key: "collect-all", label: "Collect All Conversations", segmentToPlayWhenAt: () => undefined },
+    {
+      key: "collect-all",
+      label: "Collect All Conversations",
+      segmentToPlayWhenAt: marker => ({ from: marker >= DECK_MARKER ? 1 : Math.max(marker, 1), to: DECK_MARKER }),
+    },
     { key: "extract", label: "Extract Pathways", segmentToPlayWhenAt: () => undefined },
   ];
 }

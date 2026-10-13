@@ -2,6 +2,7 @@ import { test } from "./lib/base-url";
 import { expect, Page } from "@playwright/test";
 
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
+const DECK = "The network's 14 hidden neurons lifted out, and all 800 conversations collected.";
 
 async function open(page: Page, reducedMotion: "reduce" | "no-preference" = "reduce") {
   await page.emulateMedia({ reducedMotion });
@@ -80,9 +81,8 @@ test("unavailable steps look unavailable in forced-colors mode", async ({ page }
   await open(page);
   const color = (name: string) =>
     page.getByRole("button", { name }).evaluate(element => getComputedStyle(element).color);
-  // Setup is available; Collect All Conversations and Reset aren't, at the start.
-  expect(await color("Collect All Conversations")).not.toBe(await color("Setup"));
-  expect(await color("Reset")).toBe(await color("Collect All Conversations"));
+  // Setup is available and Reset isn't, at the start.
+  expect(await color("Reset")).not.toBe(await color("Setup"));
 });
 
 test("the drawing keeps the focus when its Interactive widens and it stops scrolling", async ({ page }) => {
@@ -128,7 +128,7 @@ test("Collect a Conversation stops after ten", async ({ page }) => {
   await expect(collect).toBeDisabled();
   // aria-disabled, not disabled, so the focus stays on it.
   await expect(collect).toBeFocused();
-  await expect(page.getByRole("button", { name: "Collect All Conversations" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Collect All Conversations" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Extract Pathways" })).toBeDisabled();
 });
 
@@ -168,4 +168,49 @@ test("in a narrow window, Animate and the speed wrap below the panel's title", a
   const title = await page.getByRole("heading", { name: "The Network → Activated Pathways" }).boundingBox();
   expect(controls!.x + controls!.width).toBeLessThanOrEqual(head!.x + head!.width);
   expect(controls!.y).toBeGreaterThanOrEqual(title!.y + title!.height);
+});
+
+test("Collect All Conversations builds the deck of all 800", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  await expect(page.getByRole("img", { name: DECK })).toBeVisible();
+  await expect(page.getByText("800 Conversations")).toBeVisible();
+});
+
+test("Collect All carries on from the conversations collected by hand", async ({ page }) => {
+  await open(page);
+  const collect = page.getByRole("button", { name: "Collect a Conversation" });
+  for (let i = 0; i < 5; i++) {
+    await collect.click();
+  }
+  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  await expect(page.getByRole("img", { name: DECK })).toBeVisible();
+});
+
+test("the deck survives switching views", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  const nav = page.getByRole("navigation", { name: "Views" });
+  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await expect(page.getByText("1 / 800")).toBeVisible();
+  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await expect(page.getByRole("img", { name: DECK })).toBeVisible();
+});
+
+test("after the deck, Collect a Conversation starts the collecting over", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  await page.getByRole("button", { name: "Collect a Conversation" }).click();
+  await expect(page.getByRole("img", { name: /and 1 conversation collected\.$/ })).toBeVisible();
+  await expect(page.getByText("Conversation 1")).toBeVisible();
+});
+
+test("at the narrowest canvas, the finished deck fits its room", async ({ page }) => {
+  await canvasIn(page, 959 + INTERACTIVE_EXTRA, 959);
+  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  const canvas = (await page.getByRole("img", { name: DECK }).boundingBox())!;
+  const deck = (await page.getByTestId("deck").boundingBox())!;
+  const lifted = (await page.getByTestId("lifted-copies").boundingBox())!;
+  expect(deck.x).toBeGreaterThanOrEqual(canvas.x);
+  expect(deck.x + deck.width).toBeLessThanOrEqual(lifted.x);
 });
