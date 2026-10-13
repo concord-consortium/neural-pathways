@@ -32,7 +32,7 @@ Line numbers below refer to that file:
 | Where it goes in Trace a Case | At the right end of the steps cell, after Reset. | As in the prototype, where About sits hard right in the toolbar row after the steps. |
 | What Trace a Case does when About doesn't fit beside the steps | The two-column layout's minimum width grows so About always fits on the step line. Below that the columns stack, and About is on the full-width step line. | At NPW-60's 889 px About is about 20 px short of room. Wrapping it onto a second line there would make the view about 50 px taller, past the 562 px designed height, which breaks NPW-60's first rule. The new width, about 910 px, is still inside the designed 1024 px. |
 | Where it goes in Extract Pathways | At the right end of the toolbar row, with the steps still centered on the panel. Below a breakpoint, on its own line below the steps. | As in the prototype, where About is pinned right and the steps are centered. Below the breakpoint the visual order still matches the tab order: steps, then About. |
-| Modal or not | Modal: a native `<dialog>` opened with `showModal()`. | The prototype traps focus and marks itself `aria-modal`. The native dialog gives the inert background, Tab containment and Escape for free. |
+| Modal or not | Modal: a native `<dialog>` opened with `showModal()`, with Tab wrapped around its controls. | The prototype traps focus and marks itself `aria-modal`. The native dialog gives the inert background and Escape for free. It lets Tab leave for the browser, or the page around an iframe, so the dialog wraps Tab itself. |
 | Dragging | Not built. | The prototype's header drag and Alt+Arrow moves are more to build and test, and nothing in the lesson depends on them. |
 | The dialog's heading | "About" and the view's title, such as "About Trace a Case". | It matches the h1 the student sees above. The prototype's student-facing names ("Looking Inside a Neural Network") appear nowhere else in the app. |
 | Whether About reopens when the student returns to the view | No. Open or closed is React state, not view state. | The ticket's note: it is momentary state, and not worth keeping. |
@@ -68,8 +68,10 @@ It owns the button, the `<dialog>`, and whether the dialog is open. Views can't 
 
 ### The dialog
 
-- A native `<dialog>`, opened with `showModal()`. That makes the rest of the page inert, keeps Tab
-  inside the dialog, and closes it on Escape.
+- A native `<dialog>`, opened with `showModal()`. That makes the rest of the page inert and closes
+  the dialog on Escape. Tab past the dialog's last control would still leave it, for the browser's
+  own controls, or for the page around an Interactive's iframe. So the dialog wraps Tab and
+  Shift+Tab around its own controls, as the prototype does.
 - **The header:** the ⓘ icon (24 px, `aria-hidden`), an `h2` "About Trace a Case", and a 44 × 44
   Close button (`aria-label="Close"`, the prototype's `closeIconSVG`). The `h2` names the dialog
   (`aria-labelledby`).
