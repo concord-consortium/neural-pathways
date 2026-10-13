@@ -41,7 +41,7 @@ the damage: a canvas scaled down to no less than 0.75 can grow its captions as l
 
 **When the container is too narrow.** Below the narrowest width a drawing can be laid out at, let
 it scroll sideways in its own scroller rather than scale it down. See
-[Design each view down to a narrowest width](#design-each-view-down-to-a-narrowest-width).
+[Fit the designed size, and work down to 320 px](#fit-the-designed-size-and-work-down-to-320-px).
 
 **Check it.** Zoom to 200% in a frame as narrow as the lesson will be embedded in, and compare a
 label's rendered size with its size at 100%: it should be twice as big. A Playwright context can
@@ -50,31 +50,46 @@ Zoom shrinks both dimensions in CSS pixels, so halving only the width would let 
 pass when it shouldn't. Compare in device pixels, a CSS size times the `deviceScaleFactor`,
 against a context at the full size with `deviceScaleFactor: 1`.
 
-## Design each view down to a narrowest width
+## Fit the designed size, and work down to 320 px
 
-Each view has a narrowest width it is designed for, set by what it has to hold.
+**The designed size is 1024 × 562 px**, the size the views are designed to be used at. Sizes here
+are an Interactive's: the whole frame a view is embedded in, the app's 16 px gutters included.
+- **562 px tall.** Students mostly use Chromebooks, whose screens are the shortest of the devices
+  they use, and the lessons are embedded in the Activity Player. 562 px is the height an Interactive
+  gets there on a 1366 × 768 Chromebook, below the browser's tabs and address bar, the ChromeOS
+  shelf and the Activity Player's header. The prototype lays every view out at this height
+  (`AP_CONTENT_H` in its device preview).
+- **1024 px wide.** This is the widest the prototype's standalone layout gets (`standaloneMax`), and
+  the width its views look designed for. Narrower widths may have been meant to work too, but the
+  design hasn't covered them. Michael hasn't confirmed this width.
 
-1. A comment says what sets it, and the view's README gives the number.
-2. At that width or wider, nothing scrolls sideways and nothing is cut off.
-3. Below it, nothing may be cut off or unreachable. Drawings scroll sideways in their own scroller,
-   which the keyboard can reach. Text and controls wrap or stack where that's cheap. Scrolling down
-   is fine.
-4. Text and controls reflowing down to 320 CSS px is a known gap, until the design covers narrow
-   screens.
+**Each view has a minimum layout size:** the narrowest and shortest it can be while keeping its
+layout as designed, before anything stacks, wraps or scrolls in a way the design doesn't show. It
+is set by what the view has to hold, so size it from that, not from one window's measurement. A
+comment says what sets it, and the view's README gives it.
 
-Size the narrowest layout from what it must hold, not from one window's measurement.
+1. **A view's minimum layout size fits inside the designed size.** From its minimum layout size up,
+   nothing scrolls sideways, nothing is cut off, and the page doesn't scroll down. What doesn't fit
+   scrolls inside its own scroller, as the observation notes do, so nothing is left below the fold
+   for a student to miss.
+2. **Down to 320 CSS px wide,** every view still works. Text and controls wrap or stack, and nothing
+   is cut off or unreachable. Drawings and other two-dimensional content scroll sideways in their
+   own scroller, which the keyboard can reach. The page may scroll down.
 
 **Why.** [1.4.10 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) (AA) asks that
 content work at 320 CSS px wide, a 1280 px window at 400% zoom, without scrolling in two
 directions. It allows content that needs a two-dimensional layout, such as a diagram, to scroll.
-The views' designs don't cover narrow screens yet, and making them work much narrower than they
-do is design work. In Extract Pathways, for example, the step row would wrap into several rows
-above the canvas, and the steps and the animation they start would no longer fit on screen
-together. Until the design covers narrow screens, this is the rule to build and review against.
 
-**Scrollers.** A drawing's scroller must work from the keyboard
-([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). Chromium and
-Firefox make a scroller with nothing focusable in it reachable by Tab; Safari doesn't.
+**Known gap.** No reviewed design covers widths below 1024 px. Down to its minimum layout width a
+view keeps the prototype's layout, but how it stacks, wraps and scrolls below that is ours, not
+reviewed. The views meet 1.4.10 and 2.1.1 there, but may be too cumbersome to be useful to students.
+Extract Pathways' step row wraps into three rows above a canvas that scrolls sideways, and Trace a
+Case stacks into a page over 1,100 px tall.
+
+**Scrollers.** A scroller must work from the keyboard
+([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). It may scroll
+sideways, down or both: the observation notes only scroll down. Chromium and Firefox make a
+scroller with nothing focusable in it reachable by Tab; Safari doesn't.
 - Use `useKeyboardScrollable` (`src/core/use-keyboard-scrollable.ts`). Its comment says when it
   makes the element a Tab stop, and what it isn't for.
 - Give the element its role and name all the time, so they don't come and go with the window's

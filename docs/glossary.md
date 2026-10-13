@@ -73,6 +73,11 @@ one thing, or one name for two things, settle it and add it here.
 
 ## Layout
 
+- **designed size:** the size the views are designed to be used at, 1024 × 562 px as an Interactive
+  (see `accessibility.md`).
+- **minimum layout size:** the narrowest and shortest a view can be while keeping its layout as
+  designed, before anything stacks, wraps or scrolls in a way the design doesn't show. Its README
+  gives it. Not "designed width", since the designer didn't choose it.
 - **scroller:** an element that scrolls what it holds, such as a drawing wider than its panel.
   `useKeyboardScrollable` makes it reachable by keyboard. Not "region" for the area: its role is
   `group` or `region` (see `accessibility.md`), and "region" means the role.

@@ -18,17 +18,23 @@ activations of conversations run through it, one column of the deck each.
   middle, the lifted column in the right strip, the deck in the left. Copies of the hidden neurons
   fly on curved paths, landing in order and settling.
 
-## Widths
+## Size
 
-The narrowest width the view is designed for is 911 px: the canvas's narrowest layout, 909 px
-(`minCanvasWidth` in `extract-geometry.ts`), and the panel's border. The canvas holds the network,
-and a strip each side wide enough for the deck's columns collected by hand. As an Interactive,
-with the app's 16 px gutters, the view needs 943 px. Narrower, the canvas scrolls sideways inside
-its panel.
+The minimum layout size (see `docs/accessibility.md`) is 943 × 679 px as an Interactive. Its width
+fits inside the designed size of 1024 × 562, but its height doesn't yet.
+
+The minimum layout width, 943 px, is the canvas's narrowest layout, 909 px (`minCanvasWidth` in
+`extract-geometry.ts`), with the panel's border and the app's 16 px gutters. The canvas holds the
+network, and a strip each side wide enough for the deck's columns collected by hand. Narrower, the
+canvas scrolls sideways inside its panel and the step row wraps, down to 320 px.
+
+The minimum layout height, 679 px, comes from the canvas's 440 px (`CANVAS_HEIGHT`), below the
+title, the step row and the panel's head. In an Interactive 562 px tall, the page scrolls down.
 
 ## Still to come
 
 The view still needs:
+- to fit the 562 px designed height;
 - Collect All Conversations and Extract Pathways;
 - the Animate and speed controls;
 - the activation legend;

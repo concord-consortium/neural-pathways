@@ -20,14 +20,30 @@ The lesson's first view: follow one conversation through the network, a layer at
 The network, the diagram, the conversation card and the data loading live in `src/core/`, where
 Extract Pathways and Investigate Pathways can use them.
 
-## Widths
+## Size
 
-The view's own width, inside the app's 16 px gutters:
-- From 857 px, two columns: the card's 447 px, a 10 px gap, and the network panel's 400 px.
-- Narrower, one column, down to 382 px: the diagram's narrowest layout, 380 px, and the network
-  panel's border. That is the narrowest width the view is designed for.
-- Narrower still, the diagram scrolls sideways inside its panel. Everything else wraps or stacks,
-  and the page doesn't scroll sideways even in an Interactive 320 px wide.
+The minimum layout size (see `docs/accessibility.md`) is 889 × 523 px as an Interactive, inside the
+designed size of 1024 × 562.
+
+The minimum layout width, 889 px, holds two columns: the card's 447 px, a 10 px gap, and the network
+panel's 400 px make 857 px, inside the app's 16 px gutters.
+
+The minimum layout height, 523 px, adds up from the top:
+- the title and its margins, 81 px;
+- a 9 px gap;
+- the filter bar and the step row, 44 px;
+- a 9 px gap;
+- the card and network panels at their smallest, 380 px. That is the diagram's smallest layout,
+  300 px (`MIN_HEIGHT` in `layout.ts`), and 80 px for the network panel's head, padding and border.
+
+The view's 16 px bottom padding is the first thing to go as the window gets shorter, so it isn't
+counted.
+
+Narrower than its minimum layout width, it still works, but no reviewed design covers it:
+- The columns stack, and the page scrolls down. It is about 1,100 to 1,250 px tall.
+- Below 414 px, the diagram scrolls sideways inside its panel. That is the diagram's narrowest
+  layout, 380 px, with the network panel's border and the app's gutters. Everything else wraps or
+  stacks, and the page doesn't scroll sideways even at 320 px.
 
 ## Still to come
 
