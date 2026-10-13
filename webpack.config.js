@@ -89,6 +89,11 @@ module.exports = (env, argv) => {
           test: /\.(png|woff|woff2|eot|ttf)$/,
           type: 'asset',
         },
+        {
+          // An About text: the module's default export is the file's text.
+          test: /\.md$/i,
+          type: 'asset/source',
+        },
         { // disable svgo optimization for files ending in .nosvgo.svg
           test: /\.nosvgo\.svg$/i,
           loader: '@svgr/webpack',
