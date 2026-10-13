@@ -32,11 +32,12 @@ describe("ObservationNotes", () => {
     expect(screen.getByText("Two individuals, facing each other.")).toBeInTheDocument();
   });
 
-  // The box scrolls when the card is short, so a keyboard has to be able to reach it.
-  it("puts the notes in a region named by their heading, reachable by keyboard", () => {
+  // The box scrolls when the card is short, and is then a Tab stop. jsdom never overflows, so here
+  // it is the box that fits: a region all the same, but not a Tab stop.
+  it("puts the notes in a region named by their heading, a Tab stop only while it scrolls", () => {
     render(<ObservationNotes observation="Quiet." attributes={[voices]} values={{ voices_raised: 0 }} />);
     const region = screen.getByRole("region", { name: "Observation notes" });
-    expect(region).toHaveAttribute("tabindex", "0");
+    expect(region).not.toHaveAttribute("tabindex");
     expect(region).toHaveTextContent("Quiet.");
     expect(region).toContainElement(items()[0]);
   });

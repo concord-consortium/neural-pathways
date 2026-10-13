@@ -355,6 +355,8 @@ test.describe("the card and network panels", () => {
     const overflow = (locator: Locator) => locator.evaluate(el => el.scrollHeight - el.clientHeight);
     expect(await overflow(notes)).toBeGreaterThan(0);
     expect(await overflow(card)).toBeLessThanOrEqual(0);
+    // It scrolls, so the keyboard can reach it.
+    await expect(notes).toHaveAttribute("tabindex", "0");
   });
 
   // Like Firefox's "Zoom text only": every font twice its size, nothing else.
@@ -383,6 +385,8 @@ test.describe("the card and network panels", () => {
     const notes = card.getByRole("region", { name: "Observation notes" });
     await expect(notes).toBeVisible();
     expect(await notes.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(0);
+    // Nothing to scroll, so it isn't a Tab stop.
+    await expect(notes).not.toHaveAttribute("tabindex");
     // The box ends its 10 px padding below the attribute indicators, so nothing stretched it.
     const below = await notes.evaluate(el =>
       el.getBoundingClientRect().bottom - el.querySelector("ul")!.getBoundingClientRect().bottom);
@@ -404,4 +408,76 @@ test.describe("the card and network panels", () => {
     const view = page.getByRole("main");
     expect(await view.evaluate(el => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0);
   });
+});
+
+/** What an Interactive takes from the diagram's width: its 16 px gutters and the network panel's borders. */
+const INTERACTIVE_EXTRA = 34;
+
+/**
+ * Opens the view as an Interactive `width` wide, waits until the diagram is laid out at
+ * `diagramWidth`, and returns what scrolls, and whether anything runs past the network panel's
+ * border. The Interactive's gutter would hide a small spill from the page.
+ */
+async function diagramIn(page: Page, width: number, diagramWidth: number) {
+  await page.setViewportSize({ width, height: 900 });
+  await page.goto("/?interactive=trace-a-case");
+  const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
+  await expect(diagram).toHaveAttribute("width", String(diagramWidth));
+  return page.evaluate(() => {
+    const scrollsSideways = (element: Element) => element.scrollWidth > element.clientWidth;
+    return {
+      page: scrollsSideways(document.documentElement),
+      panel: scrollsSideways(document.querySelector(".trace-a-case__network")!),
+      diagram: scrollsSideways(document.querySelector(".network-diagram")!),
+    };
+  });
+}
+
+/** The diagram's scroll region: a group named by its panel's heading. */
+const diagramGroup = (page: Page) => page.getByRole("group", { name: "The Network" });
+
+// 380 is the narrowest the diagram is laid out (MIN_WIDTH in layout.ts).
+
+test("an Interactive just wide enough holds the diagram without scrolling", async ({ page }) => {
+  expect(await diagramIn(page, 380 + INTERACTIVE_EXTRA, 380)).toEqual({ page: false, panel: false, diagram: false });
+  await expect(diagramGroup(page)).not.toHaveAttribute("tabindex");
+});
+
+test("an Interactive a pixel too narrow scrolls the diagram inside its panel, not the page", async ({ page }) => {
+  expect(await diagramIn(page, 379 + INTERACTIVE_EXTRA, 380)).toEqual({ page: false, panel: false, diagram: true });
+  await expect(diagramGroup(page)).toHaveAttribute("tabindex", "0");
+});
+
+test("a 320 px Interactive scrolls only the diagram", async ({ page }) => {
+  expect(await diagramIn(page, 320, 380)).toEqual({ page: false, panel: false, diagram: true });
+});
+
+test("the keyboard can reach and scroll a diagram too wide for its Interactive", async ({ page }) => {
+  await diagramIn(page, 320, 380);
+  await page.getByRole("button", { name: "Reset" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(diagramGroup(page)).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => diagramGroup(page).evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+});
+
+// Classic scrollbars, as on Windows, take room from the box they appear in. A drawing a fraction of
+// a pixel bigger than its box would show them, shrink to fit the smaller box, lose them, and grow
+// back, on every animation frame. The padding nudges move the panel's height through a whole
+// pixel's fractions.
+test("the diagram is never drawn bigger than its box, even by a fraction of a pixel", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/?interactive=trace-a-case");
+  const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
+  await expect(diagram).toBeVisible();
+  for (const padding of [16.2, 16.4, 16.6, 16.8]) {
+    await page.locator(".trace-a-case").evaluate((el, px) => { el.style.paddingBottom = `${px}px`; }, padding);
+    await expect.poll(async () => {
+      const box = (await diagramGroup(page).boundingBox())!;
+      const width = Number(await diagram.getAttribute("width"));
+      const height = Number(await diagram.getAttribute("height"));
+      // Within a pixel of the box's height, so it has caught up with the new padding.
+      return width <= box.width && height <= box.height && box.height - height < 1;
+    }, { message: `with ${padding} px of padding` }).toBe(true);
+  }
 });

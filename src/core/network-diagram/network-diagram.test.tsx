@@ -22,7 +22,11 @@ const R = layout.radius;
 
 function renderDiagram(scene: Scene, pass: ForwardPass = waitPass) {
   return render(
-    <NetworkDiagram network={toyNetwork} pass={pass} scales={scales} outputLabels={LABELS} scene={scene} />,
+    <>
+      <h2 id="network-head">The Network</h2>
+      <NetworkDiagram network={toyNetwork} pass={pass} scales={scales} outputLabels={LABELS} scene={scene}
+        headingId="network-head" />
+    </>,
   );
 }
 
@@ -31,6 +35,14 @@ function numberAttr(testId: string, name: string): number {
 }
 
 describe("NetworkDiagram", () => {
+  // jsdom never overflows, so this is the diagram when it doesn't scroll: still a group, but not a Tab stop.
+  it("is a group named by its panel's heading, and not a Tab stop while it doesn't scroll", () => {
+    renderDiagram(emptyScene(SIZES));
+    const group = screen.getByRole("group", { name: "The Network" });
+    expect(group).toContainElement(screen.getByRole("img"));
+    expect(group).not.toHaveAttribute("tabindex");
+  });
+
   it("draws only wires, empty nodes and captions for an empty scene", () => {
     renderDiagram(emptyScene(SIZES));
     expect(screen.getAllByTestId(/^wire-/)).toHaveLength(80 + 48 + 12);
@@ -72,7 +84,7 @@ describe("NetworkDiagram", () => {
     // Every nonzero value is thick in gaps 0 and 2, and thin in gap 1.
     const perGap = { ...scales, edgeThresholds: [[0, 0], [Infinity, Infinity], [0, 0]] as BandThresholds[] };
     render(<NetworkDiagram network={toyNetwork} pass={waitPass} scales={perGap} outputLabels={LABELS}
-      scene={fullScene(SIZES)} />);
+      scene={fullScene(SIZES)} headingId="network-head" />);
     const widths = (gap: number) => new Set(
       screen.getAllByTestId(new RegExp(`^edge-(near|far)-${gap}-`)).map(edge => edge.getAttribute("stroke-width")));
     expect(widths(0)).toEqual(new Set(["3"]));
