@@ -1,7 +1,8 @@
 import { collectAllDuration, collectAllSceneAt } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
-import { restScene, stackRestScene } from "./extract-scene";
+import { pathwaysRestScene, restScene, stackRestScene } from "./extract-scene";
 import { extractTimeline } from "./extract-timeline";
+import { EXTRACT_MS, extractPathwaysSceneAt } from "./pathways-timeline";
 import { setupDuration, setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
@@ -28,13 +29,19 @@ describe("extractTimeline", () => {
     expect(timeline.duration({ from: 5, to: 12 })).toBe(collectAllDuration(SIZES, 4, 20));
   });
 
-  it("rests on the finished deck at the deck's marker, and past it", () => {
+  it("rests on the finished deck at the deck's marker", () => {
     expect(timeline.sceneAt(12)).toEqual(stackRestScene(SIZES, 20));
-    expect(timeline.sceneAt(13)).toEqual(stackRestScene(SIZES, 20));
   });
 
   it("draws a frame of Collect All from Collect All's timeline", () => {
     expect(timeline.sceneAt(4, { button: "collect-all", from: 4, to: 12, t: 900 }))
       .toEqual(collectAllSceneAt(SIZES, 3, 20, 900));
+  });
+
+  it("times, rests and draws the segment to the pathways as Extract Pathways", () => {
+    expect(timeline.duration({ from: 12, to: 13 })).toBe(EXTRACT_MS);
+    expect(timeline.sceneAt(13)).toEqual(pathwaysRestScene(SIZES, 20));
+    expect(timeline.sceneAt(12, { button: "extract", from: 12, to: 13, t: 3000 }))
+      .toEqual(extractPathwaysSceneAt(SIZES, 20, 3000));
   });
 });

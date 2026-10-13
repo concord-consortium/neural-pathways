@@ -13,6 +13,7 @@ import { collectAllDuration } from "./collect-all-timeline";
 import { collectDuration } from "./collect-timeline";
 import { ExtractPathways } from "./extract-pathways";
 import { ExtractPathwaysState } from "./extract-pathways-state";
+import { EXTRACT_MS } from "./pathways-timeline";
 import { setupDuration } from "./setup-timeline";
 
 jest.mock("../../core/data-loader", () => ({ fetchIndex: jest.fn() }));
@@ -47,6 +48,7 @@ const button = (name: string) => screen.getByRole("button", { name });
 const drawing = (name: string) => screen.getByRole("img", { name });
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
 const DECK = "The network's 14 hidden neurons lifted out, and all 20 conversations collected.";
+const PATHWAYS = "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 conversations.";
 const collectedLabel = (n: number) =>
   `The network, with its 14 hidden neurons lifted out and ${n} conversation${n === 1 ? "" : "s"} collected.`;
 
@@ -71,7 +73,7 @@ describe("ExtractPathways", () => {
     expect(button("Setup")).toHaveAttribute("aria-disabled", "false");
     expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "false");
     expect(button("Collect All Conversations")).toHaveAttribute("aria-disabled", "false");
-    expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "true");
+    expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "false");
     expect(button("Reset")).toHaveAttribute("aria-disabled", "true");
   });
 
@@ -166,7 +168,17 @@ describe("ExtractPathways", () => {
     expect(drawing(DECK)).toBeInTheDocument();
     expect(screen.getByText("20 Conversations")).toBeInTheDocument();
     expect(state).toMatchObject({ setupDone: true, collected: 20, deckDone: true, pathwaysDone: false });
-    expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "true");
+    expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "false");
+  });
+
+  it("draws the pathways with Extract Pathways from the start, building the deck on the way", async () => {
+    setReducedMotion(true);
+    const { state } = showView();
+    await screen.findByRole("img", { name: "The network." });
+    fireEvent.click(button("Extract Pathways"));
+    expect(drawing(PATHWAYS)).toBeInTheDocument();
+    expect(screen.getByText("Pathway 3")).toBeInTheDocument();
+    expect(state).toMatchObject({ setupDone: true, collected: 20, deckDone: true, pathwaysDone: true });
   });
 
   it("opens on a stored deck at the size of the conversations loaded", async () => {
@@ -187,6 +199,22 @@ describe("ExtractPathways", () => {
   describe("animated", () => {
     beforeEach(() => {
       setReducedMotion(false);
+    });
+
+    it("plays Extract Pathways from the deck, storing the pathways only when it ends", async () => {
+      jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+      const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true }));
+      await screen.findByRole("img", { name: DECK });
+      jest.useFakeTimers();
+      fireEvent.click(button("Extract Pathways"));
+      act(() => jest.advanceTimersByTime(3000));
+      expect(state.pathwaysDone).toBe(false);
+      expect(screen.getByTestId("particles")).toBeInTheDocument();
+      act(() => jest.advanceTimersByTime(EXTRACT_MS));
+      expect(state.pathwaysDone).toBe(true);
+      expect(drawing(PATHWAYS)).toBeInTheDocument();
+      expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
+      jest.restoreAllMocks();
     });
 
     afterEach(() => {

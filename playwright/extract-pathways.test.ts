@@ -3,6 +3,7 @@ import { expect, Page } from "@playwright/test";
 
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
 const DECK = "The network's 14 hidden neurons lifted out, and all 800 conversations collected.";
+const PATHWAYS = "The 14 hidden neurons, with their loadings on three pathways drawn from all 800 conversations.";
 
 async function open(page: Page, reducedMotion: "reduce" | "no-preference" = "reduce") {
   await page.emulateMedia({ reducedMotion });
@@ -129,7 +130,7 @@ test("Collect a Conversation stops after ten", async ({ page }) => {
   // aria-disabled, not disabled, so the focus stays on it.
   await expect(collect).toBeFocused();
   await expect(page.getByRole("button", { name: "Collect All Conversations" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Extract Pathways" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Extract Pathways" })).toBeEnabled();
 });
 
 test("Reset clears everything", async ({ page }) => {
@@ -213,4 +214,45 @@ test("at the narrowest canvas, the finished deck fits its room", async ({ page }
   const lifted = (await page.getByTestId("lifted-copies").boundingBox())!;
   expect(deck.x).toBeGreaterThanOrEqual(canvas.x);
   expect(deck.x + deck.width).toBeLessThanOrEqual(lifted.x);
+});
+
+test("Extract Pathways from the start jumps to the deck and draws the three pathways", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+  for (const n of [1, 2, 3]) {
+    await expect(page.getByText(`Pathway ${n}`)).toBeVisible();
+  }
+  await expect(page.getByTestId("pathway-line")).toHaveCount(42);
+});
+
+test("the pathways survive switching views", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  const nav = page.getByRole("navigation", { name: "Views" });
+  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await expect(page.getByText("1 / 800")).toBeVisible();
+  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+});
+
+test("at the narrowest canvas, the pathway labels fit inside it", async ({ page }) => {
+  await canvasIn(page, 959 + INTERACTIVE_EXTRA, 959);
+  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  const canvas = (await page.getByRole("img", { name: PATHWAYS }).boundingBox())!;
+  const label = (await page.getByText("Pathway 3").boundingBox())!;
+  expect(label.x + label.width).toBeLessThanOrEqual(canvas.x + canvas.width);
+});
+
+test("Extract Pathways flies its particles on a canvas, and removes it once they land", async ({ page }) => {
+  await open(page, "no-preference");
+  const animate = page.getByRole("checkbox", { name: "Animate" });
+  // Build the deck at once, then animate the extraction.
+  await animate.uncheck();
+  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  await animate.check();
+  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await expect(page.getByTestId("particles")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId("particles")).toHaveCount(0, { timeout: 10_000 });
+  await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible({ timeout: 15_000 });
 });

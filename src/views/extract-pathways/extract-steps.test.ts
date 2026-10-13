@@ -47,12 +47,12 @@ describe("extractButtons", () => {
   });
 
   it.each<[number, unknown[]]>([
-    [0, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
-    [1, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
-    [5, [{ from: 0, to: 1 }, { from: 5, to: 6 }, { from: 5, to: DECK_MARKER }, undefined]],
-    [11, [{ from: 0, to: 1 }, undefined, { from: 11, to: DECK_MARKER }, undefined]],
-    [DECK_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
-    [PATHWAYS_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
+    [0, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, { from: DECK_MARKER, to: PATHWAYS_MARKER }]],
+    [1, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, { from: DECK_MARKER, to: PATHWAYS_MARKER }]],
+    [5, [{ from: 0, to: 1 }, { from: 5, to: 6 }, { from: 5, to: DECK_MARKER }, { from: DECK_MARKER, to: PATHWAYS_MARKER }]],
+    [11, [{ from: 0, to: 1 }, undefined, { from: 11, to: DECK_MARKER }, { from: DECK_MARKER, to: PATHWAYS_MARKER }]],
+    [DECK_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, { from: DECK_MARKER, to: PATHWAYS_MARKER }]],
+    [PATHWAYS_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, { from: DECK_MARKER, to: PATHWAYS_MARKER }]],
   ])("at marker %p play %j", (marker, expected) => {
     expect(segments(marker)).toEqual(expected);
   });
