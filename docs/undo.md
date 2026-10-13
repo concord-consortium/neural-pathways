@@ -155,8 +155,8 @@ behind, and the student's original conversation is lost.
    run. Under the one root, loading a saved tree replaces a child of the root, which is itself a
    recorded change, so the order matters.
 7. **Extract Pathways stores its progress through the shared step player,** so each Setup,
-   collection, Collect All Conversations and Extract Pathways writes twice, as item 8 describes. Decide whether an extraction can be undone at
-   all. If it can, item 8's remedies apply.
+   collection and Collect All Conversations writes twice, as item 8 describes. Decide whether an
+   extraction can be undone at all. If it can, item 8's remedies apply.
 8. **A step press writes twice.** The shared step player (`StepPlayer` in
    `src/core/steps/step-player.ts`) stores the marker a run starts from when a step button is
    pressed, and the marker it ends at from a `requestAnimationFrame` tick when it finishes. Trace a

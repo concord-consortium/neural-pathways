@@ -72,7 +72,8 @@ one thing, or one name for two things, settle it and add it here.
 - **set:** 20 columns of the deck that move as one. Collect All Conversations fills the first one a
   column at a time and adds the rest behind it, up to 40.
 - **face:** one of the deck's visible surfaces: the right face is set 0's columns, the front face
-  is every set's last column, and the top is every column's top row.
+  is every set's last column, and the top is every column's top row. Set 0's last column, the
+  corner, is on both the right and the front face.
 - **copy:** one flown circle in the lifted column or the deck.
 - **collection:** one press of Collect a Conversation, from the network running the conversation
   to its column landing in the deck. `collected` counts the ones done.
