@@ -201,6 +201,11 @@ describe("ExtractPathways", () => {
       setReducedMotion(false);
     });
 
+    afterEach(() => {
+      jest.useRealTimers();
+      jest.restoreAllMocks();
+    });
+
     it("plays Extract Pathways from the deck, storing the pathways only when it ends", async () => {
       jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
       const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true }));
@@ -214,11 +219,6 @@ describe("ExtractPathways", () => {
       expect(state.pathwaysDone).toBe(true);
       expect(drawing(PATHWAYS)).toBeInTheDocument();
       expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
-      jest.restoreAllMocks();
-    });
-
-    afterEach(() => {
-      jest.useRealTimers();
     });
 
     it("plays Setup, then a collection, storing each only when it ends", async () => {
