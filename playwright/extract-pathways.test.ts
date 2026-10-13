@@ -1,5 +1,5 @@
 import { test } from "./lib/base-url";
-import { expect, Page } from "@playwright/test";
+import { expect, type Locator, Page } from "@playwright/test";
 
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
 
@@ -66,7 +66,8 @@ test("a much narrower Interactive scrolls only the canvas", async ({ page }) => 
 
 test("the keyboard can reach and scroll a canvas too wide for its Interactive", async ({ page }) => {
   await canvasIn(page, 600, 909);
-  await page.getByRole("button", { name: "Reset" }).focus();
+  // About is the last control before the drawing.
+  await page.getByRole("button", { name: "About Extract Pathways" }).focus();
   await page.keyboard.press("Tab");
   await expect(scrollRegion(page)).toBeFocused();
   await expect(scrollRegion(page)).toHaveAttribute("tabindex", "0");
@@ -128,7 +129,7 @@ test("Collect a Conversation stops after ten", async ({ page }) => {
   // aria-disabled, not disabled, so the focus stays on it.
   await expect(collect).toBeFocused();
   await expect(page.getByRole("button", { name: "Collect All Conversations" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Extract Pathways" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Extract Pathways", exact: true })).toBeDisabled();
 });
 
 test("Reset clears everything", async ({ page }) => {
@@ -137,4 +138,58 @@ test("Reset clears everything", async ({ page }) => {
   await page.getByRole("button", { name: "Reset" }).click();
   await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
+});
+
+test.describe("About", () => {
+  /**
+   * The narrowest the toolbar can be with About beside the centered steps: the steps' line, and About
+   * and a 10 px gap on each side. Measured in 16 px Barlow Condensed.
+   */
+  const TOOLBAR_WIDTH = 670 + 2 * (86 + 10);
+  const about = (page: Page) => page.getByRole("button", { name: "About Extract Pathways" });
+  const box = async (locator: Locator) => (await locator.boundingBox())!;
+  const panel = (page: Page) => page.getByRole("region", { name: "The Network → Activated Pathways" });
+
+  async function openAt(page: Page, width: number) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/?interactive=extract-pathways");
+    await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+  }
+
+  test("ends the steps' line at the minimum layout width, with the steps centered on the panel", async ({ page }) => {
+    await openAt(page, 943);
+    const aboutBox = await box(about(page));
+    const rowBox = await box(page.locator(".extract-pathways .step-row"));
+    const panelBox = await box(panel(page));
+    expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
+    expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);
+    expect(rowBox.x + rowBox.width / 2).toBeCloseTo(panelBox.x + panelBox.width / 2, 0);
+  });
+
+  test("stays on the steps' line in an Interactive just wide enough", async ({ page }) => {
+    await openAt(page, TOOLBAR_WIDTH + 32);
+    const aboutBox = await box(about(page));
+    const rowBox = await box(page.locator(".extract-pathways .step-row"));
+    expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
+  });
+
+  test("drops below the steps, at the right, a pixel narrower, without scrolling sideways", async ({ page }) => {
+    await openAt(page, TOOLBAR_WIDTH + 31);
+    const aboutBox = await box(about(page));
+    const rowBox = await box(page.locator(".extract-pathways .step-row"));
+    const panelBox = await box(panel(page));
+    expect(aboutBox.y).toBeGreaterThanOrEqual(rowBox.y + rowBox.height);
+    expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth))
+      .toBe(false);
+  });
+
+  test("comes after the steps in the tab order", async ({ page }) => {
+    await openAt(page, 1024);
+    await page.getByRole("button", { name: "Reset" }).focus();
+    await page.keyboard.press("Tab");
+    await expect(about(page)).toBeFocused();
+  });
 });

@@ -28,6 +28,9 @@ The minimum layout width, 943 px, is the canvas's narrowest layout, 909 px (`min
 network, and a strip each side wide enough for the deck's columns collected by hand. Narrower, the
 canvas scrolls sideways inside its panel and the step row wraps, down to 320 px.
 
+About sits at the right end of the step row, with the steps centered on the panel. Below 894 px it
+goes on its own line below the steps.
+
 The minimum layout height, 679 px, comes from the canvas's 440 px (`CANVAS_HEIGHT`), below the
 title, the step row and the panel's head. In an Interactive 562 px tall, the page scrolls down.
 
@@ -37,5 +40,4 @@ The view still needs:
 - to fit the 562 px designed height;
 - Collect All Conversations and Extract Pathways;
 - the Animate and speed controls;
-- the activation legend;
-- About.
+- the activation legend.

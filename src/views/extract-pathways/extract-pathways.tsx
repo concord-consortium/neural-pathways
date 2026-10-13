@@ -1,5 +1,6 @@
 import React, { useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
+import { AboutButton } from "../../core/about/about-button";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
 import { toyNetwork } from "../../core/network/toy-network";
@@ -12,6 +13,7 @@ import { ExtractDrawing } from "./extract-drawing";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 import { extractButtons, extractProgress, MAX_COLLECTED } from "./extract-steps";
 import { extractTimeline } from "./extract-timeline";
+import about from "./about.md";
 import "./extract-pathways.scss";
 
 /** Units in each drawn layer. */
@@ -50,8 +52,13 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
 
   return (
     <>
-      <div className="extract-pathways__steps">
-        <StepRow player={player} buttons={buttons} />
+      <div className="extract-pathways__toolbar">
+        <div className="extract-pathways__steps">
+          <StepRow player={player} buttons={buttons} />
+        </div>
+        <div className="extract-pathways__about">
+          <AboutButton title="Extract Pathways" markdown={about} />
+        </div>
       </div>
       <section className="extract-pathways__network" aria-labelledby={panelHeadId}>
         <h2 id={panelHeadId} className="extract-pathways__network-head">{PANEL_TITLE}</h2>
