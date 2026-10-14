@@ -7,8 +7,8 @@ import { easeBetween } from "./setup-timeline";
 import { transitionAt } from "./transitions";
 
 // The timings below are the prototype's, in ms at its "Med" speed, so each can be checked against
-// its source: particleStage, flyParticles, ptWire, pathwayStep and buildLines.
-// src/views/README.md says where the prototype is.
+// its source: particleStage, ptWire, pathwayStep and buildLines, and for MUTE_MS and KICK_MS its
+// CSS, the .d1a-loadbar transition and d1a-boxkick. src/views/README.md says where the prototype is.
 
 const DECK_SLIDE_MS = 1400;
 /** The lifted column answers the deck's move rather than sharing it. */
@@ -17,11 +17,12 @@ const COLUMN_SLIDE_MS = 1100;
 const PARTICLES_AT = Math.max(DECK_SLIDE_MS, COLUMN_DELAY + COLUMN_SLIDE_MS) + 200;
 const BARS_DONE = PARTICLES_AT + PARTICLES_MS;
 const PATHWAYS_REST = 460;
-/** Within a pathway: the beat before its bar copies leave, their flight, and the spread of their leaving. */
+// Within a pathway: the beat before its bar copies leave, their flight, and the spread of their
+// leaving.
 const LIFT = 200;
 export const COPY_FLY_MS = 760;
 const COPY_LEAD = 380;
-/** A bar copy fades over the last 22% of its flight, starting 82% of the way. */
+/** A bar copy fades for 22% of its flight time from 82% of the way, so it still shows as it lands. */
 const COPY_FADE_AT = Math.round(COPY_FLY_MS * 0.82);
 const COPY_FADE_MS = Math.round(COPY_FLY_MS * 0.22);
 /** A bar copy is gone this long after its pathway starts. */
