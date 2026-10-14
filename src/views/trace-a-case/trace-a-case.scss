@@ -80,16 +80,12 @@ $network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
   align-self: stretch;
 }
 
-// Wraps, so in a narrow panel Animate and the speed drop below the title instead of being cut off.
 .trace-a-case__network-head {
-  @include panel.panel-head;
-  flex-wrap: wrap;
+  @include panel.panel-head-with-controls;
 }
 
-// The title takes the row's slack, pushing what follows it, Animate and the speed, to the right.
 .trace-a-case__network-title {
-  margin: 0 auto 0 0;
-  font: inherit;
+  @include panel.panel-head-title;
 }
 
 // 440 px tall when the panel's height comes from its content (stacked), and otherwise the panel's
