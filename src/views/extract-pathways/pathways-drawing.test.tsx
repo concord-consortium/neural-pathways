@@ -7,7 +7,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { finishedPathways, PathwaysScene } from "./extract-scene";
 import { extractGeometry } from "./extract-geometry";
 import { kickScale, mixColor, ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
-import { faceSources, particleAt, particlePlan, particleTarget, SOURCE_STEP } from "./particles";
+import { faceSources, particleAt, particlePlan, particleTarget } from "./particles";
 import { BOX_SIDE, pathwaysLayout } from "./pathways-layout";
 import { COPY_END_SCALE } from "./pathways-timeline";
 
@@ -65,8 +65,9 @@ describe("PathwaysLayer", () => {
     // eslint-disable-next-line testing-library/no-node-access -- the kick scales the box's square
     const square = boxes[1].querySelector("rect")!;
     expect(Number(square.style.transform.match(/scale\(([\d.]+)\)/)![1])).toBeCloseTo(1.1);
-    const rules = screen.getAllByTestId("zero-rule").map(rule => [rule.getAttribute("x1"), rule.getAttribute("y1")]);
-    expect(rules).toEqual(layout.rules.map(rule => [String(rule.x), String(rule.y1)]));
+    const rules = screen.getAllByTestId("zero-rule")
+      .map(rule => ["x1", "y1", "x2", "y2"].map(name => Number(rule.getAttribute(name))));
+    expect(rules).toEqual(layout.rules.map(rule => [rule.x, rule.y1, rule.x, rule.y2]));
     expect(rules).toHaveLength(14);
   });
 
@@ -116,6 +117,17 @@ describe("PathwaysLayer", () => {
     });
   });
 
+  it("starts the bar copies on their bars at full size", () => {
+    drawLayer({
+      ...finishedPathways(),
+      flying: { pathway: 1, copies: Array.from({ length: 14 }, () => ({ progress: 0, opacity: 1 })) },
+    });
+    screen.getAllByTestId("bar-copy").forEach(copy => {
+      const [dx, dy, scale] = copy.style.transform.match(/-?[\d.]+/g)!.map(Number);
+      expect([dx, dy, scale]).toEqual([0, 0, 1]);
+    });
+  });
+
   it("flies the bar copies over the boxes, so each still shows as it lands", () => {
     drawLayer({
       ...finishedPathways(),
@@ -152,7 +164,8 @@ describe("ParticleCanvas", () => {
     const sources = faceSources(geometry, passes, 20);
     const { particles, need } = particlePlan();
     const expected = particles.flatMap(particle => {
-      const source = sources[(particle.order * SOURCE_STEP) % sources.length];
+      // The prototype steps through the sources 7919 at a time.
+      const source = sources[(particle.order * 7919) % sources.length];
       const target = particleTarget(particle, layout.bars[particle.bar], need[particle.bar]);
       const placed = particleAt(particle, 2000, source, target);
       return placed ? [{ x: placed.x, y: placed.y, color: source.color, alpha: placed.opacity }] : [];
@@ -168,6 +181,7 @@ describe("ParticleCanvas", () => {
     try {
       render(<ParticleCanvas t={2000} geometry={geometry} passes={passes} size={20} layout={layout} />);
       expect(screen.getByTestId("particles")).toHaveProperty("width", Math.round(geometry.width * 2));
+      expect(screen.getByTestId("particles")).toHaveProperty("height", Math.round(geometry.height * 2));
       expect(context.setTransform).toHaveBeenCalledWith(2, 0, 0, 2, 0, 0);
     } finally {
       window.devicePixelRatio = ratio;
