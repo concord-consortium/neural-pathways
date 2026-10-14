@@ -111,7 +111,7 @@ describe("faceSources", () => {
   /** The right face: every drawn gauge of set 0's 20 columns. */
   const rightFace = Array.from({ length: 20 }, (_, column) => drawn(0, column)).reduce((sum, n) => sum + n, 0);
 
-  it("takes every drawn gauge of set 0, then each column's top drawn gauge, where each is drawn", () => {
+  it("takes every drawn gauge of set 0 and each column's top drawn gauge, each at its fill in its sign's color", () => {
     const sources = faceSources(g, passes, 20);
     expect(sources).toHaveLength(rightFace + tops(20));
     // A gauge's fill is centered half its height from the row's middle, toward its sign.
@@ -134,10 +134,31 @@ describe("faceSources", () => {
     expect(faceSources(g, quiet, 20)).toHaveLength(faceSources(g, passes, 20).length - 1);
   });
 
-  it("takes the tops back set first, so set 0's come last", () => {
+  it("takes the right face, then the front face, then the tops, back set first", () => {
+    const shows = (set: number, column: number) => columnValues(passes, set, column)
+      .flatMap((v, row) => (g.deck.r * Math.min(1, Math.abs(v)) >= MIN_GAUGE ? [row] : []));
+    /** Where the source for a gauge of a deck of 40 is: its fill's center, in its sign's color. */
+    const source = (set: number, column: number, row: number) => {
+      const v = columnValues(passes, set, column)[row];
+      const half = (g.deck.r * Math.min(1, Math.abs(v))) / 2;
+      const cy = g.deck.ys[row] + column * g.deck.r;
+      return {
+        x: centerShift(g) - deckMid(g) + g.deck.r * setOffset(set, 40) + g.deck.x - column * g.deck.r,
+        y: v >= 0 ? cy - half : cy + half,
+        color: signColor(v),
+      };
+    };
     const sources = faceSources(g, passes, 40);
-    const x = centerShift(g) - deckMid(g) + g.deck.r * setOffset(0, 40) + g.deck.x - 19 * g.deck.r;
-    expect(sources[sources.length - 1].x).toBeCloseTo(x);
+    const front = shows(1, 19).length;
+    expect([
+      sources[0], sources[rightFace - 1], sources[rightFace], sources[rightFace + front], sources[sources.length - 1],
+    ]).toEqual([
+      source(0, 0, shows(0, 0)[0]),
+      source(0, 19, shows(0, 19)[shows(0, 19).length - 1]),
+      source(1, 19, shows(1, 19)[0]),
+      source(1, 0, shows(1, 0)[0]),
+      source(0, 19, shows(0, 19)[0]),
+    ]);
   });
 
   it("takes a short last set's last column as the front face only where it shows", () => {
