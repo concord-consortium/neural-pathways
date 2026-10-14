@@ -53,11 +53,13 @@ export function columnValues(passes: readonly ForwardPass[], set: number, column
  * it and adds nothing.
  */
 export function deckWidth(size: number): number {
-  let widest = 0;
-  for (let set = 0; set < setCount(size); set++) {
-    widest = Math.max(widest, 2 * set + columnsInSet(set, size));
+  const sets = setCount(size);
+  if (sets === 0) {
+    return 0;
   }
-  return widest + 1;
+  // Furthest left is the last set's last column, or the full set in front of a short last set.
+  const last = 2 * (sets - 1) + columnsInSet(sets - 1, size);
+  return 1 + (sets === 1 ? last : Math.max(last, 2 * (sets - 2) + SET_SIZE));
 }
 
 /**
