@@ -79,8 +79,8 @@ one thing, or one name for two things, settle it and add it here.
 - **face:** one of the deck's visible surfaces: the right face is set 0's columns, the front face
   is each set's last column, where the set in front leaves it showing, and the top is every
   column's top row. Set 0's last column, the corner, is on both the right and the front face.
-- **copy:** one flown circle in the lifted column or the deck. A **bar copy** is a loading bar's copy,
-  flying to its pathway box in Extract Pathways.
+- **copy:** one flown circle in the lifted column or the deck.
+- **bar copy:** a flown copy of a loading bar, on its way to its pathway box. Not "copy" alone.
 - **collection:** one conversation collected by hand, by Collect a Conversation or at the start of
   Collect All Conversations, from the network running it to its column landing in the deck.
   `collected` counts them, and holds the deck's size once the deck is done; a scene's
@@ -92,8 +92,7 @@ one thing, or one name for two things, settle it and add it here.
   pathway, from zero toward its sign, as long as its loading's size, in its sign's color.
 - **particle:** one dot carrying a reading from the deck's faces to a loading bar while Extract
   Pathways builds the bars.
-- **particle canvas:** the `<canvas>` over the drawing that the particles are painted on while they
-  fly.
+- **particle canvas:** the `<canvas>` over the SVG that the particles are painted on while they fly.
 - **pathway box:** the square a pathway is drawn as, built from the bar copies of its 14 loading bars.
 - **line:** a loading's connector, from its bar's zero to its pathway box.
 
