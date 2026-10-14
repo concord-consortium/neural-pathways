@@ -496,7 +496,7 @@ test("the diagram is never drawn bigger than its box, even by a fraction of a pi
 });
 
 test.describe("About", () => {
-  /** The narrowest Interactive with two columns: the card, the gap, the steps' line and the gutters. */
+  /** The narrowest Interactive with two columns: the card, the gap, the step row and the gutters. */
   const MIN_LAYOUT_WIDTH = 447 + 10 + 421 + 32;
   const about = (page: Page) => page.getByRole("button", { name: "About Trace a Case" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
@@ -508,15 +508,15 @@ test.describe("About", () => {
     await page.evaluate(() => document.fonts.ready);
   }
 
-  test("ends the steps' line at the minimum layout width, and adds no height", async ({ page }) => {
+  test("ends the step row at the minimum layout width, and adds no height", async ({ page }) => {
     await openAt(page, MIN_LAYOUT_WIDTH, 900);
     const aboutBox = await box(about(page));
     const resetBox = await box(page.getByRole("button", { name: "Reset" }));
-    const cellBox = await box(page.locator(".trace-a-case__steps"));
+    const cellBox = await box(page.locator(".trace-a-case__step-row"));
     expect(aboutBox.y).toBeCloseTo(resetBox.y, 0);
     expect(aboutBox.x + aboutBox.width).toBeCloseTo(cellBox.x + cellBox.width, 0);
-    // The toolbars' row is no taller than the filter bar beside About.
-    expect(cellBox.height).toBeCloseTo((await box(page.locator(".trace-a-case__filter"))).height, 0);
+    // The step row is no taller than the filter row beside it.
+    expect(cellBox.height).toBeCloseTo((await box(page.locator(".trace-a-case__filter-row"))).height, 0);
     // Still two columns: the card and the network start on the same line.
     const card = await box(page.getByRole("region", { name: "Conversation", exact: true }));
     const network = await box(page.getByRole("region", { name: "The Network" }));
@@ -526,7 +526,7 @@ test.describe("About", () => {
     expect(scrollsSideways).toBe(false);
   });
 
-  test("stays on the steps' line when a pixel narrower stacks the columns", async ({ page }) => {
+  test("stays beside the steps when a pixel narrower stacks the columns", async ({ page }) => {
     await openAt(page, MIN_LAYOUT_WIDTH - 1, 900);
     const card = await box(page.getByRole("region", { name: "Conversation", exact: true }));
     const network = await box(page.getByRole("region", { name: "The Network" }));
@@ -540,7 +540,7 @@ test.describe("About", () => {
     await openAt(page, 320, 562);
     const aboutBox = await box(about(page));
     const resetBox = await box(page.getByRole("button", { name: "Reset" }));
-    const cellBox = await box(page.locator(".trace-a-case__steps"));
+    const cellBox = await box(page.locator(".trace-a-case__step-row"));
     expect(aboutBox.y).toBeGreaterThanOrEqual(resetBox.y + resetBox.height);
     expect(aboutBox.x + aboutBox.width).toBeLessThanOrEqual(cellBox.x + cellBox.width + 0.5);
     expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth))

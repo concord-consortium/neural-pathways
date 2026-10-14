@@ -143,10 +143,10 @@ test("Reset clears everything", async ({ page }) => {
 
 test.describe("About", () => {
   /**
-   * The narrowest the toolbar can be with About beside the centered steps: the steps' line, and About
-   * and a 10 px gap on each side. Measured in 16 px Barlow Condensed.
+   * The narrowest the step row can be with About beside the centered steps: the steps, and About and
+   * a 10 px gap on each side. Measured in 16 px Barlow Condensed.
    */
-  const TOOLBAR_WIDTH = 670 + 2 * (86 + 10);
+  const STEP_ROW_WIDTH = 670 + 2 * (86 + 10);
   const about = (page: Page) => page.getByRole("button", { name: "About Extract Pathways" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
   const panel = (page: Page) => page.getByRole("region", { name: "The Network → Activated Pathways" });
@@ -159,7 +159,7 @@ test.describe("About", () => {
     await page.evaluate(() => document.fonts.ready);
   }
 
-  test("ends the steps' line at the minimum layout width, with the steps centered on the panel", async ({ page }) => {
+  test("ends the step row at the minimum layout width, with the steps centered on the panel", async ({ page }) => {
     await openAt(page, 943);
     const aboutBox = await box(about(page));
     const rowBox = await box(page.locator(".extract-pathways .step-row"));
@@ -169,15 +169,15 @@ test.describe("About", () => {
     expect(rowBox.x + rowBox.width / 2).toBeCloseTo(panelBox.x + panelBox.width / 2, 0);
   });
 
-  test("stays on the steps' line in an Interactive just wide enough", async ({ page }) => {
-    await openAt(page, TOOLBAR_WIDTH + 32);
+  test("stays beside the steps in an Interactive just wide enough", async ({ page }) => {
+    await openAt(page, STEP_ROW_WIDTH + 32);
     const aboutBox = await box(about(page));
     const rowBox = await box(page.locator(".extract-pathways .step-row"));
     expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
   });
 
   test("drops below the steps, at the right, a pixel narrower, without scrolling sideways", async ({ page }) => {
-    await openAt(page, TOOLBAR_WIDTH + 31);
+    await openAt(page, STEP_ROW_WIDTH + 31);
     const aboutBox = await box(about(page));
     const rowBox = await box(page.locator(".extract-pathways .step-row"));
     const panelBox = await box(panel(page));

@@ -53,7 +53,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
 
   return (
     <>
-      <div className="extract-pathways__toolbar">
+      <div className="extract-pathways__step-row">
         <div className="extract-pathways__steps">
           <StepRow player={player} buttons={buttons} />
         </div>

@@ -93,7 +93,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // card says so, and the steps and the network are left out, but the steps cell stays to hold About.
   return (
     <div className="trace-a-case__layout" style={LAYOUT_STYLE}>
-      <div className="trace-a-case__filter">
+      <div className="trace-a-case__filter-row">
         <FilterBar {...bar} />
       </div>
       <div className="trace-a-case__conversation">
@@ -108,7 +108,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
             </>}
         </ConversationCard>
       </div>
-      <div className="trace-a-case__steps">
+      <div className="trace-a-case__step-row">
         {player && place !== undefined && <StepRow player={player} buttons={TRACE_BUTTONS} />}
         <div className="trace-a-case__about">
           <AboutButton title="Trace a Case" markdown={about} />
