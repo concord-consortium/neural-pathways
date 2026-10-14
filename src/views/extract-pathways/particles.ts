@@ -12,7 +12,7 @@ import { Bar, barLengths } from "./pathways-layout";
 
 export const PARTICLE_COUNT = 1500;
 export const PARTICLE_R = 1.7;
-/** Each bar's particles leave over this long, a little further along the bar each time. */
+/** Each bar's particles leave evenly over this long, each up to JITTER late. */
 const STAGGER = 2600;
 const JITTER = 160;
 const FLY_MS = 1500;
@@ -26,8 +26,8 @@ const SEED = 48;
 const MODULUS = 4294967296;
 
 /**
- * A small seeded generator (a linear congruential generator, kept in plain arithmetic so every
- * product stays exact): numbers from 0 up to 1.
+ * A small seeded generator, a linear congruential one in plain arithmetic since the lint forbids
+ * bitwise operators: numbers from 0 up to 1. Every product stays under 2^53, so it is exact.
  */
 export function seededRandom(seed: number): () => number {
   let state = seed % MODULUS;
@@ -164,7 +164,6 @@ export function faceSources(geometry: ExtractGeometry, passes: readonly ForwardP
   for (let column = 0; column < columnsInSet(0, size); column++) {
     deck.ys.forEach((_, row) => push(gauge(0, column, row)));
   }
-  // Each later set's last column, where it shows, as faceOf shades it.
   for (let set = 1; set < sets; set++) {
     const last = columnsInSet(set, size) - 1;
     if (onFrontFace(set, last, last + 1)) {
