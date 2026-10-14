@@ -102,6 +102,15 @@ describe("collectAllSceneAt", () => {
     expect(collectAllSceneAt(SIZES, 3, 800, close.start + close.duration).deck!.count!.n).toBe(60);
   });
 
+  it("fades each column of set 1 in as it arrives", () => {
+    const plan = collectAllPlan(SIZES, 3, 800);
+    const set1 = collectAllSceneAt(SIZES, 3, 800, plan.set1[4] + 70).deck!.sets[1];
+    expect(set1.columns).toBe(5);
+    expect(set1.lastOpacity).toBeGreaterThan(0);
+    expect(set1.lastOpacity).toBeLessThan(1);
+  });
+
+
   it("brings each later set in short of its place, and closes every set up for the deck it makes", () => {
     const plan = collectAllPlan(SIZES, 3, 800);
     const entry = plan.entries[0];
