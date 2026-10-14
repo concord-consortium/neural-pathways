@@ -221,6 +221,8 @@ test("Extract Pathways from the start jumps to the deck and draws the three path
   await open(page);
   await page.getByRole("button", { name: "Extract Pathways" }).click();
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+  await expect(page.getByTestId("deck")).toBeVisible();
+  await expect(page.getByText("800 Conversations", { exact: true })).toBeVisible();
   for (const n of [1, 2, 3]) {
     await expect(page.getByText(`Pathway ${n}`)).toBeVisible();
   }
