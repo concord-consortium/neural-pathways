@@ -1,7 +1,7 @@
 import { StepTimeline } from "../../core/steps/step-player";
 import { collectAllDuration, collectAllSceneAt } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
-import { ExtractScene, pathwaysRestScene, restScene, stackRestScene } from "./extract-scene";
+import { deckRestScene, ExtractScene, pathwaysRestScene, restScene } from "./extract-scene";
 import { DECK_MARKER, PATHWAYS_MARKER } from "./extract-steps";
 import { EXTRACT_MS, extractPathwaysSceneAt } from "./pathways-timeline";
 import { setupDuration, setupSceneAt } from "./setup-timeline";
@@ -31,7 +31,7 @@ export function extractTimeline(columnSizes: readonly number[], deckSize: number
         if (marker === PATHWAYS_MARKER) {
           return pathwaysRestScene(columnSizes, deckSize);
         }
-        return marker === DECK_MARKER ? stackRestScene(columnSizes, deckSize) : restScene(columnSizes, marker);
+        return marker === DECK_MARKER ? deckRestScene(columnSizes, deckSize) : restScene(columnSizes, marker);
       }
       if (frame.to === 1) {
         return setupSceneAt(columnSizes, frame.t);

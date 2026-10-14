@@ -20,7 +20,7 @@ describe("transitionAt", () => {
     expect(transitionAt(3, moves, 300)).toBe(5);
   });
 
-  it("starts a transition from wherever the last one had got to, as a CSS transition retargets", () => {
+  it("starts a transition from wherever the last one had reached, as a CSS transition retargets", () => {
     const moves = [{ start: 0, duration: 100, to: 10 }, { start: 50, duration: 100, to: 0 }];
     const halfway = 10 * ease(0.5);
     expect(transitionAt(0, moves, 50)).toBeCloseTo(halfway);

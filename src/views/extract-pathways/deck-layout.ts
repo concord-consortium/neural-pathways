@@ -32,7 +32,7 @@ export function setCount(size: number): number {
 }
 
 /** How many columns set `set` of a deck of `size` holds: 20, but the last set may hold fewer. */
-export function setSize(set: number, size: number): number {
+export function columnsInSet(set: number, size: number): number {
   return Math.min(SET_SIZE, size - set * SET_SIZE);
 }
 
@@ -48,31 +48,31 @@ export function columnValues(passes: readonly ForwardPass[], set: number, column
 
 /**
  * How wide a deck of `size` columns is, in deck radii. Each column is a radius left of the one
- * before, so a full set is 21 wide, and each set behind it adds a neuron's width, 2. A lone partial
- * set is as wide as its columns.
+ * before, and each set a neuron's width, 2, left of the one in front, so a full set is 21 wide and
+ * each full set behind it adds 2. A last set of 18 columns or fewer ends inside the set in front of
+ * it and adds nothing.
  */
 export function deckWidth(size: number): number {
   const sets = setCount(size);
-  return sets === 1 ? size + 1 : SET_SIZE + 1 + 2 * (sets - 1);
-}
-
-/** How far right of where its columns are drawn set 0 sits once its first `columns` are centered. */
-export function firstSetOffset(columns: number): number {
-  return (columns - 1) / 2;
+  if (sets === 0) {
+    return 0;
+  }
+  // Furthest left is the last set's last column, or the full set in front of a short last set.
+  const last = 2 * (sets - 1) + columnsInSet(sets - 1, size);
+  return 1 + (sets === 1 ? last : Math.max(last, 2 * (sets - 2) + SET_SIZE));
 }
 
 /**
- * How far right of where its columns are drawn set `set` sits in a centered deck of `sets` sets.
- * Each set is a neuron's width left of the one in front of it.
+ * How far right of where its columns are drawn set `set` sits once a deck of `size` columns is
+ * centered on what is drawn. Each set is a neuron's width left of the one in front of it.
  */
-export function setOffset(set: number, sets: number): number {
-  return (SET_SIZE - 1) / 2 + (sets - 1) - 2 * set;
+export function setOffset(set: number, size: number): number {
+  return deckWidth(size) / 2 - 1 - 2 * set;
 }
 
-/** Where set `set` sits once a deck of `size` columns is done. */
-export function restOffset(set: number, size: number): number {
-  const sets = setCount(size);
-  return sets === 1 ? firstSetOffset(size) : setOffset(set, sets);
+/** How many columns a deck of `size` holds once its first `sets` sets are in. */
+export function columnsWithSets(sets: number, size: number): number {
+  return Math.min(sets * SET_SIZE, size);
 }
 
 /** The middle of the deck's room: halfway between the canvas's left edge and the lifted column's. */
@@ -89,9 +89,9 @@ export function centerShift(geometry: Pick<ExtractGeometry, "lifted" | "deck">):
 }
 
 /**
- * The beat before column `column` of set 0 lands, in a run that started with `from` columns in:
- * 900 ms for the run's first column down to 240 for the set's last, on a smoothstep across the
- * columns the run adds, so the run has the same shape wherever it starts.
+ * The beat that starts as column `column` of set 0 arrives, until the next one, in a run that
+ * started with `from` columns in: 900 ms for the run's first column down to 240 for the set's last,
+ * on a smoothstep across the columns the run adds, so the run has the same shape wherever it starts.
  */
 export function columnGap(column: number, from: number): number {
   const first = Math.min(from, SET_SIZE - 2);

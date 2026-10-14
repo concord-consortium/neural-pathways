@@ -243,7 +243,7 @@ export function collectSceneAt(columnSizes: readonly number[], n: number, t: num
     scene.lifted = { ...scene.lifted, opacity: 1 - spotlight };
   }
   if (t >= flyAt) {
-    scene.deck.push({ conversation: n, flight: Math.min(t - flyAt, landed) });
+    scene.collections.push({ conversation: n, flight: Math.min(t - flyAt, landed) });
   }
   return scene;
 }

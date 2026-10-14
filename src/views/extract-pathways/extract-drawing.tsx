@@ -7,7 +7,7 @@ import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { COLUMN_CAPTIONS, MIN_GAUGE, NetworkDrawing } from "../../core/network-diagram/network-drawing";
 import { useElementSize } from "../../core/use-element-size";
 import { useKeyboardScrollable } from "../../core/use-keyboard-scrollable";
-import { DeckStack, rowClipId } from "./deck-drawing";
+import { DeckDrawing, rowClipId } from "./deck-drawing";
 import { hiddenValues } from "./deck-layout";
 import {
   CANVAS_HEIGHT, ColumnGeometry, deckPosition, extractGeometry, LABEL_Y, NETWORK_WIDTH,
@@ -31,27 +31,26 @@ const conversations = (n: number) => `${n} conversation${n === 1 ? "" : "s"}`;
 
 /**
  * What the drawing shows, for screen readers. The lifted column and the deck columns still in
- * flight aren't counted. While Collect All runs, the description counts the conversations collected
- * by hand before the deck took over, until the deck is done. The hand collections describe their own
- * progress.
+ * flight aren't counted. While Collect All builds the deck, it counts the conversations collected by
+ * hand, and once the deck is done it says all of them are.
  */
 export function describeScene(scene: ExtractScene, hidden: number): string {
   const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
-  const { stack } = scene;
-  if (scene.pathways?.done && stack) {
+  const { deck } = scene;
+  if (scene.pathways?.done && deck) {
     return `The ${hidden} hidden neurons, with their loadings on three pathways drawn from all `
-      + `${conversations(stack.collected)}.`;
+      + `${conversations(deck.collected)}.`;
   }
-  if (stack) {
-    return stack.done
-      ? `The network's ${hidden} hidden neurons lifted out, and all ${conversations(stack.collected)} collected.`
-      : `${lifted} and ${conversations(stack.collected)} collected.`;
+  if (deck) {
+    return deck.done
+      ? `The network's ${hidden} hidden neurons lifted out, and all ${conversations(deck.collected)} collected.`
+      : `${lifted} and ${conversations(deck.collected)} collected.`;
   }
   const landed = flightDuration(hidden);
   if (!scene.lifted || scene.lifted.flight < landed) {
     return "The network.";
   }
-  const collected = scene.deck.filter(column => column.flight >= landed).length;
+  const collected = scene.collections.filter(column => column.flight >= landed).length;
   return collected === 0 ? `${lifted}.` : `${lifted} and ${conversations(collected)} collected.`;
 }
 
@@ -142,8 +141,9 @@ interface ExtractDrawingProps {
 }
 
 /**
- * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, the
- * deck in the left, drawn as `scene` says. Drawn at full size and as wide as its container, but
+ * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, and the
+ * deck in the left strip, until Collect All moves it to the middle of the room left of the lifted
+ * column; drawn as `scene` says. Drawn at full size and as wide as its container, but
  * never narrower than `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard
  * can reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since
  * the panel is already a region with that name.
@@ -197,12 +197,12 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
             opacity={scene.lifted.opacity} labelOpacity={scene.lifted.labelOpacity}
             dx={scene.pathways ? scene.pathways.slide * pathways.liftedDx : 0} />
         )}
-        {scene.stack
+        {scene.deck
           ? (
-            <DeckStack stack={scene.stack} geometry={geometry} passes={passes} names={names} clipPrefix={clipId}
+            <DeckDrawing deck={scene.deck} geometry={geometry} passes={passes} names={names} clipPrefix={clipId}
               size={deckSize} />
           )
-          : scene.deck.map((column, c) => {
+          : scene.collections.map((column, c) => {
             const flights = deckFlights(c);
             const values = hiddenValues(passes[column.conversation - 1]);
             return (

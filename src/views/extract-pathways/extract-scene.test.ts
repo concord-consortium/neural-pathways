@@ -1,6 +1,6 @@
 import { emptyScene, fullScene } from "../../core/network-diagram/scene";
 import { setOffset } from "./deck-layout";
-import { deckStack, hiddenCount, pathwaysRestScene, restScene, stackRestScene } from "./extract-scene";
+import { deckRestScene, finishedDeck, hiddenCount, pathwaysRestScene, restScene } from "./extract-scene";
 
 const SIZES = [10, 8, 6, 2];
 const LANDED = 2166;
@@ -15,14 +15,14 @@ describe("restScene", () => {
   it("is the blank network before Setup", () => {
     expect(restScene(SIZES, 0)).toEqual({
       network: emptyScene(SIZES), networkOpacity: 1, shown: undefined, label: undefined,
-      lifted: undefined, deck: [], stack: undefined,
+      lifted: undefined, collections: [], deck: undefined,
     });
   });
 
   it("adds the landed lifted column once Setup is done", () => {
     expect(restScene(SIZES, 1)).toEqual({
       network: emptyScene(SIZES), networkOpacity: 1, shown: undefined, label: undefined,
-      lifted: { flight: LANDED, opacity: 1, labelOpacity: 1 }, deck: [], stack: undefined,
+      lifted: { flight: LANDED, opacity: 1, labelOpacity: 1 }, collections: [], deck: undefined,
     });
   });
 
@@ -31,38 +31,38 @@ describe("restScene", () => {
       network: { ...fullScene(SIZES), hiddenLayerSpotlight: 0.5 }, networkOpacity: 1,
       shown: 3, label: { n: 3, bounce: 1 },
       lifted: { flight: LANDED, opacity: 0.5, labelOpacity: 1 },
-      deck: [1, 2, 3].map(conversation => ({ conversation, flight: LANDED })),
-      stack: undefined,
+      collections: [1, 2, 3].map(conversation => ({ conversation, flight: LANDED })),
+      deck: undefined,
     });
   });
 });
 
-describe("stackRestScene", () => {
+describe("deckRestScene", () => {
   it("is the finished deck of 40 sets beside the lifted column at full strength, with no network", () => {
-    const scene = stackRestScene(SIZES, 800);
+    const scene = deckRestScene(SIZES, 800);
     expect(scene).toMatchObject({
-      networkOpacity: 0, shown: undefined, label: undefined, deck: [],
+      networkOpacity: 0, shown: undefined, label: undefined, collections: [],
       lifted: { flight: LANDED, opacity: 1, labelOpacity: 1 },
     });
-    const stack = scene.stack!;
-    expect(stack.sets).toHaveLength(40);
-    expect(stack.sets[0]).toEqual({ offset: setOffset(0, 40), shift: 0, opacity: 1, columns: 20, lastOpacity: 1 });
-    expect(stack.sets[39].offset).toBe(setOffset(39, 40));
-    expect(stack).toMatchObject({
+    const deck = scene.deck!;
+    expect(deck.sets).toHaveLength(40);
+    expect(deck.sets[0]).toEqual({ offset: setOffset(0, 800), shift: 0, opacity: 1, columns: 20, lastOpacity: 1 });
+    expect(deck.sets[39].offset).toBe(setOffset(39, 800));
+    expect(deck).toMatchObject({
       centered: 1, slide: 0, arriving: [], shade: 39, labels: [], count: { n: 800, opacity: 1 },
       collected: 800, done: true,
     });
   });
 });
 
-describe("deckStack", () => {
+describe("finishedDeck", () => {
   it("ends on a partial set", () => {
-    expect(deckStack(30).sets.map(s => s.columns)).toEqual([20, 10]);
+    expect(finishedDeck(30).sets.map(s => s.columns)).toEqual([20, 10]);
   });
 
   it("centers a lone set on its own columns", () => {
-    expect(deckStack(7).sets).toEqual([{ offset: 3, shift: 0, opacity: 1, columns: 7, lastOpacity: 1 }]);
-    expect(deckStack(7).shade).toBe(0);
+    expect(finishedDeck(7).sets).toEqual([{ offset: 3, shift: 0, opacity: 1, columns: 7, lastOpacity: 1 }]);
+    expect(finishedDeck(7).shade).toBe(0);
   });
 });
 

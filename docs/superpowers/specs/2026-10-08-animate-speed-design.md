@@ -24,11 +24,11 @@ refer to that file at commit `74d66f3`.
 | Decision | Choice | Why |
 |---|---|---|
 | Where the speed is applied | In `StepPlayer`, as a clock that advances by real time divided by the speed's multiplier. Timelines don't change. | Every animation in the views already runs through the player. Applying the speed there gives Prediction Chain, and any later view, the speed for free. |
-| The multipliers | Slow 1.7, Med 1, Fast 0.6: how long a run takes, relative to Med. | The prototype's own values (`SPEEDS`, line 8898, and `SPEEDS_D1A`, line 11228). Med is the speed its timings were tuned at, and every timing in our timelines is already the Med value. See [Matching the prototype](#matching-the-prototype). |
+| The multipliers, each stop's `durationScale` | Slow 1.7, Med 1, Fast 0.6: how long a run takes, relative to Med. | The prototype's own values (`SPEEDS`, line 8898, and `SPEEDS_D1A`, line 11228). Med is the speed its timings were tuned at, and every timing in our timelines is already the Med value. See [Matching the prototype](#matching-the-prototype). |
 | A speed change during a run | Takes effect from the next frame, with no jump. | Falls out of the clock: the time already played stays played. The prototype's Prediction Chain does the same (`rescale`, line 8955). |
 | Animate off when a step is pressed | The run jumps straight to its end, as under reduced motion today. | The ticket. |
 | Animate turned off during a run | The run finishes: its end marker is stored on the next frame. | The student gets the step they pressed. The prototype is split: Extract Pathways finishes the run (line 11259), and Trace a Case drops back to where it started (`applyStepState(stepDone)`, line 11262). |
-| Extract Pathways | Gets the control in this story. | NPW-33 went to review without it, and with the player applying the speed it is only the model props and the control. |
+| Extract Pathways | Gets the control in this story. | With the player applying the speed, it is only composing `animatedMixin` and placing the control. |
 | Reduced motion | Unchanged: every run jumps to its end whatever the checkbox says, and the checkbox keeps the stored value. | As in the prototype (`motionOff`, lines 8862 and 11233). |
 | The state | `animatedMixin`, a mobx-keystone mixin with the props and their setters, composed into `TraceACaseState` and `ExtractPathwaysState`. Both stay at version 1. | Each view writes no setters of its own, and a mixin combines with any others a view needs, where a shared base class wouldn't. The view-state rules: adding a field with a default doesn't change the version. |
 | The stored speeds | Slow −100, normal 0, fast 100: integer keys that only order the stops. | A stop can be added between two others, or beyond the ends, without renumbering the ones already saved. See [The stored speeds](#the-stored-speeds). |
@@ -94,10 +94,10 @@ which gives 1.7, 1 and 0.6 for slow, normal and fast. A speed that isn't a stop 
 `AnimationControls({ animated }: { animated: Animated })`, an `observer`:
 
 - A checkbox labeled "Animate", bound to `animated.animate` and `setAnimate`.
-- A range input from 0 to 2 in steps of 1. Its value is the stop's index in `SPEED_STOPS`, not
-  the stored speed, so a stop added between two others gets its own place on the slider. Changing
-  it calls `setSpeed` with that stop's key. It has `aria-label="Animation speed"` and an `aria-valuetext`
-  of "Slow", "Med" or "Fast".
+- A range input from 0 to the last stop's index in steps of 1. Its value is the stop's index in
+  `SPEED_STOPS`, not the stored speed, so a stop added between two others gets its own place on
+  the slider. Changing it calls `setSpeed` with that stop's key. It has
+  `aria-label="Animation speed"` and an `aria-valuetext` of "Slow", "Med" or "Fast".
 - "Slow / Med / Fast" under the stops, the current one emphasized. They are `aria-hidden`: the
   value text already says the speed.
 - While Animate is off, the slider has the `disabled` attribute and the speed group is dimmed to
@@ -114,9 +114,9 @@ Keyboard focus shows through `:focus-visible`. The prototype instead cancels `mo
 checkbox's label so a click never focuses it. That isn't needed once the ring shows only for
 keyboard focus.
 
-- **The checkbox's ring** goes round the label and its box together where `:has()` works, as in
-  the prototype. Chrome 104 and earlier, which the browserslist still includes, don't support
-  `:has()`, so there the ring goes round the box alone. `@supports selector(:has(*))` chooses.
+- **The checkbox's ring** goes around the label and its box together where `:has()` works, as in
+  the prototype. Older browsers the browserslist still includes, such as Chrome 104, don't support
+  `:has()`, so there the ring goes around the box alone. `@supports selector(:has(*))` chooses.
 - **In forced colors** the slider gets an outline on keyboard focus, since forced colors repaints
   the thumb's border the same in every state and drops its shadow.
 
@@ -135,15 +135,12 @@ divider waits for it too.
 
 ## The state
 
-- `src/core/state/animation.ts` and `animation.test.ts` come over from the `NPW-30-view-state`
-  branch: `Speed`, `Animated` and the props, with the branch's `SPEED` replaced by `SPEED_STOPS`. The stored speeds change from 0, 1, 2 to
-  −100, 0, 100: see [The stored speeds](#the-stored-speeds). In place of the branch's
-  `animationProps`, which each model spread and then wrote its own setters for, the props and the
-  setters are one mixin, `animatedMixin` (`defineModelMixin`). The NPW-30 branch is rebased on
-  `main` once this lands, so its copy matches.
+- `src/core/state/animation.ts` holds `SPEED_STOPS`, `Speed`, `NORMAL_SPEED`, `Animated` and
+  `animatedMixin`, which puts the props and their setters in one mixin (`defineModelMixin`). The
+  stored speeds are −100, 0 and 100: see [The stored speeds](#the-stored-speeds).
 - `TraceACaseState` and `ExtractPathwaysState` extend
   `ExtendedModel(composeMixins(animatedMixin), { ...their own props })`. The saved form lists a
-  view's own props first, then the mixin's, as the spread did.
+  view's own props first, then the mixin's.
 - Each view passes its state to its `StepPlayer` as the settings, and to `AnimationControls`.
 - The v1 fixtures gain `animate: false` and `speed: -100` (slow), so the round-trip tests cover
   the new fields. A saved form without them still loads, with Animate on at normal speed.
@@ -169,8 +166,7 @@ The saved speed is the stop's key, not a multiplier and not a name:
 - **Continuous speed** would be a new field, or a migration: ordered keys can't stand in for a
   real scale.
 
-The NPW-30 branch's copy had 0, 1, 2. Nothing saves or loads state yet, so no saved data used
-them.
+Nothing saves state yet, so choosing these keys now breaks no saved data.
 
 ## Testing
 
@@ -179,22 +175,22 @@ them.
 - `step-player.test.ts`, with a settings object at normal speed and Animate on for the existing
   tests:
   - a 1000 ms segment takes about 1700 ms at Slow and 600 ms at Fast;
-  - changing the speed mid-run keeps `t` where it was and carries on at the new rate;
+  - changing the speed mid-run keeps `t` where it was and continues at the new rate;
   - with Animate off, `play` stores `to` with no frame and no timer;
   - turning Animate off mid-run stores `to` on the next frame and stops the clock;
-  - reduced motion still stores `to` straight away.
+  - reduced motion still stores `to` right away.
 - `animation.test.ts`: the stops' keys, pinned since they're saved, and their order; that
   `NORMAL_SPEED` is the stop with a `durationScale` of 1; `speedNamed`; and the
   mixin, on a probe model with a prop of its own: the defaults after the model's own props, the
   `Animated` setters, and a speed that isn't a stop rejected both when loading and through the
   action.
-- `playback.test.ts`: the three multipliers, and a speed that isn't a stop refused.
+- `playback.test.ts`: each stop's `durationScale`, and a speed that isn't a stop refused.
 - `animation-controls.test.tsx`: the checkbox and slider call the setters; the slider is disabled
   while Animate is off; the value text follows the speed; the current label is emphasized.
 - `trace-a-case-state.test.ts` and `extract-pathways-state.test.ts`: the defaults, the setters, and
   loading a saved form without the new fields.
 - `trace-a-case.test.tsx` and `extract-pathways.test.tsx`: the control is in the network panel's
-  head; with Animate off a step button stores its end marker straight away; a run at Fast ends well
+  head; with Animate off a step button stores its end marker right away; a run at Fast ends well
   before Med's would, so each view's speed reaches its player; and, in Extract Pathways, unchecking
   Animate during Setup finishes it.
 - `step-row.test.tsx` and `trace-a-case-steps.test.ts` pass settings to the players they make.
@@ -216,7 +212,7 @@ Every browser Playwright runs supports `:has()`, so the checkbox's fallback, a r
 alone, is checked by hand: force the `@supports` condition false and the box gets the ring.
 
 Extract Pathways' keyboard-scrolling test tabs to the canvas from the speed slider, now the
-head's last stop.
+last control in the head that takes focus.
 
 ### Manual, once, before the PR
 

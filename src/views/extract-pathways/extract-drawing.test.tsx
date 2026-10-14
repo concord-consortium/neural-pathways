@@ -9,7 +9,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
-import { ExtractScene, pathwaysRestScene, restScene, stackRestScene } from "./extract-scene";
+import { deckRestScene, ExtractScene, pathwaysRestScene, restScene } from "./extract-scene";
 import { extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { flightDuration } from "./flight";
 import { extractPathwaysSceneAt } from "./pathways-timeline";
@@ -202,7 +202,7 @@ describe("ExtractDrawing", () => {
   });
 
   it("draws the finished deck in place of the network once Collect All is done", () => {
-    renderDrawing(stackRestScene(SIZES, 20));
+    renderDrawing(deckRestScene(SIZES, 20));
     expect(screen.getByRole(
       "img", { name: "The network's 14 hidden neurons lifted out, and all 20 conversations collected." },
     )).toBeInTheDocument();

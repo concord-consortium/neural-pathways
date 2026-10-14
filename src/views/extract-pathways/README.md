@@ -18,14 +18,13 @@ the deck.
   `extract-timeline.ts`, `pathways-timeline.ts`: what the view draws at any moment, as pure
   functions of the marker and the time into a segment, at the prototype's "Med" speed.
 - `extract-geometry.ts`, `flight.ts`, `extract-drawing.tsx`: the canvas. The network sits in the
-  middle, the lifted column in the right strip, the deck in the left. Copies of the hidden neurons
-  fly on curved paths, landing in order and settling.
+  middle, the lifted column in the right strip, the deck in the left (see `ExtractDrawing`). Copies
+  of the hidden neurons fly on curved paths, landing in order and settling.
 - `deck-layout.ts`: the deck that Collect All Conversations builds: its size, its sets of 20, where
   each set sits in deck radii, and the timings that depend on a column or a set.
 - `transitions.ts`: a value carried by CSS-style transitions, each starting from wherever the last
   left it.
-- `deck-drawing.tsx`: the deck's sets, each memoized so a frame that only moves it redraws none of
-  its columns, with the depth shading of its faces.
+- `deck-drawing.tsx`: the deck's sets, memoized (see `DeckSet`), and the depth shading of its faces.
 - `pathways-layout.ts`: the stand-in loadings, and where the loading bars, their zero rules and the
   pathway boxes go once the deck and the lifted column have slid.
 - `particles.ts`: the particles that carry the deck's readings to the bars: a seeded plan of their
@@ -44,8 +43,17 @@ deck of 800 fits between the canvas's left edge and the lifted column with 10 px
 and the left strip holds the deck's columns collected by hand. Narrower, the canvas scrolls
 sideways inside its panel and the step row wraps, down to 320 px.
 
-The minimum layout height, 679 px, comes from the canvas's 440 px (`CANVAS_HEIGHT`), below the
-title, the step row and the panel's head. In an Interactive 562 px tall, the page scrolls down.
+The minimum layout height, 679 px, adds up from the top:
+- the title and its margins, 81 px;
+- a 9 px gap;
+- the step row, 44 px;
+- a 9 px gap;
+- the panel, 520 px: the canvas's 440 px (`CANVAS_HEIGHT`), and 80 px for the panel's head, padding
+  and border;
+- the view's 16 px bottom padding.
+
+Nothing in the view gives way as the window gets shorter, not even the padding, so the page scrolls
+down below 679 px, as it does in an Interactive 562 px tall.
 
 ## Still to come
 

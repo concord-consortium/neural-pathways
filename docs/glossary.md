@@ -33,8 +33,8 @@ one thing, or one name for two things, settle it and add it here.
 
 ## The step system
 
-- **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup and
-  Collect a Conversation. Not a point or a stretch of the timeline.
+- **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup,
+  Collect a Conversation and Collect All Conversations. Not a point or a stretch of the timeline.
 - **marker:** a point on a view's timeline where the scene rests and progress is stored. 0 is the
   start.
 - **segment:** the stretch of timeline between two markers, `{ from, to }`, which a step plays.
@@ -71,13 +71,15 @@ one thing, or one name for two things, settle it and add it here.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
 - **set:** 20 columns of the deck that move as one; the last set holds fewer when the conversations
   don't fill it. Collect All Conversations fills the first one a column at a time and adds the rest
-  behind it, up to 40.
+  behind it, up to 40. Sets are numbered from 0, so set 0 is the one in front.
 - **face:** one of the deck's visible surfaces: the right face is set 0's columns, the front face
   is every set's last column, and the top is every column's top row. Set 0's last column, the
   corner, is on both the right and the front face.
 - **copy:** one flown circle in the lifted column or the deck.
-- **collection:** one press of Collect a Conversation, from the network running the conversation
-  to its column landing in the deck. `collected` counts the ones done.
+- **collection:** one conversation collected by hand, by Collect a Conversation or at the start of
+  Collect All Conversations, from the network running it to its column landing in the deck.
+  `collected` counts them, and holds the deck's size once the deck is done; a scene's
+  `collections` are the ones in flight or landed.
 - **stage:** a part of the extraction whose completion is stored: Setup (`setupDone`), the
   collections (`collected`), the deck (`deckDone`) and the pathways (`pathwaysDone`). A stage still
   playing isn't stored.
@@ -92,6 +94,10 @@ one thing, or one name for two things, settle it and add it here.
 
 - **designed size:** the size the views are designed to be used at, 1024 × 562 px as an Interactive
   (see `accessibility.md`).
+- **Interactive:** a view embedded on its own in an iframe, as the Activity Player embeds it, via
+  `?interactive=<view-id>` (see `src/app/README.md`). The sizes in `accessibility.md` and the
+  views' READMEs are an Interactive's, the app's gutters included. Not "frame", which means a run at
+  one moment.
 - **minimum layout size:** the narrowest and shortest a view can be while keeping its layout as
   designed, before anything stacks, wraps or scrolls in a way the design doesn't show. Its README
   gives it. Not "designed width", since the designer didn't choose it.

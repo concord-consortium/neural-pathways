@@ -49,7 +49,7 @@ describe("animatedMixin", () => {
     expect(animated.speed).toBe(speedNamed("Fast"));
   });
 
-  it("type-checks a speed set through the action", () => {
+  it("rejects a speed that isn't a stop when set through the action", () => {
     expect(() => new AnimatedProbe({}).setSpeed(50 as any)).toThrow();
   });
 });

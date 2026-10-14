@@ -1,6 +1,6 @@
 import { collectAllDuration, collectAllSceneAt } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
-import { pathwaysRestScene, restScene, stackRestScene } from "./extract-scene";
+import { deckRestScene, pathwaysRestScene, restScene } from "./extract-scene";
 import { extractTimeline } from "./extract-timeline";
 import { EXTRACT_MS, extractPathwaysSceneAt } from "./pathways-timeline";
 import { setupDuration, setupSceneAt } from "./setup-timeline";
@@ -30,7 +30,7 @@ describe("extractTimeline", () => {
   });
 
   it("rests on the finished deck at the deck's marker", () => {
-    expect(timeline.sceneAt(12)).toEqual(stackRestScene(SIZES, 20));
+    expect(timeline.sceneAt(12)).toEqual(deckRestScene(SIZES, 20));
   });
 
   it("draws a frame of Collect All from Collect All's timeline", () => {

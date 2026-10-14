@@ -1,9 +1,9 @@
 import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import {
-  columnGap, firstSetOffset, SET_SIZE, setCount, setEnter, setGap, setHold, setMove, setOffset, setSize,
+  columnGap, columnsInSet, columnsWithSets, setCount, setEnter, setGap, setHold, setMove, setOffset,
 } from "./deck-layout";
-import { ExtractScene, restScene, SPOTLIGHT, StackScene, StackSet } from "./extract-scene";
+import { DeckScene, DeckSetScene, ExtractScene, restScene, SPOTLIGHT } from "./extract-scene";
 import { easeX, SETTLE_MS, SETTLE_PX, settleEase } from "./flight";
 import { easeBetween } from "./setup-timeline";
 import { lerp, Transition, transitionAt } from "./transitions";
@@ -101,7 +101,7 @@ export function collectAllPlan(columnSizes: readonly number[], collected: number
   const from = Math.max(collected, target);
   at += HANDOVER_MS;
   const beats: Beat[] = [];
-  for (let column = from; column < setSize(0, size); column++) {
+  for (let column = from; column < columnsInSet(0, size); column++) {
     const gap = columnGap(column, from);
     beats.push({ column, start: at, gap });
     at += gap;
@@ -114,7 +114,7 @@ export function collectAllPlan(columnSizes: readonly number[], collected: number
   const entries: SetEntry[] = [];
   const closes: Close[] = [];
   if (sets >= 2) {
-    for (let column = 0; column < setSize(1, size); column++) {
+    for (let column = 0; column < columnsInSet(1, size); column++) {
       set1.push(at + column * SET1_STEP);
     }
     const close = set1[set1.length - 1] + SET1_CLOSE_DELAY;
@@ -153,7 +153,7 @@ function setPlace(plan: CollectAllPlan, set: number, offset: number, shift: numb
   const to = (value: (close: Close) => number): Transition[] =>
     closes.map(close => ({ start: close.start, duration: close.duration, to: value(close) }));
   return {
-    offset: transitionAt(offset, to(close => setOffset(set, close.sets)), t),
+    offset: transitionAt(offset, to(close => setOffset(set, columnsWithSets(close.sets, plan.size))), t),
     shift: transitionAt(shift, to(() => 0), t),
   };
 }
@@ -163,18 +163,18 @@ function frontSet(plan: CollectAllPlan, t: number) {
   const { from, size, beats } = plan;
   const local = t - plan.handOver;
   const centered = moveEase(clamp01((local - HANDOVER_REST - CENTER_DELAY) / CENTER_MS));
-  let offset = lerp(0, firstSetOffset(Math.min(from + 1, size)), centered);
+  let offset = lerp(0, setOffset(0, Math.min(from + 1, size)), centered);
   let columns = from;
-  const arriving: StackScene["arriving"] = [];
-  const labels: StackScene["labels"] = [];
+  const arriving: DeckScene["arriving"] = [];
+  const labels: DeckScene["labels"] = [];
   beats.forEach((beat, i) => {
     if (t < beat.start) {
       return;
     }
     const since = t - beat.start;
     // Where the last beat, or the hand-over for the first, centered it.
-    const was = firstSetOffset(Math.max(beat.column, from + 1));
-    offset = lerp(was, firstSetOffset(beat.column + 1), moveEase(clamp01(since / beat.gap)));
+    const was = setOffset(0, Math.max(beat.column, from + 1));
+    offset = lerp(was, setOffset(0, beat.column + 1), moveEase(clamp01(since / beat.gap)));
     if (since >= COLUMN_IN_MS + COLUMN_SETTLE_MS) {
       columns = beat.column + 1;
     } else {
@@ -194,36 +194,36 @@ function frontSet(plan: CollectAllPlan, t: number) {
 }
 
 /** The count over the deck at `t`: set 0's, then changing as sets close. */
-function countFor(plan: CollectAllPlan, t: number): StackScene["count"] {
+function countFor(plan: CollectAllPlan, t: number): DeckScene["count"] {
   if (t < plan.countAt) {
     return undefined;
   }
-  let n = Math.min(SET_SIZE, plan.size);
+  let n = columnsWithSets(1, plan.size);
   let opacity = easeBetween(0, 1, t, plan.countAt, COUNT_FADE_MS);
   plan.closes.forEach((close, i) => {
     if (i === 0) {
       if (t >= close.start + COUNT_SWAP) {
-        n = Math.min(2 * SET_SIZE, plan.size);
+        n = columnsWithSets(2, plan.size);
         opacity = easeBetween(0, 1, t, close.start + COUNT_SWAP, COUNT_OUT_MS);
       } else if (t >= close.start) {
         opacity = 1 - easeBetween(0, 1, t, close.start, COUNT_OUT_MS);
       }
     } else if (t >= close.start + close.duration) {
-      n = Math.min(close.sets * SET_SIZE, plan.size);
+      n = columnsWithSets(close.sets, plan.size);
     }
   });
   return { n, opacity };
 }
 
-function stackAt(plan: CollectAllPlan, t: number): StackScene {
+function deckAt(plan: CollectAllPlan, t: number): DeckScene {
   const front = frontSet(plan, t);
-  const sets: StackSet[] = [{
+  const sets: DeckSetScene[] = [{
     ...setPlace(plan, 0, front.offset, 0, t), opacity: 1, columns: front.columns, lastOpacity: 1,
   }];
   const appeared = plan.set1.filter(at => t >= at).length;
   if (appeared > 0) {
     sets.push({
-      ...setPlace(plan, 1, setOffset(1, 2), -SET1_ENTER, t),
+      ...setPlace(plan, 1, setOffset(1, columnsWithSets(2, plan.size)), -SET1_ENTER, t),
       opacity: 1,
       columns: appeared,
       lastOpacity: ease(clamp01((t - plan.set1[appeared - 1]) / SET1_COLUMN_FADE_MS)),
@@ -235,9 +235,9 @@ function stackAt(plan: CollectAllPlan, t: number): StackScene {
       break;
     }
     sets.push({
-      ...setPlace(plan, entry.set, setOffset(entry.set, entry.set + 1), -entry.enter, t),
+      ...setPlace(plan, entry.set, setOffset(entry.set, columnsWithSets(entry.set + 1, plan.size)), -entry.enter, t),
       opacity: easeBetween(0, 1, t, entry.at, entry.fade),
-      columns: setSize(entry.set, plan.size),
+      columns: columnsInSet(entry.set, plan.size),
       lastOpacity: 1,
     });
     shade = entry.set;
@@ -279,7 +279,7 @@ export function collectAllSceneAt(columnSizes: readonly number[], collected: num
   const scene = restScene(columnSizes, hidden < 1 ? plan.from + 1 : 1);
   scene.networkOpacity = 1 - hidden;
   scene.lifted = { ...scene.lifted!, opacity: 1 - SPOTLIGHT * (1 - hidden) };
-  scene.deck = [];
-  scene.stack = stackAt(plan, t);
+  scene.collections = [];
+  scene.deck = deckAt(plan, t);
   return scene;
 }

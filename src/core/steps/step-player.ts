@@ -18,16 +18,13 @@ export interface Run extends Segment {
 
 /** A run at one moment: the run, and the time into it. */
 export interface Frame extends Run {
-  /**
-   * Timeline time since the run started: milliseconds at normal speed, which the player stretches
-   * at slow speed and squeezes at fast.
-   */
+  /** Timeline time since the run started. */
   t: number;
 }
 
 /** What a view's timeline draws. Pure: the same marker and frame always give the same scene. */
 export interface StepTimeline<S> {
-  /** How long `segment` takes to play, in timeline time: milliseconds at normal speed. */
+  /** How long `segment` takes to play, in timeline time. */
   duration(segment: Segment): number;
   /** The scene resting at `marker`, or at `frame` of the run playing. */
   sceneAt(marker: Marker, frame?: Frame): S;

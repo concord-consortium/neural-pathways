@@ -42,8 +42,8 @@
     }
   }
 
-  // Keyboard focus rings the label and its box together where :has() works. Chrome 104 and
-  // earlier, which the browserslist still includes, ring the box alone.
+  // Keyboard focus rings the label and its box together where :has() works. Older browsers the
+  // browserslist still includes, such as Chrome 104, ring the box alone.
   @supports selector(:has(*)) {
     &:has(input:focus-visible) {
       outline: 2px solid colors.$wait;

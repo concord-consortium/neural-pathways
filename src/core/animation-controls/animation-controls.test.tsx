@@ -25,6 +25,16 @@ describe("AnimationControls", () => {
     expect(slider()).toBeDisabled();
   });
 
+  it("stores Animate again when the box is checked again, enabling the slider", () => {
+    const settings = new TestSettings();
+    render(<AnimationControls animated={settings} />);
+    fireEvent.click(checkbox());
+    fireEvent.click(checkbox());
+    expect(settings.animate).toBe(true);
+    expect(checkbox()).toBeChecked();
+    expect(slider()).toBeEnabled();
+  });
+
   it("disables the slider while Animate is off, keeping the speed", () => {
     render(<AnimationControls animated={new TestSettings({ animate: false, speed: speedNamed("Fast") })} />);
     expect(slider()).toBeDisabled();
