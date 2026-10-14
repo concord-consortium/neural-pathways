@@ -147,8 +147,8 @@ describe("faceSources", () => {
     expect(faceSources(g, passes, 50)).toHaveLength(rightFace + drawn(1, 19) + tops(50));
   });
 
-  it("targets bars that are laid out for the same deck", () => {
+  it("targets bars as long as the plan shares the particles by", () => {
     const layout = pathwaysLayout(g, 800);
-    expect(layout.bars).toHaveLength(particlePlan().need.length);
+    expect(layout.bars.map(bar => bar.length)).toEqual(barLengths());
   });
 });
