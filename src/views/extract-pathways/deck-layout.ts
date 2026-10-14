@@ -32,7 +32,7 @@ export function setCount(size: number): number {
 }
 
 /** How many columns set `set` of a deck of `size` holds: 20, but the last set may hold fewer. */
-export function setSize(set: number, size: number): number {
+export function columnsInSet(set: number, size: number): number {
   return Math.min(SET_SIZE, size - set * SET_SIZE);
 }
 
