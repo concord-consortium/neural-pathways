@@ -93,7 +93,7 @@ describe("StepPlayer", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("stores `to` straight away under reduced motion", () => {
+  it("stores `to` right away under reduced motion", () => {
     setReducedMotion(true);
     const progress = new TestProgress();
     const player = new StepPlayer(timeline, progress, new TestSettings());
@@ -201,7 +201,7 @@ describe("StepPlayer", () => {
   });
 
   describe("Animate", () => {
-    it("stores `to` straight away with Animate off", () => {
+    it("stores `to` right away with Animate off", () => {
       const progress = new TestProgress();
       const player = new StepPlayer(timeline, progress, new TestSettings({ animate: false }));
       player.play("a", { from: 0, to: 3 });
