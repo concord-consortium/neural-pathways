@@ -11,8 +11,8 @@ keep working alongside them, and leaving the view and coming back shows the same
 
 Jira: [NPW-48](https://concord-consortium.atlassian.net/browse/NPW-48). It builds on NPW-33 (the
 first half: Setup, Collect a Conversation and the shared step system), which is on `main`. Its
-branch starts from NPW-38 (Animate and speed) merged with NPW-60 (the narrowest designed width),
-both open PRs. It blocks NPW-24, which completes the view.
+branch builds on NPW-38 (Animate and speed) and NPW-60 (the narrowest designed width), both on
+`main`. It blocks NPW-24, which completes the view.
 
 The source is the `EX_STAGE0_ONLY` branch of `runExtract` in `index.html` on the
 `neural-net-maker` branch of the demos repo
@@ -35,7 +35,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 | Button rules | As the prototype's handlers and `syncExRow` (lines 10888–10915, 10972–11017): Collect All and Extract Pathways are always available, and each jumps to where its run starts. | Each button's segment is a plain function of the marker, which the step system already supports. |
 | How many conversations the deck holds | Every conversation loaded, up to 800, in sets of 20; the last set may be partial. | alien3 has exactly 800. The prototype instead forces at least 2 sets and repeats conversation 1 to fill them (`CB_NSETS`, line 14800, and `cases[n] \|\| cases[0]`, line 13905), which would show repeated data in the tests' smaller fixtures. |
 | The run's last frame | Collect All ends when the last set has closed and finished fading in, not when the prototype's final timer fires up to 80 ms earlier. | A pure `sceneAt(marker)` must equal the end of the run that reaches it. The last set's 160 ms fade outlasts its 92 ms close. |
-| The deck's room on the narrowest canvas | The narrowest canvas grows from 909 to about 960 px, so the finished deck fits between the canvas's left edge and the lifted column with 10 px clear each side. | At 909, the 40-set deck is about 18 px wider than its room and would run under the lifted column, the one thing still saying what a row is. The first half's spec left this width for NPW-48 to set. 960 plus the panel's border and the gutters is 994, inside the 1024 designed width. |
+| The deck's room on the narrowest canvas | The narrowest canvas grows from 909 to 959 px, so the finished deck fits between the canvas's left edge and the lifted column with 10 px clear each side. | At 909, the 40-set deck is about 18 px wider than its room and would run under the lifted column, the one thing still saying what a row is. The first half's spec left this width for NPW-48 to set. 959 plus the panel's border and the gutters is 993, inside the 1024 designed width. |
 | Tooltips in the deck | Set 1's columns keep the neuron-name tooltips the hand-collected copies have; sets 2 to 40 have none. | As in the prototype (`makeFilled` has a title, `addColumn` doesn't, lines 13683 and 13904). Eleven thousand titles would add nothing a student could use. |
 | The lines' paint order | Under the bars and the boxes. | The prototype's comment asks for that ("a connector runs between two things and should not be drawn over either of them", line 14640), though its DOM order puts the lines over the bars. |
 | The particles' randomness | A seeded generator. | The timeline must be pure: the same moment always draws the same picture. |
@@ -112,10 +112,10 @@ parts, back to back.
 
 ### 1. Up to three by hand
 
-While *c* < min(3, *D*), the missing collections play first: collections *c* + 1 to 3, each exactly
-as Collect a Conversation's segment plays it, so conversation 1 is still the replay. Their
-durations and scenes are the existing collect timeline's. Then *c* is 3. The prototype says why
-three: "by the third you have seen a first, a different one, and a repeat, which is the whole
+While *c* < min(3, *D*), the missing collections play first: collections *c* + 1 to min(3, *D*),
+each exactly as Collect a Conversation's segment plays it, so conversation 1 is still the replay.
+Their durations and scenes are the existing collect timeline's. Then *c* is min(3, *D*). The
+prototype says why three: "by the third you have seen a first, a different one, and a repeat, which is the whole
 pattern" (line 10870).
 
 ### 2. The hand-over, 1,350 ms
@@ -148,8 +148,8 @@ count after part 1, so at least min(3, *D*):
 - **The column arrives:** it starts 16 px left of its place, fully transparent, and moves to 4 px
   past its place over 420 ms with `EASE_X`, then settles back over 190 ms with `SETTLE_EASE`. It
   fades in over 252 ms (`addColumn` and `settleXY`, lines 13904–13959 and 13845–13879).
-- **Its label:** "Conversation *i* + 1", 14 px, ending 20 px left of the column's top circle, on
-  that circle's baseline + 4. It fades in over 150 ms as the previous label fades out over 150 ms
+- **Its label:** "Conversation *i* + 1", 14 px, ending 20 px left of the column's top circle, with
+  its baseline 4 px below that circle's center. It fades in over 150 ms as the previous label fades out over 150 ms
   (`nameColumn`, line 14034). Labels move with the deck.
 
 ### 4. The count, 1,180 ms
@@ -224,7 +224,7 @@ front face, and the top row of every column is its top surface (lines 13609–13
 - **The corner:** set 1's last column is both. It is shaded as the front face, and its right half
   takes an extra overlay at `1 − (1 − 0.005 L) / (1 − 0.0025 L)`, so that half lands on the right
   face's value. On its top circle, the front cut is the bottom-left quarter, and the right face's
-  piece is the sector from the diagonal round to the bottom, at `0.005 L`.
+  piece is the sector from the diagonal around to the bottom, at `0.005 L`.
 - Overlays go under each circle's ring, so the rings stay at full strength.
 
 ### The rest scene at marker 12
@@ -378,11 +378,12 @@ element counts that grow with the frame, and no per-column entries for the 800.
 
 ### Parts that re-render only when their part of the scene changes
 
-- **The network:** a memoized part, given its scene and `networkOpacity`. Not rendered at all once
+- **The network:** `NetworkDrawing`, whose wires, discs and outlines are memoized, given its scene
+  and `networkOpacity`. Not rendered at all once
   its opacity is 0.
 - **The lifted column:** memoized on its flight, opacity, label opacity and `liftedDx`.
 - **`DeckSet`:** one set of up to 20 columns, memoized on its set number, how many columns it has,
-  and the shade level. It draws each column about the origin, placed by a transform, so every
+  and the shade level. It draws each column at the deck's first column, placed by a transform, so every
   column shares one clip path per row, as the copies already do. Each frame, only its wrapper's
   transform and opacity change. Sets are drawn back to front, set 1 last, and each set's columns in
   order, so later columns stand in front.
@@ -403,7 +404,7 @@ element counts that grow with the frame, and no per-column entries for the 800.
 
 - **`minCanvasWidth`** becomes the larger of the first half's minimum and the narrowest width
   whose room, `lifted.x − lifted.r`, holds the 40-set deck, `span(40)`, plus 10 px each side. It is
-  worked out from the geometry, not hardcoded: about 960 px for the toy network.
+  worked out from the geometry, not hardcoded: 959 px for the toy network.
 - **The end of Extract Pathways fits** at that width: the box labels end well inside the canvas.
 - **New exports** in `extract-geometry.ts` or a new `deck-layout.ts`: `deckMid`, `span(s)`,
   `setX(k, s)`, the first set's centering offset, and the face and particle source positions.
@@ -416,7 +417,9 @@ element counts that grow with the frame, and no per-column entries for the 800.
 - "The 14 hidden neurons, with their loadings on three pathways drawn from all *D* conversations."
   at marker 13.
 
-While Collect All or Extract Pathways runs, it keeps the description of where the run started.
+While Collect All runs, the description counts the conversations collected by hand, and changes to
+"all *D* conversations collected" when the deck is done. While Extract Pathways runs, it keeps
+describing the deck.
 Fuller text alternatives, and anything announced as stages complete, belong to the accessibility
 story for Extract Pathways.
 
@@ -428,12 +431,14 @@ story for Extract Pathways.
   fixture with the deck and the pathways done round-trips.
 - **The progress adapter:** each marker from 0 to 13 to the four fields and back; a hand count
   above the limit; `pathwaysDone` stored without `deckDone`.
-- **The buttons:** each button's segment at markers 0, 1, 3, 11, 12 and 13, as in the table above.
+- **The buttons:** each button's segment at markers 0, 1, 5, 11, 12 and 13, as in the table above.
   In PR 1, Extract Pathways is unavailable at each.
-- **The deck's layout:** `setX` centers the deck in its room for 1, 2 and 40 sets; the first set's
+- **The deck's layout:** `setX` centers what the deck draws in its room, for decks of 1 to 800 with partial last sets; the first set's
   centering for *n* columns; `enter`, `gap`, `hold` and `move` at their ends.
 - **Collect All's timeline:**
-  - its duration from 0, 1, 3 and 10 collected;
+  - the hand-over starting once the collections by hand are done, from 1 collected;
+  - its last frame equal to the scene at rest from 0, 3 and 10 collected, and with decks of 3, 20,
+    30, 50 and 799;
   - below three, it starts with exactly the missing collections, and their scenes equal Collect a
     Conversation's;
   - the first set's beats shorten across the run, from 900 to 240;
@@ -452,7 +457,7 @@ story for Extract Pathways.
 - **Geometry:** the 40-set deck fits its room with 10 px each side at `minCanvasWidth`, and not a
   pixel narrower; the box labels fit inside the canvas at the end of Extract Pathways.
 - **The drawing (RTL):**
-  - a `DeckSet` doesn't re-render when only its position changes, checked with a render counter;
+  - a `DeckSet` doesn't re-render when only its position changes, checked by spying on `columnValues`;
   - the particle canvas is present only while the particles fly;
   - set 1's columns have tooltips and later sets' don't;
   - the new descriptions.
@@ -464,7 +469,8 @@ story for Extract Pathways.
 
 `playwright/extract-pathways.test.ts`:
 
-- Collect All from the start, and from 5 collected, ends with the deck and "800 Conversations".
+- Collect All from the start ends with the deck and "800 Conversations", and from 5 collected ends
+  with the deck.
 - Extract Pathways from the start jumps to the deck and ends with three boxes and 42 lines.
 - Both stages survive switching to Trace a Case and back.
 - After the deck, Collect a Conversation starts the collecting over at "Conversation 1".
@@ -495,14 +501,14 @@ story for Extract Pathways.
 
 Two stacked PRs, each about the size of the first half's second PR (43 files, about 2,300 lines).
 
-1. **Collect All Conversations** (about 26 files): the state fields and markers; all four buttons'
+1. **Collect All Conversations** (about 30 files): the state fields and markers; all four buttons'
    rules, with Extract Pathways still unavailable; the deck's layout, `DeckSet` and its shading;
    the memoized drawing parts; the new narrowest canvas; Collect All's timeline; their tests; and
-   the README, state doc and glossary for what it adds. If splitting the drawing makes its file
+   the README, state doc, glossary and undo doc for what it adds. If splitting the drawing makes its file
    too long, the network and lifted-column parts get files of their own, 2 to 4 more. If the PR
    runs well past the first half's size, the shading moves to a PR of its own between the two.
 2. **Extract Pathways:** the slide, the bars, the particle canvas, the boxes and the lines; its
-   timeline; Extract Pathways' rule; the new descriptions; their tests; and the docs that finish
+   timeline; Extract Pathways' rule; the pathways' description; their tests; and the docs that finish
    the story.
 
 ## Out of scope
