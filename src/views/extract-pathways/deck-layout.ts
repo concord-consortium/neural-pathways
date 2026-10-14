@@ -70,6 +70,16 @@ export function setOffset(set: number, size: number): number {
   return deckWidth(size) / 2 - 1 - 2 * set;
 }
 
+/**
+ * Whether column `column` of set `set`, which holds `setColumns` once all its columns are in, is on
+ * the deck's front face: a set's last column, where nothing in front of it covers it. Every set
+ * behind set 0 has a full set in front, whose column `column` + 2 is drawn over all of this column
+ * but its top circle, so a short last set's last column shows only if it is column 18 or 19.
+ */
+export function onFrontFace(set: number, column: number, setColumns: number): boolean {
+  return column === setColumns - 1 && (set === 0 || column >= SET_SIZE - 2);
+}
+
 /** How many columns a deck of `size` holds once its first `sets` sets are in. */
 export function columnsWithSets(sets: number, size: number): number {
   return Math.min(sets * SET_SIZE, size);

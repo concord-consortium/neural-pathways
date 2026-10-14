@@ -31,9 +31,10 @@ describe("faceOf", () => {
     expect(faceOf(3, 0, 20)).toBe("inside");
   });
 
-  it("ends a partial set's front face at its last column", () => {
-    expect(faceOf(1, 9, 10)).toBe("front");
-    expect(faceOf(1, 8, 10)).toBe("inside");
+  it("puts a short last set's last column on the front face only where the set in front leaves it showing", () => {
+    expect(faceOf(1, 18, 19)).toBe("front");
+    expect(faceOf(1, 9, 10)).toBe("inside");
+    expect(faceOf(0, 6, 7)).toBe("corner");
   });
 });
 
@@ -132,15 +133,14 @@ describe("DeckDrawing", () => {
     }
   });
 
-  it("shades a partial last set's last column as front face", () => {
-    const deck = finishedDeck(50);
+  it.each([[59, 22], [50, 21]])("shades a short last set's last column only if it shows, in %p", (size, faces) => {
+    const deck = finishedDeck(size);
     const { rerender } = render(drawDeck(deck));
     const reads = jest.spyOn(deckLayout, "columnValues");
     try {
       rerender(drawDeck({ ...deck, shade: deck.shade + 1 }));
-      // Set 0's 20 columns, set 1's last, and the last of set 2's 10.
-      expect(reads).toHaveBeenCalledTimes(22);
-      expect(reads).toHaveBeenCalledWith(passes, 2, 9);
+      // Set 0's 20 columns and set 1's last; set 2's last of 19 shows, and its last of 10 is hidden.
+      expect(reads).toHaveBeenCalledTimes(faces);
     } finally {
       reads.mockRestore();
     }
