@@ -20,7 +20,10 @@ import "./extract-pathways.scss";
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
 const PANEL_TITLE = "The Network → Activated Pathways";
 
-/** Lift the hidden neurons out of the network and collect conversations' activations from them. */
+/**
+ * Lift the hidden neurons out of the network, collect conversations' activations from them into a
+ * deck, and draw the three pathways from it.
+ */
 export const ExtractPathways: React.FC = observer(function ExtractPathways() {
   const indexState = useDatasetIndex(alien3Dataset);
   return (
