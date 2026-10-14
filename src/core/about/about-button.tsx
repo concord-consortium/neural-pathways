@@ -1,8 +1,9 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { marked } from "marked";
 import { useKeyboardScrollable } from "../use-keyboard-scrollable";
-import { CloseIcon, InfoIcon } from "./about-icons";
 import { placeDialog } from "./place-dialog";
+import CloseIcon from "./close.svg";
+import InfoIcon from "./info.svg";
 import "./about-button.scss";
 
 interface AboutButtonProps {
@@ -106,7 +107,7 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
     <>
       <button ref={buttonRef} type="button" className={`about-button${open ? " about-button--open" : ""}`}
         aria-label={`About ${title}`} aria-haspopup="dialog" onClick={() => setOpen(true)}>
-        <InfoIcon className="about-button__icon" />
+        <InfoIcon className="about-button__icon" aria-hidden="true" focusable="false" />
         About
       </button>
       <dialog ref={dialogRef} className="about-dialog" aria-labelledby={headingId} onClose={onClose}
@@ -114,11 +115,11 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
         {open &&
           <>
             <div className="about-dialog__header">
-              <InfoIcon className="about-dialog__icon" />
+              <InfoIcon className="about-dialog__icon" aria-hidden="true" focusable="false" />
               <h2 id={headingId} className="about-dialog__title">About {title}</h2>
               <button ref={closeRef} type="button" className="about-dialog__close" aria-label="Close"
                 onClick={() => dialogRef.current?.close()}>
-                <CloseIcon />
+                <CloseIcon aria-hidden="true" focusable="false" />
               </button>
             </div>
             <div ref={bodyRef} className="about-dialog__body" role="group" aria-labelledby={headingId}
