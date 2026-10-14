@@ -28,8 +28,9 @@ describe("extractTimeline", () => {
     expect(timeline.duration({ from: 5, to: 12 })).toBe(collectAllDuration(SIZES, 4, 20));
   });
 
-  it("rests on the finished deck at the deck's marker", () => {
+  it("rests on the finished deck at the deck's marker, and past it", () => {
     expect(timeline.sceneAt(12)).toEqual(stackRestScene(SIZES, 20));
+    expect(timeline.sceneAt(13)).toEqual(stackRestScene(SIZES, 20));
   });
 
   it("draws a frame of Collect All from Collect All's timeline", () => {
