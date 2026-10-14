@@ -28,7 +28,7 @@ The work is two stacked PRs (see [PRs](#prs)).
 |---|---|---|
 | Where the view ends | On the finished picture: the half deck, the lifted column with its bars, the three boxes and the lines. Picking a neuron or a pathway to see its loadings, the tip that says so, and the loading key are left out. | The story's scope ends at "the pathway boxes appear, with their particles and lines". The view does need the picking before it is complete, so it moves to NPW-24, which completes the view. |
 | Animate and speed | The new steps play at the view's speed, and Animate off or reduced motion jumps a run to its end. | NPW-38 is in this branch's base, and its step player already plays every timeline in timeline time and applies both settings. The story's note that the steps play at Med until NPW-24 predates that order. |
-| Drawing | An SVG deck whose sets are memoized, so a frame changes only their transforms; the particles on a canvas over the SVG, only while they fly. The particles pass in front of the lifted column and the bars, where the prototype's pass behind them; layering the drawing to match is left to NPW-65. | 800 columns of 14 gauges is about 34,000 SVG elements, and 1,500 particles move every frame. Re-rendering either every frame would drop frames on the 1366 × 768 Chromebook the designed size comes from. The deck keeps what SVG gives (tooltips, sharp text when zoomed, DOM checks in Jest); the particles are dots with no text, so a canvas loses nothing for them. |
+| Drawing | An SVG deck whose sets are memoized, so a frame changes only their transforms; the particles on a particle canvas over the SVG, only while they fly. The particles pass in front of the lifted column and the bars, where the prototype's pass behind them; layering the drawing to match is left to NPW-65. | 800 columns of 14 gauges is about 34,000 SVG elements, and 1,500 particles move every frame. Re-rendering either every frame would drop frames on the 1366 × 768 Chromebook the designed size comes from. The deck keeps what SVG gives (tooltips, sharp text when zoomed, DOM checks in Jest); the particles are dots with no text, so a canvas loses nothing for them. |
 | State names | `deckDone` and `pathwaysDone`, not the draft's `cubeDone`. | The glossary calls it the deck, and the first half renamed `extracted` to `setupDone` for the same reason. Nothing has shipped. |
 | `collected` once the deck is done | The deck's size, 800 for alien3. | The field keeps meaning "how many conversations are collected". |
 | Markers | 12 is the deck done and 13 the pathways done, after the first half's 0 to 11. | The prototype's stages are one ordered sequence, so they stay one marker. |
@@ -264,7 +264,8 @@ network replaces them.
 
 **The sources.** Every drawn gauge on the deck's visible faces, at the deck's slid place: every row
 of set 1's columns, every row of each later set's last column where it is on the front face (see
-the depth shading), and each column's top drawn gauge, back set first (`faceGauges`, line 14193). A gauge is drawn only when it fills at least 0.35 px of its circle.
+the depth shading), and each column's top drawn gauge, back set first (`faceGauges`,
+line 14193). A gauge is drawn only when it fills at least 0.35 px of its circle.
 
 **The particles.** 1,500, shared among the bars in proportion to their lengths, at least 4 each.
 For particle *i* of a bar that needs *n*:
@@ -284,7 +285,8 @@ draws the same picture.
 **The bars grow** by their particles: a bar's length is its full length times the share of its
 particles that have landed. All of them finish together.
 
-**The end.** At 4,875 ms into the particles, every bar is at full length and the canvas is gone.
+**The end.** At 4,875 ms into the particles, every bar is at full length and the particle canvas is
+gone.
 Every particle has landed by then, so the prototype's 300 ms fade of the particle layer has nothing
 left to fade and is left out.
 
@@ -300,13 +302,13 @@ boxes stay empty.
 
 After a 460 ms rest, each pathway in turn takes 2,120 ms (`pathwayStep`, lines 14544–14627):
 
-- At 200, copies of its 14 bars lift off, neuron *k*'s after `round(k · 380 / 14)` ms. Each flies
+- At 200, bar copies of its 14 bars leave, neuron *k*'s after `round(k · 380 / 14)` ms. Each flies
   to the box's center over 760 ms with `EASE_X`, shrinking to 0.18 about its own center, and fades
-  for 22% of its flight time from 82% of the way, so it still shows as it lands. The copies fly over
-  the boxes. The bars they leave turn `$rule` gray over 320 ms.
-- As each copy lands, the box, its square and its label step to `(k + 1) / 14` opacity over 140 ms,
-  and the box kicks: scale 1 → 1.10 → 0.98 → 1 over 300 ms with `cubic-bezier(.34,1.1,.5,1)`,
-  about its own center, restarting on every arrival.
+  for 22% of its flight time, starting 82% of the way through it, so it still shows, faintly, as it
+  lands. The bar copies fly over the boxes. The bars they leave turn `$rule` gray over 320 ms.
+- As each bar copy lands, the box, its square and its label step to `(k + 1) / 14` opacity over
+  140 ms, and the box kicks: scale 1 → 1.10 → 0.98 → 1 over 300 ms with
+  `cubic-bezier(.34,1.1,.5,1)`, about its own center, restarting on every arrival.
 - The next pathway starts at 2,120.
 
 ### 4. The lines, 13,395–14,235
@@ -393,15 +395,15 @@ element counts that grow with the frame, and no per-column entries for the 800.
   order, so later columns stand in front.
 - **The arriving column and the column label:** drawn on their own, since they change every frame
   of a beat. A column joins its set when it has settled.
-- **The pathways layer:** the zero rules, 42 bars, the flying copies, the boxes and labels, and the
-  lines. At most 42 bars and 14 copies change per frame.
+- **The pathways layer:** the zero rules, 42 bars, the boxes and labels, the flying bar copies, and
+  the lines. At most 42 bars and 14 bar copies change per frame.
 
 ### The particle canvas
 
 - A `<canvas>` over the SVG, the SVG's size, at the device's pixel ratio. It exists only while
   `scene.pathways.particles` is defined.
-- `particleAt`, `particleTarget` and `landedCounts` are pure. The canvas effect calls the first two
-  for the frame's `t` and paints the result; the timeline grows the bars by the third.
+- `particleAt`, `particleTarget` and `landedCounts` are pure. The particle canvas's effect calls the
+  first two for the frame's `t` and paints the result; the timeline grows the bars by the third.
 - It has `aria-hidden="true"`; the drawing's description covers it.
 
 ### Geometry
@@ -410,8 +412,8 @@ element counts that grow with the frame, and no per-column entries for the 800.
   whose room, `lifted.x − lifted.r`, holds the 40-set deck, `span(40)`, plus 10 px each side. It is
   worked out from the geometry, not hardcoded: 959 px for the toy network.
 - **The end of Extract Pathways fits** at that width: the box labels end well inside the canvas.
-- **New exports** in `extract-geometry.ts` or a new `deck-layout.ts`: `deckMid`, `span(s)`,
-  `setX(k, s)` and the first set's centering offset. The particles' source positions are in a new
+- **New exports** in a new `deck-layout.ts`: `deckMid`, `deckWidth`, `setOffset` and
+  `centerShift`, which place the deck and its sets. The particles' source positions are in a new
   `particles.ts`, and the bars' and boxes' places in a new `pathways-layout.ts`.
 
 ### The description for screen readers
@@ -455,21 +457,21 @@ story for Extract Pathways.
     edge at `showR + 100` for decks of 800 and 20;
   - each bar's length is its share of landed particles, reaching full length at the end;
   - the pathways come one at a time, each box's opacity stepping by fourteenths;
-  - the bar copies leave one after another and fade from 82% of their flight, each arrival kicks
-    the box, and the lines start after the last pathway;
+  - the bar copies leave one after another and fade from 82% of their flight time, each arrival
+    kicks the box, and the lines start after the last pathway;
   - its last frame equals `sceneAt(13)`.
 - **The particles:** the same seed gives the same numbers; a particle's curve and its fades, and
   that it isn't drawn before it leaves or after it lands; each bar gets at least 4 and the total
   is about 1,500; every particle lands before the flight ends; the sources are set 1's drawn
-  gauges, each column's top drawn gauge, back set first, and a short last set's last column only
-  where it shows, each at its gauge's place and in its color.
+  gauges, then a short last set's last column only where it shows, then each column's top drawn
+  gauge, back set first, each at its gauge's fill and in its color.
 - **Geometry:** the 40-set deck fits its room with 10 px each side at `minCanvasWidth`, and not a
   pixel narrower; the box labels fit inside the canvas at the end of Extract Pathways.
 - **The drawing (RTL):**
   - a `DeckSet` doesn't re-render when only its position changes, checked by spying on `columnValues`;
   - the particle canvas is present only while the particles fly, and paints each particle on its
     path from its source to its bar, in its color and opacity, at the device's pixel ratio;
-  - each line and bar copy goes to its own pathway's box, and the copies fly over the boxes;
+  - each line and bar copy goes to its own pathway's box, and the bar copies fly over the boxes;
   - the lines' and boxes' fades, the kick and the zero rules;
   - the description while Extract Pathways runs, and the lifted column's slide;
   - set 1's columns have tooltips and later sets' don't;
