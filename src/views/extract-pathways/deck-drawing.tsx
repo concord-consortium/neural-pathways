@@ -224,7 +224,8 @@ export function DeckDrawing({ deck, geometry, passes, names, clipPrefix, size }:
     <>
       <g data-testid="deck" transform={`translate(${x},0)`}>
         {backToFront.map(({ set, index }) => (
-          <g key={index} transform={`translate(${set.offset * firstColumn.r + set.shift},0)`}
+          <g key={index} data-testid={`deck-place-${index}`}
+            transform={`translate(${set.offset * firstColumn.r + set.shift},0)`}
             opacity={set.opacity < 1 ? set.opacity : undefined}>
             <DeckSet passes={passes} deck={firstColumn} set={index} columns={set.columns}
               setColumns={columnsInSet(index, size)} shade={deck.shade} lastOpacity={set.lastOpacity}

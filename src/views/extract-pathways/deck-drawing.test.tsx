@@ -95,6 +95,17 @@ describe("DeckDrawing", () => {
     expect(column.getAttribute("transform")).toBe(`translate(${-8 - 5 * geometry.deck.r},${5 * geometry.deck.r})`);
   });
 
+  it("moves the deck toward the room's middle, and places and fades each set as its scene says", () => {
+    const full = finishedDeck(40);
+    const sets = full.sets.map((set, i) => (i === 1 ? { ...set, shift: -8, opacity: 0.5 } : set));
+    render(drawDeck({ ...full, centered: 0.5, sets }));
+    expect(screen.getByTestId("deck"))
+      .toHaveAttribute("transform", `translate(${0.5 * deckLayout.centerShift(geometry)},0)`);
+    const place = screen.getByTestId("deck-place-1");
+    expect(place).toHaveAttribute("transform", `translate(${deckLayout.setOffset(1, 40) * geometry.deck.r - 8},0)`);
+    expect(place).toHaveAttribute("opacity", "0.5");
+  });
+
   it("doesn't redraw a set's columns when only its place changes", () => {
     const deck = finishedDeck(60);
     const { rerender } = render(drawDeck(deck));
