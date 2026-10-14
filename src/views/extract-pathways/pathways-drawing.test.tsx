@@ -52,6 +52,23 @@ describe("PathwaysLayer", () => {
     ["Pathway 1", "Pathway 2", "Pathway 3"].forEach(label => expect(screen.getByText(label)).toBeInTheDocument());
   });
 
+  it("fades the lines and the boxes in, kicks a box, and draws each neuron's zero rule", () => {
+    const pathways = finishedPathways();
+    pathways.lines = 0.5;
+    pathways.boxes[1] = { opacity: 0.5, kick: 0.38 };
+    drawLayer(pathways);
+    expect(screen.getByTestId("pathway-lines")).toHaveAttribute("opacity", "0.5");
+    const boxes = screen.getAllByTestId("pathway-box");
+    expect(boxes[0]).not.toHaveAttribute("opacity");
+    expect(boxes[1]).toHaveAttribute("opacity", "0.5");
+    // eslint-disable-next-line testing-library/no-node-access -- the kick scales the box's square
+    const square = boxes[1].querySelector("rect")!;
+    expect(Number(square.style.transform.match(/scale\(([\d.]+)\)/)![1])).toBeCloseTo(1.1);
+    const rules = screen.getAllByTestId("zero-rule").map(rule => [rule.getAttribute("x1"), rule.getAttribute("y1")]);
+    expect(rules).toEqual(layout.rules.map(rule => [String(rule.x), String(rule.y1)]));
+    expect(rules).toHaveLength(14);
+  });
+
   it("grows a bar from zero toward its sign, and grays it while it is muted", () => {
     const pathways = finishedPathways();
     pathways.bars![1] = { grown: 0.5, muted: 1 };

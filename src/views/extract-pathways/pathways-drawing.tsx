@@ -56,7 +56,7 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
   return (
     <g data-testid="pathways">
       {pathways.lines > 0 && (
-        <g opacity={pathways.lines < 1 ? pathways.lines : undefined}>
+        <g data-testid="pathway-lines" opacity={pathways.lines < 1 ? pathways.lines : undefined}>
           {layout.bars.map((bar, b) => {
             const box = layout.boxes[bar.pathway];
             return (
@@ -67,7 +67,8 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
         </g>
       )}
       {layout.rules.map((rule, k) => (
-        <line key={k} className="extract-drawing__zero" x1={rule.x} y1={rule.y1} x2={rule.x} y2={rule.y2} />
+        <line key={k} data-testid="zero-rule" className="extract-drawing__zero"
+          x1={rule.x} y1={rule.y1} x2={rule.x} y2={rule.y2} />
       ))}
       {layout.bars.map((bar, b) => {
         const width = bar.length * bars[b].grown;
@@ -80,7 +81,7 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
       {layout.boxes.map((box, p) => {
         const { opacity, kick } = pathways.boxes[p];
         return opacity > 0 && (
-          <g key={p} opacity={opacity < 1 ? opacity : undefined}>
+          <g key={p} data-testid="pathway-box" opacity={opacity < 1 ? opacity : undefined}>
             <rect className="extract-drawing__box" x={box.x} y={box.cy - BOX_SIDE / 2} width={BOX_SIDE}
               height={BOX_SIDE} rx={BOX_CORNER}
               style={kick === undefined ? undefined : aboutCenter(`scale(${kickScale(kick)})`)} />
