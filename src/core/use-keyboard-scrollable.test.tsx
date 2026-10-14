@@ -56,6 +56,8 @@ describe("useKeyboardScrollable", () => {
       setWidths(600, 300);
       act(() => resized());
       expect(scroller()).toHaveAttribute("tabindex", "0");
+      // The caller's role and name stay: the hook adds none of its own.
+      expect(screen.getByRole("region", { name: "Notes" })).toBe(scroller());
       setWidths(300, 300);
       act(() => resized());
       expect(scroller()).not.toHaveAttribute("tabindex");

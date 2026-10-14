@@ -1,6 +1,7 @@
 import React, { useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
+import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { alien3Dataset } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
 import { toyNetwork } from "../../core/network/toy-network";
@@ -41,7 +42,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
   const { passes, scales } = indexPasses(toyNetwork, index);
   const limit = Math.min(MAX_COLLECTED, passes.length);
   const buttons = useMemo(() => extractButtons(limit), [limit]);
-  const player = useMemo(() => new StepPlayer(TIMELINE, extractProgress(state, limit)), [state, limit]);
+  const player = useMemo(() => new StepPlayer(TIMELINE, extractProgress(state, limit), state), [state, limit]);
   // Stop the player when the view unmounts. A layout effect, so no existing run can finish and
   // store its marker after the view is gone.
   useLayoutEffect(() => () => player.stop(), [player]);
@@ -61,7 +62,10 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
         </div>
       </div>
       <section className="extract-pathways__network" aria-labelledby={panelHeadId}>
-        <h2 id={panelHeadId} className="extract-pathways__network-head">{PANEL_TITLE}</h2>
+        <div className="extract-pathways__network-head">
+          <h2 id={panelHeadId} className="extract-pathways__network-title">{PANEL_TITLE}</h2>
+          <AnimationControls animated={state} />
+        </div>
         <div className="extract-pathways__drawing">
           <Observer>
             {() => (

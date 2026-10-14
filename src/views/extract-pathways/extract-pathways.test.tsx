@@ -1,7 +1,8 @@
 import React from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import { speedNamed } from "../../core/state/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
 import * as viewStateContext from "../../core/state/view-state-context";
 import { ViewStateProvider } from "../../core/state/view-state-context";
@@ -95,7 +96,7 @@ describe("ExtractPathways", () => {
     expect(button("Reset")).toHaveAttribute("aria-disabled", "false");
   });
 
-  it("jumps Setup to its end when Collect a Conversation comes first", async () => {
+  it("stores Setup as done when Collect a Conversation comes first", async () => {
     setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
@@ -146,6 +147,15 @@ describe("ExtractPathways", () => {
     expect(state.collected).toBe(0);
   });
 
+  it("shows Animate and the speed in the panel's head, and stores Animate in the view's state", async () => {
+    const { state } = showView();
+    await screen.findByRole("img", { name: "The network." });
+    const panel = screen.getByRole("region", { name: "The Network → Activated Pathways" });
+    fireEvent.click(within(panel).getByRole("checkbox", { name: "Animate" }));
+    expect(state.animate).toBe(false);
+    expect(within(panel).getByRole("slider", { name: "Animation speed" })).toBeDisabled();
+  });
+
   describe("animated", () => {
     beforeEach(() => {
       setReducedMotion(false);
@@ -174,6 +184,41 @@ describe("ExtractPathways", () => {
       act(() => jest.advanceTimersByTime(collectDuration(SIZES, 1)));
       expect(state.collected).toBe(1);
       expect(drawing(collectedLabel(1))).toBeInTheDocument();
+    });
+
+    it("stores Setup as done at once with Animate off", async () => {
+      const state = new ExtractPathwaysState({});
+      state.setAnimate(false);
+      showView(state);
+      await screen.findByRole("img", { name: "The network." });
+      fireEvent.click(button("Setup"));
+      expect(state.setupDone).toBe(true);
+      expect(drawing(LIFTED)).toBeInTheDocument();
+    });
+
+    it("plays Setup's run at the speed in the view's state", async () => {
+      const state = new ExtractPathwaysState({});
+      state.setSpeed(speedNamed("Fast"));
+      showView(state);
+      await screen.findByRole("img", { name: "The network." });
+      jest.useFakeTimers();
+      fireEvent.click(button("Setup"));
+      // Fast takes 0.6 of the Med duration, so the run is done well before Med's would be.
+      act(() => jest.advanceTimersByTime(setupDuration(SIZES) * 0.7));
+      expect(state.setupDone).toBe(true);
+    });
+
+    it("finishes Setup's run when Animate is turned off during it", async () => {
+      const { state } = showView();
+      await screen.findByRole("img", { name: "The network." });
+      jest.useFakeTimers();
+      fireEvent.click(button("Setup"));
+      act(() => jest.advanceTimersByTime(1000));
+      expect(state.setupDone).toBe(false);
+      fireEvent.click(screen.getByRole("checkbox", { name: "Animate" }));
+      act(() => jest.advanceTimersByTime(20));
+      expect(state.setupDone).toBe(true);
+      expect(drawing(LIFTED)).toBeInTheDocument();
     });
 
     it("doesn't re-render the view's body while a run plays", async () => {

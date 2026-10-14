@@ -3,7 +3,9 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { spokenText } from "../../core/conversation-card/__fixtures__/spoken-text";
 import * as conversationCard from "../../core/conversation-card/conversation-card";
 import { fetchIndex } from "../../core/data-loader";
+import { phaseDuration } from "../../core/network-diagram/forward-pass-phases";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import { speedNamed } from "../../core/state/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
 import { TraceACaseState } from "./trace-a-case-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
@@ -184,6 +186,50 @@ describe("TraceACase", () => {
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
     expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-current", "step");
+  });
+
+  it("shows Animate and the speed in the network's head", async () => {
+    showView();
+    await screen.findByText("1 / 3");
+    const network = screen.getByRole("region", { name: "The Network" });
+    expect(within(network).getByRole("checkbox", { name: "Animate" })).toBeChecked();
+    expect(within(network).getByRole("slider", { name: "Animation speed" })).toHaveAttribute("aria-valuetext", "Med");
+  });
+
+  it("stores Animate in the view's state", async () => {
+    const state = new TraceACaseState({});
+    showView(undefined, state);
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("checkbox", { name: "Animate" }));
+    expect(state.animate).toBe(false);
+    expect(screen.getByRole("slider", { name: "Animation speed" })).toBeDisabled();
+  });
+
+  it("stores a step's end marker at once with Animate off", async () => {
+    setReducedMotion(false);
+    const state = new TraceACaseState({});
+    state.setAnimate(false);
+    showView(undefined, state);
+    await screen.findByText("1 / 3");
+    fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
+    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
+    expect(state.marker(ids[0])).toBe(4);
+  });
+
+  it("plays a step's run at the speed in the view's state", async () => {
+    const state = new TraceACaseState({});
+    state.setSpeed(speedNamed("Fast"));
+    showView(undefined, state);
+    await screen.findByText("1 / 3");
+    jest.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
+      // Fast takes 0.6 of the Med duration, so the run is done well before Med's would be.
+      act(() => jest.advanceTimersByTime(phaseDuration(4, [10, 8, 6, 2]) * 0.7));
+      expect(state.marker(ids[0])).toBe(4);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("starts a conversation not stepped yet with nothing done", async () => {

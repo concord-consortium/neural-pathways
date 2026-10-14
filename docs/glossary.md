@@ -41,6 +41,11 @@ one thing, or one name for two things, settle it and add it here.
   Not "keyframe".
 - **run:** one play of a segment, started by a press. A run still playing is never stored.
 - **frame:** a run at one moment: `currentFrame`, replaced on every animation frame.
+- **timeline time:** the milliseconds a timeline is written in, as in `Frame.t` and `duration`:
+  real milliseconds at normal speed, the prototype's Med. The step player stretches them at Slow
+  and squeezes them at Fast. Not "virtual time".
+- **normal speed:** `NORMAL_SPEED`, key 0, shown as Med on the slider. Slow and Fast are relative
+  to it.
 - **current:** the step marked with `aria-current="step"`: the one whose run plays, or, while
   nothing plays, the one its view marks. Not "pressed", since a step isn't a toggle.
 - **unavailable:** a button marked `aria-disabled="true"`, which stays in the tab order and does
@@ -75,6 +80,10 @@ one thing, or one name for two things, settle it and add it here.
 
 - **designed size:** the size the views are designed to be used at, 1024 × 562 px as an Interactive
   (see `accessibility.md`).
+- **Interactive:** a view embedded on its own in an iframe, as the Activity Player embeds it, via
+  `?interactive=<view-id>` (see `src/app/README.md`). The sizes in `accessibility.md` and the
+  views' READMEs are an Interactive's, the app's gutters included. Not "frame", which means a run at
+  one moment.
 - **minimum layout size:** the narrowest and shortest a view can be while keeping its layout as
   designed, before anything stacks, wraps or scrolls in a way the design doesn't show. Its README
   gives it. Not "designed width", since the designer didn't choose it.

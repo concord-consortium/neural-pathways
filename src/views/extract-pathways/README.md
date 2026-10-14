@@ -6,9 +6,11 @@ activations of conversations run through it, one column of the deck each.
 ## What's here
 
 - `extract-pathways.tsx`: the view. It loads the alien3 conversations and shows the step row above
-  one full-width panel holding the drawing. There is no filter and no conversation panel.
+  one full-width panel holding the drawing. The panel's head holds the shared Animate and speed
+  control. There is no filter and no conversation panel.
 - `extract-pathways-state.ts`: the view's saved state, `ExtractPathwaysState`: whether Setup is
-  done, and how many conversations are collected. A Setup or collection still playing isn't stored.
+  done, how many conversations are collected, and Animate and the speed. A Setup or collection
+  still playing isn't stored.
 - `extract-steps.ts`: the buttons and the marker, on the shared step system in
   `src/core/steps/`.
 - `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `extract-timeline.ts`: what the
@@ -31,13 +33,21 @@ canvas scrolls sideways inside its panel and the step row wraps, down to 320 px.
 About sits at the right end of the step row, with the steps centered on the panel. Below 894 px it
 goes on its own line below the steps.
 
-The minimum layout height, 679 px, comes from the canvas's 440 px (`CANVAS_HEIGHT`), below the
-title, the step row and the panel's head. In an Interactive 562 px tall, the page scrolls down.
+The minimum layout height, 679 px, adds up from the top:
+- the title and its margins, 81 px;
+- a 9 px gap;
+- the step row, 44 px;
+- a 9 px gap;
+- the panel, 520 px: the canvas's 440 px (`CANVAS_HEIGHT`), and 80 px for the panel's head, padding
+  and border;
+- the view's 16 px bottom padding.
+
+Nothing in the view gives way as the window gets shorter, not even the padding, so the page scrolls
+down below 679 px, as it does in an Interactive 562 px tall.
 
 ## Still to come
 
 The view still needs:
 - to fit the 562 px designed height;
 - Collect All Conversations and Extract Pathways;
-- the Animate and speed controls;
 - the activation legend.

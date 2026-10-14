@@ -53,15 +53,14 @@ against a context at the full size with `deviceScaleFactor: 1`.
 ## Fit the designed size, and work down to 320 px
 
 **The designed size is 1024 × 562 px**, the size the views are designed to be used at. Sizes here
-are an Interactive's: the whole frame a view is embedded in, the app's 16 px gutters included.
+are an Interactive's: the whole iframe a view is embedded in, the app's 16 px gutters included.
 - **562 px tall.** Students mostly use Chromebooks, whose screens are the shortest of the devices
   they use, and the lessons are embedded in the Activity Player. 562 px is the height an Interactive
   gets there on a 1366 × 768 Chromebook, below the browser's tabs and address bar, the ChromeOS
   shelf and the Activity Player's header. The prototype lays every view out at this height
   (`AP_CONTENT_H` in its device preview).
 - **1024 px wide.** This is the widest the prototype's standalone layout gets (`standaloneMax`), and
-  the width its views look designed for. Narrower widths may have been meant to work too, but the
-  design hasn't covered them. Michael hasn't confirmed this width.
+  the width its views look designed for. It hasn't been confirmed with the designer.
 
 **Each view has a minimum layout size:** the narrowest and shortest it can be while keeping its
 layout as designed, before anything stacks, wraps or scrolls in a way the design doesn't show. It
@@ -80,11 +79,14 @@ comment says what sets it, and the view's README gives it.
 content work at 320 CSS px wide, a 1280 px window at 400% zoom, without scrolling in two
 directions. It allows content that needs a two-dimensional layout, such as a diagram, to scroll.
 
-**Known gap.** No reviewed design covers widths below 1024 px. Down to its minimum layout width a
-view keeps the prototype's layout, but how it stacks, wraps and scrolls below that is ours, not
-reviewed. The views meet 1.4.10 and 2.1.1 there, but may be too cumbersome to be useful to students.
-Extract Pathways' step row wraps into three rows above a canvas that scrolls sideways, and Trace a
-Case stacks into a page over 1,100 px tall.
+**Known gaps.**
+- No reviewed design covers widths below 1024 px. Down to its minimum layout width a view keeps the
+  prototype's layout, but how it stacks, wraps and scrolls below that is ours, not reviewed. The
+  views are built to meet 1.4.10 and 2.1.1 there, and checked in Chromium, but may be too cumbersome
+  to be useful to students. Extract Pathways' step row wraps into three rows above a canvas that
+  scrolls sideways, and Trace a Case stacks into a page over 1,100 px tall.
+- Extract Pathways' minimum layout height, 679 px, doesn't fit the designed size yet, so in an
+  Interactive 562 px tall its page scrolls down.
 
 **Scrollers.** A scroller must work from the keyboard
 ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). It may scroll
