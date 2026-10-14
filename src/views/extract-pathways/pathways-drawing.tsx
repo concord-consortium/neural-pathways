@@ -121,9 +121,10 @@ interface ParticleCanvasProps {
 }
 
 /**
- * The particles in flight, painted on a canvas over the SVG at the device's pixel ratio. A canvas,
- * because 1,500 dots moving every frame are too many SVG elements to update; they carry no text,
- * so it loses nothing. Hidden from screen readers: the drawing's description covers it.
+ * The particle canvas: the particles in flight, painted on a `<canvas>` over the SVG at the device's
+ * pixel ratio. A `<canvas>`, because 1,500 dots moving every frame are too many SVG elements to
+ * update; they carry no text, so it loses nothing. Hidden from screen readers: the drawing's
+ * description covers it.
  */
 export function ParticleCanvas({ t, geometry, passes, size, layout }: ParticleCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);

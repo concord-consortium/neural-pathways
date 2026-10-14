@@ -30,7 +30,7 @@ the deck.
 - `particles.ts`: the particles that carry the deck's readings to the bars: a seeded plan of their
   timing, their curves, and the gauges on the deck's faces they leave from.
 - `pathways-drawing.tsx`: the bars, the bar copies flying to the boxes, the boxes and the lines, in
-  SVG; and the particles, painted on a canvas over the SVG while they fly.
+  SVG; and the particles, painted on the particle canvas over the SVG while they fly.
 
 ## Size
 

@@ -67,6 +67,9 @@ one thing, or one name for two things, settle it and add it here.
 
 ## Extract Pathways
 
+- **canvas:** Extract Pathways' drawing area, the SVG that `ExtractDrawing` lays out, as in
+  `minCanvasWidth` and "half off the canvas". Not the particles' `<canvas>` element, which is the
+  particle canvas.
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
 - **set:** 20 columns of the deck that move as one; the last set holds fewer when the conversations
@@ -87,7 +90,9 @@ one thing, or one name for two things, settle it and add it here.
 - **loading bar:** one loading, drawn beside the lifted column: three to a neuron, one per
   pathway, growing from zero by its loading's size, in its sign's color.
 - **particle:** one dot carrying a reading from the deck's faces to a loading bar while Extract
-  Pathways builds the bars. Drawn on a canvas, not in the SVG.
+  Pathways builds the bars.
+- **particle canvas:** the `<canvas>` over the drawing that the particles are painted on while they
+  fly.
 - **pathway box:** the square a pathway is drawn as, built from the bar copies of its 14 loading bars.
 - **line:** a loading's connector, from its bar's zero to its pathway box.
 

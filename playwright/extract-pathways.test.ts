@@ -247,7 +247,7 @@ test("at the narrowest canvas, the pathway labels fit inside it", async ({ page 
   expect(label.x + label.width).toBeLessThanOrEqual(canvas.x + canvas.width);
 });
 
-test("Extract Pathways flies its particles on a canvas, and removes it once they land", async ({ page }) => {
+test("Extract Pathways flies its particles on the particle canvas, and removes it once they land", async ({ page }) => {
   await open(page, "no-preference");
   const animate = page.getByRole("checkbox", { name: "Animate" });
   // Build the deck at once, then animate the extraction.
