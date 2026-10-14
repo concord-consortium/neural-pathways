@@ -28,8 +28,17 @@ The minimum layout width, 943 px, is the canvas's narrowest layout, 909 px (`min
 network, and a strip each side wide enough for the deck's columns collected by hand. Narrower, the
 canvas scrolls sideways inside its panel and the step row wraps, down to 320 px.
 
-The minimum layout height, 679 px, comes from the canvas's 440 px (`CANVAS_HEIGHT`), below the
-title, the step row and the panel's head. In an Interactive 562 px tall, the page scrolls down.
+The minimum layout height, 679 px, adds up from the top:
+- the title and its margins, 81 px;
+- a 9 px gap;
+- the step row, 44 px;
+- a 9 px gap;
+- the panel, 520 px: the canvas's 440 px (`CANVAS_HEIGHT`), and 80 px for the panel's head, padding
+  and border;
+- the view's 16 px bottom padding.
+
+Nothing in the view gives way as the window gets shorter, not even the padding, so the page scrolls
+down below 679 px, as it does in an Interactive 562 px tall.
 
 ## Still to come
 
