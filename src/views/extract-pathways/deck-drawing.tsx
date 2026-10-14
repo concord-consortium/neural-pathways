@@ -4,7 +4,7 @@ import { ForwardPass } from "../../core/network/forward";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import { centerShift, columnValues, deckMid, deckWidth, setSize } from "./deck-layout";
 import { ColumnGeometry, ExtractGeometry } from "./extract-geometry";
-import { StackScene } from "./extract-scene";
+import { DeckScene } from "./extract-scene";
 
 // The deck's depth shading is the prototype's cbShade, and its label and count are nameColumn's
 // and showCount's. src/views/README.md says where the prototype is.
@@ -199,8 +199,8 @@ export const DeckSet = React.memo(function DeckSet({ columns, size, lastOpacity,
   );
 });
 
-interface DeckStackProps {
-  stack: StackScene;
+interface DeckDrawingProps {
+  deck: DeckScene;
   geometry: ExtractGeometry;
   passes: readonly ForwardPass[];
   /** The hidden neurons' names, for set 0's tooltips. */
@@ -211,31 +211,31 @@ interface DeckStackProps {
 }
 
 /** The deck once Collect All has started: its sets, set 0's arriving columns and labels, and the count. */
-export function DeckStack({ stack, geometry, passes, names, clipPrefix, size }: DeckStackProps) {
-  const { deck } = geometry;
+export function DeckDrawing({ deck, geometry, passes, names, clipPrefix, size }: DeckDrawingProps) {
+  const firstColumn = geometry.deck;
   const mid = deckMid(geometry);
-  const x = stack.centered * centerShift(geometry) - stack.slide * mid;
-  const { count } = stack;
-  const countX = count ? mid + stack.slide * ((deck.r * deckWidth(count.n)) / 4 - mid) : 0;
-  const backToFront = stack.sets.map((set, index) => ({ set, index })).reverse();
+  const x = deck.centered * centerShift(geometry) - deck.slide * mid;
+  const { count } = deck;
+  const countX = count ? mid + deck.slide * ((firstColumn.r * deckWidth(count.n)) / 4 - mid) : 0;
+  const backToFront = deck.sets.map((set, index) => ({ set, index })).reverse();
   return (
     <>
       <g data-testid="deck" transform={`translate(${x},0)`}>
         {backToFront.map(({ set, index }) => (
-          <g key={index} transform={`translate(${set.offset * deck.r + set.shift},0)`}
+          <g key={index} transform={`translate(${set.offset * firstColumn.r + set.shift},0)`}
             opacity={set.opacity < 1 ? set.opacity : undefined}>
-            <DeckSet passes={passes} deck={deck} set={index} columns={set.columns} size={setSize(index, size)}
-              shade={stack.shade} lastOpacity={set.lastOpacity} clipPrefix={clipPrefix}
+            <DeckSet passes={passes} deck={firstColumn} set={index} columns={set.columns} size={setSize(index, size)}
+              shade={deck.shade} lastOpacity={set.lastOpacity} clipPrefix={clipPrefix}
               names={index === 0 ? names : undefined} />
-            {index === 0 && stack.arriving.map(arriving => (
-              <DeckColumn key={`arriving-${arriving.column}`} passes={passes} deck={deck} set={0}
-                column={arriving.column} face={faceOf(0, arriving.column, setSize(0, size))} shade={stack.shade}
+            {index === 0 && deck.arriving.map(arriving => (
+              <DeckColumn key={`arriving-${arriving.column}`} passes={passes} deck={firstColumn} set={0}
+                column={arriving.column} face={faceOf(0, arriving.column, setSize(0, size))} shade={deck.shade}
                 clipPrefix={clipPrefix} names={names} dx={arriving.dx} opacity={arriving.opacity} />
             ))}
-            {index === 0 && stack.labels.map(label => (
+            {index === 0 && deck.labels.map(label => (
               <text key={`label-${label.column}`} className="extract-drawing__label" textAnchor="end"
-                x={deck.x - (label.column + 1) * deck.r - LABEL_GAP} y={deck.ys[0] + label.column * deck.r + 4}
-                opacity={label.opacity}>
+                x={firstColumn.x - (label.column + 1) * firstColumn.r - LABEL_GAP}
+                y={firstColumn.ys[0] + label.column * firstColumn.r + 4} opacity={label.opacity}>
                 {`Conversation ${label.column + 1}`}
               </text>
             ))}
@@ -244,7 +244,7 @@ export function DeckStack({ stack, geometry, passes, names, clipPrefix, size }: 
       </g>
       {count && (
         <text className="extract-drawing__label extract-drawing__count" textAnchor="middle" x={countX}
-          y={deck.ys[0] - deck.r - COUNT_RISE} opacity={count.opacity < 1 ? count.opacity : undefined}>
+          y={firstColumn.ys[0] - firstColumn.r - COUNT_RISE} opacity={count.opacity < 1 ? count.opacity : undefined}>
           {`${count.n} Conversation${count.n === 1 ? "" : "s"}`}
         </text>
       )}

@@ -1,7 +1,7 @@
 import { collectAllDuration, collectAllPlan, collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { columnGap, setOffset } from "./deck-layout";
-import { stackRestScene } from "./extract-scene";
+import { deckRestScene } from "./extract-scene";
 
 const SIZES = [10, 8, 6, 2];
 const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
@@ -63,8 +63,8 @@ describe("collectAllSceneAt", () => {
     const start = collectAllSceneAt(SIZES, 3, 800, 0);
     expect(start.networkOpacity).toBe(1);
     expect(start.lifted!.opacity).toBe(0.5);
-    expect(start.deck).toEqual([]);
-    expect(start.stack!.sets).toEqual([{ offset: 0, shift: 0, opacity: 1, columns: 3, lastOpacity: 1 }]);
+    expect(start.collections).toEqual([]);
+    expect(start.deck!.sets).toEqual([{ offset: 0, shift: 0, opacity: 1, columns: 3, lastOpacity: 1 }]);
     const hidden = collectAllSceneAt(SIZES, 3, 800, 900);
     expect(hidden.networkOpacity).toBe(0);
     expect(hidden.lifted!.opacity).toBe(1);
@@ -72,57 +72,57 @@ describe("collectAllSceneAt", () => {
   });
 
   it("centers the deck for one more column by the end of the hand-over", () => {
-    const stack = collectAllSceneAt(SIZES, 3, 800, HANDOVER_MS).stack!;
-    expect(stack.centered).toBe(1);
-    expect(stack.sets[0].offset).toBe(1.5);
+    const deck = collectAllSceneAt(SIZES, 3, 800, HANDOVER_MS).deck!;
+    expect(deck.centered).toBe(1);
+    expect(deck.sets[0].offset).toBe(1.5);
   });
 
   it("slides each column of set 0 in from the left, labels it, and settles it", () => {
     const beat = collectAllPlan(SIZES, 3, 800).beats[2];
     expect(beat.column).toBe(5);
-    const sliding = collectAllSceneAt(SIZES, 3, 800, beat.start + 100).stack!;
+    const sliding = collectAllSceneAt(SIZES, 3, 800, beat.start + 100).deck!;
     expect(sliding.arriving).toHaveLength(1);
     expect(sliding.arriving[0].column).toBe(5);
     expect(sliding.arriving[0].dx).toBeLessThan(0);
     expect(sliding.arriving[0].opacity).toBeGreaterThan(0);
     expect(sliding.labels.map(label => label.column)).toContain(5);
     expect(sliding.sets[0].columns).toBe(5);
-    const settled = collectAllSceneAt(SIZES, 3, 800, beat.start + 700).stack!;
+    const settled = collectAllSceneAt(SIZES, 3, 800, beat.start + 700).deck!;
     expect(settled.arriving).toEqual([]);
     expect(settled.sets[0].columns).toBe(6);
   });
 
   it("counts set 0, then each set as it closes", () => {
     const plan = collectAllPlan(SIZES, 3, 800);
-    expect(collectAllSceneAt(SIZES, 3, 800, plan.countAt - 1).stack!.count).toBeUndefined();
-    expect(collectAllSceneAt(SIZES, 3, 800, plan.countAt + 320).stack!.count).toEqual({ n: 20, opacity: 1 });
-    expect(collectAllSceneAt(SIZES, 3, 800, plan.closes[0].start + 620).stack!.count).toEqual({ n: 40, opacity: 1 });
+    expect(collectAllSceneAt(SIZES, 3, 800, plan.countAt - 1).deck!.count).toBeUndefined();
+    expect(collectAllSceneAt(SIZES, 3, 800, plan.countAt + 320).deck!.count).toEqual({ n: 20, opacity: 1 });
+    expect(collectAllSceneAt(SIZES, 3, 800, plan.closes[0].start + 620).deck!.count).toEqual({ n: 40, opacity: 1 });
     const close = plan.closes[1];
-    expect(collectAllSceneAt(SIZES, 3, 800, close.start + close.duration).stack!.count!.n).toBe(60);
+    expect(collectAllSceneAt(SIZES, 3, 800, close.start + close.duration).deck!.count!.n).toBe(60);
   });
 
   it("brings each later set in short of its place, and closes every set up for the deck it makes", () => {
     const plan = collectAllPlan(SIZES, 3, 800);
     const entry = plan.entries[0];
-    const arriving = collectAllSceneAt(SIZES, 3, 800, entry.at).stack!;
+    const arriving = collectAllSceneAt(SIZES, 3, 800, entry.at).deck!;
     expect(arriving.sets[2]).toMatchObject({ offset: setOffset(2, 3), shift: -50, opacity: 0, columns: 20 });
     expect(arriving.shade).toBe(2);
     const close = plan.closes[1];
-    const closed = collectAllSceneAt(SIZES, 3, 800, close.start + close.duration).stack!;
+    const closed = collectAllSceneAt(SIZES, 3, 800, close.start + close.duration).deck!;
     expect(closed.sets.map(set => set.offset)).toEqual([0, 1, 2].map(set => setOffset(set, 3)));
     expect(closed.sets[2].shift).toBe(0);
   });
 
   it("describes the deck by the conversations collected by hand until it is done", () => {
     const plan = collectAllPlan(SIZES, 3, 800);
-    expect(collectAllSceneAt(SIZES, 3, 800, plan.end - 1).stack).toMatchObject({ collected: 3, done: false });
+    expect(collectAllSceneAt(SIZES, 3, 800, plan.end - 1).deck).toMatchObject({ collected: 3, done: false });
   });
 
   it.each<[number, number]>([[0, 800], [3, 800], [10, 800], [3, 20], [3, 30], [2, 3]])(
     "ends from %p collected of %p on the deck at rest",
     (collected, size) => {
       expect(collectAllSceneAt(SIZES, collected, size, collectAllDuration(SIZES, collected, size)))
-        .toEqual(stackRestScene(SIZES, size));
+        .toEqual(deckRestScene(SIZES, size));
     },
   );
 });

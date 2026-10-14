@@ -10,7 +10,7 @@ import { flightDuration } from "./flight";
 export const SPOTLIGHT = 0.5;
 
 /** One set of the deck. */
-export interface StackSet {
+export interface DeckSetScene {
   /** Where it sits once the deck is centered, in deck radii right of where its columns are drawn. */
   offset: number;
   /** How far it still is from there, in px: negative while it closes up from short of its place. */
@@ -22,14 +22,14 @@ export interface StackSet {
   lastOpacity: number;
 }
 
-/** The deck once Collect All Conversations has started. ExtractDrawing's DeckStack draws it. */
-export interface StackScene {
+/** The deck once Collect All Conversations has started. ExtractDrawing's DeckDrawing draws it. */
+export interface DeckScene {
   /** How far the deck has moved from the left strip toward the middle of its room, 0–1. */
   centered: number;
   /** How far Extract Pathways has slid it left, until its middle is on the canvas's left edge, 0–1. */
   slide: number;
   /** Every set in, set 0 (in front) first. */
-  sets: StackSet[];
+  sets: DeckSetScene[];
   /** Set 0's columns still sliding in: how far from their place, in px, and their opacity. */
   arriving: { column: number; dx: number; opacity: number }[];
   /** How deep the faces' shading is: see deck-drawing's `shading`. */
@@ -56,10 +56,13 @@ export interface ExtractScene {
   label: { n: number; bounce: number } | undefined;
   /** The lifted column, once its copies have left. `flight` is ms since they left. */
   lifted: { flight: number; opacity: number; labelOpacity: number } | undefined;
-  /** The deck's columns in order. `flight` is ms since that column's copies left. */
-  deck: { conversation: number; flight: number }[];
-  /** The deck once Collect All has started; the columns collected by hand are its first. */
-  stack: StackScene | undefined;
+  /**
+   * The collections so far, in order: the conversation each adds to the deck, and `flight`, ms since
+   * its copies left. Empty once Collect All has started, when `deck` holds their columns.
+   */
+  collections: { conversation: number; flight: number }[];
+  /** The deck, in sets, once Collect All has started; the columns collected by hand are set 0's first. */
+  deck: DeckScene | undefined;
 }
 
 /** How many hidden units there are: every layer but the first and last. */
@@ -85,13 +88,13 @@ export function restScene(columnSizes: readonly number[], marker: Marker): Extra
     shown: collected > 0 ? collected : undefined,
     label: collected > 0 ? { n: collected, bounce: 1 } : undefined,
     lifted: marker >= 1 ? { flight: landed, opacity: 1 - spotlight, labelOpacity: 1 } : undefined,
-    deck: Array.from({ length: collected }, (_, c) => ({ conversation: c + 1, flight: landed })),
-    stack: undefined,
+    collections: Array.from({ length: collected }, (_, c) => ({ conversation: c + 1, flight: landed })),
+    deck: undefined,
   };
 }
 
 /** The finished deck of `size` columns, at rest. */
-export function deckStack(size: number): StackScene {
+export function finishedDeck(size: number): DeckScene {
   const sets = setCount(size);
   return {
     centered: 1,
@@ -110,9 +113,9 @@ export function deckStack(size: number): StackScene {
 }
 
 /** The scene resting at the deck: the finished deck beside the lifted column at full strength, and no network. */
-export function stackRestScene(columnSizes: readonly number[], size: number): ExtractScene {
+export function deckRestScene(columnSizes: readonly number[], size: number): ExtractScene {
   const scene = restScene(columnSizes, 1);
   scene.networkOpacity = 0;
-  scene.stack = deckStack(size);
+  scene.deck = finishedDeck(size);
   return scene;
 }

@@ -3,7 +3,7 @@ import { collectDuration, collectSceneAt } from "./collect-timeline";
 import {
   columnGap, firstSetOffset, SET_SIZE, setCount, setEnter, setGap, setHold, setMove, setOffset, setSize,
 } from "./deck-layout";
-import { ExtractScene, restScene, SPOTLIGHT, StackScene, StackSet } from "./extract-scene";
+import { ExtractScene, restScene, SPOTLIGHT, DeckScene, DeckSetScene } from "./extract-scene";
 import { easeX, SETTLE_MS, SETTLE_PX, settleEase } from "./flight";
 import { easeBetween } from "./setup-timeline";
 import { lerp, Transition, transitionAt } from "./transitions";
@@ -165,8 +165,8 @@ function frontSet(plan: CollectAllPlan, t: number) {
   const centered = moveEase(clamp01((local - HANDOVER_REST - CENTER_DELAY) / CENTER_MS));
   let offset = lerp(0, firstSetOffset(Math.min(from + 1, size)), centered);
   let columns = from;
-  const arriving: StackScene["arriving"] = [];
-  const labels: StackScene["labels"] = [];
+  const arriving: DeckScene["arriving"] = [];
+  const labels: DeckScene["labels"] = [];
   beats.forEach((beat, i) => {
     if (t < beat.start) {
       return;
@@ -194,7 +194,7 @@ function frontSet(plan: CollectAllPlan, t: number) {
 }
 
 /** The count over the deck at `t`: set 0's, then changing as sets close. */
-function countFor(plan: CollectAllPlan, t: number): StackScene["count"] {
+function countFor(plan: CollectAllPlan, t: number): DeckScene["count"] {
   if (t < plan.countAt) {
     return undefined;
   }
@@ -215,9 +215,9 @@ function countFor(plan: CollectAllPlan, t: number): StackScene["count"] {
   return { n, opacity };
 }
 
-function stackAt(plan: CollectAllPlan, t: number): StackScene {
+function deckAt(plan: CollectAllPlan, t: number): DeckScene {
   const front = frontSet(plan, t);
-  const sets: StackSet[] = [{
+  const sets: DeckSetScene[] = [{
     ...setPlace(plan, 0, front.offset, 0, t), opacity: 1, columns: front.columns, lastOpacity: 1,
   }];
   const appeared = plan.set1.filter(at => t >= at).length;
@@ -279,7 +279,7 @@ export function collectAllSceneAt(columnSizes: readonly number[], collected: num
   const scene = restScene(columnSizes, hidden < 1 ? plan.from + 1 : 1);
   scene.networkOpacity = 1 - hidden;
   scene.lifted = { ...scene.lifted!, opacity: 1 - SPOTLIGHT * (1 - hidden) };
-  scene.deck = [];
-  scene.stack = stackAt(plan, t);
+  scene.collections = [];
+  scene.deck = deckAt(plan, t);
   return scene;
 }

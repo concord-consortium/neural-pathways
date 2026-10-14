@@ -7,7 +7,7 @@ import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { COLUMN_CAPTIONS, MIN_GAUGE, NetworkDrawing } from "../../core/network-diagram/network-drawing";
 import { useElementSize } from "../../core/use-element-size";
 import { useKeyboardScrollable } from "../../core/use-keyboard-scrollable";
-import { DeckStack, rowClipId } from "./deck-drawing";
+import { DeckDrawing, rowClipId } from "./deck-drawing";
 import { hiddenValues } from "./deck-layout";
 import {
   CANVAS_HEIGHT, ColumnGeometry, deckPosition, extractGeometry, LABEL_Y, NETWORK_WIDTH,
@@ -35,17 +35,17 @@ const conversations = (n: number) => `${n} conversation${n === 1 ? "" : "s"}`;
  */
 export function describeScene(scene: ExtractScene, hidden: number): string {
   const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
-  const { stack } = scene;
-  if (stack) {
-    return stack.done
-      ? `The network's ${hidden} hidden neurons lifted out, and all ${conversations(stack.collected)} collected.`
-      : `${lifted} and ${conversations(stack.collected)} collected.`;
+  const { deck } = scene;
+  if (deck) {
+    return deck.done
+      ? `The network's ${hidden} hidden neurons lifted out, and all ${conversations(deck.collected)} collected.`
+      : `${lifted} and ${conversations(deck.collected)} collected.`;
   }
   const landed = flightDuration(hidden);
   if (!scene.lifted || scene.lifted.flight < landed) {
     return "The network.";
   }
-  const collected = scene.deck.filter(column => column.flight >= landed).length;
+  const collected = scene.collections.filter(column => column.flight >= landed).length;
   return collected === 0 ? `${lifted}.` : `${lifted} and ${conversations(collected)} collected.`;
 }
 
@@ -189,12 +189,12 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
           <LiftedColumn flights={liftedFlights} lifted={lifted} names={names} flight={scene.lifted.flight}
             opacity={scene.lifted.opacity} labelOpacity={scene.lifted.labelOpacity} dx={0} />
         )}
-        {scene.stack
+        {scene.deck
           ? (
-            <DeckStack stack={scene.stack} geometry={geometry} passes={passes} names={names} clipPrefix={clipId}
+            <DeckDrawing deck={scene.deck} geometry={geometry} passes={passes} names={names} clipPrefix={clipId}
               size={deckSize} />
           )
-          : scene.deck.map((column, c) => {
+          : scene.collections.map((column, c) => {
             const flights = deckFlights(c);
             const values = hiddenValues(passes[column.conversation - 1]);
             return (

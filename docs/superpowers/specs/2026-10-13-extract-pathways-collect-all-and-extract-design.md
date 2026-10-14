@@ -324,20 +324,21 @@ compared shallowly.
 
 ```ts
 interface ExtractScene {
-  // …as now: network, shown, label, lifted, deck (the columns in flight or landed by hand)
+  // …as now: network, shown, label, lifted, and collections (renamed from deck: the columns in
+  // flight or landed by hand)
   /** The network's opacity as a whole, 0 once the hand-over hides it. */
   networkOpacity: number;
   /** How far the lifted column, its label, bars, boxes and lines are moved right (negative: left). */
   liftedDx: number;
   /** The deck once Collect All has started: undefined before. */
-  stack: StackScene | undefined;
+  deck: DeckScene | undefined;
   /** Undefined until Extract Pathways starts. */
   pathways: PathwaysScene | undefined;
   /** Timeline time into the particles' flight, while they fly. */
   particles: number | undefined;
 }
 
-interface StackScene {
+interface DeckScene {
   /** How far Extract Pathways has slid the whole deck left; 0 until then. */
   slide: number;
   /**
@@ -363,8 +364,8 @@ interface PathwaysScene {
 }
 ```
 
-Once the hand-over starts, the columns collected by hand are set 1's first columns in `stack`, and
-`deck` is empty: a landed hand column and a column of set 1 are drawn the same way.
+Once the hand-over starts, the columns collected by hand are set 1's first columns in `deck`, and
+`collections` is empty: a landed hand column and a column of set 1 are drawn the same way.
 
 The names and shapes may change in implementation, but the scene stays a plain description: no
 element counts that grow with the frame, and no per-column entries for the 800.
