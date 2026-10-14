@@ -2,7 +2,7 @@ import React from "react";
 import { signColor } from "../../core/colors";
 import { ForwardPass } from "../../core/network/forward";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
-import { centerShift, columnValues, deckMid, deckWidth, SET_SIZE } from "./deck-layout";
+import { centerShift, columnValues, deckMid, deckWidth, setSize } from "./deck-layout";
 import { ColumnGeometry, ExtractGeometry } from "./extract-geometry";
 import { StackScene } from "./extract-scene";
 
@@ -22,9 +22,13 @@ const COUNT_RISE = 12;
 /** Which of the deck's visible surfaces a column is part of. */
 export type Face = "right" | "front" | "corner" | "inside";
 
-/** Set 0's columns are the right face, every set's last column is the front face, and set 0's last is both. */
-export function faceOf(set: number, column: number): Face {
-  const front = column === SET_SIZE - 1;
+/**
+ * Set 0's columns are the right face, every set's last column is the front face, and set 0's last
+ * is both. `columns` is how many the set holds once it is full, so a partial last set's front face
+ * is its last column.
+ */
+export function faceOf(set: number, column: number, columns: number): Face {
+  const front = column === columns - 1;
   if (set === 0) {
     return front ? "corner" : "right";
   }
@@ -107,6 +111,7 @@ interface DeckColumnProps {
   deck: ColumnGeometry;
   set: number;
   column: number;
+  face: Face;
   shade: number;
   clipPrefix: string;
   /** Each row's neuron name, for set 0's tooltips. */
@@ -120,11 +125,11 @@ interface DeckColumnProps {
  * Drawn at the deck's first column and placed by its transform, so its rows share one clip each.
  */
 const DeckColumn = React.memo(function DeckColumn(
-  { passes, deck, set, column, shade, clipPrefix, names, dx = 0, opacity = 1 }: DeckColumnProps
+  { passes, deck, set, column, face, shade, clipPrefix, names, dx = 0, opacity = 1 }: DeckColumnProps
 ) {
   const values = columnValues(passes, set, column);
   const { r, x: cx } = deck;
-  const look = shading(faceOf(set, column), shade);
+  const look = shading(face, shade);
   const row = (k: number, overlays: React.ReactNode) => {
     const v = values[k];
     const cy = deck.ys[k];
@@ -166,7 +171,10 @@ interface DeckSetProps {
   passes: readonly ForwardPass[];
   deck: ColumnGeometry;
   set: number;
+  /** How many of its columns are in. */
   columns: number;
+  /** How many it holds once it is full. */
+  size: number;
   shade: number;
   lastOpacity: number;
   clipPrefix: string;
@@ -177,13 +185,16 @@ interface DeckSetProps {
  * One set of the deck: up to 20 columns. Memoized, so a frame that only moves the set redraws none
  * of its columns. Only the face columns take the shade, so a deeper shade redraws just those.
  */
-export const DeckSet = React.memo(function DeckSet({ columns, lastOpacity, shade, ...props }: DeckSetProps) {
+export const DeckSet = React.memo(function DeckSet({ columns, size, lastOpacity, shade, ...props }: DeckSetProps) {
   return (
     <g data-testid={`deck-set-${props.set}`}>
-      {Array.from({ length: columns }, (_, column) => (
-        <DeckColumn key={column} {...props} column={column} shade={faceOf(props.set, column) === "inside" ? 0 : shade}
-          opacity={column === columns - 1 ? lastOpacity : 1} />
-      ))}
+      {Array.from({ length: columns }, (_, column) => {
+        const face = faceOf(props.set, column, size);
+        return (
+          <DeckColumn key={column} {...props} column={column} face={face} shade={face === "inside" ? 0 : shade}
+            opacity={column === columns - 1 ? lastOpacity : 1} />
+        );
+      })}
     </g>
   );
 });
@@ -195,10 +206,12 @@ interface DeckStackProps {
   /** The hidden neurons' names, for set 0's tooltips. */
   names: readonly string[];
   clipPrefix: string;
+  /** How many conversations the deck holds once it is done. */
+  size: number;
 }
 
 /** The deck once Collect All has started: its sets, set 0's arriving columns and labels, and the count. */
-export function DeckStack({ stack, geometry, passes, names, clipPrefix }: DeckStackProps) {
+export function DeckStack({ stack, geometry, passes, names, clipPrefix, size }: DeckStackProps) {
   const { deck } = geometry;
   const mid = deckMid(geometry);
   const x = stack.centered * centerShift(geometry) - stack.slide * mid;
@@ -211,12 +224,13 @@ export function DeckStack({ stack, geometry, passes, names, clipPrefix }: DeckSt
         {backToFront.map(({ set, index }) => (
           <g key={index} transform={`translate(${set.offset * deck.r + set.shift},0)`}
             opacity={set.opacity < 1 ? set.opacity : undefined}>
-            <DeckSet passes={passes} deck={deck} set={index} columns={set.columns} shade={stack.shade}
-              lastOpacity={set.lastOpacity} clipPrefix={clipPrefix} names={index === 0 ? names : undefined} />
+            <DeckSet passes={passes} deck={deck} set={index} columns={set.columns} size={setSize(index, size)}
+              shade={stack.shade} lastOpacity={set.lastOpacity} clipPrefix={clipPrefix}
+              names={index === 0 ? names : undefined} />
             {index === 0 && stack.arriving.map(arriving => (
               <DeckColumn key={`arriving-${arriving.column}`} passes={passes} deck={deck} set={0}
-                column={arriving.column} shade={stack.shade} clipPrefix={clipPrefix} names={names}
-                dx={arriving.dx} opacity={arriving.opacity} />
+                column={arriving.column} face={faceOf(0, arriving.column, setSize(0, size))} shade={stack.shade}
+                clipPrefix={clipPrefix} names={names} dx={arriving.dx} opacity={arriving.opacity} />
             ))}
             {index === 0 && stack.labels.map(label => (
               <text key={`label-${label.column}`} className="extract-drawing__label" textAnchor="end"

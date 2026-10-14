@@ -69,8 +69,9 @@ one thing, or one name for two things, settle it and add it here.
 
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
-- **set:** 20 columns of the deck that move as one. Collect All Conversations fills the first one a
-  column at a time and adds the rest behind it, up to 40.
+- **set:** 20 columns of the deck that move as one; the last set holds fewer when the conversations
+  don't fill it. Collect All Conversations fills the first one a column at a time and adds the rest
+  behind it, up to 40.
 - **face:** one of the deck's visible surfaces: the right face is set 0's columns, the front face
   is every set's last column, and the top is every column's top row. Set 0's last column, the
   corner, is on both the right and the front face.

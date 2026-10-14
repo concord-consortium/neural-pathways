@@ -131,6 +131,8 @@ interface ExtractDrawingProps {
   scene: ExtractScene;
   /** The id of the heading that names the drawing's panel, which names the drawing too. */
   headingId: string;
+  /** How many conversations the deck holds. */
+  deckSize: number;
 }
 
 /**
@@ -141,7 +143,7 @@ interface ExtractDrawingProps {
  * the panel is already a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
-  network, passes, scales, outputLabels, scene, headingId,
+  network, passes, scales, outputLabels, scene, headingId, deckSize,
 }) => {
   // Until the host is measured, and in jsdom, which can't measure it: the narrowest layout.
   const [hostRef, size] = useElementSize<HTMLDivElement>({ width: 0, height: CANVAS_HEIGHT });
@@ -188,7 +190,10 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
             opacity={scene.lifted.opacity} labelOpacity={scene.lifted.labelOpacity} dx={0} />
         )}
         {scene.stack
-          ? <DeckStack stack={scene.stack} geometry={geometry} passes={passes} names={names} clipPrefix={clipId} />
+          ? (
+            <DeckStack stack={scene.stack} geometry={geometry} passes={passes} names={names} clipPrefix={clipId}
+              size={deckSize} />
+          )
           : scene.deck.map((column, c) => {
             const flights = deckFlights(c);
             const values = hiddenValues(passes[column.conversation - 1]);

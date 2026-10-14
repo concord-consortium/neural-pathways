@@ -31,6 +31,11 @@ export function setCount(size: number): number {
   return Math.ceil(size / SET_SIZE);
 }
 
+/** How many columns set `set` of a deck of `size` holds: 20, but the last set may hold fewer. */
+export function setSize(set: number, size: number): number {
+  return Math.min(SET_SIZE, size - set * SET_SIZE);
+}
+
 /** A conversation's hidden activations: Hidden Layer 1's, then Hidden Layer 2's. */
 export function hiddenValues(pass: ForwardPass): number[] {
   return pass.layers.slice(1, -1).flat();

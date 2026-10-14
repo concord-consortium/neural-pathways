@@ -15,16 +15,25 @@ const passes = Array.from({ length: 800 }, (_, i) => fixturePasses[i % fixturePa
 const geometry = extractGeometry(SIZES, 0);
 const names = Array.from({ length: 14 }, (_, k) => `Neuron ${k + 1}`);
 
-function drawStack(stack: StackScene) {
-  return <svg><DeckStack stack={stack} geometry={geometry} passes={passes} names={names} clipPrefix="clip" /></svg>;
+function drawStack(stack: StackScene, size = stack.collected) {
+  return (
+    <svg>
+      <DeckStack stack={stack} geometry={geometry} passes={passes} names={names} clipPrefix="clip" size={size} />
+    </svg>
+  );
 }
 
 describe("faceOf", () => {
   it("finds the right face in set 0, the front face in each set's last column, and their corner", () => {
-    expect(faceOf(0, 0)).toBe("right");
-    expect(faceOf(0, 19)).toBe("corner");
-    expect(faceOf(3, 19)).toBe("front");
-    expect(faceOf(3, 0)).toBe("inside");
+    expect(faceOf(0, 0, 20)).toBe("right");
+    expect(faceOf(0, 19, 20)).toBe("corner");
+    expect(faceOf(3, 19, 20)).toBe("front");
+    expect(faceOf(3, 0, 20)).toBe("inside");
+  });
+
+  it("ends a partial set's front face at its last column", () => {
+    expect(faceOf(1, 9, 10)).toBe("front");
+    expect(faceOf(1, 8, 10)).toBe("inside");
   });
 });
 
@@ -110,5 +119,26 @@ describe("DeckStack", () => {
     } finally {
       reads.mockRestore();
     }
+  });
+
+  it("shades a partial last set's last column as front face", () => {
+    const stack = deckStack(50);
+    const { rerender } = render(drawStack(stack));
+    const reads = jest.spyOn(deckLayout, "columnValues");
+    try {
+      rerender(drawStack({ ...stack, shade: stack.shade + 1 }));
+      // Set 0's 20 columns, set 1's last, and the last of set 2's 10.
+      expect(reads).toHaveBeenCalledTimes(22);
+      expect(reads).toHaveBeenCalledWith(passes, 2, 9);
+    } finally {
+      reads.mockRestore();
+    }
+  });
+
+  it("finds a set's front face by the columns it will hold, not those in so far", () => {
+    const full = deckStack(40);
+    render(drawStack({ ...full, sets: full.sets.map((set, i) => (i === 1 ? { ...set, columns: 15 } : set)) }));
+    // eslint-disable-next-line testing-library/no-node-access -- the shading is a filter on the column's lower rows
+    expect(screen.getByTestId("deck-1-14").querySelector("g")).not.toHaveAttribute("style");
   });
 });

@@ -1,7 +1,7 @@
 import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import {
-  columnGap, firstSetOffset, SET_SIZE, setCount, setEnter, setGap, setHold, setMove, setOffset,
+  columnGap, firstSetOffset, SET_SIZE, setCount, setEnter, setGap, setHold, setMove, setOffset, setSize,
 } from "./deck-layout";
 import { ExtractScene, restScene, SPOTLIGHT, StackScene, StackSet } from "./extract-scene";
 import { easeX, SETTLE_MS, SETTLE_PX, settleEase } from "./flight";
@@ -101,7 +101,7 @@ export function collectAllPlan(columnSizes: readonly number[], collected: number
   const from = Math.max(collected, target);
   at += HANDOVER_MS;
   const beats: Beat[] = [];
-  for (let column = from; column < Math.min(SET_SIZE, size); column++) {
+  for (let column = from; column < setSize(0, size); column++) {
     const gap = columnGap(column, from);
     beats.push({ column, start: at, gap });
     at += gap;
@@ -114,7 +114,7 @@ export function collectAllPlan(columnSizes: readonly number[], collected: number
   const entries: SetEntry[] = [];
   const closes: Close[] = [];
   if (sets >= 2) {
-    for (let column = 0; column < Math.min(SET_SIZE, size - SET_SIZE); column++) {
+    for (let column = 0; column < setSize(1, size); column++) {
       set1.push(at + column * SET1_STEP);
     }
     const close = set1[set1.length - 1] + SET1_CLOSE_DELAY;
@@ -237,7 +237,7 @@ function stackAt(plan: CollectAllPlan, t: number): StackScene {
     sets.push({
       ...setPlace(plan, entry.set, setOffset(entry.set, entry.set + 1), -entry.enter, t),
       opacity: easeBetween(0, 1, t, entry.at, entry.fade),
-      columns: Math.min(SET_SIZE, plan.size - entry.set * SET_SIZE),
+      columns: setSize(entry.set, plan.size),
       lastOpacity: 1,
     });
     shade = entry.set;

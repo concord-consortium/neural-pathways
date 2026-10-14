@@ -24,7 +24,7 @@ const geometry = extractGeometry(SIZES, 0);
 function renderDrawing(scene: ExtractScene) {
   return render(
     <ExtractDrawing network={toyNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
-      headingId="panel-head" />,
+      headingId="panel-head" deckSize={passes.length} />,
   );
 }
 
@@ -74,7 +74,7 @@ describe("ExtractDrawing", () => {
       <>
         <h2 id="panel-head">The Network → Activated Pathways</h2>
         <ExtractDrawing network={toyNetwork} passes={passes} scales={scales} outputLabels={LABELS}
-          scene={restScene(SIZES, 0)} headingId="panel-head" />
+          scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length} />
       </>,
     );
     const group = screen.getByRole("group", { name: "The Network → Activated Pathways" });

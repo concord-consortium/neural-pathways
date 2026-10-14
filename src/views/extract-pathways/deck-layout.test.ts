@@ -3,7 +3,7 @@ import { toyNetwork } from "../../core/network/toy-network";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import {
   centerShift, columnGap, columnValues, deckMid, deckSize, deckWidth, firstSetOffset, restOffset,
-  SET_SIZE, setCount, setEnter, setGap, setHold, setMove, setOffset,
+  SET_SIZE, setCount, setEnter, setGap, setHold, setMove, setOffset, setSize,
 } from "./deck-layout";
 import { extractGeometry } from "./extract-geometry";
 
@@ -17,6 +17,13 @@ describe("the deck's size", () => {
     expect(setCount(800)).toBe(40);
     expect(setCount(30)).toBe(2);
     expect(setCount(7)).toBe(1);
+  });
+
+  it("fills every set but the last, which holds the rest", () => {
+    expect(setSize(0, 30)).toBe(20);
+    expect(setSize(1, 30)).toBe(10);
+    expect(setSize(1, 40)).toBe(20);
+    expect(setSize(0, 7)).toBe(7);
   });
 
   it("is 21 radii wide for a full set, 2 more per set behind, and one more than its columns alone", () => {
