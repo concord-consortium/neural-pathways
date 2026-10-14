@@ -2,7 +2,7 @@ import React from "react";
 import { signColor } from "../../core/colors";
 import { ForwardPass } from "../../core/network/forward";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
-import { centerShift, columnsInSet, columnValues, deckMid, deckWidth } from "./deck-layout";
+import { centerShift, columnsInSet, columnValues, deckMid, deckWidth, onFrontFace } from "./deck-layout";
 import { ColumnGeometry, ExtractGeometry } from "./extract-geometry";
 import { DeckScene } from "./extract-scene";
 
@@ -23,12 +23,12 @@ const COUNT_RISE = 12;
 export type Face = "right" | "front" | "corner" | "inside";
 
 /**
- * Set 0's columns are the right face, every set's last column is the front face, and set 0's last
- * is both. `setColumns` is how many the set holds once all its columns are in, so a partial last
- * set's front face is its last column.
+ * Set 0's columns are the right face, each set's last column is the front face where it shows (see
+ * `onFrontFace`), and set 0's last is both. `setColumns` is how many the set holds once all its
+ * columns are in.
  */
 export function faceOf(set: number, column: number, setColumns: number): Face {
-  const front = column === setColumns - 1;
+  const front = onFrontFace(set, column, setColumns);
   if (set === 0) {
     return front ? "corner" : "right";
   }

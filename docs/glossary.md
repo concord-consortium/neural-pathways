@@ -73,8 +73,8 @@ one thing, or one name for two things, settle it and add it here.
   don't fill it. Collect All Conversations fills the first one a column at a time and adds the rest
   behind it, up to 40. Sets are numbered from 0, so set 0 is the one in front.
 - **face:** one of the deck's visible surfaces: the right face is set 0's columns, the front face
-  is every set's last column, and the top is every column's top row. Set 0's last column, the
-  corner, is on both the right and the front face.
+  is each set's last column, where the set in front leaves it showing, and the top is every
+  column's top row. Set 0's last column, the corner, is on both the right and the front face.
 - **copy:** one flown circle in the lifted column or the deck.
 - **collection:** one conversation collected by hand, by Collect a Conversation or at the start of
   Collect All Conversations, from the network running it to its column landing in the deck.
