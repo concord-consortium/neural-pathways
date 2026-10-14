@@ -1,7 +1,7 @@
 import { forward } from "../../core/network/forward";
 import { toyNetwork } from "../../core/network/toy-network";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
-import { deckWidth } from "./deck-layout";
+import { centerShift, deckMid, deckWidth, setOffset } from "./deck-layout";
 import { extractGeometry } from "./extract-geometry";
 import {
   faceSources, landedCounts, Particle, particleAt, particlePlan, PARTICLES_MS, particleTarget, seededRandom,
@@ -98,6 +98,14 @@ describe("faceSources", () => {
     const right = (g.deck.r * deckWidth(800)) / 2;
     sources.forEach(source => expect(source.x).toBeLessThanOrEqual(right));
     expect(sources.some(source => source.x > 0)).toBe(true);
+  });
+
+  it("takes every row of a short last set's last column when it shows, as the front face", () => {
+    // Set 2 of a deck of 59 holds 19 columns, and nothing in front covers its last; the top alone
+    // would give that column one source at most.
+    const x = centerShift(g) - deckMid(g) + g.deck.r * setOffset(2, 59) + g.deck.x - 18 * g.deck.r;
+    const fromLastColumn = faceSources(g, passes, 59).filter(source => Math.abs(source.x - x) < 1e-9);
+    expect(fromLastColumn.length).toBeGreaterThan(1);
   });
 
   it("targets bars that are laid out for the same deck", () => {

@@ -2,7 +2,7 @@ import { signColor } from "../../core/colors";
 import { ForwardPass } from "../../core/network/forward";
 import { Point } from "../../core/network-diagram/layout";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
-import { centerShift, columnValues, deckMid, SET_SIZE, setCount, setOffset } from "./deck-layout";
+import { centerShift, columnsInSet, columnValues, deckMid, onFrontFace, setCount, setOffset } from "./deck-layout";
 import type { ExtractGeometry } from "./extract-geometry";
 import { Bar, barLengths } from "./pathways-layout";
 
@@ -134,14 +134,14 @@ export interface Source {
 
 /**
  * Every drawn gauge on the deck's visible faces, once the deck has slid half off the canvas: every
- * row of set 0, the right face; every row of each later set's last column, the front face; and
- * each column's top drawn gauge, the top, in the prototype's order (back set first, set 0 last).
+ * row of set 0, the right face; every row of each later set's last column where it shows, the
+ * front face (see `onFrontFace`); and each column's top drawn gauge, the top, in the prototype's
+ * order (back set first, set 0 last).
  */
 export function faceSources(geometry: ExtractGeometry, passes: readonly ForwardPass[], size: number): Source[] {
   const { deck } = geometry;
   const sets = setCount(size);
   const slid = centerShift(geometry) - deckMid(geometry);
-  const columnsIn = (set: number) => Math.min(SET_SIZE, size - set * SET_SIZE);
   const gauge = (set: number, column: number, row: number): Source | undefined => {
     const v = columnValues(passes, set, column)[row];
     const height = deck.r * Math.min(1, Math.abs(v));
@@ -161,18 +161,19 @@ export function faceSources(geometry: ExtractGeometry, passes: readonly ForwardP
       sources.push(source);
     }
   };
-  for (let column = 0; column < columnsIn(0); column++) {
+  for (let column = 0; column < columnsInSet(0, size); column++) {
     deck.ys.forEach((_, row) => push(gauge(0, column, row)));
   }
-  // A partial last set has no full last column, so, like faceOf's shading, it adds no front-face sources.
+  // Each later set's last column, where it shows, as faceOf shades it.
   for (let set = 1; set < sets; set++) {
-    if (columnsIn(set) === SET_SIZE) {
-      deck.ys.forEach((_, row) => push(gauge(set, SET_SIZE - 1, row)));
+    const last = columnsInSet(set, size) - 1;
+    if (onFrontFace(set, last, last + 1)) {
+      deck.ys.forEach((_, row) => push(gauge(set, last, row)));
     }
   }
   const backToFront = Array.from({ length: sets }, (_, i) => sets - 1 - i);
   for (const set of backToFront) {
-    for (let column = 0; column < columnsIn(set); column++) {
+    for (let column = 0; column < columnsInSet(set, size); column++) {
       const top = deck.ys.map((_, row) => gauge(set, column, row)).find(Boolean);
       push(top);
     }
