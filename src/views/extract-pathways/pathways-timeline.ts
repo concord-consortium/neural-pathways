@@ -50,7 +50,7 @@ export function copyLeaves(neuron: number): number {
 
 function pathwaysAt(t: number): PathwaysScene {
   const neurons = LOADINGS.length;
-  const slide = moveEase(clamp01((t - COLUMN_DELAY) / COLUMN_SLIDE_MS));
+  const liftedSlide = moveEase(clamp01((t - COLUMN_DELAY) / COLUMN_SLIDE_MS));
   const particles = t >= PARTICLES_AT && t < BARS_DONE ? t - PARTICLES_AT : undefined;
   let bars: PathwaysScene["bars"];
   if (t >= PARTICLES_AT) {
@@ -93,7 +93,7 @@ function pathwaysAt(t: number): PathwaysScene {
     };
   });
   return {
-    slide,
+    liftedSlide,
     particles,
     bars,
     flying,

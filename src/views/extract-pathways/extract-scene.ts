@@ -51,7 +51,7 @@ export interface DeckScene {
 /** What Extract Pathways adds to the scene. PathwaysLayer and ParticleCanvas draw it. */
 export interface PathwaysScene {
   /** How far the lifted column has moved to make room, 0–1. */
-  slide: number;
+  liftedSlide: number;
   /** Timeline time into the particles' flight, while they fly. */
   particles: number | undefined;
   /** The 42 bars, neuron by neuron, once the particles start: how far grown and how gray, each 0–1. */
@@ -146,7 +146,7 @@ export function deckRestScene(columnSizes: readonly number[], size: number): Ext
 /** The pathways when Extract Pathways is done. */
 export function finishedPathways(): PathwaysScene {
   return {
-    slide: 1,
+    liftedSlide: 1,
     particles: undefined,
     bars: barLengths().map(() => ({ grown: 1, muted: 0 })),
     flying: undefined,

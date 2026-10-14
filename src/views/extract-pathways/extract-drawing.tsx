@@ -195,7 +195,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
         {scene.lifted && (
           <LiftedColumn flights={liftedFlights} lifted={lifted} names={names} flight={scene.lifted.flight}
             opacity={scene.lifted.opacity} labelOpacity={scene.lifted.labelOpacity}
-            dx={scene.pathways ? scene.pathways.slide * pathways.liftedDx : 0} />
+            dx={scene.pathways ? scene.pathways.liftedSlide * pathways.liftedDx : 0} />
         )}
         {scene.deck
           ? (

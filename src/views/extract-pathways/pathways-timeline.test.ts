@@ -20,9 +20,9 @@ describe("extractPathwaysSceneAt", () => {
 
   it("slides the deck half off the canvas, and the lifted column after it", () => {
     expect(at(0).deck!.slide).toBe(0);
-    expect(at(400).pathways!.slide).toBe(0);
+    expect(at(400).pathways!.liftedSlide).toBe(0);
     expect(at(1400).deck!.slide).toBe(1);
-    expect(at(1500).pathways!.slide).toBe(1);
+    expect(at(1500).pathways!.liftedSlide).toBe(1);
   });
 
   it("draws no bars until the particles start, then grows them as particles land", () => {
