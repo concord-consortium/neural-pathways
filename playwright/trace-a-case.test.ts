@@ -151,9 +151,8 @@ test("the filter bar shows focus in forced-colors mode", async ({ page }) => {
   expect(await outline()).toBe("solid");
 });
 
-// Every browser Playwright runs supports :has(), so this checks only the ring around the label and
-// box. The fallback, a ring on the box alone for Chrome 104 and earlier, is checked by hand: force
-// the stylesheet's @supports condition false and the box gets the ring.
+// Every browser Playwright runs supports :has(), so the stylesheet's fallback for older browsers is
+// checked by hand.
 test("the Animate checkbox shows keyboard focus around its label", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
