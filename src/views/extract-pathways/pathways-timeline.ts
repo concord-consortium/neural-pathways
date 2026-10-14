@@ -22,7 +22,10 @@ const PATHWAYS_REST = 460;
 const LIFT = 200;
 export const COPY_FLY_MS = 760;
 const COPY_LEAD = 380;
-/** A bar copy fades for 22% of its flight time from 82% of the way, so it still shows as it lands. */
+/**
+ * A bar copy fades for 22% of its flight time, starting 82% of the way through it, so it still
+ * shows, faintly, as it lands.
+ */
 const COPY_FADE_AT = Math.round(COPY_FLY_MS * 0.82);
 const COPY_FADE_MS = Math.round(COPY_FLY_MS * 0.22);
 /** A bar copy is gone this long after its pathway starts. */
