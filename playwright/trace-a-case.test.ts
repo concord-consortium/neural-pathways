@@ -224,6 +224,9 @@ test("in a narrow window, Animate and the speed wrap below the network's title",
   await page.setViewportSize({ width: 480, height: 900 });
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  // Measured once the web font has loaded: the fallback font is wider, so the controls would
+  // overrun the head.
+  await page.evaluate(() => document.fonts.ready);
   const head = await page.locator(".trace-a-case__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
   const title = await page.getByRole("heading", { name: "The Network" }).boundingBox();

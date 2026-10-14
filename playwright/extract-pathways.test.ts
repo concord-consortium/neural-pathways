@@ -218,6 +218,9 @@ test("Animate and the speed survive switching views", async ({ page }) => {
 test("in a narrow window, Animate and the speed wrap below the panel's title", async ({ page }) => {
   await page.setViewportSize({ width: 480, height: 900 });
   await open(page);
+  // Measured once the web font has loaded: the fallback font is wider, so the controls would
+  // overrun the head.
+  await page.evaluate(() => document.fonts.ready);
   const head = await page.locator(".extract-pathways__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
   const title = await page.getByRole("heading", { name: "The Network → Activated Pathways" }).boundingBox();
