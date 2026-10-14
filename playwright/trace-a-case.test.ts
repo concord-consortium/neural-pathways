@@ -372,6 +372,18 @@ test("the keyboard can reach and scroll a diagram too wide for its Interactive",
   await expect.poll(() => diagramGroup(page).evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
 });
 
+// Widening past 889 px also switches the view to two columns.
+test("the diagram keeps the focus when its Interactive widens and it stops scrolling", async ({ page }) => {
+  await diagramIn(page, 320, 380);
+  await diagramGroup(page).focus();
+  await page.setViewportSize({ width: 1300, height: 900 });
+  await expect.poll(() => page.locator(".network-diagram").evaluate(e => e.scrollWidth > e.clientWidth)).toBe(false);
+  await expect(diagramGroup(page)).toBeFocused();
+  // Once the focus leaves, there's nothing to scroll, so it's no longer a Tab stop.
+  await page.keyboard.press("Shift+Tab");
+  await expect(diagramGroup(page)).not.toHaveAttribute("tabindex");
+});
+
 // Classic scrollbars, as on Windows, take room from the box they appear in. A drawing a fraction of
 // a pixel bigger than its box would show them, shrink to fit the smaller box, lose them, and grow
 // back, on every animation frame. The padding nudges move the panel's height through a whole
