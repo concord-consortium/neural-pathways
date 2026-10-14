@@ -4,9 +4,13 @@ import { TraceACaseState } from "../views/trace-a-case/trace-a-case-state";
 import { TraceACase } from "../views/trace-a-case/trace-a-case";
 import { ExtractPathwaysState } from "../views/extract-pathways/extract-pathways-state";
 import { ExtractPathways } from "../views/extract-pathways/extract-pathways";
+import { InvestigatePathwaysState } from "../views/investigate-pathways/investigate-pathways-state";
 import { InvestigatePathways } from "../views/investigate-pathways/investigate-pathways";
+import { PredictionChainState } from "../views/prediction-chain/prediction-chain-state";
 import { PredictionChain } from "../views/prediction-chain/prediction-chain";
+import { CorrelationsState } from "../core/state/correlations-state";
 import { Correlations } from "../views/correlations/correlations";
+import { InvestigateUnknownPathwayState } from "../views/investigate-unknown-pathway/investigate-unknown-pathway-state";
 import { InvestigateUnknownPathway } from "../views/investigate-unknown-pathway/investigate-unknown-pathway";
 import { CorrelationsPart2 } from "../views/correlations-part-2/correlations-part-2";
 
@@ -26,14 +30,23 @@ export const VIEWS: readonly ViewDef[] = [
     id: "extract-pathways", title: "Extract Pathways", component: ExtractPathways,
     stateModel: ExtractPathwaysState,
   },
-  { id: "investigate-pathways", title: "Investigate Pathways", component: InvestigatePathways },
-  { id: "prediction-chain", title: "Prediction Chain", component: PredictionChain },
-  { id: "correlations", title: "Correlations", component: Correlations },
+  {
+    id: "investigate-pathways", title: "Investigate Pathways", component: InvestigatePathways,
+    stateModel: InvestigatePathwaysState,
+  },
+  {
+    id: "prediction-chain", title: "Prediction Chain", component: PredictionChain,
+    stateModel: PredictionChainState,
+  },
+  { id: "correlations", title: "Correlations", component: Correlations, stateModel: CorrelationsState },
   {
     id: "investigate-unknown-pathway", title: "Investigate Unknown Pathway",
-    component: InvestigateUnknownPathway,
+    component: InvestigateUnknownPathway, stateModel: InvestigateUnknownPathwayState,
   },
-  { id: "correlations-part-2", title: "Correlations Part 2", component: CorrelationsPart2 },
+  {
+    id: "correlations-part-2", title: "Correlations Part 2", component: CorrelationsPart2,
+    stateModel: CorrelationsState,
+  },
 ];
 
 export function findView(id: string): ViewDef | undefined {
