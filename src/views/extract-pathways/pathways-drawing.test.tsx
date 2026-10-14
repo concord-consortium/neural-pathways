@@ -7,6 +7,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { finishedPathways, PathwaysScene } from "./extract-scene";
 import { extractGeometry } from "./extract-geometry";
 import { kickScale, mixColor, ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
+import { faceSources, particleAt, particlePlan, particleTarget, SOURCE_STEP } from "./particles";
 import { BOX_SIDE, pathwaysLayout } from "./pathways-layout";
 import { COPY_END_SCALE } from "./pathways-timeline";
 
@@ -130,16 +131,47 @@ describe("PathwaysLayer", () => {
 describe("ParticleCanvas", () => {
   afterEach(() => jest.restoreAllMocks());
 
-  it("paints the particles in flight, hidden from screen readers", () => {
+  function mockContext() {
+    const painted: { x: number; y: number; color: string; alpha: number }[] = [];
     const context = {
-      setTransform: jest.fn(), clearRect: jest.fn(), beginPath: jest.fn(), arc: jest.fn(), fill: jest.fn(),
-      globalAlpha: 1, fillStyle: "",
+      setTransform: jest.fn(), clearRect: jest.fn(), beginPath: jest.fn(), globalAlpha: 1, fillStyle: "",
+      arc: jest.fn((x: number, y: number) => painted.push({ x, y, color: "", alpha: 0 })),
+      fill: jest.fn((): void => {
+        Object.assign(painted[painted.length - 1], { color: context.fillStyle, alpha: context.globalAlpha });
+      }),
     };
     jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(context as any);
+    return { context, painted };
+  }
+
+  it("paints each particle in flight where it is, in its source's color, hidden from screen readers", () => {
+    const { context, painted } = mockContext();
     render(<ParticleCanvas t={2000} geometry={geometry} passes={passes} size={20} layout={layout} />);
     expect(screen.getByTestId("particles")).toHaveAttribute("aria-hidden", "true");
     expect(context.clearRect).toHaveBeenCalled();
-    expect(context.arc.mock.calls.length).toBeGreaterThan(0);
+    const sources = faceSources(geometry, passes, 20);
+    const { particles, need } = particlePlan();
+    const expected = particles.flatMap(particle => {
+      const source = sources[(particle.order * SOURCE_STEP) % sources.length];
+      const target = particleTarget(particle, layout.bars[particle.bar], need[particle.bar]);
+      const placed = particleAt(particle, 2000, source, target);
+      return placed ? [{ x: placed.x, y: placed.y, color: source.color, alpha: placed.opacity }] : [];
+    });
+    expect(expected.length).toBeGreaterThan(0);
+    expect(painted).toEqual(expected);
+  });
+
+  it("paints at the device's pixel ratio", () => {
+    const { context } = mockContext();
+    const ratio = window.devicePixelRatio;
+    window.devicePixelRatio = 2;
+    try {
+      render(<ParticleCanvas t={2000} geometry={geometry} passes={passes} size={20} layout={layout} />);
+      expect(screen.getByTestId("particles")).toHaveProperty("width", Math.round(geometry.width * 2));
+      expect(context.setTransform).toHaveBeenCalledWith(2, 0, 0, 2, 0, 0);
+    } finally {
+      window.devicePixelRatio = ratio;
+    }
   });
 
   it("draws nothing, without failing, where there is no 2D context", () => {
