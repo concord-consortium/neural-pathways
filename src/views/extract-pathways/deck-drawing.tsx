@@ -108,7 +108,8 @@ export function rowClipId(prefix: string, row: number): string {
 
 interface DeckColumnProps {
   passes: readonly ForwardPass[];
-  deck: ColumnGeometry;
+  /** The deck's first column, where every column is drawn before its transform places it. */
+  firstColumn: ColumnGeometry;
   set: number;
   column: number;
   face: Face;
@@ -125,14 +126,14 @@ interface DeckColumnProps {
  * Drawn at the deck's first column and placed by its transform, so its rows share one clip each.
  */
 const DeckColumn = React.memo(function DeckColumn(
-  { passes, deck, set, column, face, shade, clipPrefix, names, dx = 0, opacity = 1 }: DeckColumnProps
+  { passes, firstColumn, set, column, face, shade, clipPrefix, names, dx = 0, opacity = 1 }: DeckColumnProps
 ) {
   const values = columnValues(passes, set, column);
-  const { r, x: cx } = deck;
+  const { r, x: cx } = firstColumn;
   const look = shading(face, shade);
   const row = (k: number, overlays: React.ReactNode) => {
     const v = values[k];
-    const cy = deck.ys[k];
+    const cy = firstColumn.ys[k];
     const height = r * Math.min(1, Math.abs(v));
     const parts = (
       <>
@@ -149,7 +150,7 @@ const DeckColumn = React.memo(function DeckColumn(
       ? <g key={k}><title>{names[k]}</title>{parts}</g>
       : <React.Fragment key={k}>{parts}</React.Fragment>;
   };
-  const top = deck.ys[0];
+  const top = firstColumn.ys[0];
   return (
     <g data-testid={`deck-${set}-${column}`} transform={`translate(${-column * r + dx},${column * r})`}
       opacity={opacity < 1 ? opacity : undefined}>
@@ -160,7 +161,7 @@ const DeckColumn = React.memo(function DeckColumn(
         </>
       ))}
       <g style={look.body !== undefined ? { filter: `brightness(${look.body})` } : undefined}>
-        {deck.ys.slice(1).map((cy, i) => row(i + 1, look.cornerBody !== undefined
+        {firstColumn.ys.slice(1).map((cy, i) => row(i + 1, look.cornerBody !== undefined
           && <path d={rightHalf(cx, cy, r)} fillOpacity={look.cornerBody} />))}
       </g>
     </g>
@@ -169,7 +170,7 @@ const DeckColumn = React.memo(function DeckColumn(
 
 interface DeckSetProps {
   passes: readonly ForwardPass[];
-  deck: ColumnGeometry;
+  firstColumn: ColumnGeometry;
   set: number;
   /** How many of its columns are in. */
   columns: number;
@@ -227,11 +228,11 @@ export function DeckDrawing({ deck, geometry, passes, names, clipPrefix, size }:
           <g key={index} data-testid={`deck-place-${index}`}
             transform={`translate(${set.offset * firstColumn.r + set.shift},0)`}
             opacity={set.opacity < 1 ? set.opacity : undefined}>
-            <DeckSet passes={passes} deck={firstColumn} set={index} columns={set.columns}
+            <DeckSet passes={passes} firstColumn={firstColumn} set={index} columns={set.columns}
               setColumns={columnsInSet(index, size)} shade={deck.shade} lastOpacity={set.lastOpacity}
               clipPrefix={clipPrefix} names={index === 0 ? names : undefined} />
             {index === 0 && deck.arriving.map(arriving => (
-              <DeckColumn key={`arriving-${arriving.column}`} passes={passes} deck={firstColumn} set={0}
+              <DeckColumn key={`arriving-${arriving.column}`} passes={passes} firstColumn={firstColumn} set={0}
                 column={arriving.column} face={faceOf(0, arriving.column, columnsInSet(0, size))} shade={deck.shade}
                 clipPrefix={clipPrefix} names={names} dx={arriving.dx} opacity={arriving.opacity} />
             ))}
