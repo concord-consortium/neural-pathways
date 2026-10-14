@@ -72,9 +72,10 @@ describe("collectAllSceneAt", () => {
   });
 
   it("centers the deck for one more column by the end of the hand-over", () => {
-    const deck = collectAllSceneAt(SIZES, 3, 800, HANDOVER_MS).deck!;
-    expect(deck.centered).toBe(1);
-    expect(deck.sets[0].offset).toBe(1.5);
+    // Just before the first beat starts, which places the deck from then on.
+    const deck = collectAllSceneAt(SIZES, 3, 800, HANDOVER_MS - 1).deck!;
+    expect(deck.centered).toBeCloseTo(1, 3);
+    expect(deck.sets[0].offset).toBeCloseTo(1.5, 3);
   });
 
   it("slides each column of set 0 in from the left, labels it, and settles it", () => {
