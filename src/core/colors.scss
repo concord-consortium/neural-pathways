@@ -16,6 +16,8 @@ $wait-text: #3568AD;
 // Ink, rules and surfaces.
 $ink: #1E242C;
 $ink-2: #58616F;
+// 4.5:1 on $surface, exactly the least small text may have, so darkening $surface or lightening
+// this fails the speed slider's stop names.
 $ink-3: #6A727C;
 $rule: #CCD3DD;
 $rule-soft: #E4E9F0;
