@@ -6,7 +6,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import * as deckLayout from "./deck-layout";
 import { bottomHalf, DeckDrawing, diagonalHalf, faceOf, shading } from "./deck-drawing";
 import { extractGeometry } from "./extract-geometry";
-import { finishedDeck, DeckScene } from "./extract-scene";
+import { DeckScene, finishedDeck } from "./extract-scene";
 
 const SIZES = [10, 8, 6, 2];
 const fixturePasses = fixture.conversations.map(c => forward(toyNetwork, c.text));

@@ -1,6 +1,6 @@
 import { emptyScene, fullScene } from "../../core/network-diagram/scene";
 import { setOffset } from "./deck-layout";
-import { finishedDeck, hiddenCount, restScene, deckRestScene } from "./extract-scene";
+import { deckRestScene, finishedDeck, hiddenCount, restScene } from "./extract-scene";
 
 const SIZES = [10, 8, 6, 2];
 const LANDED = 2166;

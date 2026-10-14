@@ -1,7 +1,7 @@
 import { StepTimeline } from "../../core/steps/step-player";
 import { collectAllDuration, collectAllSceneAt } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
-import { ExtractScene, restScene, deckRestScene } from "./extract-scene";
+import { deckRestScene, ExtractScene, restScene } from "./extract-scene";
 import { DECK_MARKER } from "./extract-steps";
 import { setupDuration, setupSceneAt } from "./setup-timeline";
 

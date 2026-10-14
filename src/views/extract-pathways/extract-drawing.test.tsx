@@ -9,7 +9,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
-import { ExtractScene, restScene, deckRestScene } from "./extract-scene";
+import { deckRestScene, ExtractScene, restScene } from "./extract-scene";
 import { extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { flightDuration } from "./flight";
 import { setupSceneAt } from "./setup-timeline";

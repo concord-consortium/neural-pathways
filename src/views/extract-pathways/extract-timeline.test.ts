@@ -1,6 +1,6 @@
 import { collectAllDuration, collectAllSceneAt } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
-import { restScene, deckRestScene } from "./extract-scene";
+import { deckRestScene, restScene } from "./extract-scene";
 import { extractTimeline } from "./extract-timeline";
 import { setupDuration, setupSceneAt } from "./setup-timeline";
 

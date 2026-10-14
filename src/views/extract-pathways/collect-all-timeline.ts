@@ -3,7 +3,7 @@ import { collectDuration, collectSceneAt } from "./collect-timeline";
 import {
   columnGap, columnsInSet, columnsWithSets, setCount, setEnter, setGap, setHold, setMove, setOffset,
 } from "./deck-layout";
-import { ExtractScene, restScene, SPOTLIGHT, DeckScene, DeckSetScene } from "./extract-scene";
+import { DeckScene, DeckSetScene, ExtractScene, restScene, SPOTLIGHT } from "./extract-scene";
 import { easeX, SETTLE_MS, SETTLE_PX, settleEase } from "./flight";
 import { easeBetween } from "./setup-timeline";
 import { lerp, Transition, transitionAt } from "./transitions";
