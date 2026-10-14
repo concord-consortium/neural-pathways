@@ -83,7 +83,7 @@ describe("deckMid and centerShift", () => {
 });
 
 describe("the deck's timings", () => {
-  it("eases set 1's beats from 900 to 240 ms across the columns a run adds", () => {
+  it("eases set 0's beats from 900 to 240 ms across the columns a run adds", () => {
     expect(columnGap(3, 3)).toBe(900);
     expect(columnGap(11, 3)).toBe(570);
     expect(columnGap(19, 3)).toBe(240);
@@ -91,7 +91,7 @@ describe("the deck's timings", () => {
     expect(columnGap(19, 10)).toBe(240);
   });
 
-  it("brings set 3 in 50 px short of its place, down to 8 by set 10", () => {
+  it("brings set 2 in 50 px short of its place, down to 8 by set 9", () => {
     expect(setEnter(2)).toBe(50);
     expect(setEnter(5)).toBe(32);
     expect(setEnter(9)).toBe(8);
@@ -109,7 +109,7 @@ describe("the deck's timings", () => {
     expect(setMove(60)).toBe(90);
   });
 
-  it("holds sets 3 and 4 before they close", () => {
+  it("holds sets 2 and 3 before they close", () => {
     expect(setHold(2)).toBe(340);
     expect(setHold(3)).toBe(170);
     expect(setHold(4)).toBe(0);

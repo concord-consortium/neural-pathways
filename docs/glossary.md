@@ -71,7 +71,7 @@ one thing, or one name for two things, settle it and add it here.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
 - **set:** 20 columns of the deck that move as one; the last set holds fewer when the conversations
   don't fill it. Collect All Conversations fills the first one a column at a time and adds the rest
-  behind it, up to 40.
+  behind it, up to 40. Sets are numbered from 0, so set 0 is the one in front.
 - **face:** one of the deck's visible surfaces: the right face is set 0's columns, the front face
   is every set's last column, and the top is every column's top row. Set 0's last column, the
   corner, is on both the right and the front face.
