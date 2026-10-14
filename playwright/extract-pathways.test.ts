@@ -65,7 +65,8 @@ test("a much narrower frame scrolls only the canvas", async ({ page }) => {
 
 test("the keyboard can reach and scroll a canvas too wide for its frame", async ({ page }) => {
   await canvasIn(page, 600, 909);
-  // The speed slider is the last stop in the panel's head, just before the canvas.
+  // The speed slider is the last control in the panel's head that takes focus, just before the
+  // canvas.
   await page.getByRole("slider", { name: "Animation speed" }).focus();
   await page.keyboard.press("Tab");
   await expect(scrollRegion(page)).toBeFocused();
