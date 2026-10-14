@@ -27,10 +27,7 @@ export interface DeckSetScene {
 export interface DeckScene {
   /** How far the deck has moved from the left strip toward the middle of its room, 0–1. */
   centered: number;
-  /**
-   * How far Extract Pathways has slid it left, until its middle is on the canvas's left edge, 0–1;
-   * 0 until Extract Pathways is built.
-   */
+  /** How far Extract Pathways has slid it left, until its middle is on the canvas's left edge, 0–1. */
   slide: number;
   /** Every set in, set 0 (in front) first. */
   sets: DeckSetScene[];
@@ -95,8 +92,8 @@ export function hiddenCount(columnSizes: readonly number[]): number {
 /**
  * The scene resting at `marker`, with nothing running: the blank network; then the lifted
  * column; then the last conversation collected in full, under its label, with the deck, spotlit as
- * its flight left it (see `collectSceneAt`). For markers 0 to 11; from the deck on, the timeline
- * rests in `deckRestScene`.
+ * its flight left it (see `collectSceneAt`). For markers 0 to 11; at the deck the timeline rests in
+ * `deckRestScene`, and at the pathways in `pathwaysRestScene`.
  */
 export function restScene(columnSizes: readonly number[], marker: Marker): ExtractScene {
   const collected = Math.max(0, marker - 1);
