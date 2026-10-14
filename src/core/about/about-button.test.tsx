@@ -75,6 +75,15 @@ describe("AboutButton", () => {
     expect(aboutButton()).toHaveFocus();
   });
 
+  // Only the dialog's border is the dialog element itself and inside its box.
+  it("stays open on a click on the dialog element inside its box", () => {
+    open();
+    jest.spyOn(dialog(), "getBoundingClientRect").mockReturnValue(
+      { left: 100, right: 500, top: 100, bottom: 400, width: 400, height: 300, x: 100, y: 100 } as DOMRect);
+    fireEvent.click(dialog(), { clientX: 101, clientY: 200 });
+    expect(dialog()).toHaveAttribute("open");
+  });
+
   it("stays open on a click on its text", () => {
     open();
     fireEvent.click(screen.getByText("Why it matters."));
@@ -96,6 +105,17 @@ describe("AboutButton", () => {
     open();
     act(() => screen.getByRole("button", { name: "Close" }).blur());
     expect(fireEvent.keyDown(dialog(), { key: "Tab", shiftKey: true })).toBe(false);
+    expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+  });
+
+  it("lets Tab reach a link in its text", () => {
+    render(<AboutButton title="Trace a Case" markdown="See [the glossary](https://example.org)." />);
+    fireEvent.click(aboutButton());
+    // Close comes before the text, so Tab from it is the browser's to move on to the link.
+    expect(fireEvent.keyDown(screen.getByRole("button", { name: "Close" }), { key: "Tab" })).toBe(true);
+    const link = screen.getByRole("link", { name: "the glossary" });
+    act(() => link.focus());
+    expect(fireEvent.keyDown(link, { key: "Tab" })).toBe(false);
     expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
   });
 

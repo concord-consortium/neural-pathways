@@ -33,6 +33,18 @@ test.describe("a placeholder view's About", () => {
   });
 });
 
+// The placeholder views' text is checked in src/app/views-about.test.tsx, which can't load data.
+for (const [id, title, text] of [
+  ["trace-a-case", "Trace a Case", "Students follow a single alien conversation through the model"],
+  ["extract-pathways", "Extract Pathways", "Students stack many cases’ activations"],
+]) {
+  test(`${title}'s About opens its own text`, async ({ page }) => {
+    await page.goto(`/?interactive=${id}`);
+    await page.getByRole("button", { name: `About ${title}` }).click();
+    await expect(page.getByRole("dialog", { name: `About ${title}` })).toContainText(text);
+  });
+}
+
 test.describe("the About dialog", () => {
   const about = (page: Page) => page.getByRole("button", { name: "About Trace a Case" });
   const dialog = (page: Page) => page.getByRole("dialog", { name: "About Trace a Case" });
@@ -52,6 +64,17 @@ test.describe("the About dialog", () => {
     expect(dialogBox.y).toBeCloseTo(buttonBox.y + buttonBox.height + 6, 0);
     expect(dialogBox.x + dialogBox.width).toBeCloseTo(buttonBox.x + buttonBox.width, 0);
     await expect(page.getByRole("button", { name: "Close" })).toBeFocused();
+  });
+
+  // Trace a Case's text is taller than the room below its button at the designed size.
+  test("at the designed size, hangs below its button inside the window, and scrolls its text", async ({ page }) => {
+    await openTrace(page);
+    await about(page).click();
+    const buttonBox = await box(about(page));
+    const dialogBox = await box(dialog(page));
+    expect(dialogBox.y).toBeCloseTo(buttonBox.y + buttonBox.height + 6, 0);
+    expect(dialogBox.y + dialogBox.height).toBeLessThanOrEqual(552 + 0.5);
+    await expect(page.getByRole("group", { name: "About Trace a Case" })).toHaveAttribute("tabindex", "0");
   });
 
   test("Enter opens the dialog and it stays open", async ({ page }) => {

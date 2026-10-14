@@ -71,7 +71,8 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
     if (event.key !== "Tab") {
       return;
     }
-    const stops = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("button, [tabindex='0']"));
+    // Links count as well, so an about.md can have them.
+    const stops = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("a[href], button, [tabindex='0']"));
     const first = stops[0];
     const last = stops[stops.length - 1];
     // A click on the text leaves focus on the dialog itself, outside its controls, so Tab starts at
