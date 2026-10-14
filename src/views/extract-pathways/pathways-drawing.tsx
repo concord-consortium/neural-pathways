@@ -44,8 +44,8 @@ const aboutCenter = (transform: string): React.CSSProperties =>
   ({ transformBox: "fill-box", transformOrigin: "center", transform });
 
 /**
- * The lines, the zero rules, the loading bars, the copies in flight, and the boxes with their
- * labels, under the boxes and over the lines, as `pathways` says. Nothing until the particles start.
+ * The lines, the zero rules, the loading bars, the boxes with their labels, and the bar copies
+ * in flight, bottom to top, as `pathways` says. Nothing until the particles start.
  */
 export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; layout: PathwaysLayout }) {
   const { bars } = pathways;
@@ -77,6 +77,20 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
             fill={mixColor(signColor(bar.loading), RULE_COLOR, bars[b].muted)} />
         );
       })}
+      {layout.boxes.map((box, p) => {
+        const { opacity, kick } = pathways.boxes[p];
+        return opacity > 0 && (
+          <g key={p} opacity={opacity < 1 ? opacity : undefined}>
+            <rect className="extract-drawing__box" x={box.x} y={box.cy - BOX_SIDE / 2} width={BOX_SIDE}
+              height={BOX_SIDE} rx={BOX_CORNER}
+              style={kick === undefined ? undefined : aboutCenter(`scale(${kickScale(kick)})`)} />
+            <text className="extract-drawing__label extract-drawing__pathway" x={box.x + BOX_SIDE + LABEL_GAP}
+              y={box.cy + 4}>
+              {`Pathway ${p + 1}`}
+            </text>
+          </g>
+        );
+      })}
       {flying?.copies.map((copy, neuron) => {
         const bar = layout.bars[neuron * layout.boxes.length + flying.pathway];
         const box = layout.boxes[flying.pathway];
@@ -90,20 +104,6 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
             width={bar.length} height={BAR_HEIGHT} fill={signColor(bar.loading)}
             opacity={copy.opacity < 1 ? copy.opacity : undefined}
             style={aboutCenter(`translate(${dx}px, ${dy}px) scale(${scale})`)} />
-        );
-      })}
-      {layout.boxes.map((box, p) => {
-        const { opacity, kick } = pathways.boxes[p];
-        return opacity > 0 && (
-          <g key={p} opacity={opacity < 1 ? opacity : undefined}>
-            <rect className="extract-drawing__box" x={box.x} y={box.cy - BOX_SIDE / 2} width={BOX_SIDE}
-              height={BOX_SIDE} rx={BOX_CORNER}
-              style={kick === undefined ? undefined : aboutCenter(`scale(${kickScale(kick)})`)} />
-            <text className="extract-drawing__label extract-drawing__pathway" x={box.x + BOX_SIDE + LABEL_GAP}
-              y={box.cy + 4}>
-              {`Pathway ${p + 1}`}
-            </text>
-          </g>
         );
       })}
     </g>

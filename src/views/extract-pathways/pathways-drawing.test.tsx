@@ -69,6 +69,16 @@ describe("PathwaysLayer", () => {
     });
     expect(screen.getAllByTestId("bar-copy")).toHaveLength(14);
   });
+
+  it("flies the bar copies over the boxes, so each still shows as it lands", () => {
+    drawLayer({
+      ...finishedPathways(),
+      flying: { pathway: 0, copies: Array.from({ length: 14 }, () => ({ progress: 1, opacity: 0.5 })) },
+    });
+    const box = screen.getByText("Pathway 1");
+    const copy = screen.getAllByTestId("bar-copy")[0];
+    expect(box.compareDocumentPosition(copy)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
 });
 
 describe("ParticleCanvas", () => {
