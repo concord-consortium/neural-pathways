@@ -162,7 +162,7 @@ test.describe("About", () => {
   test("ends the step row at the minimum layout width, with the steps centered on the panel", async ({ page }) => {
     await openAt(page, 943);
     const aboutBox = await box(about(page));
-    const rowBox = await box(page.locator(".extract-pathways .step-row"));
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
     const panelBox = await box(panel(page));
     expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
     expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);
@@ -172,14 +172,14 @@ test.describe("About", () => {
   test("stays beside the steps in an Interactive just wide enough", async ({ page }) => {
     await openAt(page, STEP_ROW_WIDTH + 32);
     const aboutBox = await box(about(page));
-    const rowBox = await box(page.locator(".extract-pathways .step-row"));
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
     expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
   });
 
   test("drops below the steps, at the right, a pixel narrower, without scrolling sideways", async ({ page }) => {
     await openAt(page, STEP_ROW_WIDTH + 31);
     const aboutBox = await box(about(page));
-    const rowBox = await box(page.locator(".extract-pathways .step-row"));
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
     const panelBox = await box(panel(page));
     expect(aboutBox.y).toBeGreaterThanOrEqual(rowBox.y + rowBox.height);
     expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);

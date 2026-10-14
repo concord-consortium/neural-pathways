@@ -20,7 +20,7 @@ import { useSharedState, useViewState } from "../../core/state/view-state-contex
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { StepPlayer } from "../../core/steps/step-player";
-import { StepRow } from "../../core/steps/step-row";
+import { StepButtonGroup } from "../../core/steps/step-button-group";
 import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
 import about from "./about.md";
 import "./trace-a-case.scss";
@@ -112,7 +112,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
         </ConversationCard>
       </div>
       <div className="trace-a-case__step-row">
-        {player && place !== undefined && <StepRow player={player} buttons={TRACE_BUTTONS} />}
+        {player && place !== undefined && <StepButtonGroup player={player} buttons={TRACE_BUTTONS} />}
         <div className="trace-a-case__about">
           <AboutButton title={TRACE_A_CASE_TITLE} markdown={about} />
         </div>

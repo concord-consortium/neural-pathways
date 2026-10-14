@@ -95,5 +95,5 @@ one thing, or one name for two things, settle it and add it here.
   `useKeyboardScrollable` makes it reachable by keyboard. Not "region" for the area: its role is
   `group` or `region` (see `accessibility.md`), and "region" means the role.
 - **step row:** the row of controls above the network in Trace a Case and above the drawing in
-  Extract Pathways, holding the steps, Reset and About. `StepRow` draws the steps and Reset in it.
-  Not "toolbar".
+  Extract Pathways, holding the steps, Reset and About. `StepButtonGroup` draws the steps and Reset
+  in it. Not "toolbar".

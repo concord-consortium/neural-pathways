@@ -44,9 +44,9 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
   it between views.
 - `about/`: `AboutButton`, a view's About button and the modal dialog with its About text. Each
-  view keeps its text in an `about.md` beside its code, in markdown, and `marked` renders it. Webpack
-  imports an `.md` file as its text, and so does `jest/md-transform.js` under Jest. `markdown.d.ts`
-  types the import.
+  view keeps its text in an `about.md` beside its code, in markdown, and `marked` renders it.
+  Webpack imports an `.md` file as its text, and so does `jest/md-transform.js` under Jest.
+  `markdown.d.ts` types the import.
 - `view-placeholder/`: `ViewPlaceholder`, a view that isn't built yet: its title, its About button
   and a note.
 - `network/`: the network types, the toy network Trace a Case uses until there is one built from
@@ -75,10 +75,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   scene is still and progress is stored, and plays segments between them. `StepPlayer` plays the
   segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. It
   plays at the view's speed (see `StepPlayer`). A view lists its buttons as `StepButton`s, each
-  saying which segment it plays when the timeline rests at a marker, and `StepRow` draws them with
-  Reset. The player's scene changes on every frame of a run, so a view reads `player.scene` only
-  inside a small `<Observer>` around its drawing; the rest of the view then doesn't re-render while
-  a run plays.
+  saying which segment it plays when the timeline rests at a marker, and `StepButtonGroup` draws
+  them with Reset. The player's scene changes on every frame of a run, so a view reads
+  `player.scene` only inside a small `<Observer>` around its drawing; the rest of the view then
+  doesn't re-render while a run plays.
 - `animation-controls/`: the Animate checkbox and the Slow/Med/Fast speed slider, for any view
   whose state is `Animated`. The step player reads the same two values from the state the view
   gives it, so a view places the control and passes its state to both.

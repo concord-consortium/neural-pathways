@@ -7,7 +7,7 @@ import { indexPasses } from "../../core/network/index-passes";
 import { toyNetwork } from "../../core/network/toy-network";
 import { useViewState } from "../../core/state/view-state-context";
 import { StepPlayer } from "../../core/steps/step-player";
-import { StepRow } from "../../core/steps/step-row";
+import { StepButtonGroup } from "../../core/steps/step-button-group";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { ExtractDrawing } from "./extract-drawing";
@@ -58,7 +58,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
     <>
       <div className="extract-pathways__step-row">
         <div className="extract-pathways__steps">
-          <StepRow player={player} buttons={buttons} />
+          <StepButtonGroup player={player} buttons={buttons} />
         </div>
         <div className="extract-pathways__about">
           <AboutButton title={EXTRACT_PATHWAYS_TITLE} markdown={about} />
