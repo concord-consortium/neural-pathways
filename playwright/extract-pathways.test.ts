@@ -178,7 +178,7 @@ test("Collect All Conversations builds the deck of all 800", async ({ page }) =>
   await expect(page.getByText("800 Conversations")).toBeVisible();
 });
 
-test("Collect All carries on from the conversations collected by hand", async ({ page }) => {
+test("from five collected, Collect All ends on the deck", async ({ page }) => {
   await open(page);
   const collect = page.getByRole("button", { name: "Collect a Conversation" });
   for (let i = 0; i < 5; i++) {
