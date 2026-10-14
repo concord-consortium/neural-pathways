@@ -344,7 +344,7 @@ async function diagramIn(page: Page, width: number, diagramWidth: number) {
   });
 }
 
-/** The diagram's scroll region: a group named by its panel's heading. */
+/** The diagram's scroller: a group named by its panel's heading. */
 const diagramGroup = (page: Page) => page.getByRole("group", { name: "The Network" });
 
 // 380 is the narrowest the diagram is laid out (MIN_WIDTH in layout.ts).

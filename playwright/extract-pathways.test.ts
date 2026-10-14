@@ -41,14 +41,14 @@ async function canvasIn(page: Page, width: number, canvasWidth: number) {
   });
 }
 
-/** The drawing's scroll region: a group named by its panel's heading. */
-const scrollRegion = (page: Page) => page.getByRole("group", { name: "The Network → Activated Pathways" });
+/** The drawing's scroller: a group named by its panel's heading. */
+const drawingGroup = (page: Page) => page.getByRole("group", { name: "The Network → Activated Pathways" });
 
 // 909 is the narrowest the canvas is laid out (minCanvasWidth).
 
 test("an Interactive just wide enough holds the canvas at full size without scrolling", async ({ page }) => {
   expect(await canvasIn(page, 909 + INTERACTIVE_EXTRA, 909)).toEqual({ page: false, drawing: false });
-  await expect(scrollRegion(page)).not.toHaveAttribute("tabindex");
+  await expect(drawingGroup(page)).not.toHaveAttribute("tabindex");
 });
 
 test("a wider Interactive widens the canvas to fill it", async ({ page }) => {
@@ -57,7 +57,7 @@ test("a wider Interactive widens the canvas to fill it", async ({ page }) => {
 
 test("an Interactive a pixel too narrow scrolls the canvas sideways rather than scaling it down", async ({ page }) => {
   expect(await canvasIn(page, 908 + INTERACTIVE_EXTRA, 909)).toEqual({ page: false, drawing: true });
-  await expect(scrollRegion(page)).toHaveAttribute("tabindex", "0");
+  await expect(drawingGroup(page)).toHaveAttribute("tabindex", "0");
 });
 
 test("a much narrower Interactive scrolls only the canvas", async ({ page }) => {
@@ -68,10 +68,10 @@ test("the keyboard can reach and scroll a canvas too wide for its Interactive", 
   await canvasIn(page, 600, 909);
   await page.getByRole("button", { name: "Reset" }).focus();
   await page.keyboard.press("Tab");
-  await expect(scrollRegion(page)).toBeFocused();
-  await expect(scrollRegion(page)).toHaveAttribute("tabindex", "0");
+  await expect(drawingGroup(page)).toBeFocused();
+  await expect(drawingGroup(page)).toHaveAttribute("tabindex", "0");
   await page.keyboard.press("ArrowRight");
-  await expect.poll(() => scrollRegion(page).evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+  await expect.poll(() => drawingGroup(page).evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
 });
 
 test("unavailable steps look unavailable in forced-colors mode", async ({ page }) => {
@@ -86,10 +86,10 @@ test("unavailable steps look unavailable in forced-colors mode", async ({ page }
 
 test("the drawing keeps the focus when its Interactive widens and it stops scrolling", async ({ page }) => {
   await canvasIn(page, 600, 909);
-  await scrollRegion(page).focus();
+  await drawingGroup(page).focus();
   await page.setViewportSize({ width: 1300, height: 900 });
   await expect.poll(() => page.locator(".extract-drawing").evaluate(e => e.scrollWidth > e.clientWidth)).toBe(false);
-  await expect(scrollRegion(page)).toBeFocused();
+  await expect(drawingGroup(page)).toBeFocused();
   // Once the focus leaves, there's nothing to scroll, so it's no longer a Tab stop.
   await page.keyboard.press("Shift+Tab");
   await expect(page.locator(".extract-drawing")).not.toHaveAttribute("tabindex");
