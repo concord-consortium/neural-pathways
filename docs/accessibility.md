@@ -85,7 +85,7 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   views are built to meet 1.4.10 and 2.1.1 there, and checked in Chromium, but may be too cumbersome
   to be useful to students. Extract Pathways' step row wraps into three rows above a canvas that
   scrolls sideways, and Trace a Case stacks into a page over 1,100 px tall.
-- Extract Pathways' minimum layout height, 679 px, doesn't fit the designed size yet, so in an
+- Extract Pathways' minimum layout height, 680 px, doesn't fit the designed size yet, so in an
   Interactive 562 px tall its page scrolls down.
 
 **Scrollers.** A scroller must work from the keyboard

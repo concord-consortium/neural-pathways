@@ -90,7 +90,7 @@ module.exports = (env, argv) => {
           type: 'asset',
         },
         {
-          // An About text: the module's default export is the file's text.
+          // A markdown file, such as a view's About text: the module's default export is the file's text.
           test: /\.md$/i,
           type: 'asset/source',
         },

@@ -4,7 +4,7 @@ them is out in front at full size, and the three pathways stand beside it.
 ### Reading a loading
 
 Click a pathway and every neuron shows how strongly it loads on that pathway. Click a neuron instead
-and the same numbers come back the other way round — that neuron’s loading on each of the three. It
+and the same numbers come back the other way around — that neuron’s loading on each of the three. It
 is one table, read from either end.
 
 ### The point

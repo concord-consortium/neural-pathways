@@ -23,8 +23,8 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
   const closeRef = useRef<HTMLButtonElement>(null);
   const headingId = useId();
   const [bodyRef, bodyProps] = useKeyboardScrollable<HTMLDivElement>();
-  // The text is HTML set as is, which is safe only because it comes from the views' about.md files,
-  // reviewed with the code. Never pass a student's text or the data here.
+  // marked's HTML is set as is, which is safe only because the markdown comes from the views' about.md
+  // files, reviewed with the code. Never pass a student's text or the data here.
   const html = useMemo(() => marked.parse(markdown, { async: false }), [markdown]);
 
   // In the window's coordinates, without its scrollbars, as a top-layer dialog is laid out.

@@ -20,16 +20,15 @@
   flex-shrink: 0;
 }
 
-// Pressed while its dialog is open, as the prototype's.
+// Filled dark while its dialog is open.
 .about-button--open {
   border-color: colors.$ink;
   background: colors.$ink;
   color: #fff;
 }
 
-// Placed by the script below its button, which also limits its height to the room there (see
-// place-dialog.ts). 400 px wide at most, and never wider or taller than the window less its 10 px
-// margins. Its body scrolls.
+// Placed by the script, which also limits its height (see place-dialog.ts). 400 px wide at most, and
+// never wider or taller than the window less its 10 px margins. Its body scrolls.
 .about-dialog {
   position: fixed;
   inset: auto;

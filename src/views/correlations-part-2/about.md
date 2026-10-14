@@ -1,6 +1,6 @@
 Placeholder. The Correlations matrix again, run after Investigate Pathway 3 has commissioned new
 attribute codings — so the columns include facts about the conversations that nobody had recorded
-the first time round.
+the first time around.
 
 ### The point
 

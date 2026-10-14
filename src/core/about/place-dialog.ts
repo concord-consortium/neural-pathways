@@ -14,7 +14,8 @@ const MIN_ROOM_BELOW = 200;
  * Where the About dialog goes, in the window's coordinates, and how tall it may be. It hangs below
  * its button with their right edges aligned, as in the prototype, no taller than the room below, so
  * a long text scrolls inside it. With too little room below, it moves up until it fits in the window
- * instead. Either way it is kept inside the window. `dialog` is its height with no limit set.
+ * instead. Either way it is kept inside the window. `dialog` is its size without the last
+ * placement's limit.
  */
 export function placeDialog(button: { right: number; bottom: number }, dialog: Size, view: Size) {
   const left = Math.max(MARGIN, Math.min(button.right - dialog.width, view.width - MARGIN - dialog.width));

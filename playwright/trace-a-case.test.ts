@@ -498,6 +498,8 @@ test("the diagram is never drawn bigger than its box, even by a fraction of a pi
 test.describe("About", () => {
   /** The narrowest Interactive with two columns: the card, the gap, the step row and the gutters. */
   const MIN_LAYOUT_WIDTH = 447 + 10 + 421 + 32;
+  /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
+  const MIN_LAYOUT_HEIGHT = 524;
   const about = (page: Page) => page.getByRole("button", { name: "About Trace a Case" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
 
@@ -508,8 +510,8 @@ test.describe("About", () => {
     await page.evaluate(() => document.fonts.ready);
   }
 
-  test("ends the step row at the minimum layout width, and adds no height", async ({ page }) => {
-    await openAt(page, MIN_LAYOUT_WIDTH, 900);
+  test("ends the step row at the minimum layout size, and nothing scrolls", async ({ page }) => {
+    await openAt(page, MIN_LAYOUT_WIDTH, MIN_LAYOUT_HEIGHT);
     const aboutBox = await box(about(page));
     const resetBox = await box(page.getByRole("button", { name: "Reset" }));
     const cellBox = await box(page.locator(".trace-a-case__step-row"));
@@ -521,9 +523,9 @@ test.describe("About", () => {
     const card = await box(page.getByRole("region", { name: "Conversation", exact: true }));
     const network = await box(page.getByRole("region", { name: "The Network" }));
     expect(network.y).toBeCloseTo(card.y, 0);
-    const scrollsSideways = await page.evaluate(() => [document.documentElement, document.querySelector("main")!]
-      .some(element => element.scrollWidth > element.clientWidth));
-    expect(scrollsSideways).toBe(false);
+    const scrolls = await page.evaluate(() => [document.documentElement, document.querySelector("main")!]
+      .some(element => element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight));
+    expect(scrolls).toBe(false);
   });
 
   test("stays beside the steps when a pixel narrower stacks the columns", async ({ page }) => {
