@@ -1,6 +1,7 @@
 import React, { useId } from "react";
 import { AlienIcon } from "../alien-icons/alien-icon";
 import { AttributeDefinition } from "../types/attributes";
+import { useKeyboardScrollable } from "../use-keyboard-scrollable";
 import "./observation-notes.scss";
 
 interface ObservationNotesProps {
@@ -19,12 +20,13 @@ interface ObservationNotesProps {
  */
 export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation, attributes, values }) => {
   const headId = useId();
+  const [boxRef, boxProps] = useKeyboardScrollable<HTMLDivElement>();
   return (
     <div className="observation-notes">
       <h3 id={headId} className="observation-notes__head">Observation notes</h3>
-      {/* The box scrolls when the card is too short for it, so it is a named region the keyboard
-          can reach. Safari doesn't make a scrolling box focusable on its own. */}
-      <div className="observation-notes__box" role="region" aria-labelledby={headId} tabIndex={0}>
+      {/* The box scrolls when the card is too short for it, and the keyboard can reach it then. It is
+          a region named by the heading whether it scrolls or not. */}
+      <div ref={boxRef} className="observation-notes__box" role="region" aria-labelledby={headId} {...boxProps}>
         <p className="observation-notes__text">{observation || "(no notes for this conversation)"}</p>
         {attributes.length > 0 &&
           <ul className="observation-notes__indicators">
