@@ -17,6 +17,9 @@ import { extractTimeline } from "./extract-timeline";
 import about from "./about.md";
 import "./extract-pathways.scss";
 
+/** The view's title, in its heading, its About and the app's list of views. */
+export const EXTRACT_PATHWAYS_TITLE = "Extract Pathways";
+
 /** Units in each drawn layer. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
 const TIMELINE = extractTimeline(COLUMN_SIZES);
@@ -27,7 +30,7 @@ export const ExtractPathways: React.FC = observer(function ExtractPathways() {
   const indexState = useDatasetIndex(alien3Dataset);
   return (
     <div className="extract-pathways">
-      <h1 className="extract-pathways__title">Extract Pathways</h1>
+      <h1 className="extract-pathways__title">{EXTRACT_PATHWAYS_TITLE}</h1>
       {indexState.status === "loading" && <p>Loading conversations…</p>}
       {indexState.status === "error" &&
         <p role="alert">The conversations could not be loaded: {indexState.error.message}</p>}
@@ -58,7 +61,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
           <StepRow player={player} buttons={buttons} />
         </div>
         <div className="extract-pathways__about">
-          <AboutButton title="Extract Pathways" markdown={about} />
+          <AboutButton title={EXTRACT_PATHWAYS_TITLE} markdown={about} />
         </div>
       </div>
       <section className="extract-pathways__network" aria-labelledby={panelHeadId}>

@@ -2,6 +2,9 @@ import React from "react";
 import { ViewPlaceholder } from "../../core/view-placeholder/view-placeholder";
 import about from "./about.md";
 
+/** The view's title, in its heading, its About and the app's list of views. */
+export const INVESTIGATE_PATHWAYS_TITLE = "Investigate Pathways";
+
 export const InvestigatePathways: React.FC = () => (
-  <ViewPlaceholder className="investigate-pathways" title="Investigate Pathways" about={about} />
+  <ViewPlaceholder className="investigate-pathways" title={INVESTIGATE_PATHWAYS_TITLE} about={about} />
 );

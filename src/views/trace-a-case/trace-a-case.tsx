@@ -25,6 +25,9 @@ import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-step
 import about from "./about.md";
 import "./trace-a-case.scss";
 
+/** The view's title, in its heading, its About and the app's list of views. */
+export const TRACE_A_CASE_TITLE = "Trace a Case";
+
 /** Units in each drawn layer. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
 const TIMELINE = traceTimeline(COLUMN_SIZES);
@@ -45,7 +48,7 @@ export const TraceACase: React.FC = observer(function TraceACase() {
 
   return (
     <div className="trace-a-case">
-      <h1 className="trace-a-case__title">Trace a Case</h1>
+      <h1 className="trace-a-case__title">{TRACE_A_CASE_TITLE}</h1>
       {indexState.status === "loading" && <p>Loading conversations…</p>}
       {indexState.status === "error" &&
         <p role="alert">
@@ -111,7 +114,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
       <div className="trace-a-case__step-row">
         {player && place !== undefined && <StepRow player={player} buttons={TRACE_BUTTONS} />}
         <div className="trace-a-case__about">
-          <AboutButton title="Trace a Case" markdown={about} />
+          <AboutButton title={TRACE_A_CASE_TITLE} markdown={about} />
         </div>
       </div>
       {player && place !== undefined &&
