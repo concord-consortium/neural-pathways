@@ -81,7 +81,11 @@ $network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
 }
 
 .trace-a-case__network-head {
-  @include panel.panel-head;
+  @include panel.panel-head-with-controls;
+}
+
+.trace-a-case__network-title {
+  @include panel.panel-head-title;
 }
 
 // 440 px tall when the panel's height comes from its content (stacked), and otherwise the panel's

@@ -37,3 +37,17 @@ $head-height: $head-control-height + $head-padding-top + $head-padding-bottom + 
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+// A head with controls after its title. It wraps, so in a narrow panel the controls drop below the
+// title instead of being cut off.
+@mixin panel-head-with-controls {
+  @include panel-head;
+  flex-wrap: wrap;
+}
+
+// The title in a head with controls: the head's font rather than a heading's, and the row's slack,
+// which pushes the controls to the right.
+@mixin panel-head-title {
+  margin: 0 auto 0 0;
+  font: inherit;
+}

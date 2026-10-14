@@ -151,6 +151,94 @@ test("the filter bar shows focus in forced-colors mode", async ({ page }) => {
   expect(await outline()).toBe("solid");
 });
 
+// Every browser Playwright runs supports :has(), so the stylesheet's fallback for older browsers is
+// checked by hand.
+test("the Animate checkbox shows keyboard focus around its label", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const animate = page.getByRole("checkbox", { name: "Animate" });
+  await page.getByRole("button", { name: "Reset" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(animate).toBeFocused();
+  const outline = (element: Element) => getComputedStyle(element).outlineStyle;
+  expect(await page.locator(".animation-controls__animate").evaluate(outline)).toBe("solid");
+  expect(await animate.evaluate(outline)).toBe("none");
+});
+
+test("the speed slider shows focus in forced-colors mode", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const speed = page.getByRole("slider", { name: "Animation speed" });
+  const outline = () => speed.evaluate(element => getComputedStyle(element).outlineStyle);
+  expect(await outline()).toBe("none");
+  await page.getByRole("checkbox", { name: "Animate" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(speed).toBeFocused();
+  expect(await outline()).toBe("solid");
+});
+
+test("Animate and the speed survive switching views", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const network = page.getByRole("region", { name: "The Network" });
+  const animate = network.getByRole("checkbox", { name: "Animate" });
+  const speed = network.getByRole("slider", { name: "Animation speed" });
+  await expect(speed).toHaveAttribute("aria-valuetext", "Med");
+  await speed.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(speed).toHaveAttribute("aria-valuetext", "Fast");
+  await animate.uncheck();
+  await expect(speed).toBeDisabled();
+  const nav = page.getByRole("navigation", { name: "Views" });
+  await nav.getByRole("link", { name: "Correlations", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
+  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await expect(animate).not.toBeChecked();
+  await expect(speed).toBeDisabled();
+  await expect(speed).toHaveAttribute("aria-valuetext", "Fast");
+});
+
+test("clicking a speed's name moves the slider to it", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const network = page.getByRole("region", { name: "The Network" });
+  // The slider is stretched over the names, so a click where a name is lands on the slider.
+  const name = await network.getByText("Slow", { exact: true }).boundingBox();
+  await page.mouse.click(name!.x + name!.width / 2, name!.y + name!.height / 2);
+  await expect(network.getByRole("slider", { name: "Animation speed" })).toHaveAttribute("aria-valuetext", "Slow");
+});
+
+test("with Animate off, Step 4 shows the answer at once", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  await page.getByRole("checkbox", { name: "Animate" }).uncheck();
+  await page.getByRole("button", { name: "Step 4" }).click();
+  // Animated at Med, Step 4 takes several seconds to name the answer.
+  await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
+    .toBeVisible({ timeout: 1_000 });
+});
+
+test("in a narrow window, Animate and the speed wrap below the network's title", async ({ page }) => {
+  await page.setViewportSize({ width: 480, height: 900 });
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const head = await page.locator(".trace-a-case__network-head").boundingBox();
+  const controls = await page.locator(".animation-controls").boundingBox();
+  const title = await page.getByRole("heading", { name: "The Network" }).boundingBox();
+  expect(controls!.x + controls!.width).toBeLessThanOrEqual(head!.x + head!.width);
+  expect(controls!.y).toBeGreaterThanOrEqual(title!.y + title!.height);
+});
+
+test("Animate and the speed sit at the right end of the network's head", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  const head = await page.locator(".trace-a-case__network-head").boundingBox();
+  const controls = await page.locator(".animation-controls").boundingBox();
+  // Only the head's 14 px side padding is to the right of the control.
+  expect(head!.x + head!.width - (controls!.x + controls!.width)).toBeCloseTo(14, 0);
+});
+
 test("the card shows the conversation's label, notes and attribute indicators", async ({ page }) => {
   await page.goto("/");
   const card = page.getByRole("region", { name: "Conversation", exact: true });
@@ -228,7 +316,7 @@ test.describe("the card and network panels", () => {
       const { card, network } = panels(page);
       await expect(card.getByRole("listitem")).toHaveCount(5);
       const cardHead = await rect(card.getByRole("heading", { name: "Conversation" }).locator(".."));
-      const networkHead = await rect(network.getByRole("heading", { name: "The Network" }));
+      const networkHead = await rect(network.getByRole("heading", { name: "The Network" }).locator(".."));
       expect(networkHead.height).toBeCloseTo(cardHead.height, 0);
     });
   }

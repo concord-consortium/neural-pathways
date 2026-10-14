@@ -1,16 +1,16 @@
 import "../../core/state/setup";
-import { Model, model, modelAction, tProp, types } from "mobx-keystone";
+import { composeMixins, ExtendedModel, model, modelAction, tProp, types } from "mobx-keystone";
+import { animatedMixin } from "../../core/state/animation";
 
 /** A count that can't go below zero. */
 const countType = types.refinement(types.integer, n => n >= 0, "non-negative integer");
 
 /**
- * Extract Pathways' own state: the extraction stages completed so far. A stage in progress is not
- * kept. See docs/view-state.md for the fields still to come and the rules on changing the saved
- * form.
+ * Extract Pathways' own state. A stage still playing isn't stored. See docs/view-state.md for the
+ * fields still to come and the rules on changing the saved form.
  */
 @model("npw/ExtractPathwaysState")
-export class ExtractPathwaysState extends Model({
+export class ExtractPathwaysState extends ExtendedModel(composeMixins(animatedMixin), {
   version: tProp(types.literal(1), 1),
   /** Whether Setup is done: the hidden neurons are lifted out of the network. */
   setupDone: tProp(types.boolean, false),

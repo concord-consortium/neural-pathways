@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { StepButton } from "./step-button";
 import { StepPlayer, StepTimeline } from "./step-player";
 import { StepRow } from "./step-row";
-import { clearReducedMotion, setReducedMotion, TestProgress } from "./test-helpers";
+import { clearReducedMotion, setReducedMotion, TestProgress, TestSettings } from "./test-helpers";
 
 const timeline: StepTimeline<number> = {
   duration: ({ from, to }) => (to - from) * 1000,
@@ -29,7 +29,7 @@ const BUTTONS: StepButton[] = [
 ];
 
 function showRow(marker = 0, buttons = BUTTONS) {
-  const player = new StepPlayer(timeline, new TestProgress(marker));
+  const player = new StepPlayer(timeline, new TestProgress(marker), new TestSettings());
   render(<StepRow player={player} buttons={buttons} />);
   return player;
 }

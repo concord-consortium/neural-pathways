@@ -26,7 +26,11 @@
 }
 
 .extract-pathways__network-head {
-  @include panel.panel-head;
+  @include panel.panel-head-with-controls;
+}
+
+.extract-pathways__network-title {
+  @include panel.panel-head-title;
 }
 
 .extract-pathways__drawing {
