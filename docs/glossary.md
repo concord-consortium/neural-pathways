@@ -34,7 +34,8 @@ one thing, or one name for two things, settle it and add it here.
 ## The step system
 
 - **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup,
-  Collect a Conversation and Collect All Conversations. Not a point or a stretch of the timeline.
+  Collect a Conversation, Collect All Conversations and Extract Pathways. Not a point or a stretch
+  of the timeline.
 - **marker:** a point on a view's timeline where the scene rests and progress is stored. 0 is the
   start.
 - **segment:** the stretch of timeline between two markers, `{ from, to }`, which a step plays.
@@ -88,7 +89,7 @@ one thing, or one name for two things, settle it and add it here.
   collections (`collected`), the deck (`deckDone`) and the pathways (`pathwaysDone`). A stage still
   playing isn't stored.
 - **loading bar:** one loading, drawn beside the lifted column: three to a neuron, one per
-  pathway, growing from zero by its loading's size, in its sign's color.
+  pathway, from zero toward its sign, as long as its loading's size, in its sign's color.
 - **particle:** one dot carrying a reading from the deck's faces to a loading bar while Extract
   Pathways builds the bars.
 - **particle canvas:** the `<canvas>` over the drawing that the particles are painted on while they
