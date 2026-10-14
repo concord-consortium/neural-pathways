@@ -75,6 +75,10 @@ one thing, or one name for two things, settle it and add it here.
 
 - **designed size:** the size the views are designed to be used at, 1024 × 562 px as an Interactive
   (see `accessibility.md`).
+- **Interactive:** a view embedded on its own in an iframe, as the Activity Player embeds it, via
+  `?interactive=<view-id>` (see `src/app/README.md`). The sizes in `accessibility.md` and the
+  views' READMEs are an Interactive's, the app's gutters included. Not "frame", which means a run at
+  one moment.
 - **minimum layout size:** the narrowest and shortest a view can be while keeping its layout as
   designed, before anything stacks, wraps or scrolls in a way the design doesn't show. Its README
   gives it. Not "designed width", since the designer didn't choose it.
