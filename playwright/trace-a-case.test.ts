@@ -236,8 +236,8 @@ test("Animate and the speed sit at the right end of the network's head", async (
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   const head = await page.locator(".trace-a-case__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
-  // The head's 14 px padding and 1 px border are all that's to the right of the control.
-  expect(head!.x + head!.width - (controls!.x + controls!.width)).toBeLessThanOrEqual(15);
+  // Only the head's 14 px side padding is to the right of the control.
+  expect(head!.x + head!.width - (controls!.x + controls!.width)).toBeCloseTo(14, 0);
 });
 
 test("the card shows the conversation's label, notes and attribute indicators", async ({ page }) => {
