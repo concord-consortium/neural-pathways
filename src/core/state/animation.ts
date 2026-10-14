@@ -4,9 +4,8 @@ import { defineModelMixin, modelAction, tProp, types } from "mobx-keystone";
  * The speed slider's stops, left to right. Each `key` is stored in saved student data: never
  * change one. Keys only order the stops, with normal at 0; they aren't a scale. A new stop goes in
  * its place in this list, with any integer key between its neighbors', or beyond the ends, so no
- * stop is ever renumbered. A test checks the keys increase down the list. `name` is shown under
- * the stop, and `durationScale` is how long a run takes there relative to normal: the prototype's
- * Med, which every timeline is written in.
+ * stop is ever renumbered. `name` is shown under the stop, and `durationScale` is how long a run
+ * takes there relative to normal.
  */
 export const SPEED_STOPS = [
   { key: -100, name: "Slow", durationScale: 1.7 },
@@ -21,7 +20,7 @@ export type Speed = typeof SPEED_STOPS[number]["key"];
 export const NORMAL_SPEED: Speed = 0;
 
 /**
- * What the views with an Animate toggle and a speed slider have in common, so one set of controls
+ * What the views with an Animate checkbox and a speed slider have in common, so one set of controls
  * can drive any of them. Their models get it from `animatedMixin`. The props are `readonly` because
  * keystone only allows changes inside a model action: use the setters.
  */
