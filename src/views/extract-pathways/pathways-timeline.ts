@@ -1,6 +1,6 @@
 import { clamp01 } from "../../core/network-diagram/easing";
 import { moveEase } from "./collect-all-timeline";
-import { ExtractScene, PathwaysScene, stackRestScene } from "./extract-scene";
+import { deckRestScene, ExtractScene, PathwaysScene } from "./extract-scene";
 import { landedCounts, particlePlan, PARTICLES_MS } from "./particles";
 import { barLengths, LOADINGS, PATHWAYS } from "./pathways-layout";
 import { easeBetween } from "./setup-timeline";
@@ -109,8 +109,8 @@ function pathwaysAt(t: number): PathwaysScene {
  * each pathway's bars send copies to its box, one pathway at a time; then the lines fade in.
  */
 export function extractPathwaysSceneAt(columnSizes: readonly number[], size: number, t: number): ExtractScene {
-  const scene = stackRestScene(columnSizes, size);
-  scene.stack!.slide = moveEase(clamp01(t / DECK_SLIDE_MS));
+  const scene = deckRestScene(columnSizes, size);
+  scene.deck!.slide = moveEase(clamp01(t / DECK_SLIDE_MS));
   scene.pathways = pathwaysAt(t);
   return scene;
 }

@@ -14,9 +14,9 @@ describe("extractPathwaysSceneAt", () => {
   });
 
   it("slides the deck half off the canvas, and the lifted column after it", () => {
-    expect(at(0).stack!.slide).toBe(0);
+    expect(at(0).deck!.slide).toBe(0);
     expect(at(400).pathways!.slide).toBe(0);
-    expect(at(1400).stack!.slide).toBe(1);
+    expect(at(1400).deck!.slide).toBe(1);
     expect(at(1500).pathways!.slide).toBe(1);
   });
 

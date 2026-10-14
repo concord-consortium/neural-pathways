@@ -158,8 +158,8 @@ export function finishedPathways(): PathwaysScene {
 
 /** The scene resting at the pathways: the deck slid half off the canvas, and the finished pathways beside it. */
 export function pathwaysRestScene(columnSizes: readonly number[], size: number): ExtractScene {
-  const scene = stackRestScene(columnSizes, size);
-  scene.stack!.slide = 1;
+  const scene = deckRestScene(columnSizes, size);
+  scene.deck!.slide = 1;
   scene.pathways = finishedPathways();
   return scene;
 }

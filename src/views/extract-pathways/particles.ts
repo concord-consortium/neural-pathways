@@ -2,7 +2,7 @@ import { signColor } from "../../core/colors";
 import { ForwardPass } from "../../core/network/forward";
 import { Point } from "../../core/network-diagram/layout";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
-import { centerShift, columnValues, deckMid, restOffset, SET_SIZE, setCount } from "./deck-layout";
+import { centerShift, columnValues, deckMid, SET_SIZE, setCount, setOffset } from "./deck-layout";
 import type { ExtractGeometry } from "./extract-geometry";
 import { Bar, barLengths } from "./pathways-layout";
 
@@ -150,7 +150,7 @@ export function faceSources(geometry: ExtractGeometry, passes: readonly ForwardP
     }
     const cy = deck.ys[row] + column * deck.r;
     return {
-      x: slid + deck.r * restOffset(set, size) + deck.x - column * deck.r,
+      x: slid + deck.r * setOffset(set, size) + deck.x - column * deck.r,
       y: v >= 0 ? cy - height / 2 : cy + height / 2,
       color: signColor(v),
     };
