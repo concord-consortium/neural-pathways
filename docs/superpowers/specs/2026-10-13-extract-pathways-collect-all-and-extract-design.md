@@ -203,7 +203,9 @@ centered in its room at every size (`cbSetLeft` and `cbSetX`, lines 14811–1481
 
 The prototype's sets are always full. Here the last set may be partial, and a last set of 18 columns
 or fewer ends inside the set in front of it, so it adds no width. The deck is centered on what is
-drawn: its width is one more than the largest 2*k* + (columns in set *k*), in radii.
+drawn: its width is one more than the largest 2*k* + (columns in set *k*), in radii. The set in front
+also covers all of that last column but its top circle, so it is on the front face only when the
+set has 19 columns.
 
 ### 7. The end: marker 12
 
