@@ -118,7 +118,7 @@ describe("collectAllSceneAt", () => {
     expect(collectAllSceneAt(SIZES, 3, 800, plan.end - 1).deck).toMatchObject({ collected: 3, done: false });
   });
 
-  it.each<[number, number]>([[0, 800], [3, 800], [10, 800], [3, 20], [3, 30], [2, 3]])(
+  it.each<[number, number]>([[0, 800], [3, 800], [10, 800], [3, 20], [3, 30], [2, 3], [3, 50], [0, 799]])(
     "ends from %p collected of %p on the deck at rest",
     (collected, size) => {
       expect(collectAllSceneAt(SIZES, collected, size, collectAllDuration(SIZES, collected, size)))
