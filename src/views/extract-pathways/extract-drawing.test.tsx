@@ -240,6 +240,34 @@ describe("ExtractDrawing", () => {
     expect(screen.getByTestId("lifted-column")).toHaveAttribute("transform", `translate(${dx},0)`);
   });
 
+  it("keeps describing the deck while Extract Pathways runs", () => {
+    jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    try {
+      renderDrawing(extractPathwaysSceneAt(SIZES, 20, 3000));
+      expect(screen.getByRole(
+        "img", { name: "The network's 14 hidden neurons lifted out, and all 20 conversations collected." },
+      )).toBeInTheDocument();
+    } finally {
+      jest.restoreAllMocks();
+    }
+  });
+
+  it("slides the lifted column toward its place beside the pathways", () => {
+    const columnX = (t: number) => {
+      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, t));
+      const column = screen.getByTestId("lifted-column");
+      const x = column.hasAttribute("transform") ? placeOf(column).x : 0;
+      unmount();
+      return x;
+    };
+    const dx = pathwaysLayout(geometry, 20).liftedDx;
+    expect(columnX(400)).toBe(0);
+    // The column moves left, so dx is negative; at 900 ms it is part of the way there.
+    const share = columnX(900) / dx;
+    expect(share).toBeGreaterThan(0);
+    expect(share).toBeLessThan(1);
+  });
+
   it("shows the particle canvas only while the particles fly", () => {
     jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
     try {
