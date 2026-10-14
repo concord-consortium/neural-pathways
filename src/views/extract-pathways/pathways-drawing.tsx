@@ -39,7 +39,7 @@ export function kickScale(p: number): number {
   return 1;
 }
 
-/** Scales an SVG element about its own center, as CSS does with transform-box: fill-box. */
+/** Applies `transform` to an SVG element about its own center (transform-box: fill-box). */
 const aboutCenter = (transform: string): React.CSSProperties =>
   ({ transformBox: "fill-box", transformOrigin: "center", transform });
 
