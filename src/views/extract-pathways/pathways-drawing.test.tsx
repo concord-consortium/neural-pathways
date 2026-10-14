@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { forward } from "../../core/network/forward";
 import { toyNetwork } from "../../core/network/toy-network";
-import { NEGATIVE_COLOR, POSITIVE_COLOR, signColor } from "../../core/colors";
+import { NEGATIVE_COLOR, POSITIVE_COLOR, RULE_COLOR, signColor } from "../../core/colors";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import { finishedPathways, PathwaysScene } from "./extract-scene";
 import { extractGeometry } from "./extract-geometry";
@@ -21,8 +21,8 @@ const drawLayer = (pathways: PathwaysScene) =>
 
 describe("mixColor", () => {
   it("mixes two colors, landing exactly on each", () => {
-    expect(mixColor(POSITIVE_COLOR, "#CCD3DD", 0)).toBe(POSITIVE_COLOR);
-    expect(mixColor(POSITIVE_COLOR, "#CCD3DD", 1)).toBe("#CCD3DD");
+    expect(mixColor(POSITIVE_COLOR, RULE_COLOR, 0)).toBe(POSITIVE_COLOR);
+    expect(mixColor(POSITIVE_COLOR, RULE_COLOR, 1)).toBe(RULE_COLOR);
     expect(mixColor("#000000", "#FFFFFF", 0.5)).toBe("#808080");
   });
 });
@@ -78,7 +78,7 @@ describe("PathwaysLayer", () => {
     const length = layout.bars[1].length / 2;
     expect(Number(bar.getAttribute("width"))).toBeCloseTo(length);
     expect(Number(bar.getAttribute("x"))).toBeCloseTo(layout.bars[1].zero - length);
-    expect(bar).toHaveAttribute("fill", "#CCD3DD");
+    expect(bar).toHaveAttribute("fill", RULE_COLOR);
   });
 
   it("draws a pathway's copies while they fly", () => {
