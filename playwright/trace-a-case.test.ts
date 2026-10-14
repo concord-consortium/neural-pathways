@@ -453,7 +453,8 @@ test("a 320 px Interactive scrolls only the diagram", async ({ page }) => {
 
 test("the keyboard can reach and scroll a diagram too wide for its Interactive", async ({ page }) => {
   await diagramIn(page, 320, 380);
-  await page.getByRole("button", { name: "Reset" }).focus();
+  // The speed slider in the network panel's head is the last control before the diagram.
+  await page.getByRole("slider", { name: "Animation speed" }).focus();
   await page.keyboard.press("Tab");
   await expect(diagramGroup(page)).toBeFocused();
   await page.keyboard.press("ArrowRight");
