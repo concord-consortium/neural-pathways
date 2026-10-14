@@ -56,7 +56,7 @@ export interface PathwaysScene {
   particles: number | undefined;
   /** The 42 bars, neuron by neuron, once the particles start: how far grown and how gray, each 0–1. */
   bars: { grown: number; muted: number }[] | undefined;
-  /** The copies of one pathway's bars in flight to its box: each one's progress and opacity. */
+  /** One pathway's bar copies in flight to its box: each one's progress and opacity. */
   flying: { pathway: number; copies: { progress: number; opacity: number }[] } | undefined;
   /** Each box's opacity, and how far its latest kick has played, 0–1, while one plays. */
   boxes: { opacity: number; kick: number | undefined }[];

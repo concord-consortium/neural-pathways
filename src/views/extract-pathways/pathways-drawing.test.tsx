@@ -81,7 +81,7 @@ describe("PathwaysLayer", () => {
     expect(bar).toHaveAttribute("fill", RULE_COLOR);
   });
 
-  it("draws a pathway's copies while they fly", () => {
+  it("draws a pathway's bar copies while they fly", () => {
     drawLayer({
       ...finishedPathways(),
       flying: { pathway: 0, copies: Array.from({ length: 14 }, () => ({ progress: 0.5, opacity: 1 })) },
@@ -97,7 +97,7 @@ describe("PathwaysLayer", () => {
     expect(layout.bars.map(bar => bar.pathway)).toEqual(layout.bars.map((_, b) => b % 3));
   });
 
-  it("flies copies of the flying pathway's bars, in their colors, to the middle of its box", () => {
+  it("flies bar copies of the flying pathway's bars, in their colors, to the middle of its box", () => {
     const copies = Array.from({ length: 14 }, () => ({ progress: 1, opacity: 1 }));
     copies[13] = { progress: 1, opacity: 0 };
     drawLayer({ ...finishedPathways(), flying: { pathway: 1, copies } });
