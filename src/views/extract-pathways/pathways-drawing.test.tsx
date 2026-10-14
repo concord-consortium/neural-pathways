@@ -2,12 +2,13 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { forward } from "../../core/network/forward";
 import { toyNetwork } from "../../core/network/toy-network";
-import { NEGATIVE_COLOR, POSITIVE_COLOR } from "../../core/colors";
+import { NEGATIVE_COLOR, POSITIVE_COLOR, signColor } from "../../core/colors";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import { finishedPathways, PathwaysScene } from "./extract-scene";
 import { extractGeometry } from "./extract-geometry";
 import { kickScale, mixColor, ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
-import { pathwaysLayout } from "./pathways-layout";
+import { BOX_SIDE, pathwaysLayout } from "./pathways-layout";
+import { COPY_END_SCALE } from "./pathways-timeline";
 
 const SIZES = [10, 8, 6, 2];
 const geometry = extractGeometry(SIZES, 0);
@@ -70,6 +71,33 @@ describe("PathwaysLayer", () => {
     expect(screen.getAllByTestId("bar-copy")).toHaveLength(14);
   });
 
+  it("runs each bar's line to its own pathway's box", () => {
+    drawLayer(finishedPathways());
+    const ends = screen.getAllByTestId("pathway-line")
+      .map((line, b) => [b, Number(line.getAttribute("x2")), Number(line.getAttribute("y2"))]);
+    expect(ends).toEqual(layout.bars.map((bar, b) => [b, layout.boxes[bar.pathway].x, layout.boxes[bar.pathway].cy]));
+    expect(layout.bars.map(bar => bar.pathway)).toEqual(layout.bars.map((_, b) => b % 3));
+  });
+
+  it("flies copies of the flying pathway's bars, in their colors, to the middle of its box", () => {
+    const copies = Array.from({ length: 14 }, () => ({ progress: 1, opacity: 1 }));
+    copies[13] = { progress: 1, opacity: 0 };
+    drawLayer({ ...finishedPathways(), flying: { pathway: 1, copies } });
+    const drawn = screen.getAllByTestId("bar-copy");
+    expect(drawn).toHaveLength(13);
+    const box = layout.boxes[1];
+    drawn.forEach((copy, neuron) => {
+      const bar = layout.bars[neuron * 3 + 1];
+      const middle = bar.zero + (bar.loading >= 0 ? bar.length / 2 : -bar.length / 2);
+      expect([neuron, Number(copy.getAttribute("x")), copy.getAttribute("fill")])
+        .toEqual([neuron, middle - bar.length / 2, signColor(bar.loading)]);
+      const [dx, dy, scale] = copy.style.transform.match(/-?[\d.]+/g)!.map(Number);
+      expect(dx).toBeCloseTo(box.x + BOX_SIDE / 2 - middle);
+      expect(dy).toBeCloseTo(box.cy - bar.y);
+      expect(scale).toBeCloseTo(COPY_END_SCALE);
+    });
+  });
+
   it("flies the bar copies over the boxes, so each still shows as it lands", () => {
     drawLayer({
       ...finishedPathways(),
@@ -78,6 +106,7 @@ describe("PathwaysLayer", () => {
     const box = screen.getByText("Pathway 1");
     const copy = screen.getAllByTestId("bar-copy")[0];
     expect(box.compareDocumentPosition(copy)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(copy).toHaveAttribute("opacity", "0.5");
   });
 });
 
