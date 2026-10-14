@@ -2,10 +2,12 @@ import {
   fromSnapshot, getGlobalConfig, getSnapshot, Model, model, ModelAutoTypeCheckingMode, onPatches, Patch,
   SnapshotTypeMismatchError, undoMiddleware,
 } from "mobx-keystone";
-import { SharedState } from "./shared-state";
+import { COMMISSION_BUDGET, SharedState } from "./shared-state";
 import { savedJson } from "./test-helpers";
 import fixture from "./__fixtures__/shared-state.v1.json";
 import noConversationFixture from "./__fixtures__/shared-state.v1-no-conversation.json";
+
+const empty = { version: 1, commissioned: [], $modelType: "npw/SharedState" };
 
 // Test-only: another registered model whose saved form must not load as SharedState.
 @model("test/NotSharedState")
@@ -16,23 +18,23 @@ describe("SharedState", () => {
     expect(getGlobalConfig().modelAutoTypeChecking).toBe(ModelAutoTypeCheckingMode.AlwaysOn);
   });
 
-  it("starts at version 1 with no conversation", () => {
-    expect(savedJson(new SharedState({}))).toEqual({ version: 1, $modelType: "npw/SharedState" });
+  it("starts with no query, no conversation and nothing commissioned", () => {
+    expect(savedJson(new SharedState({}))).toEqual(empty);
   });
 
   it("loads its version 1 saved form and saves it back unchanged", () => {
     expect(savedJson(fromSnapshot(SharedState, fixture as any))).toEqual(fixture);
   });
 
-  it("loads a version 1 form saved before conversationId and query existed", () => {
+  it("loads a version 1 form saved before its fields existed, giving them their defaults", () => {
     const state = fromSnapshot(SharedState, noConversationFixture as any);
     expect(state.conversationId).toBeUndefined();
     expect(state.query).toBeUndefined();
-    expect(savedJson(state)).toEqual(noConversationFixture);
+    expect(savedJson(state)).toEqual(empty);
   });
 
   it("loads a saved form without $modelType", () => {
-    expect(savedJson(fromSnapshot(SharedState, { version: 1 } as any))).toEqual(noConversationFixture);
+    expect(savedJson(fromSnapshot(SharedState, { version: 1 } as any))).toEqual(empty);
   });
 
   it("rejects a saved form with a wrong-typed conversationId", () => {
@@ -41,6 +43,10 @@ describe("SharedState", () => {
 
   it("rejects a saved form with a wrong-typed query", () => {
     expect(() => fromSnapshot(SharedState, { ...fixture, query: 3 } as any)).toThrow();
+  });
+
+  it("rejects a saved form with a wrong-typed commissioned list", () => {
+    expect(() => fromSnapshot(SharedState, { ...fixture, commissioned: "young_present" } as any)).toThrow();
   });
 
   it("rejects a saved form from another version", () => {
@@ -152,7 +158,7 @@ describe("SharedState", () => {
     it("never saves the draft", () => {
       const state = new SharedState({ query: "n:1" });
       state.setQueryDraft("(n:2");
-      expect(savedJson(state)).toEqual({ version: 1, query: "n:1", $modelType: "npw/SharedState" });
+      expect(savedJson(state)).toEqual({ ...empty, query: "n:1" });
     });
 
     // Undo isn't built. These pin the keystone behavior docs/undo.md relies on: the draft is never
@@ -168,6 +174,41 @@ describe("SharedState", () => {
       expect(state.query).toBeUndefined();
       expect(state.conversationId).toBe("7ca6475a5371");
       undo.dispose();
+    });
+  });
+
+  describe("commissioning", () => {
+    it("allows two codings, in the order they were commissioned", () => {
+      expect(COMMISSION_BUDGET).toBe(2);
+      const state = new SharedState({});
+      state.commission("young_present");
+      state.commission("gestures_repeated");
+      expect(state.commissioned).toEqual(["young_present", "gestures_repeated"]);
+    });
+
+    it("ignores a coding that is already commissioned", () => {
+      const state = new SharedState({});
+      state.commission("young_present");
+      state.commission("young_present");
+      expect(state.commissioned).toEqual(["young_present"]);
+    });
+
+    it("ignores codings past the budget", () => {
+      const state = new SharedState({});
+      state.commission("young_present");
+      state.commission("gestures_repeated");
+      state.commission("carrying_burden");
+      expect(state.commissioned).toEqual(["young_present", "gestures_repeated"]);
+    });
+
+    it("reset empties the list and frees the budget", () => {
+      const state = new SharedState({});
+      state.commission("young_present");
+      state.commission("gestures_repeated");
+      state.resetCommissioned();
+      expect(state.commissioned).toEqual([]);
+      state.commission("carrying_burden");
+      expect(state.commissioned).toEqual(["carrying_burden"]);
     });
   });
 });

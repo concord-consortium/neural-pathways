@@ -3,6 +3,9 @@ import { action, observable } from "mobx";
 import { Model, model, modelAction, tProp, types } from "mobx-keystone";
 import { validConversationId } from "./conversation";
 
+/** How many hidden codings a student can commission in Investigate Unknown Pathway. */
+export const COMMISSION_BUDGET = 2;
+
 /**
  * The state every view reads and writes, carried from one interactive to the next in the Activity
  * Player. Fields arrive with the view stories that first use them; see docs/view-state.md for them
@@ -17,6 +20,8 @@ export class SharedState extends Model({
   query: tProp(types.maybe(types.string)),
   /** The current conversation, in every view that shows one. Unset until a view first loads its conversations. */
   conversationId: tProp(types.maybe(types.string)),
+  /** Attribute keys commissioned in Investigate Unknown Pathway, in the order they were commissioned. */
+  commissioned: tProp(types.array(types.string), () => []),
 }) {
   /** The filter bar's text while it differs from `query`; unset otherwise. Volatile: see docs/view-state.md. */
   @observable accessor queryDraft: string | undefined = undefined;
@@ -57,5 +62,19 @@ export class SharedState extends Model({
     if (id !== this.conversationId) {
       this.conversationId = id;
     }
+  }
+
+  /** Adds a coding, unless it is already commissioned or the budget is spent. */
+  @modelAction
+  commission(attributeKey: string) {
+    if (this.commissioned.includes(attributeKey) || this.commissioned.length >= COMMISSION_BUDGET) {
+      return;
+    }
+    this.commissioned.push(attributeKey);
+  }
+
+  @modelAction
+  resetCommissioned() {
+    this.commissioned = [];
   }
 }
