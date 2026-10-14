@@ -59,7 +59,7 @@ describe("collectAllSceneAt", () => {
     expect(collectAllSceneAt(SIZES, 1, 800, collectDuration(SIZES, 2) + 700)).toEqual(collectSceneAt(SIZES, 3, 700));
   });
 
-  it("hands the columns collected by hand to the deck, then fades the network and lifts the column back up", () => {
+  it("hands the collections to the deck, fades the network, and brings the lifted column back to full strength", () => {
     const start = collectAllSceneAt(SIZES, 3, 800, 0);
     expect(start.networkOpacity).toBe(1);
     expect(start.lifted!.opacity).toBe(0.5);

@@ -87,9 +87,9 @@ export function centerShift(geometry: Pick<ExtractGeometry, "lifted" | "deck">):
 }
 
 /**
- * The beat before column `column` of set 0 lands, in a run that started with `from` columns in:
- * 900 ms for the run's first column down to 240 for the set's last, on a smoothstep across the
- * columns the run adds, so the run has the same shape wherever it starts.
+ * The beat that starts as column `column` of set 0 arrives, until the next one, in a run that
+ * started with `from` columns in: 900 ms for the run's first column down to 240 for the set's last,
+ * on a smoothstep across the columns the run adds, so the run has the same shape wherever it starts.
  */
 export function columnGap(column: number, from: number): number {
   const first = Math.min(from, SET_SIZE - 2);

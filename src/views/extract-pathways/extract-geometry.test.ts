@@ -15,7 +15,7 @@ describe("minCanvasWidth", () => {
     expect(room(958)).toBeLessThan(needed);
   });
 
-  it("still holds the ten columns collected by hand in the left strip, at least 10 clear", () => {
+  it("holds the ten columns collected by hand in the left strip, at least 10 clear", () => {
     const g = extractGeometry(SIZES, 0);
     const last = deckPosition(g.deck, MAX_COLLECTED - 1, 0);
     expect(last.x - g.deck.r).toBeGreaterThanOrEqual(10);

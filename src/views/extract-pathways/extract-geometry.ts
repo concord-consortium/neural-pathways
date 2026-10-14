@@ -92,9 +92,9 @@ export function extractGeometry(columnSizes: readonly number[], hostWidth: numbe
 }
 
 /**
- * The narrowest the canvas is laid out: wide enough for the network with a strip each side that
- * holds the deck's columns collected by hand, and for the finished deck of 800 to fit its room, the
- * canvas left of the lifted column, with DECK_PAD_SIDE clear each side. A narrower panel scrolls
+ * The narrowest the canvas is laid out. It holds the network with a strip each side for the deck's
+ * columns collected by hand, and the finished deck of 800 in its room left of the lifted column,
+ * with DECK_PAD_SIDE clear each side. A narrower panel scrolls
  * the drawing sideways rather than scaling it down, since text scaled to fit stops growing when
  * the page is zoomed (WCAG 1.4.4).
  *

@@ -29,9 +29,8 @@ const conversations = (n: number) => `${n} conversation${n === 1 ? "" : "s"}`;
 
 /**
  * What the drawing shows, for screen readers. The lifted column and the deck columns still in
- * flight aren't counted. While Collect All runs, the description counts the conversations collected
- * by hand before the deck took over, until the deck is done. The hand collections describe their own
- * progress.
+ * flight aren't counted. While Collect All builds the deck, it counts the conversations collected by
+ * hand, and once the deck is done it says all of them are.
  */
 export function describeScene(scene: ExtractScene, hidden: number): string {
   const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
@@ -136,8 +135,9 @@ interface ExtractDrawingProps {
 }
 
 /**
- * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, the
- * deck in the left, drawn as `scene` says. Drawn at full size and as wide as its container, but
+ * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, and the
+ * deck in the left strip, until Collect All moves it to the middle of the room left of the lifted
+ * column; drawn as `scene` says. Drawn at full size and as wide as its container, but
  * never narrower than `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard
  * can reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since
  * the panel is already a region with that name.

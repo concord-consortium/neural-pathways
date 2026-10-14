@@ -12,7 +12,7 @@ import { DeckScene } from "./extract-scene";
 /** How much darker each level makes the right face, and the front face. */
 const RIGHT_FACE_SHADE = 0.005;
 const FRONT_FACE_SHADE = 0.0025;
-/** The deepest level the shading reaches. */
+/** The prototype's cap on the level (`CB_SHADE_CAP`); a deck of 40 sets reaches 39. */
 const MAX_SHADE = 40;
 /** How far left of a column's top circle its label ends. */
 const LABEL_GAP = 20;
@@ -59,7 +59,7 @@ export const bottomLeftQuarter: Shape = (cx, cy, r) =>
 export const rightHalf: Shape = (cx, cy, r) =>
   `M ${fixed(cx)} ${fixed(cy - r)} A ${fixed(r)} ${fixed(r)} 0 0 1 ${fixed(cx)} ${fixed(cy + r)} Z`;
 
-/** From the 45° diagonal round to the bottom: the corner's right share of its top circle. */
+/** From the 45° diagonal around to the bottom: the corner's right share of its top circle. */
 export const rightSector: Shape = (cx, cy, r) => {
   const k = r * DIAGONAL;
   return `M ${fixed(cx)} ${fixed(cy)} L ${fixed(cx + k)} ${fixed(cy - k)} `

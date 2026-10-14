@@ -15,7 +15,7 @@ export interface ExtractProgress {
 
 /**
  * Extract Pathways' own state. A stage still playing isn't stored. See docs/view-state.md for the
- * fields still to come and the rules on changing the saved form.
+ * rules on changing the saved form.
  */
 @model("npw/ExtractPathwaysState")
 export class ExtractPathwaysState extends ExtendedModel(composeMixins(animatedMixin), {

@@ -17,14 +17,13 @@ activations of conversations run through it, one column of the deck each.
   `extract-timeline.ts`: what the view draws at any moment, as pure functions of the marker and the
   time into a segment, at the prototype's "Med" speed.
 - `extract-geometry.ts`, `flight.ts`, `extract-drawing.tsx`: the canvas. The network sits in the
-  middle, the lifted column in the right strip, the deck in the left. Copies of the hidden neurons
-  fly on curved paths, landing in order and settling.
+  middle, the lifted column in the right strip, the deck in the left (see `ExtractDrawing`). Copies
+  of the hidden neurons fly on curved paths, landing in order and settling.
 - `deck-layout.ts`: the deck that Collect All Conversations builds: its size, its sets of 20, where
   each set sits in deck radii, and the timings that depend on a column or a set.
 - `transitions.ts`: a value carried by CSS-style transitions, each starting from wherever the last
   left it.
-- `deck-drawing.tsx`: the deck's sets, each memoized so a frame that only moves it redraws none of
-  its columns, with the depth shading of its faces.
+- `deck-drawing.tsx`: the deck's sets, memoized (see `DeckSet`), and the depth shading of its faces.
 
 ## Size
 
