@@ -99,6 +99,7 @@ describe("collectAllSceneAt", () => {
     expect(collectAllSceneAt(SIZES, 3, 800, plan.countAt + 320).deck!.count).toEqual({ n: 20, opacity: 1 });
     expect(collectAllSceneAt(SIZES, 3, 800, plan.closes[0].start + 620).deck!.count).toEqual({ n: 40, opacity: 1 });
     const close = plan.closes[1];
+    expect(collectAllSceneAt(SIZES, 3, 800, close.start + close.duration - 1).deck!.count!.n).toBe(40);
     expect(collectAllSceneAt(SIZES, 3, 800, close.start + close.duration).deck!.count!.n).toBe(60);
   });
 
@@ -110,6 +111,11 @@ describe("collectAllSceneAt", () => {
     expect(set1.lastOpacity).toBeLessThan(1);
   });
 
+  it("starts shading the faces as the first close starts", () => {
+    const plan = collectAllPlan(SIZES, 3, 800);
+    expect(collectAllSceneAt(SIZES, 3, 800, plan.closes[0].start - 1).deck!.shade).toBe(0);
+    expect(collectAllSceneAt(SIZES, 3, 800, plan.closes[0].start).deck!.shade).toBe(1);
+  });
 
   it("brings each later set in short of its place, and closes every set up for the deck it makes", () => {
     const plan = collectAllPlan(SIZES, 3, 800);
