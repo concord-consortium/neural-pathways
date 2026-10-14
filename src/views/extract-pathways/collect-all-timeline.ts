@@ -1,7 +1,7 @@
 import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import {
-  columnGap, columnsInSet, firstSetOffset, SET_SIZE, setCount, setEnter, setGap, setHold, setMove, setOffset,
+  columnGap, columnsInSet, columnsWithSets, setCount, setEnter, setGap, setHold, setMove, setOffset,
 } from "./deck-layout";
 import { ExtractScene, restScene, SPOTLIGHT, DeckScene, DeckSetScene } from "./extract-scene";
 import { easeX, SETTLE_MS, SETTLE_PX, settleEase } from "./flight";
@@ -153,7 +153,7 @@ function setPlace(plan: CollectAllPlan, set: number, offset: number, shift: numb
   const to = (value: (close: Close) => number): Transition[] =>
     closes.map(close => ({ start: close.start, duration: close.duration, to: value(close) }));
   return {
-    offset: transitionAt(offset, to(close => setOffset(set, close.sets)), t),
+    offset: transitionAt(offset, to(close => setOffset(set, columnsWithSets(close.sets, plan.size))), t),
     shift: transitionAt(shift, to(() => 0), t),
   };
 }
@@ -163,7 +163,7 @@ function frontSet(plan: CollectAllPlan, t: number) {
   const { from, size, beats } = plan;
   const local = t - plan.handOver;
   const centered = moveEase(clamp01((local - HANDOVER_REST - CENTER_DELAY) / CENTER_MS));
-  let offset = lerp(0, firstSetOffset(Math.min(from + 1, size)), centered);
+  let offset = lerp(0, setOffset(0, Math.min(from + 1, size)), centered);
   let columns = from;
   const arriving: DeckScene["arriving"] = [];
   const labels: DeckScene["labels"] = [];
@@ -173,8 +173,8 @@ function frontSet(plan: CollectAllPlan, t: number) {
     }
     const since = t - beat.start;
     // Where the last beat, or the hand-over for the first, centered it.
-    const was = firstSetOffset(Math.max(beat.column, from + 1));
-    offset = lerp(was, firstSetOffset(beat.column + 1), moveEase(clamp01(since / beat.gap)));
+    const was = setOffset(0, Math.max(beat.column, from + 1));
+    offset = lerp(was, setOffset(0, beat.column + 1), moveEase(clamp01(since / beat.gap)));
     if (since >= COLUMN_IN_MS + COLUMN_SETTLE_MS) {
       columns = beat.column + 1;
     } else {
@@ -198,18 +198,18 @@ function countFor(plan: CollectAllPlan, t: number): DeckScene["count"] {
   if (t < plan.countAt) {
     return undefined;
   }
-  let n = Math.min(SET_SIZE, plan.size);
+  let n = columnsWithSets(1, plan.size);
   let opacity = easeBetween(0, 1, t, plan.countAt, COUNT_FADE_MS);
   plan.closes.forEach((close, i) => {
     if (i === 0) {
       if (t >= close.start + COUNT_SWAP) {
-        n = Math.min(2 * SET_SIZE, plan.size);
+        n = columnsWithSets(2, plan.size);
         opacity = easeBetween(0, 1, t, close.start + COUNT_SWAP, COUNT_OUT_MS);
       } else if (t >= close.start) {
         opacity = 1 - easeBetween(0, 1, t, close.start, COUNT_OUT_MS);
       }
     } else if (t >= close.start + close.duration) {
-      n = Math.min(close.sets * SET_SIZE, plan.size);
+      n = columnsWithSets(close.sets, plan.size);
     }
   });
   return { n, opacity };
@@ -223,7 +223,7 @@ function deckAt(plan: CollectAllPlan, t: number): DeckScene {
   const appeared = plan.set1.filter(at => t >= at).length;
   if (appeared > 0) {
     sets.push({
-      ...setPlace(plan, 1, setOffset(1, 2), -SET1_ENTER, t),
+      ...setPlace(plan, 1, setOffset(1, columnsWithSets(2, plan.size)), -SET1_ENTER, t),
       opacity: 1,
       columns: appeared,
       lastOpacity: ease(clamp01((t - plan.set1[appeared - 1]) / SET1_COLUMN_FADE_MS)),
@@ -235,7 +235,7 @@ function deckAt(plan: CollectAllPlan, t: number): DeckScene {
       break;
     }
     sets.push({
-      ...setPlace(plan, entry.set, setOffset(entry.set, entry.set + 1), -entry.enter, t),
+      ...setPlace(plan, entry.set, setOffset(entry.set, columnsWithSets(entry.set + 1, plan.size)), -entry.enter, t),
       opacity: easeBetween(0, 1, t, entry.at, entry.fade),
       columns: columnsInSet(entry.set, plan.size),
       lastOpacity: 1,

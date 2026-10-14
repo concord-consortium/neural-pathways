@@ -1,6 +1,6 @@
 import { emptyScene, fullScene, Scene } from "../../core/network-diagram/scene";
 import { Marker } from "../../core/steps/step-player";
-import { columnsInSet, restOffset, setCount } from "./deck-layout";
+import { columnsInSet, setCount, setOffset } from "./deck-layout";
 import { flightDuration } from "./flight";
 
 /**
@@ -100,7 +100,7 @@ export function finishedDeck(size: number): DeckScene {
     centered: 1,
     slide: 0,
     sets: Array.from({ length: sets }, (_, set) => ({
-      offset: restOffset(set, size), shift: 0, opacity: 1,
+      offset: setOffset(set, size), shift: 0, opacity: 1,
       columns: columnsInSet(set, size), lastOpacity: 1,
     })),
     arriving: [],

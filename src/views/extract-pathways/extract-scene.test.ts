@@ -46,8 +46,8 @@ describe("deckRestScene", () => {
     });
     const deck = scene.deck!;
     expect(deck.sets).toHaveLength(40);
-    expect(deck.sets[0]).toEqual({ offset: setOffset(0, 40), shift: 0, opacity: 1, columns: 20, lastOpacity: 1 });
-    expect(deck.sets[39].offset).toBe(setOffset(39, 40));
+    expect(deck.sets[0]).toEqual({ offset: setOffset(0, 800), shift: 0, opacity: 1, columns: 20, lastOpacity: 1 });
+    expect(deck.sets[39].offset).toBe(setOffset(39, 800));
     expect(deck).toMatchObject({
       centered: 1, slide: 0, arriving: [], shade: 39, labels: [], count: { n: 800, opacity: 1 },
       collected: 800, done: true,

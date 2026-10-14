@@ -105,11 +105,11 @@ describe("collectAllSceneAt", () => {
     const plan = collectAllPlan(SIZES, 3, 800);
     const entry = plan.entries[0];
     const arriving = collectAllSceneAt(SIZES, 3, 800, entry.at).deck!;
-    expect(arriving.sets[2]).toMatchObject({ offset: setOffset(2, 3), shift: -50, opacity: 0, columns: 20 });
+    expect(arriving.sets[2]).toMatchObject({ offset: setOffset(2, 60), shift: -50, opacity: 0, columns: 20 });
     expect(arriving.shade).toBe(2);
     const close = plan.closes[1];
     const closed = collectAllSceneAt(SIZES, 3, 800, close.start + close.duration).deck!;
-    expect(closed.sets.map(set => set.offset)).toEqual([0, 1, 2].map(set => setOffset(set, 3)));
+    expect(closed.sets.map(set => set.offset)).toEqual([0, 1, 2].map(set => setOffset(set, 60)));
     expect(closed.sets[2].shift).toBe(0);
   });
 

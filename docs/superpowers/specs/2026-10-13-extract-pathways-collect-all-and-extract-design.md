@@ -201,6 +201,10 @@ so each set is one neuron's width further left than the one in front of it, and 
 centered in its room at every size (`cbSetLeft` and `cbSetX`, lines 14811–14812). Set 1 alone, with
 20 columns, is where the first set's centering leaves it.
 
+The prototype's sets are always full. Here the last set may be partial, and a last set of 18 columns
+or fewer ends inside the set in front of it, so it adds no width. The deck is centered on what is
+drawn: its width is one more than the largest 2*k* + (columns in set *k*), in radii.
+
 ### 7. The end: marker 12
 
 The full deck, "*D* Conversations", the lifted column at full strength, and no network. From three

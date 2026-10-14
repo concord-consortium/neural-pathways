@@ -2,8 +2,8 @@ import { forward } from "../../core/network/forward";
 import { toyNetwork } from "../../core/network/toy-network";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
 import {
-  centerShift, columnGap, columnsInSet, columnValues, deckMid, deckSize, deckWidth, firstSetOffset, restOffset,
-  SET_SIZE, setCount, setEnter, setGap, setHold, setMove, setOffset,
+  centerShift, columnGap, columnsInSet, columnsWithSets, columnValues, deckMid, deckSize, deckWidth, setCount,
+  setEnter, setGap, setHold, setMove, setOffset,
 } from "./deck-layout";
 import { extractGeometry } from "./extract-geometry";
 
@@ -26,11 +26,23 @@ describe("the deck's size", () => {
     expect(columnsInSet(0, 7)).toBe(7);
   });
 
-  it("is 21 radii wide for a full set, 2 more per set behind, and one more than its columns alone", () => {
+  it("counts the columns once the first sets are in", () => {
+    expect(columnsWithSets(2, 800)).toBe(40);
+    expect(columnsWithSets(2, 30)).toBe(30);
+  });
+
+  it("is 21 radii wide for a full set, 2 more per full set behind, and one more than its columns alone", () => {
     expect(deckWidth(20)).toBe(21);
-    expect(deckWidth(30)).toBe(23);
+    expect(deckWidth(40)).toBe(23);
     expect(deckWidth(800)).toBe(99);
     expect(deckWidth(7)).toBe(8);
+  });
+
+  it("adds nothing for a last set of 18 columns or fewer, which ends inside the set in front", () => {
+    expect(deckWidth(30)).toBe(21);
+    expect(deckWidth(38)).toBe(21);
+    expect(deckWidth(39)).toBe(22);
+    expect(deckWidth(790)).toBe(97);
   });
 });
 
@@ -42,27 +54,23 @@ describe("columnValues", () => {
 });
 
 describe("setOffset", () => {
-  it("centers the deck on the room's middle at every size", () => {
-    for (const sets of [1, 2, 40]) {
-      // Set 1's first column's right edge, and the last set's last column's left edge.
-      const right = setOffset(0, sets) + 1;
-      const left = setOffset(sets - 1, sets) - (SET_SIZE - 1) - 1;
-      expect(right).toBeCloseTo(-left);
-      expect(right - left).toBe(deckWidth(sets * SET_SIZE));
-    }
+  it.each([1, 7, 20, 30, 38, 39, 40, 790, 799, 800])("centers what a deck of %p draws on the room's middle", size => {
+    // Set 0's first column's right edge, and the left edge of the column furthest left: a set's last
+    // column sits as many radii left of the set's offset as the set has columns, less one.
+    const right = setOffset(0, size) + 1;
+    const lefts = Array.from({ length: setCount(size) }, (_, set) => setOffset(set, size) - columnsInSet(set, size));
+    const left = Math.min(...lefts);
+    expect(right).toBeCloseTo(-left);
+    expect(right - left).toBe(deckWidth(size));
   });
 
   it("puts each set a neuron's width left of the one in front of it", () => {
-    expect(setOffset(0, 5) - setOffset(1, 5)).toBe(2);
+    expect(setOffset(0, 100) - setOffset(1, 100)).toBe(2);
   });
 
-  it("matches the first set's centering once it has all 20 columns", () => {
-    expect(setOffset(0, 1)).toBe(firstSetOffset(20));
-  });
-
-  it("centers a lone partial set on its own columns at rest", () => {
-    expect(restOffset(0, 7)).toBe(3);
-    expect(restOffset(1, 30)).toBe(setOffset(1, 2));
+  it("centers set 0 on its own columns while it fills", () => {
+    expect(setOffset(0, 7)).toBe(3);
+    expect(setOffset(0, 20)).toBe(9.5);
   });
 });
 
