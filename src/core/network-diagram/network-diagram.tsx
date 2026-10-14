@@ -32,9 +32,9 @@ interface NetworkDiagramProps {
  * container. The only state it keeps is its measured size: views decide what is drawn, and animate
  * by passing new scenes.
  *
- * Never narrower than `MIN_WIDTH`; a narrower container scrolls it sideways, and the keyboard can
- * reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since the
- * panel is already a region with that name.
+ * Never smaller than `MIN_WIDTH` × `MIN_HEIGHT`; a smaller container scrolls it, and the keyboard
+ * can reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading,
+ * since the panel is already a region with that name.
  */
 export const NetworkDiagram: React.FC<NetworkDiagramProps> = ({
   network, pass, scales, outputLabels, scene, headingId,

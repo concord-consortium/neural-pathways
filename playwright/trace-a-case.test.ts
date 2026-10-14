@@ -151,9 +151,8 @@ test("the filter bar shows focus in forced-colors mode", async ({ page }) => {
   expect(await outline()).toBe("solid");
 });
 
-// Every browser Playwright runs supports :has(), so this checks only the ring around the label and
-// box. The fallback, a ring on the box alone for Chrome 104 and earlier, is checked by hand: force
-// the stylesheet's @supports condition false and the box gets the ring.
+// Every browser Playwright runs supports :has(), so the stylesheet's fallback for older browsers is
+// checked by hand.
 test("the Animate checkbox shows keyboard focus around its label", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
@@ -236,8 +235,8 @@ test("Animate and the speed sit at the right end of the network's head", async (
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   const head = await page.locator(".trace-a-case__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
-  // The head's 14 px padding and 1 px border are all that's to the right of the control.
-  expect(head!.x + head!.width - (controls!.x + controls!.width)).toBeLessThanOrEqual(15);
+  // Only the head's 14 px side padding is to the right of the control.
+  expect(head!.x + head!.width - (controls!.x + controls!.width)).toBeCloseTo(14, 0);
 });
 
 test("the card shows the conversation's label, notes and attribute indicators", async ({ page }) => {
@@ -433,7 +432,7 @@ async function diagramIn(page: Page, width: number, diagramWidth: number) {
   });
 }
 
-/** The diagram's scroll region: a group named by its panel's heading. */
+/** The diagram's scroller: a group named by its panel's heading. */
 const diagramGroup = (page: Page) => page.getByRole("group", { name: "The Network" });
 
 // 380 is the narrowest the diagram is laid out (MIN_WIDTH in layout.ts).
@@ -454,11 +453,24 @@ test("a 320 px Interactive scrolls only the diagram", async ({ page }) => {
 
 test("the keyboard can reach and scroll a diagram too wide for its Interactive", async ({ page }) => {
   await diagramIn(page, 320, 380);
-  await page.getByRole("button", { name: "Reset" }).focus();
+  // The speed slider in the network panel's head is the last control before the diagram.
+  await page.getByRole("slider", { name: "Animation speed" }).focus();
   await page.keyboard.press("Tab");
   await expect(diagramGroup(page)).toBeFocused();
   await page.keyboard.press("ArrowRight");
   await expect.poll(() => diagramGroup(page).evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+});
+
+// Widening past 889 px also switches the view to two columns.
+test("the diagram keeps the focus when its Interactive widens and it stops scrolling", async ({ page }) => {
+  await diagramIn(page, 320, 380);
+  await diagramGroup(page).focus();
+  await page.setViewportSize({ width: 1300, height: 900 });
+  await expect.poll(() => page.locator(".network-diagram").evaluate(e => e.scrollWidth > e.clientWidth)).toBe(false);
+  await expect(diagramGroup(page)).toBeFocused();
+  // Once the focus leaves, there's nothing to scroll, so it's no longer a Tab stop.
+  await page.keyboard.press("Shift+Tab");
+  await expect(diagramGroup(page)).not.toHaveAttribute("tabindex");
 });
 
 // Classic scrollbars, as on Windows, take room from the box they appear in. A drawing a fraction of

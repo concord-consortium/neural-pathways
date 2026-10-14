@@ -90,7 +90,7 @@ class StepPlayer<S> {
   isn't finite, leaves the player as it was. Then it stops any run, stores `from`, and runs the
   requestAnimationFrame clock. At `t >= duration` it stops and stores `to`. A run in progress is
   never stored.
-- **Reduced motion:** `play` stores `to` straight away.
+- **Reduced motion:** `play` stores `to` right away.
 - **`reset`:** stops and stores 0.
 - **`stop`:** cancels the clock and drops the run. Progress keeps `from`. The player can play
   again afterward.
@@ -439,7 +439,7 @@ as in the prototype, where `setNodeLevel` has no transition.
   timeline):
   - `play` stores `from`, runs, then stores `to`;
   - a press during a run drops it, so its `to` is never stored;
-  - reduced motion stores `to` straight away;
+  - reduced motion stores `to` right away;
   - a run that has ended plays again from its `from`;
   - `stop()` cancels the clock, and the player plays again afterward;
   - `reset()` stores 0;

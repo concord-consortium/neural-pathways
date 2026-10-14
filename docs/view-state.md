@@ -89,7 +89,7 @@ speed. The target, with what is built marked:
 | Investigate Unknown Pathway | `npw/InvestigateUnknownPathwayState` | The chips selected on each pane; pane 2's conversation |
 | Correlations Part 2 | `npw/CorrelationsState` | The same as Correlations, in its own tree |
 
-The views with an Animate toggle get the `animate` and `speed` props and their setters from
+The views with an Animate checkbox get the `animate` and `speed` props and their setters from
 `animatedMixin` in `src/core/state/animation.ts`, a mobx-keystone mixin composed into the view's
 model. That makes the model `Animated`, so one set of controls, `AnimationControls`, drives any of
 them. Prediction Chain will be the third.
