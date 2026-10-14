@@ -41,6 +41,11 @@ one thing, or one name for two things, settle it and add it here.
   Not "keyframe".
 - **run:** one play of a segment, started by a press. A run still playing is never stored.
 - **frame:** a run at one moment: `currentFrame`, replaced on every animation frame.
+- **timeline time:** the milliseconds a timeline is written in, as in `Frame.t` and `duration`:
+  real milliseconds at normal speed, the prototype's Med. The step player stretches them at Slow
+  and squeezes them at Fast. Not "virtual time".
+- **normal speed:** `NORMAL_SPEED`, key 0, shown as Med on the slider. Slow and Fast are relative
+  to it.
 - **current:** the step marked with `aria-current="step"`: the one whose run plays, or, while
   nothing plays, the one its view marks. Not "pressed", since a step isn't a toggle.
 - **unavailable:** a button marked `aria-disabled="true"`, which stays in the tab order and does
