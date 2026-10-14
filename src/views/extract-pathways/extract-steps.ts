@@ -44,7 +44,8 @@ export function extractProgress(state: ExtractPathwaysState, limit: number, deck
  * first if it isn't done, until `limit` are in; from the deck or the pathways it starts the
  * collecting over. Collect All Conversations builds the deck from wherever the collecting stopped;
  * from the deck or the pathways, it starts the collecting over, as Collect a Conversation does.
- * Extract Pathways draws the pathways from the deck, which is simply there if it isn't built yet.
+ * Extract Pathways draws the pathways from the deck, which is simply there if Collect All hasn't
+ * finished it.
  */
 export function extractButtons(limit: number): readonly StepButton[] {
   return [
