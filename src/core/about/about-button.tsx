@@ -26,7 +26,9 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
   const [bodyRef, bodyProps] = useKeyboardScrollable<HTMLDivElement>();
   // marked's HTML is set as is, which is safe only because the markdown comes from the views' about.md
   // files, reviewed with the code. Never pass a student's text or the data here.
-  const html = useMemo(() => marked.parse(markdown, { async: false }), [markdown]);
+  // One object for as long as the text is the same: React sets the HTML again whenever it gets a new
+  // one, as on the re-render when the text takes the focus, which would drop a selection being made.
+  const html = useMemo(() => ({ __html: marked.parse(markdown, { async: false }) }), [markdown]);
 
   // In the window's coordinates, without its scrollbars, as a top-layer dialog is laid out.
   const place = useCallback(() => {
@@ -91,14 +93,22 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
   };
 
   // A click on the backdrop lands on the dialog element itself, outside its box.
-  const onDialogClick = (event: React.MouseEvent<HTMLDialogElement>) => {
+  const onBackdrop = (event: React.MouseEvent<HTMLDialogElement>) => {
     if (event.target !== event.currentTarget) {
-      return;
+      return false;
     }
     const box = event.currentTarget.getBoundingClientRect();
-    const inside = event.clientX >= box.left && event.clientX <= box.right &&
-      event.clientY >= box.top && event.clientY <= box.bottom;
-    if (!inside) {
+    return event.clientX < box.left || event.clientX > box.right ||
+      event.clientY < box.top || event.clientY > box.bottom;
+  };
+  // So does the click that ends a text selection dragged out over the backdrop, as the common
+  // ancestor of the press and the release. Only a press on the backdrop as well closes the dialog.
+  const pressedOnBackdrop = useRef(false);
+  const onDialogMouseDown = (event: React.MouseEvent<HTMLDialogElement>) => {
+    pressedOnBackdrop.current = onBackdrop(event);
+  };
+  const onDialogClick = (event: React.MouseEvent<HTMLDialogElement>) => {
+    if (pressedOnBackdrop.current && onBackdrop(event)) {
       event.currentTarget.close();
     }
   };
@@ -111,7 +121,7 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
         About
       </button>
       <dialog ref={dialogRef} className="about-dialog" aria-labelledby={headingId} onClose={onClose}
-        onClick={onDialogClick} onKeyDown={onDialogKeyDown}>
+        onMouseDown={onDialogMouseDown} onClick={onDialogClick} onKeyDown={onDialogKeyDown}>
         {open &&
           <>
             <div className="about-dialog__header">
@@ -125,7 +135,7 @@ export const AboutButton: React.FC<AboutButtonProps> = ({ title, markdown }) => 
             <div ref={bodyRef} className="about-dialog__body" role="group" aria-labelledby={headingId}
               {...bodyProps}
               // eslint-disable-next-line react/no-danger -- reviewed text from the repo: see `html`
-              dangerouslySetInnerHTML={{ __html: html }} />
+              dangerouslySetInnerHTML={html} />
           </>}
       </dialog>
     </>

@@ -17,6 +17,7 @@ test.describe("a placeholder view's About", () => {
   test("grows its header for a long title in a narrow window when only the text is zoomed", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 562 });
     await page.goto("/?interactive=investigate-unknown-pathway");
+    await page.evaluate(() => document.fonts.ready);
     await page.getByRole("button", { name: "About Investigate Unknown Pathway" }).click();
     const heading = page.getByRole("heading", { level: 2, name: "About Investigate Unknown Pathway" });
     await page.evaluate(() => {
@@ -53,6 +54,9 @@ test.describe("the About dialog", () => {
     await page.setViewportSize({ width, height });
     await page.goto("/?interactive=trace-a-case");
     await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+    // The dialog is placed when it opens, and not again when a font arrives, so measure it in the
+    // web fonts.
+    await page.evaluate(() => document.fonts.ready);
   }
 
   test("opens below its button, right edges aligned, with focus on Close", async ({ page }) => {
@@ -108,6 +112,19 @@ test.describe("the About dialog", () => {
     await page.mouse.click(5, 5);
     await expect(dialog(page)).toBeHidden();
     await expect(about(page)).toBeFocused();
+  });
+
+  // At the designed size the text scrolls, so pressing on it focuses it, which re-renders the dialog.
+  test("keeps a text selection dragged out over the backdrop, and stays open", async ({ page }) => {
+    await openTrace(page);
+    await about(page).click();
+    const text = await box(dialog(page).locator("p").first());
+    await page.mouse.move(text.x + 2, text.y + 8);
+    await page.mouse.down();
+    await page.mouse.move(5, 5, { steps: 10 });
+    await page.mouse.up();
+    await expect(dialog(page)).toBeVisible();
+    expect(await page.evaluate(() => getSelection()?.toString())).not.toBe("");
   });
 
   test("stays inside the window when it narrows", async ({ page }) => {

@@ -4,17 +4,6 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { VIEWS } from "./views";
 
-// jsdom has <dialog> but none of its methods. These do what the browser's do, short of the top layer.
-beforeAll(() => {
-  HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-    this.setAttribute("open", "");
-  };
-  HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    this.removeAttribute("open");
-    this.dispatchEvent(new Event("close"));
-  };
-});
-
 /**
  * The first line of a view's about.md, which its dialog should show. Not the first sentence: every
  * text starts with the same one.

@@ -24,6 +24,18 @@ describe("placeDialog", () => {
       .toEqual({ top: 306, left: 600, maxHeight: 246 });
   });
 
+  it("keeps it below the button with 200 px of room, and moves it up with 199", () => {
+    expect(placeDialog({ right: 1000, bottom: 346 }, dialog, view))
+      .toEqual({ top: 352, left: 600, maxHeight: 200 });
+    expect(placeDialog({ right: 1000, bottom: 347 }, dialog, view))
+      .toEqual({ top: 252, left: 600, maxHeight: 542 });
+  });
+
+  it("leaves a short dialog below the button when it fits there, with too little room for a tall one", () => {
+    expect(placeDialog({ right: 1000, bottom: 400 }, { width: 400, height: 100 }, view))
+      .toEqual({ top: 406, left: 600, maxHeight: 542 });
+  });
+
   it("moves it up until it fits when there is too little room below the button", () => {
     expect(placeDialog({ right: 1000, bottom: 500 }, dialog, view))
       .toEqual({ top: 252, left: 600, maxHeight: 542 });
@@ -46,7 +58,7 @@ describe("placeDialog", () => {
   });
 
   it("puts it at the left margin when the window is narrower than it", () => {
-    expect(placeDialog({ right: 300, bottom: 120 }, { width: 300, height: 300 }, { width: 320, height: 562 }))
+    expect(placeDialog({ right: 300, bottom: 120 }, dialog, { width: 320, height: 562 }))
       .toEqual({ top: 126, left: 10, maxHeight: 426 });
   });
 });

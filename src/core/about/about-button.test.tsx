@@ -4,17 +4,6 @@ import { AboutButton } from "./about-button";
 
 const MARKDOWN = "What the view is for.\n\n### The point\n\nWhy it matters.";
 
-// jsdom has <dialog> but none of its methods. These do what the browser's do, short of the top layer.
-beforeAll(() => {
-  HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-    this.setAttribute("open", "");
-  };
-  HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    this.removeAttribute("open");
-    this.dispatchEvent(new Event("close"));
-  };
-});
-
 const aboutButton = () => screen.getByRole("button", { name: "About Trace a Case" });
 const dialog = () => screen.getByRole("dialog", { name: "About Trace a Case" });
 
@@ -66,13 +55,20 @@ describe("AboutButton", () => {
     expect(aboutButton()).toHaveFocus();
   });
 
-  // A click on the backdrop lands on the dialog element itself, outside its box. jsdom's box is
-  // empty, at 0, 0.
+  // jsdom's box is empty, at 0, 0.
   it("closes on a click outside it", () => {
     open();
+    fireEvent.mouseDown(dialog(), { clientX: 500, clientY: 300 });
     fireEvent.click(dialog(), { clientX: 500, clientY: 300 });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(aboutButton()).toHaveFocus();
+  });
+
+  it("stays open when a text selection is dragged out of it", () => {
+    open();
+    fireEvent.mouseDown(screen.getByText("Why it matters."));
+    fireEvent.click(dialog(), { clientX: 500, clientY: 300 });
+    expect(dialog()).toHaveAttribute("open");
   });
 
   // Only the dialog's border is the dialog element itself and inside its box.
@@ -117,6 +113,32 @@ describe("AboutButton", () => {
     act(() => link.focus());
     expect(fireEvent.keyDown(link, { key: "Tab" })).toBe(false);
     expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+  });
+
+  it("wraps Shift+Tab from its first control to its last", () => {
+    render(<AboutButton title="Trace a Case" markdown="See [the glossary](https://example.org)." />);
+    fireEvent.click(aboutButton());
+    const link = screen.getByRole("link", { name: "the glossary" });
+    act(() => link.focus());
+    // The link is the last control, so Shift+Tab from it is the browser's to move back to Close.
+    expect(fireEvent.keyDown(link, { key: "Tab", shiftKey: true })).toBe(true);
+    const close = screen.getByRole("button", { name: "Close" });
+    act(() => close.focus());
+    expect(fireEvent.keyDown(close, { key: "Tab", shiftKey: true })).toBe(false);
+    expect(link).toHaveFocus();
+  });
+
+  it("starts Tab at its first control, and Shift+Tab at its last, when focus is on none of them", () => {
+    render(<AboutButton title="Trace a Case" markdown="See [the glossary](https://example.org)." />);
+    fireEvent.click(aboutButton());
+    const close = screen.getByRole("button", { name: "Close" });
+    act(() => close.blur());
+    const link = screen.getByRole("link", { name: "the glossary" });
+    expect(fireEvent.keyDown(dialog(), { key: "Tab", shiftKey: true })).toBe(false);
+    expect(link).toHaveFocus();
+    act(() => link.blur());
+    expect(fireEvent.keyDown(dialog(), { key: "Tab" })).toBe(false);
+    expect(close).toHaveFocus();
   });
 
   it("leaves other keys alone", () => {
