@@ -88,6 +88,7 @@ one thing, or one name for two things, settle it and add it here.
 
 - **designed size:** the size the views are designed to be used at, 1024 × 562 px as an Interactive
   (see `accessibility.md`).
+- **filter row:** the row of controls above the conversation card, holding the filter bar.
 - **Interactive:** a view embedded on its own in an iframe, as the Activity Player embeds it, via
   `?interactive=<view-id>` (see `src/app/README.md`). The sizes in `accessibility.md` and the
   views' READMEs are an Interactive's, the app's gutters included. Not "frame", which means a run at
@@ -95,6 +96,11 @@ one thing, or one name for two things, settle it and add it here.
 - **minimum layout size:** the narrowest and shortest a view can be while keeping its layout as
   designed, before anything stacks, wraps or scrolls in a way the design doesn't show. Its README
   gives it. Not "designed width", since the designer didn't choose it.
+- **panel head:** the title row at the top of a panel, inside its border. It can hold controls too,
+  such as Animate and the speed. Not "toolbar".
 - **scroller:** an element that scrolls what it holds, such as a drawing wider than its panel.
   `useKeyboardScrollable` makes it reachable by keyboard. Not "region" for the area: its role is
   `group` or `region` (see `accessibility.md`), and "region" means the role.
+- **step row:** the row of controls above the network in Trace a Case and above the drawing in
+  Extract Pathways, holding the steps, Reset and About. `StepButtonGroup` draws the steps and Reset
+  in it. Not "toolbar".

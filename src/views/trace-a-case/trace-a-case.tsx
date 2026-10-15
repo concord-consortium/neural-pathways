@@ -1,5 +1,6 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
+import { AboutButton } from "../../core/about/about-button";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { ConversationCard } from "../../core/conversation-card/conversation-card";
 import { ConversationWords } from "../../core/conversation-card/conversation-words";
@@ -19,9 +20,13 @@ import { useSharedState, useViewState } from "../../core/state/view-state-contex
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { StepPlayer } from "../../core/steps/step-player";
-import { StepRow } from "../../core/steps/step-row";
+import { StepButtonGroup } from "../../core/steps/step-button-group";
 import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
+import about from "./about.md";
 import "./trace-a-case.scss";
+
+/** The view's title, in its heading, its About and the app's list of views. */
+export const TRACE_A_CASE_TITLE = "Trace a Case";
 
 /** Units in each drawn layer. */
 const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
@@ -43,7 +48,7 @@ export const TraceACase: React.FC = observer(function TraceACase() {
 
   return (
     <div className="trace-a-case">
-      <h1 className="trace-a-case__title">Trace a Case</h1>
+      <h1 className="trace-a-case__title">{TRACE_A_CASE_TITLE}</h1>
       {indexState.status === "loading" && <p>Loading conversations…</p>}
       {indexState.status === "error" &&
         <p role="alert">
@@ -88,10 +93,10 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
 
   // The filter comes first: it sits over the card in both layouts. The card comes before the steps,
   // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
-  // card says so, and the steps and the network are left out.
+  // card says so, and the steps and the network are left out, but the step row stays to hold About.
   return (
     <div className="trace-a-case__layout" style={LAYOUT_STYLE}>
-      <div className="trace-a-case__filter">
+      <div className="trace-a-case__filter-row">
         <FilterBar {...bar} />
       </div>
       <div className="trace-a-case__conversation">
@@ -106,27 +111,28 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
             </>}
         </ConversationCard>
       </div>
+      <div className="trace-a-case__step-row">
+        {player && place !== undefined && <StepButtonGroup player={player} buttons={TRACE_BUTTONS} />}
+        <div className="trace-a-case__about">
+          <AboutButton title={TRACE_A_CASE_TITLE} markdown={about} />
+        </div>
+      </div>
       {player && place !== undefined &&
-        <>
-          <div className="trace-a-case__steps">
-            <StepRow player={player} buttons={TRACE_BUTTONS} />
+        <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
+          <div className="trace-a-case__network-head">
+            <h2 id={networkHeadId} className="trace-a-case__network-title">The Network</h2>
+            <AnimationControls animated={state} />
           </div>
-          <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
-            <div className="trace-a-case__network-head">
-              <h2 id={networkHeadId} className="trace-a-case__network-title">The Network</h2>
-              <AnimationControls animated={state} />
-            </div>
-            <div className="trace-a-case__diagram">
-              <Observer>
-                {() => (
-                  <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
-                    outputLabels={alien3Dataset.classificationLabels} scene={player.scene}
-                    headingId={networkHeadId} />
-                )}
-              </Observer>
-            </div>
-          </section>
-        </>}
+          <div className="trace-a-case__diagram">
+            <Observer>
+              {() => (
+                <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
+                  outputLabels={alien3Dataset.classificationLabels} scene={player.scene}
+                  headingId={networkHeadId} />
+              )}
+            </Observer>
+          </div>
+        </section>}
     </div>
   );
 });

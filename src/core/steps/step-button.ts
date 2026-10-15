@@ -1,6 +1,6 @@
 import { Marker, Segment } from "./step-player";
 
-/** One button in a step row. A view lists its buttons, and the row works out their state. */
+/** One step button. A view lists them, and `StepButtonGroup` works out their state. */
 export interface StepButton {
   /** Unique within the row. */
   key: string;

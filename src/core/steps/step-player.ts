@@ -75,7 +75,8 @@ export class StepPlayer<S> {
 
   /**
    * The run playing, without its time. Compared by value, so it changes only when a run starts or
-   * ends, not on every frame like `currentFrame`. The step row reads this rather than the frame.
+   * ends, not on every frame like `currentFrame`. `StepButtonGroup` reads this rather than the
+   * frame.
    */
   @computedStruct
   get currentRun(): Run | undefined {

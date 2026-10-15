@@ -27,7 +27,7 @@ activations of conversations run through it, one column of the deck each.
 
 ## Size
 
-The minimum layout size (see `docs/accessibility.md`) is 993 × 679 px as an Interactive. Its width
+The minimum layout size (see `docs/accessibility.md`) is 993 × 680 px as an Interactive. Its width
 fits inside the designed size of 1024 × 562, but its height doesn't yet.
 
 The minimum layout width, 993 px, is the canvas's narrowest layout, 959 px (`minCanvasWidth` in
@@ -36,8 +36,11 @@ deck of 800 fits between the canvas's left edge and the lifted column with 10 px
 and the left strip holds the deck's columns collected by hand. Narrower, the canvas scrolls
 sideways inside its panel and the step row wraps, down to 320 px.
 
-The minimum layout height, 679 px, adds up from the top:
-- the title and its margins, 81 px;
+About sits at the right end of the step row, with the steps centered on the panel. Below 894 px it
+goes on its own line below the steps.
+
+The minimum layout height, 680 px, adds up from the top:
+- the title and its margins, 82 px: a 32 px heading's line and its 0.67em margins make 81.9 px;
 - a 9 px gap;
 - the step row, 44 px;
 - a 9 px gap;
@@ -46,7 +49,7 @@ The minimum layout height, 679 px, adds up from the top:
 - the view's 16 px bottom padding.
 
 Nothing in the view gives way as the window gets shorter, not even the padding, so the page scrolls
-down below 679 px, as it does in an Interactive 562 px tall.
+down below 680 px, as it does in an Interactive 562 px tall.
 
 ## Still to come
 
@@ -54,5 +57,4 @@ The view still needs:
 - Extract Pathways;
 - picking a neuron or a pathway to see its loadings;
 - to fit the 562 px designed height;
-- the activation legend;
-- About.
+- the activation legend.

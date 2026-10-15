@@ -281,9 +281,9 @@ export default defineConfig(
     }
   },
   {
-    // A Jest transform, which Node loads as CommonJS.
-    name: "jest svg transform",
-    files: ["jest/svg-transform.js"],
+    // Jest transforms, which Node loads as CommonJS.
+    name: "jest transforms",
+    files: ["jest/svg-transform.js", "jest/md-transform.js"],
     languageOptions: {
       globals: {
         ...globals.node
