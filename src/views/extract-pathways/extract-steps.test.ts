@@ -46,13 +46,15 @@ describe("extractButtons", () => {
     expect(buttons.every(b => b.showAsCurrentWhenAt === undefined)).toBe(true);
   });
 
+  const EXTRACT = { from: DECK_MARKER, to: PATHWAYS_MARKER };
+  const ALL = (from: number) => ({ from, to: DECK_MARKER });
   it.each<[number, unknown[]]>([
-    [0, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
-    [1, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
-    [5, [{ from: 0, to: 1 }, { from: 5, to: 6 }, { from: 5, to: DECK_MARKER }, undefined]],
-    [11, [{ from: 0, to: 1 }, undefined, { from: 11, to: DECK_MARKER }, undefined]],
-    [DECK_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
-    [PATHWAYS_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, { from: 1, to: DECK_MARKER }, undefined]],
+    [0, [{ from: 0, to: 1 }, { from: 1, to: 2 }, ALL(1), EXTRACT]],
+    [1, [{ from: 0, to: 1 }, { from: 1, to: 2 }, ALL(1), EXTRACT]],
+    [5, [{ from: 0, to: 1 }, { from: 5, to: 6 }, ALL(5), EXTRACT]],
+    [11, [{ from: 0, to: 1 }, undefined, ALL(11), EXTRACT]],
+    [DECK_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, ALL(1), EXTRACT]],
+    [PATHWAYS_MARKER, [{ from: 0, to: 1 }, { from: 1, to: 2 }, ALL(1), EXTRACT]],
   ])("at marker %p play %j", (marker, expected) => {
     expect(segments(marker)).toEqual(expected);
   });

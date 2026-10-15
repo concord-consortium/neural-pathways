@@ -34,7 +34,8 @@ one thing, or one name for two things, settle it and add it here.
 ## The step system
 
 - **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup,
-  Collect a Conversation and Collect All Conversations. Not a point or a stretch of the timeline.
+  Collect a Conversation, Collect All Conversations and Extract Pathways. Not a point or a stretch
+  of the timeline.
 - **marker:** a point on a view's timeline where the scene rests and progress is stored. 0 is the
   start.
 - **segment:** the stretch of timeline between two markers, `{ from, to }`, which a step plays.
@@ -67,6 +68,9 @@ one thing, or one name for two things, settle it and add it here.
 
 ## Extract Pathways
 
+- **canvas:** Extract Pathways' drawing area, the SVG that `ExtractDrawing` lays out, as in
+  `minCanvasWidth` and "half off the canvas". Not the particles' `<canvas>` element, which is the
+  particle canvas.
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
 - **set:** 20 columns of the deck that move as one; the last set holds fewer when the conversations
@@ -76,6 +80,7 @@ one thing, or one name for two things, settle it and add it here.
   is each set's last column, where the set in front leaves it showing, and the top is every
   column's top row. Set 0's last column, the corner, is on both the right and the front face.
 - **copy:** one flown circle in the lifted column or the deck.
+- **bar copy:** a flown copy of a loading bar, on its way to its pathway box. Not "copy" alone.
 - **collection:** one conversation collected by hand, by Collect a Conversation or at the start of
   Collect All Conversations, from the network running it to its column landing in the deck.
   `collected` counts them, and holds the deck's size once the deck is done; a scene's
@@ -83,6 +88,13 @@ one thing, or one name for two things, settle it and add it here.
 - **stage:** a part of the extraction whose completion is stored: Setup (`setupDone`), the
   collections (`collected`), the deck (`deckDone`) and the pathways (`pathwaysDone`). A stage still
   playing isn't stored.
+- **loading bar:** one loading, drawn beside the lifted column: three to a neuron, one per
+  pathway, from zero toward its sign, as long as its loading's size, in its sign's color.
+- **particle:** one dot carrying a reading from the deck's faces to a loading bar while Extract
+  Pathways builds the bars.
+- **particle canvas:** the `<canvas>` over the SVG that the particles are painted on while they fly.
+- **pathway box:** the square a pathway is drawn as, built from the bar copies of its 14 loading bars.
+- **line:** a loading's connector, from its bar's zero to its pathway box.
 
 ## Layout
 

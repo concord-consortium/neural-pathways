@@ -9,9 +9,11 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
-import { deckRestScene, ExtractScene, restScene } from "./extract-scene";
+import { deckRestScene, ExtractScene, pathwaysRestScene, restScene } from "./extract-scene";
 import { extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { flightDuration } from "./flight";
+import { extractPathwaysSceneAt } from "./pathways-timeline";
+import { pathwaysLayout } from "./pathways-layout";
 import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
@@ -226,5 +228,56 @@ describe("ExtractDrawing", () => {
     const labelOpacity = Number(screen.getByText("Conversation 3").parentElement!.getAttribute("opacity"));
     expect(labelOpacity).toBeGreaterThan(0);
     expect(labelOpacity).toBeLessThan(1);
+  });
+
+  it("draws the pathways beside the slid deck, and describes them, once Extract Pathways is done", () => {
+    renderDrawing(pathwaysRestScene(SIZES, 20));
+    expect(screen.getByRole("img", {
+      name: "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 conversations.",
+    })).toBeInTheDocument();
+    expect(screen.getAllByTestId("pathway-line")).toHaveLength(42);
+    const dx = pathwaysLayout(geometry, 20).liftedDx;
+    expect(screen.getByTestId("lifted-column")).toHaveAttribute("transform", `translate(${dx},0)`);
+  });
+
+  it("keeps describing the deck while Extract Pathways runs", () => {
+    jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    try {
+      renderDrawing(extractPathwaysSceneAt(SIZES, 20, 3000));
+      expect(screen.getByRole(
+        "img", { name: "The network's 14 hidden neurons lifted out, and all 20 conversations collected." },
+      )).toBeInTheDocument();
+    } finally {
+      jest.restoreAllMocks();
+    }
+  });
+
+  it("slides the lifted column toward its place beside the pathways", () => {
+    const columnX = (t: number) => {
+      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, t));
+      const column = screen.getByTestId("lifted-column");
+      const x = column.hasAttribute("transform") ? placeOf(column).x : 0;
+      unmount();
+      return x;
+    };
+    const dx = pathwaysLayout(geometry, 20).liftedDx;
+    expect(columnX(400)).toBe(0);
+    // The column moves left, so dx is negative; at 900 ms it is part of the way there.
+    const share = columnX(900) / dx;
+    expect(share).toBeGreaterThan(0);
+    expect(share).toBeLessThan(1);
+  });
+
+  it("shows the particle canvas only while the particles fly", () => {
+    jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    try {
+      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, 3000));
+      expect(screen.getByTestId("particles")).toBeInTheDocument();
+      unmount();
+      renderDrawing(pathwaysRestScene(SIZES, 20));
+      expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
+    } finally {
+      jest.restoreAllMocks();
+    }
   });
 });
