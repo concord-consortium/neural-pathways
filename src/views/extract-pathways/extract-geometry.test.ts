@@ -1,20 +1,32 @@
-import { deckPosition, extractGeometry, minCanvasWidth } from "./extract-geometry";
+import { canvasLayout, deckPosition, extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { MAX_COLLECTED } from "./extract-steps";
 
 const SIZES = [10, 8, 6, 2];
+/** The narrowest canvas for these sizes. */
+const NARROWEST = 959;
 
 describe("minCanvasWidth", () => {
-  it("is the network plus two strips that each hold the deck's ten columns, 10 clear", () => {
-    expect(minCanvasWidth(SIZES)).toBe(909);
+  it("is the narrowest canvas whose room holds the finished deck, 10 clear each side", () => {
+    expect(minCanvasWidth(SIZES)).toBe(NARROWEST);
+    const room = (width: number) => {
+      const g = canvasLayout(SIZES, width);
+      return g.lifted.x - g.lifted.r;
+    };
+    const needed = 8.3 * 99 + 2 * 10;
+    expect(room(NARROWEST)).toBeGreaterThanOrEqual(needed);
+    expect(room(NARROWEST - 1)).toBeLessThan(needed);
+  });
+
+  it("holds the ten columns collected by hand in the left strip, at least 10 clear", () => {
     const g = extractGeometry(SIZES, 0);
     const last = deckPosition(g.deck, MAX_COLLECTED - 1, 0);
-    expect(last.x - g.deck.r).toBeCloseTo(10);
+    expect(last.x - g.deck.r).toBeGreaterThanOrEqual(10);
   });
 
   it("lays out a host one pixel narrower at the minimum, and one pixel wider at its own width", () => {
-    expect(extractGeometry(SIZES, 908).width).toBe(909);
-    expect(extractGeometry(SIZES, 909).width).toBe(909);
-    expect(extractGeometry(SIZES, 910).width).toBe(910);
+    expect(extractGeometry(SIZES, NARROWEST - 1).width).toBe(NARROWEST);
+    expect(extractGeometry(SIZES, NARROWEST).width).toBe(NARROWEST);
+    expect(extractGeometry(SIZES, NARROWEST + 1).width).toBe(NARROWEST + 1);
   });
 });
 
@@ -31,8 +43,8 @@ describe("extractGeometry", () => {
   });
 
   it("lays out at the host's width in whole pixels, but no narrower than its minimum", () => {
-    expect(extractGeometry(SIZES, 600).width).toBe(909);
-    expect(extractGeometry(SIZES, 600).networkX).toBe(186);
+    expect(extractGeometry(SIZES, 600).width).toBe(NARROWEST);
+    expect(extractGeometry(SIZES, 600).networkX).toBe(211);
     expect(extractGeometry(SIZES, 980.6).width).toBe(980);
     const wide = extractGeometry(SIZES, 1300);
     expect(wide.width).toBe(1300);

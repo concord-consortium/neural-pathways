@@ -40,3 +40,8 @@
   stroke: colors.$node-outline;
   stroke-width: 1;
 }
+
+// The count over the deck, a size above the labels it replaces (the prototype's d1a-colhead).
+.extract-drawing__count {
+  font-size: 15px;
+}

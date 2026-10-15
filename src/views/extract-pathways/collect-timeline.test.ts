@@ -129,8 +129,8 @@ describe("collectSceneAt", () => {
     expect(collectSceneAt(SIZES, 4, flightStart).network.hiddenLayerSpotlight).toBe(0);
     expect(collectSceneAt(SIZES, 4, flightStart + 350).network.hiddenLayerSpotlight).toBe(0.5);
     expect(collectSceneAt(SIZES, 4, flightStart + 350).lifted?.opacity).toBe(0.5);
-    expect(collectSceneAt(SIZES, 4, flightStart + 549).deck).toHaveLength(3);
-    const flying = collectSceneAt(SIZES, 4, flightStart + 1000).deck;
+    expect(collectSceneAt(SIZES, 4, flightStart + 549).collections).toHaveLength(3);
+    const flying = collectSceneAt(SIZES, 4, flightStart + 1000).collections;
     expect(flying).toHaveLength(4);
     expect(flying[3]).toEqual({ conversation: 4, flight: 450 });
     const end = collectSceneAt(SIZES, 4, collectDuration(SIZES, 4));
