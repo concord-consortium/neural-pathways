@@ -245,7 +245,7 @@ test("the pathways survive switching views", async ({ page }) => {
 });
 
 test("at the narrowest canvas, the pathway labels fit inside it", async ({ page }) => {
-  await canvasIn(page, 959 + INTERACTIVE_EXTRA, 959);
+  await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
   await page.getByRole("button", { name: "Extract Pathways" }).click();
   const canvas = (await page.getByRole("img", { name: PATHWAYS }).boundingBox())!;
   const label = (await page.getByText("Pathway 3").boundingBox())!;
