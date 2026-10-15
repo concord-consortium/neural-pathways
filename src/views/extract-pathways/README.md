@@ -34,7 +34,7 @@ About sits at the right end of the step row, with the steps centered on the pane
 goes on its own line below the steps.
 
 The minimum layout height, 680 px, adds up from the top:
-- the title and its margins, 82 px: 32 px text and the browser's 0.67em margins make 81.9 px;
+- the title and its margins, 82 px: a 32 px heading's line and its 0.67em margins make 81.9 px;
 - a 9 px gap;
 - the step row, 44 px;
 - a 9 px gap;

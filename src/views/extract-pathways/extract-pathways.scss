@@ -8,8 +8,9 @@
   container-type: inline-size;
 }
 
-// The step row at its narrowest with About beside the steps: the steps (670 px), and About (86 px)
-// and a 10 px gap on each side, so the steps stay centered. In 16 px Barlow Condensed, rounded up.
+// The step row at its narrowest with About beside the steps: the steps (670 px) and, on each side, a
+// column as wide as About (86 px) plus the 10 px gap, so the steps stay centered. In 16 px Barlow
+// Condensed, rounded up.
 $step-row-width: 670px + 2 * (86px + 10px);
 
 // The steps centered on the panel, and About at the right end of the row, as in the prototype. The

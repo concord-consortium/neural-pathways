@@ -83,8 +83,8 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
 - No reviewed design covers widths below 1024 px. Down to its minimum layout width a view keeps the
   prototype's layout, but how it stacks, wraps and scrolls below that is ours, not reviewed. The
   views are built to meet 1.4.10 and 2.1.1 there, and checked in Chromium, but may be too cumbersome
-  to be useful to students. Extract Pathways' step row wraps into three rows above a canvas that
-  scrolls sideways, and Trace a Case stacks into a page over 1,100 px tall.
+  to be useful to students. At 320 px Extract Pathways' steps wrap into three rows, with About on a
+  fourth, above a canvas that scrolls sideways, and Trace a Case stacks into a page over 1,100 px tall.
 - Extract Pathways' minimum layout height, 680 px, doesn't fit the designed size yet, so in an
   Interactive 562 px tall its page scrolls down.
 
@@ -95,10 +95,11 @@ scroller with nothing focusable in it reachable by Tab; Safari doesn't.
 - Use `useKeyboardScrollable` (`src/core/use-keyboard-scrollable.ts`). Its comment says when it
   makes the element a Tab stop, and what it isn't for.
 - Give the element its role and name all the time, so they don't come and go with the window's
-  size. It is a `group` when an enclosing landmark already has its name, as Extract Pathways'
-  drawing and Trace a Case's network diagram are, inside panels named by the same heading. Otherwise
-  it is a `region` named by its heading, as the observation notes are. A `region` inside a landmark
-  with the same name would list the landmark twice.
+  size. It is a `group` when an enclosing landmark or dialog already has its name, as Extract
+  Pathways' drawing and Trace a Case's network diagram are, inside panels named by the same heading,
+  and About's text is, inside its dialog. Otherwise it is a `region` named by its heading, as the
+  observation notes are. A `region` inside a landmark with the same name would list the landmark
+  twice.
 - A scroller clips what is drawn outside it, so keep the drawing inside its own box, down to a
   fraction of a pixel. The network diagram leaves room for its winning pill to grow as it pops.
 

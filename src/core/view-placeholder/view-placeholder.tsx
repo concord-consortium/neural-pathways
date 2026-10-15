@@ -3,7 +3,7 @@ import { AboutButton } from "../about/about-button";
 import "./view-placeholder.scss";
 
 interface ViewPlaceholderProps {
-  /** The view's root class, as the view had it. */
+  /** The view's root class, such as `correlations`. */
   className: string;
   title: string;
   /** The view's About text, as markdown. */

@@ -93,7 +93,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
 
   // The filter comes first: it sits over the card in both layouts. The card comes before the steps,
   // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
-  // card says so, and the steps and the network are left out, but the steps cell stays to hold About.
+  // card says so, and the steps and the network are left out, but the step row stays to hold About.
   return (
     <div className="trace-a-case__layout" style={LAYOUT_STYLE}>
       <div className="trace-a-case__filter-row">

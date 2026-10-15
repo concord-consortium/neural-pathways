@@ -28,10 +28,10 @@ designed size of 1024 × 562.
 
 The minimum layout width, 910 px, holds two columns: the card's 447 px, a 10 px gap, and the step
 row, 421 px. The step row holds Step 1 to Step 4, Reset and About on one line, and is wider than the
-network panel's 400 px smallest. Together that is 878 px, inside the app's 16 px gutters.
+network panel's narrowest, 382 px. Together that is 878 px, inside the app's 16 px gutters.
 
 The minimum layout height, 524 px, adds up from the top:
-- the title and its margins, 82 px: 32 px text and the browser's 0.67em margins make 81.9 px;
+- the title and its margins, 82 px: a 32 px heading's line and its 0.67em margins make 81.9 px;
 - a 9 px gap;
 - the filter bar and the step row, 44 px;
 - a 9 px gap;

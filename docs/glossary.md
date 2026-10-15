@@ -80,8 +80,7 @@ one thing, or one name for two things, settle it and add it here.
 
 - **designed size:** the size the views are designed to be used at, 1024 × 562 px as an Interactive
   (see `accessibility.md`).
-- **filter row:** the row of controls above the conversation card, holding the filter bar, and About
-  in views that put it there.
+- **filter row:** the row of controls above the conversation card, holding the filter bar.
 - **Interactive:** a view embedded on its own in an iframe, as the Activity Player embeds it, via
   `?interactive=<view-id>` (see `src/app/README.md`). The sizes in `accessibility.md` and the
   views' READMEs are an Interactive's, the app's gutters included. Not "frame", which means a run at

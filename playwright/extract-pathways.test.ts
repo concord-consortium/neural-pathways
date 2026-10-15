@@ -143,8 +143,8 @@ test("Reset clears everything", async ({ page }) => {
 
 test.describe("About", () => {
   /**
-   * The narrowest the step row can be with About beside the centered steps: the steps, and About and
-   * a 10 px gap on each side. Measured in 16 px Barlow Condensed.
+   * The narrowest the step row can be with About beside the centered steps: the steps and, on each
+   * side, a column as wide as About plus the 10 px gap. Measured in 16 px Barlow Condensed.
    */
   const STEP_ROW_WIDTH = 670 + 2 * (86 + 10);
   const about = (page: Page) => page.getByRole("button", { name: "About Extract Pathways" });

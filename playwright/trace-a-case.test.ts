@@ -499,8 +499,8 @@ test("the diagram is never drawn bigger than its box, even by a fraction of a pi
 });
 
 test.describe("About", () => {
-  /** The narrowest Interactive with two columns: the card, the gap, the step row and the gutters. */
-  const MIN_LAYOUT_WIDTH = 447 + 10 + 421 + 32;
+  /** The narrowest Interactive with two columns: see the README's Size section. */
+  const MIN_LAYOUT_WIDTH = 910;
   /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
   const MIN_LAYOUT_HEIGHT = 524;
   const about = (page: Page) => page.getByRole("button", { name: "About Trace a Case" });

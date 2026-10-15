@@ -6,7 +6,7 @@ $diagram-padding: 8px;
 $network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
 // The step row at its narrowest, on one line: Step 1 to Step 4 and Reset (329.4 px), a 6 px gap and
 // About (85.3 px), rounded up, in 16 px Barlow Condensed. It is wider than the network panel's
-// smallest, 400 px, so it sets the second column's minimum.
+// narrowest, 382 px, so it sets the second column's minimum.
 $step-row-width: 421px;
 // The two columns at their narrowest: the card's 447 px, the 10 px gap and the step row. This sets
 // the view's minimum layout width.
@@ -25,9 +25,8 @@ $two-columns-width: 447px + 10px + $step-row-width;
 
 // Two columns, each a row of controls over a panel, as in the prototype: the filter row over the
 // conversation card, the step row over the network. The two rows line up, so the two panels start
-// on the same line. They take at least 878 px of view width ($two-columns-width), which sets the
-// view's minimum layout width (910 px as an Interactive): the card's 447, the 10 px gap, and the
-// step row.
+// on the same line. They take at least $two-columns-width, which sets the view's minimum layout
+// width.
 //
 // The layout takes the height the title leaves, and the panel row grows into it, up to 800 px so a
 // very tall window doesn't leave the network floating in empty space. It stops at the network
