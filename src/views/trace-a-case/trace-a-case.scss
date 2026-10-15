@@ -4,6 +4,13 @@
 $diagram-padding: 8px;
 // The network panel's height around the diagram: its head, the diagram's padding and its border.
 $network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
+// The step row at its narrowest, on one line: Step 1 to Step 4 and Reset (329.4 px), a 6 px gap and
+// About (85.3 px), rounded up, in 16 px Barlow Condensed. It is wider than the network panel's
+// narrowest, 382 px, so it sets the second column's minimum.
+$step-row-width: 421px;
+// The two columns at their narrowest: the card's 447 px, the 10 px gap and the step row. This sets
+// the view's minimum layout width.
+$two-columns-width: 447px + 10px + $step-row-width;
 
 // At least the window's height, so the layout below the title can fill what is left of it.
 .trace-a-case {
@@ -16,11 +23,10 @@ $network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
   container-type: inline-size;
 }
 
-// Two columns, each a toolbar over a panel, as in the prototype: the filter over the
-// conversation card, the steps over the network. The toolbars share a row, so the two panels
-// start on the same line. They take at least 857 px of view width, which sets the view's minimum
-// layout width (889 px as an Interactive): the card's 447, the 10 px gap, and the network panel's
-// 400.
+// Two columns, each a row of controls over a panel, as in the prototype: the filter row over the
+// conversation card, the step row over the network. The two rows line up, so the two panels start
+// on the same line. They take at least $two-columns-width, which sets the view's minimum layout
+// width.
 //
 // The layout takes the height the title leaves, and the panel row grows into it, up to 800 px so a
 // very tall window doesn't leave the network floating in empty space. It stops at the network
@@ -34,42 +40,52 @@ $network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
   display: grid;
   flex: 1 1 0;
   min-height: 0;
-  grid-template-columns: 447px minmax(400px, 1fr);
+  grid-template-columns: 447px minmax($step-row-width, 1fr);
   grid-template-rows: auto minmax(calc(var(--diagram-min-height) + #{$network-chrome}), 800px);
   grid-template-areas:
-    "filter       steps"
+    "filter-row   step-row"
     "conversation network";
   align-content: start;
   align-items: start;
   gap: 9px 10px;
 }
 
-// Too narrow for both columns: stack them, keeping each toolbar above its panel. Each panel is as
+// Too narrow for both columns: stack them, keeping each row of controls above its panel. Each panel is as
 // tall as its content, and the layout as tall as the panels. This is below the view's minimum
 // layout width, so the page may scroll down (see docs/accessibility.md). Below 382 px of view width
 // (414 as an Interactive), the diagram's smallest layout (MIN_WIDTH in layout.ts) and the panel's
 // border, the diagram scrolls sideways inside its panel.
-@container (width < 857px) {
+@container (width < #{$two-columns-width}) {
   .trace-a-case__layout {
     flex: none;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
     grid-template-areas:
-      "filter"
+      "filter-row"
       "conversation"
-      "steps"
+      "step-row"
       "network";
   }
 }
 
-.trace-a-case__filter {
-  grid-area: filter;
+.trace-a-case__filter-row {
+  grid-area: filter-row;
   min-width: 0;
 }
 
-.trace-a-case__steps {
-  grid-area: steps;
+// The steps, then About at the right end of the row. When the row is too narrow for both, About
+// wraps onto a line of its own, still at the right.
+.trace-a-case__step-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  grid-area: step-row;
   min-width: 0;
+}
+
+.trace-a-case__about {
+  margin-left: auto;
 }
 
 // The two panels stretch to their row, so they are the same height.

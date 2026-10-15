@@ -2,7 +2,7 @@ import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { StepButton } from "./step-button";
 import { StepPlayer, StepTimeline } from "./step-player";
-import { StepRow } from "./step-row";
+import { StepButtonGroup } from "./step-button-group";
 import { clearReducedMotion, setReducedMotion, TestProgress, TestSettings } from "./test-helpers";
 
 const timeline: StepTimeline<number> = {
@@ -30,13 +30,13 @@ const BUTTONS: StepButton[] = [
 
 function showRow(marker = 0, buttons = BUTTONS) {
   const player = new StepPlayer(timeline, new TestProgress(marker), new TestSettings());
-  render(<StepRow player={player} buttons={buttons} />);
+  render(<StepButtonGroup player={player} buttons={buttons} />);
   return player;
 }
 
 const button = (name: string) => screen.getByRole("button", { name });
 
-describe("StepRow", () => {
+describe("StepButtonGroup", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     setReducedMotion(false);

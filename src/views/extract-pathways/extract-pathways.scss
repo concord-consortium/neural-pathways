@@ -5,19 +5,53 @@
   flex-direction: column;
   gap: 9px;
   padding-bottom: 16px;
+  container-type: inline-size;
+}
+
+// The step row at its narrowest with About beside the steps: the steps (670 px) and, on each side, a
+// column as wide as About (86 px) plus the 10 px gap, so the steps stay centered. In 16 px Barlow
+// Condensed, rounded up.
+$step-row-width: 670px + 2 * (86px + 10px);
+
+// The steps centered on the panel, and About at the right end of the row, as in the prototype. The
+// side columns are the same width, so the middle one is centered.
+.extract-pathways__step-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 9px 10px;
+}
+
+.extract-pathways__about {
+  grid-column: 3;
+  justify-self: end;
 }
 
 // The steps sit centered above the full-width panel, as in the prototype, and so do their lines
 // when the row wraps.
 .extract-pathways__steps {
+  grid-column: 2;
   display: flex;
   // `safe` keeps a button reachable by scrolling when it alone is wider than the panel.
   justify-content: safe center;
   min-width: 0;
   overflow-x: auto;
 
-  > .step-row {
+  > .step-button-group {
     justify-content: center;
+  }
+}
+
+// Too narrow for About beside the centered steps: About goes on its own line below them, still at the
+// right, so it still comes after them. This is narrower than the view's minimum layout width.
+@container (width < #{$step-row-width}) {
+  .extract-pathways__step-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .extract-pathways__steps,
+  .extract-pathways__about {
+    grid-column: 1;
   }
 }
 

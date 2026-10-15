@@ -1,0 +1,29 @@
+@use "../button";
+@use "../colors" as colors;
+
+.step-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.step-button-group__step,
+.step-button-group__reset {
+  @include button.lesson;
+
+  &:hover:not([aria-disabled="true"]):not([aria-current="step"]) {
+    background: colors.$surface;
+  }
+}
+
+.step-button-group__step[aria-current="step"] {
+  border-color: colors.$ink;
+  background: colors.$ink;
+  color: #fff;
+}
+
+// Unavailable buttons stay focusable, so only their face fades, not their focus ring.
+.step-button-group__step[aria-disabled="true"],
+.step-button-group__reset[aria-disabled="true"] {
+  @include button.unavailable;
+}

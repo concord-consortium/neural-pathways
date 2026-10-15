@@ -1,6 +1,30 @@
 @use "sass:color";
 @use "./colors" as colors;
 
+// The lesson's buttons, from the prototype's step buttons: white with a 2 px rule, in capitals. Each
+// button adds its own hover and pressed states.
+@mixin lesson {
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 2px solid colors.$rule;
+  border-radius: 5px;
+  background: #fff;
+  color: colors.$ink-2;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid colors.$wait;
+    outline-offset: 1px;
+  }
+}
+
 // A lesson button that is unavailable. It uses aria-disabled rather than disabled, so it keeps its
 // place in the tab order. Only its face fades: opacity on the whole button would fade its focus
 // ring too. For the white buttons with a $rule border and $ink-2 text.
