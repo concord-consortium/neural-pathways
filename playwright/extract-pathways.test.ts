@@ -281,7 +281,7 @@ test("at the narrowest canvas, the finished deck fits its room", async ({ page }
 
 test("Extract Pathways from the start jumps to the deck and draws the three pathways", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
   await expect(page.getByTestId("deck")).toBeVisible();
   await expect(page.getByText("800 Conversations", { exact: true })).toBeVisible();
@@ -293,7 +293,7 @@ test("Extract Pathways from the start jumps to the deck and draws the three path
 
 test("the pathways survive switching views", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Trace a Case" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
@@ -303,7 +303,7 @@ test("the pathways survive switching views", async ({ page }) => {
 
 test("at the narrowest canvas, the pathway labels fit inside it", async ({ page }) => {
   await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
-  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   const canvas = (await page.getByRole("img", { name: PATHWAYS }).boundingBox())!;
   const label = (await page.getByText("Pathway 3").boundingBox())!;
   expect(label.x + label.width).toBeLessThanOrEqual(canvas.x + canvas.width);
@@ -316,7 +316,7 @@ test("Extract Pathways flies its particles on the particle canvas, and removes i
   await animate.uncheck();
   await page.getByRole("button", { name: "Collect All Conversations" }).click();
   await animate.check();
-  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   await expect(page.getByTestId("particles")).toBeVisible({ timeout: 5_000 });
   await expect(page.getByTestId("particles")).toHaveCount(0, { timeout: 10_000 });
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible({ timeout: 15_000 });
