@@ -1,5 +1,5 @@
 import { test } from "./lib/base-url";
-import { expect, Page } from "@playwright/test";
+import { expect, type Locator, Page } from "@playwright/test";
 
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
 const DECK = "The network's 14 hidden neurons lifted out, and all 800 conversations collected.";
@@ -136,7 +136,7 @@ test("Collect a Conversation stops after ten", async ({ page }) => {
   // aria-disabled, not disabled, so the focus stays on it.
   await expect(collect).toBeFocused();
   await expect(page.getByRole("button", { name: "Collect All Conversations" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Extract Pathways" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Extract Pathways", exact: true })).toBeEnabled();
 });
 
 test("Reset clears everything", async ({ page }) => {
@@ -145,6 +145,60 @@ test("Reset clears everything", async ({ page }) => {
   await page.getByRole("button", { name: "Reset" }).click();
   await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
+});
+
+test.describe("About", () => {
+  /**
+   * The narrowest the step row can be with About beside the centered steps: the steps and, on each
+   * side, a column as wide as About plus the 10 px gap. Measured in 16 px Barlow Condensed.
+   */
+  const STEP_ROW_WIDTH = 670 + 2 * (86 + 10);
+  const about = (page: Page) => page.getByRole("button", { name: "About Extract Pathways" });
+  const box = async (locator: Locator) => (await locator.boundingBox())!;
+  const panel = (page: Page) => page.getByRole("region", { name: "The Network → Activated Pathways" });
+
+  async function openAt(page: Page, width: number) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/?interactive=extract-pathways");
+    await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+  }
+
+  test("ends the step row at the minimum layout width, with the steps centered on the panel", async ({ page }) => {
+    await openAt(page, 943);
+    const aboutBox = await box(about(page));
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
+    const panelBox = await box(panel(page));
+    expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
+    expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);
+    expect(rowBox.x + rowBox.width / 2).toBeCloseTo(panelBox.x + panelBox.width / 2, 0);
+  });
+
+  test("stays beside the steps in an Interactive just wide enough", async ({ page }) => {
+    await openAt(page, STEP_ROW_WIDTH + 32);
+    const aboutBox = await box(about(page));
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
+    expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
+  });
+
+  test("drops below the steps, at the right, a pixel narrower, without scrolling sideways", async ({ page }) => {
+    await openAt(page, STEP_ROW_WIDTH + 31);
+    const aboutBox = await box(about(page));
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
+    const panelBox = await box(panel(page));
+    expect(aboutBox.y).toBeGreaterThanOrEqual(rowBox.y + rowBox.height);
+    expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth))
+      .toBe(false);
+  });
+
+  test("comes after the steps in the tab order", async ({ page }) => {
+    await openAt(page, 1024);
+    await page.getByRole("button", { name: "Reset" }).focus();
+    await page.keyboard.press("Tab");
+    await expect(about(page)).toBeFocused();
+  });
 });
 
 test("Animate and the speed survive switching views", async ({ page }) => {
@@ -170,6 +224,9 @@ test("Animate and the speed survive switching views", async ({ page }) => {
 test("in a narrow window, Animate and the speed wrap below the panel's title", async ({ page }) => {
   await page.setViewportSize({ width: 480, height: 900 });
   await open(page);
+  // Measured once the web font has loaded: the fallback font is wider, so the controls would
+  // overrun the head.
+  await page.evaluate(() => document.fonts.ready);
   const head = await page.locator(".extract-pathways__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
   const title = await page.getByRole("heading", { name: "The Network → Activated Pathways" }).boundingBox();

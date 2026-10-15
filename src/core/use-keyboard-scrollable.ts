@@ -11,9 +11,10 @@ function overflows(element: Element): boolean {
  * Chromium's own scrollers do. The caller gives the element its role and name; docs/accessibility.md
  * says which.
  *
- * Only for a scroller with nothing focusable inside: Tab already reaches, and scrolls to, anything
- * that is. Where there is no ResizeObserver (jsdom), the element never counts as overflowing.
- * Returns a ref for the element and the props to spread on it.
+ * Not for a scroller that holds only controls: Tab already reaches, and scrolls to, each of them. A
+ * scroller of text with a few links in it still needs it, for the text between them. Where there is
+ * no ResizeObserver (jsdom), the element never counts as overflowing. Returns a ref for the element
+ * and the props to spread on it.
  */
 export function useKeyboardScrollable<T extends HTMLElement>() {
   const [element, setElement] = useState<T | null>(null);

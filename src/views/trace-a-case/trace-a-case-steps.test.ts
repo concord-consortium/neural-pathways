@@ -18,7 +18,7 @@ function makeState() {
   return { playerFor, stored };
 }
 
-/** Presses Step `step` as the step row does. */
+/** Presses Step `step` as the step buttons do. */
 function press(player: StepPlayer<Scene>, step: number) {
   const button = TRACE_BUTTONS[step - 1];
   player.play(button.key, button.segmentToPlayWhenAt(player.marker)!);
