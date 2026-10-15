@@ -2,17 +2,19 @@ import { canvasLayout, deckPosition, extractGeometry, minCanvasWidth } from "./e
 import { MAX_COLLECTED } from "./extract-steps";
 
 const SIZES = [10, 8, 6, 2];
+/** The narrowest canvas for these sizes. */
+const NARROWEST = 959;
 
 describe("minCanvasWidth", () => {
   it("is the narrowest canvas whose room holds the finished deck, 10 clear each side", () => {
-    expect(minCanvasWidth(SIZES)).toBe(959);
+    expect(minCanvasWidth(SIZES)).toBe(NARROWEST);
     const room = (width: number) => {
       const g = canvasLayout(SIZES, width);
       return g.lifted.x - g.lifted.r;
     };
     const needed = 8.3 * 99 + 2 * 10;
-    expect(room(959)).toBeGreaterThanOrEqual(needed);
-    expect(room(958)).toBeLessThan(needed);
+    expect(room(NARROWEST)).toBeGreaterThanOrEqual(needed);
+    expect(room(NARROWEST - 1)).toBeLessThan(needed);
   });
 
   it("holds the ten columns collected by hand in the left strip, at least 10 clear", () => {
@@ -22,9 +24,9 @@ describe("minCanvasWidth", () => {
   });
 
   it("lays out a host one pixel narrower at the minimum, and one pixel wider at its own width", () => {
-    expect(extractGeometry(SIZES, 958).width).toBe(959);
-    expect(extractGeometry(SIZES, 959).width).toBe(959);
-    expect(extractGeometry(SIZES, 960).width).toBe(960);
+    expect(extractGeometry(SIZES, NARROWEST - 1).width).toBe(NARROWEST);
+    expect(extractGeometry(SIZES, NARROWEST).width).toBe(NARROWEST);
+    expect(extractGeometry(SIZES, NARROWEST + 1).width).toBe(NARROWEST + 1);
   });
 });
 
@@ -41,7 +43,7 @@ describe("extractGeometry", () => {
   });
 
   it("lays out at the host's width in whole pixels, but no narrower than its minimum", () => {
-    expect(extractGeometry(SIZES, 600).width).toBe(959);
+    expect(extractGeometry(SIZES, 600).width).toBe(NARROWEST);
     expect(extractGeometry(SIZES, 600).networkX).toBe(211);
     expect(extractGeometry(SIZES, 980.6).width).toBe(980);
     const wide = extractGeometry(SIZES, 1300);

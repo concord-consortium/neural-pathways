@@ -20,6 +20,11 @@ test("Setup lifts the hidden neurons out of the network, animated", async ({ pag
 
 /** What an Interactive takes from the canvas's width: its 16 px gutters and the panel's borders. */
 const INTERACTIVE_EXTRA = 34;
+/**
+ * The narrowest the canvas is laid out (`minCanvasWidth`): the finished deck needs the room. It
+ * depends on the network the view draws, so it changes when the real network replaces the toy one.
+ */
+const NARROWEST_CANVAS = 959;
 
 /**
  * Opens the view as an Interactive `width` wide, waits until the canvas is laid out at
@@ -45,10 +50,9 @@ async function canvasIn(page: Page, width: number, canvasWidth: number) {
 /** The drawing's scroller: a group named by its panel's heading. */
 const drawingGroup = (page: Page) => page.getByRole("group", { name: "The Network → Activated Pathways" });
 
-// 959 is the narrowest the canvas is laid out (minCanvasWidth): the finished deck needs the room.
-
 test("an Interactive just wide enough holds the canvas at full size without scrolling", async ({ page }) => {
-  expect(await canvasIn(page, 959 + INTERACTIVE_EXTRA, 959)).toEqual({ page: false, drawing: false });
+  const scrolls = await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
+  expect(scrolls).toEqual({ page: false, drawing: false });
   await expect(drawingGroup(page)).not.toHaveAttribute("tabindex");
 });
 
@@ -57,16 +61,17 @@ test("a wider Interactive widens the canvas to fill it", async ({ page }) => {
 });
 
 test("an Interactive a pixel too narrow scrolls the canvas sideways rather than scaling it down", async ({ page }) => {
-  expect(await canvasIn(page, 958 + INTERACTIVE_EXTRA, 959)).toEqual({ page: false, drawing: true });
+  const scrolls = await canvasIn(page, NARROWEST_CANVAS - 1 + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
+  expect(scrolls).toEqual({ page: false, drawing: true });
   await expect(drawingGroup(page)).toHaveAttribute("tabindex", "0");
 });
 
 test("a much narrower Interactive scrolls only the canvas", async ({ page }) => {
-  expect(await canvasIn(page, 600, 959)).toEqual({ page: false, drawing: true });
+  expect(await canvasIn(page, 600, NARROWEST_CANVAS)).toEqual({ page: false, drawing: true });
 });
 
 test("the keyboard can reach and scroll a canvas too wide for its Interactive", async ({ page }) => {
-  await canvasIn(page, 600, 959);
+  await canvasIn(page, 600, NARROWEST_CANVAS);
   // The speed slider is the last control in the panel's head that takes focus, just before the
   // canvas.
   await page.getByRole("slider", { name: "Animation speed" }).focus();
@@ -87,7 +92,7 @@ test("unavailable steps look unavailable in forced-colors mode", async ({ page }
 });
 
 test("the drawing keeps the focus when its Interactive widens and it stops scrolling", async ({ page }) => {
-  await canvasIn(page, 600, 959);
+  await canvasIn(page, 600, NARROWEST_CANVAS);
   await drawingGroup(page).focus();
   await page.setViewportSize({ width: 1300, height: 900 });
   await expect.poll(() => page.locator(".extract-drawing").evaluate(e => e.scrollWidth > e.clientWidth)).toBe(false);
@@ -207,7 +212,7 @@ test("after the deck, Collect a Conversation starts the collecting over", async 
 });
 
 test("at the narrowest canvas, the finished deck fits its room", async ({ page }) => {
-  await canvasIn(page, 959 + INTERACTIVE_EXTRA, 959);
+  await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
   await page.getByRole("button", { name: "Collect All Conversations" }).click();
   const canvas = (await page.getByRole("img", { name: DECK }).boundingBox())!;
   const deck = (await page.getByTestId("deck").boundingBox())!;
