@@ -49,6 +49,7 @@
     "generate:alien": "ts-node --project tsconfig.generator.json generator/generate-alien-data.ts",
     "analyze:pathway-prediction": "ts-node --project tsconfig.generator.json scripts/analysis/pathway-prediction-residual.ts",
     "analyze:activation-floor": "ts-node --project tsconfig.generator.json scripts/analysis/activation-floor.ts",
+    "draw:network-layout-options": "ts-node --project tsconfig.generator.json scripts/docs/draw-network-layout-options.ts",
     "lint": "eslint",
     "lint:build": "eslint --config eslint.build.config.mjs",
     "lint:boundary": "node --test eslint.config.test.mjs",
