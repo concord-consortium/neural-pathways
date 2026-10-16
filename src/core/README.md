@@ -43,10 +43,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   form, are in `docs/view-state.md`.
 - `use-dataset-index.ts`: `useDatasetIndex`, which loads a dataset's index once per page and shares
   it between views.
-- `network/`: the network types, the toy network Trace a Case uses until there is one built from
-  the real alien3 activations (`toy-network.ts`), the forward pass, and the scales the diagram
-  draws against (`network-scales.ts`). `index-passes.ts` computes a dataset index's passes and
-  scales once per page.
+- `network/`: the network types, the forward pass, and the scales the diagram draws against
+  (`network-scales.ts`). The network itself comes with the alien3 data: the generator fits it and
+  writes it into the index (`alien3Network` in `datasets/alien3-dataset.ts`). `index-passes.ts`
+  computes a dataset index's passes and scales once per page.
 
   Three words name the same thing, each from its own side:
   - **unit:** one element of a layer, in the network's math (`network.ts`, and the `[unit]` and

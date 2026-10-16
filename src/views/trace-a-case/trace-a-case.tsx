@@ -5,12 +5,11 @@ import { ConversationCard } from "../../core/conversation-card/conversation-card
 import { ConversationWords } from "../../core/conversation-card/conversation-words";
 import { ActualLabel } from "../../core/conversation-card/actual-label";
 import { ObservationNotes } from "../../core/conversation-card/observation-notes";
-import { alien3Dataset } from "../../core/datasets/alien3-dataset";
+import { alien3Dataset, alien3Network } from "../../core/datasets/alien3-dataset";
 import { conversationFilterFor, idsFor } from "../../core/filter/conversation-filter";
 import { FilterBar } from "../../core/filter/filter-bar";
 import { useConversationFilter } from "../../core/filter/use-conversation-filter";
 import { indexPasses } from "../../core/network/index-passes";
-import { toyNetwork } from "../../core/network/toy-network";
 import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
 import { validConversationId } from "../../core/state/conversation";
@@ -23,10 +22,6 @@ import { StepRow } from "../../core/steps/step-row";
 import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
 import "./trace-a-case.scss";
 
-/** Units in each drawn layer. */
-const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
-const TIMELINE = traceTimeline(COLUMN_SIZES);
-
 /** Gives the stylesheet the diagram's smallest layout, which it sizes the network panel from. */
 const LAYOUT_STYLE = { "--diagram-min-height": `${MIN_HEIGHT}px` } as React.CSSProperties;
 
@@ -36,9 +31,11 @@ export const TraceACase: React.FC = observer(function TraceACase() {
   // Correct the shared conversation when the list arrives, not in a useEffect: see docs/undo.md.
   // The list is the stored query's matches: a query still being typed never moves the stored
   // conversation.
-  const onLoaded = useCallback(
-    (index: S3Index) => shared.ensureValidConversation(idsFor(conversationFilterFor(index), shared.query ?? "")),
-    [shared]);
+  const onLoaded = useCallback((index: S3Index) => {
+    // Checked here, so data without a network shows the alert rather than breaking the view.
+    alien3Network(index);
+    shared.ensureValidConversation(idsFor(conversationFilterFor(index), shared.query ?? ""));
+  }, [shared]);
   const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
 
   return (
@@ -64,7 +61,9 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // The generated attributes a student can see. The derived target, prediction and
   // model_correct aren't among them, and the hidden ones wait to be commissioned.
   const indicatorAttributes = useMemo(() => (index.metadata.attributes ?? []).filter(a => !a.hidden), [index]);
-  const { passes, scales } = indexPasses(toyNetwork, index);
+  const network = alien3Network(index);
+  const timeline = useMemo(() => traceTimeline(network.layers.map(layer => layer.biases.length)), [network]);
+  const { passes, scales } = indexPasses(network, index);
   const networkHeadId = useId();
   // Shown even before the store's correction lands, and while a query is being typed, so an id
   // the list doesn't include never reaches the screen.
@@ -73,8 +72,8 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // No conversation is shown when nothing matches: the empty list leaves the stored id in place.
   const shownId = listPosition < 0 ? undefined : currentId;
   const player = useMemo(
-    () => (shownId === undefined ? undefined : new StepPlayer(TIMELINE, traceProgress(state, shownId), state)),
-    [state, shownId]);
+    () => (shownId === undefined ? undefined : new StepPlayer(timeline, traceProgress(state, shownId), state)),
+    [timeline, state, shownId]);
   // Stop the old player when the conversation changes or the view unmounts. A layout effect, so its
   // run can't finish and store its marker after the change is committed.
   useLayoutEffect(() => () => player?.stop(), [player]);
@@ -119,7 +118,7 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
             <div className="trace-a-case__diagram">
               <Observer>
                 {() => (
-                  <NetworkDiagram network={toyNetwork} pass={passes[place]} scales={scales}
+                  <NetworkDiagram network={network} pass={passes[place]} scales={scales}
                     outputLabels={alien3Dataset.classificationLabels} scene={player.scene}
                     headingId={networkHeadId} />
                 )}

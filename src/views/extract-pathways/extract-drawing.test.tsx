@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { toyNetwork } from "../../core/network/toy-network";
+import { fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
 import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
@@ -18,14 +18,14 @@ import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
 const LABELS = { 0: "wait", 1: "approach" };
-const passes = fixture.conversations.map(c => forward(toyNetwork, c.text));
-const scales = networkScales(toyNetwork, passes);
+const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+const scales = networkScales(fixtureNetwork, passes);
 // jsdom has no ResizeObserver, so the drawing lays out at its narrowest.
 const geometry = extractGeometry(SIZES, 0);
 
 function renderDrawing(scene: ExtractScene) {
   return render(
-    <ExtractDrawing network={toyNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
+    <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
       headingId="panel-head" deckSize={passes.length} />,
   );
 }
@@ -75,7 +75,7 @@ describe("ExtractDrawing", () => {
     render(
       <>
         <h2 id="panel-head">The Network → Activated Pathways</h2>
-        <ExtractDrawing network={toyNetwork} passes={passes} scales={scales} outputLabels={LABELS}
+        <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS}
           scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length} />
       </>,
     );

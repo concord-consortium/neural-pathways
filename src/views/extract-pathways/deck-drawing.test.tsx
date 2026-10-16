@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import { forward } from "../../core/network/forward";
-import { toyNetwork } from "../../core/network/toy-network";
+import { fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
 import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import * as deckLayout from "./deck-layout";
 import { bottomHalf, DeckDrawing, diagonalHalf, faceOf, shading } from "./deck-drawing";
@@ -9,7 +9,7 @@ import { extractGeometry } from "./extract-geometry";
 import { DeckScene, finishedDeck } from "./extract-scene";
 
 const SIZES = [10, 8, 6, 2];
-const fixturePasses = fixture.conversations.map(c => forward(toyNetwork, c.text));
+const fixturePasses = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
 // The fixture has 20 conversations; a deck of more repeats them, which only these tests need.
 const passes = Array.from({ length: 800 }, (_, i) => fixturePasses[i % fixturePasses.length]);
 const geometry = extractGeometry(SIZES, 0);

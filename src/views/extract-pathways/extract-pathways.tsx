@@ -1,9 +1,8 @@
-import React, { useId, useLayoutEffect, useMemo } from "react";
+import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
-import { alien3Dataset } from "../../core/datasets/alien3-dataset";
+import { alien3Dataset, alien3Network } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
-import { toyNetwork } from "../../core/network/toy-network";
 import { useViewState } from "../../core/state/view-state-context";
 import { StepPlayer } from "../../core/steps/step-player";
 import { StepRow } from "../../core/steps/step-row";
@@ -16,13 +15,16 @@ import { extractButtons, extractProgress, MAX_COLLECTED } from "./extract-steps"
 import { extractTimeline } from "./extract-timeline";
 import "./extract-pathways.scss";
 
-/** Units in each drawn layer. */
-const COLUMN_SIZES = toyNetwork.layers.map(layer => layer.biases.length);
 const PANEL_TITLE = "The Network → Activated Pathways";
 
 /** Lift the hidden neurons out of the network and collect conversations' activations from them. */
 export const ExtractPathways: React.FC = observer(function ExtractPathways() {
-  const indexState = useDatasetIndex(alien3Dataset);
+  // Checked when the index arrives, so data without a network shows the alert rather than breaking
+  // the view.
+  const onLoaded = useCallback((index: S3Index) => {
+    alien3Network(index);
+  }, []);
+  const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
   return (
     <div className="extract-pathways">
       <h1 className="extract-pathways__title">Extract Pathways</h1>
@@ -37,11 +39,13 @@ export const ExtractPathways: React.FC = observer(function ExtractPathways() {
 const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { index: S3Index }) {
   const state = useViewState(ExtractPathwaysState);
   const panelHeadId = useId();
-  const { passes, scales } = indexPasses(toyNetwork, index);
+  const network = alien3Network(index);
+  const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
+  const { passes, scales } = indexPasses(network, index);
   const limit = Math.min(MAX_COLLECTED, passes.length);
   const size = deckSize(passes.length);
   const buttons = useMemo(() => extractButtons(limit), [limit]);
-  const timeline = useMemo(() => extractTimeline(COLUMN_SIZES, size), [size]);
+  const timeline = useMemo(() => extractTimeline(columnSizes, size), [columnSizes, size]);
   const player = useMemo(() => new StepPlayer(timeline, extractProgress(state, limit, size), state),
     [timeline, state, limit, size]);
   // Stop the player when the view unmounts. A layout effect, so no existing run can finish and
@@ -65,7 +69,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
         <div className="extract-pathways__drawing">
           <Observer>
             {() => (
-              <ExtractDrawing network={toyNetwork} passes={passes} scales={scales}
+              <ExtractDrawing network={network} passes={passes} scales={scales}
                 outputLabels={alien3Dataset.classificationLabels} scene={player.scene} headingId={panelHeadId}
                 deckSize={size} />
             )}

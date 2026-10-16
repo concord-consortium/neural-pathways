@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { forward } from "../../core/network/forward";
-import { toyNetwork } from "../../core/network/toy-network";
+import { fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
 import { NEGATIVE_COLOR, POSITIVE_COLOR } from "../../core/colors";
 import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import { finishedPathways, PathwaysScene } from "./extract-scene";
@@ -12,7 +12,7 @@ import { pathwaysLayout } from "./pathways-layout";
 const SIZES = [10, 8, 6, 2];
 const geometry = extractGeometry(SIZES, 0);
 const layout = pathwaysLayout(geometry, 20);
-const passes = fixture.conversations.map(c => forward(toyNetwork, c.text));
+const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
 
 const drawLayer = (pathways: PathwaysScene) =>
   render(<svg><PathwaysLayer pathways={pathways} layout={layout} /></svg>);

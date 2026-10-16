@@ -10,7 +10,7 @@ import "./network-diagram.scss";
 
 /**
  * As in the prototype, "Input Layer" captions the first drawn column, the embedding. The code calls
- * the word-presence vector before it the input.
+ * the word-count vector before it the input.
  */
 export const COLUMN_CAPTIONS = ["Input Layer", "Hidden Layer 1", "Hidden Layer 2", "Output Layer"];
 /** Output units top to bottom: Approach (class 1) above Wait (class 0), as in the prototype. */

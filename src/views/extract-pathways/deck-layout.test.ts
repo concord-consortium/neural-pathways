@@ -1,5 +1,5 @@
 import { forward } from "../../core/network/forward";
-import { toyNetwork } from "../../core/network/toy-network";
+import { fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
 import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import {
   centerShift, columnGap, columnsInSet, columnsWithSets, columnValues, deckMid, deckSize, deckWidth, setCount,
@@ -48,7 +48,7 @@ describe("the deck's size", () => {
 
 describe("columnValues", () => {
   it("reads a column's hidden activations from its own conversation", () => {
-    const passes = fixture.conversations.map(c => forward(toyNetwork, c.text));
+    const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
     expect(columnValues(passes, 0, 3)).toEqual([...passes[3].layers[1], ...passes[3].layers[2]]);
   });
 });

@@ -2,6 +2,7 @@ import React from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
+import { fixtureMetadata } from "../../core/network/__fixtures__/alien3-network";
 import { speedNamed } from "../../core/state/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
 import * as viewStateContext from "../../core/state/view-state-context";
@@ -33,7 +34,7 @@ function item(id: string, text: string, classification: number): S3Item {
 }
 
 const items = fixture.conversations.map(c => item(c.id, c.text, c.classification));
-const index: S3Index = { metadata: { fa_fits: {}, review_sets: {} }, items };
+const index: S3Index = { metadata: fixtureMetadata, items };
 
 function showView(state = new ExtractPathwaysState({})) {
   const utils = render(
@@ -82,6 +83,15 @@ describe("ExtractPathways", () => {
     mockedFetchIndex.mockRejectedValue(new Error("offline"));
     showView();
     expect(await screen.findByRole("alert")).toHaveTextContent("offline");
+  });
+
+  it("says to generate the data when the index has no network", async () => {
+    const { network: _network, ...metadata } = fixtureMetadata;
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      `The conversations could not be loaded: ` +
+      "The alien3 data has no network. Run npm run generate:alien to generate it.");
   });
 
   it("says so when there are no conversations", async () => {
