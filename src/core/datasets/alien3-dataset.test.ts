@@ -1,5 +1,6 @@
 import { S3Index, S3Item } from "../types/s3-data";
-import { alien3Dataset } from "./alien3-dataset";
+import { alien3Dataset, alien3Loadings, alien3Network } from "./alien3-dataset";
+import { fixtureMetadata, fixtureNetwork } from "../network/__fixtures__/alien3-network";
 
 const generatedDefinition = {
   key: "voices_raised",
@@ -105,5 +106,40 @@ describe("alien3Dataset", () => {
     const attrs = alien3Dataset.resolveAttributes(index);
     expect(attrs.find(a => a.key === "prediction")?.valueLabels).toBe(alien3Dataset.classificationLabels);
     expect(attrs.find(a => a.key === "target")?.valueLabels).toBe(alien3Dataset.classificationLabels);
+  });
+});
+
+describe("alien3Network", () => {
+  it("reads the network from the index", () => {
+    expect(alien3Network({ metadata: fixtureMetadata, items: [] })).toBe(fixtureNetwork);
+  });
+
+  it("says to generate the data when the index has none", () => {
+    const { network: _network, ...metadata } = fixtureMetadata;
+    expect(() => alien3Network({ metadata, items: [] }))
+      .toThrow("The alien3 data has no network. Run npm run generate:alien to generate it.");
+  });
+});
+
+describe("alien3Loadings", () => {
+  it("reads the fit's loadings as [neuron][pathway]", () => {
+    const fit = Object.values(fixtureMetadata.fa_fits)[0];
+    const loadings = alien3Loadings({ metadata: fixtureMetadata, items: [] });
+    expect(loadings).toHaveLength(14);
+    expect(loadings[0]).toHaveLength(3);
+    expect(loadings[5][2]).toBe(fit.loadings![2][5]);
+  });
+
+  it("says to generate the data when the fit has no loadings", () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: { ...fit, loadings: undefined } } };
+    expect(() => alien3Loadings({ metadata, items: [] }))
+      .toThrow("The alien3 data has no loadings. Run npm run generate:alien to generate it.");
+  });
+
+  it("refuses an index with more than one fit", () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: fit, other: fit } };
+    expect(() => alien3Loadings({ metadata, items: [] })).toThrow(/no loadings/);
   });
 });

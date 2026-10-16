@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { forward } from "../../core/network/forward";
 import { toyNetwork } from "../../core/network/toy-network";
 import { NEGATIVE_COLOR, POSITIVE_COLOR } from "../../core/colors";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import { finishedPathways, PathwaysScene } from "./extract-scene";
 import { extractGeometry } from "./extract-geometry";
 import { kickScale, mixColor, ParticleCanvas, PathwaysLayer } from "./pathways-drawing";

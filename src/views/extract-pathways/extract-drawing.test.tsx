@@ -5,7 +5,7 @@ import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import { collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";

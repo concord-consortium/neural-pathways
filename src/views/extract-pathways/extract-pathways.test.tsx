@@ -1,7 +1,7 @@
 import React from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import { speedNamed } from "../../core/state/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
 import * as viewStateContext from "../../core/state/view-state-context";

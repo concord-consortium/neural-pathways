@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import { forward } from "../../core/network/forward";
 import { toyNetwork } from "../../core/network/toy-network";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import * as deckLayout from "./deck-layout";
 import { bottomHalf, DeckDrawing, diagonalHalf, faceOf, shading } from "./deck-drawing";
 import { extractGeometry } from "./extract-geometry";

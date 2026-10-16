@@ -1,6 +1,6 @@
 import { forward } from "../../core/network/forward";
 import { toyNetwork } from "../../core/network/toy-network";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import { centerShift, deckMid, deckWidth, setOffset } from "./deck-layout";
 import { extractGeometry } from "./extract-geometry";
 import {

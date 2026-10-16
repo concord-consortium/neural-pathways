@@ -1,4 +1,5 @@
 import { S3Index, S3Item } from "../types/s3-data";
+import { Network } from "../network/network";
 import { AttributeDefinition } from "../types/attributes";
 import { DatasetDefinition, validateAttributeKeys } from "./dataset-definition";
 
@@ -99,3 +100,22 @@ export const alien3Dataset = createAlienDataset({
   label: "Alien Conversations (3 pathways)",
   baseUrl: "alien-data-3/",
 });
+
+/** The network the generator fitted to the alien3 data. Throws when the index has none. */
+export function alien3Network(index: S3Index): Network {
+  const { network } = index.metadata;
+  if (!network) {
+    throw new Error("The alien3 data has no network. Run npm run generate:alien to generate it.");
+  }
+  return network;
+}
+
+/** The alien3 fit's loadings, [neuron][pathway]. Throws unless the index has exactly one fit, with loadings. */
+export function alien3Loadings(index: S3Index): number[][] {
+  const fits = Object.values(index.metadata.fa_fits);
+  const loadings = fits.length === 1 ? fits[0].loadings : undefined;
+  if (!loadings) {
+    throw new Error("The alien3 data has no loadings. Run npm run generate:alien to generate it.");
+  }
+  return loadings[0].map((_, neuron) => loadings.map(row => row[neuron]));
+}

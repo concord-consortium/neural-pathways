@@ -4,7 +4,7 @@ import { spokenText } from "../../core/conversation-card/__fixtures__/spoken-tex
 import * as conversationCard from "../../core/conversation-card/conversation-card";
 import { fetchIndex } from "../../core/data-loader";
 import { phaseDuration } from "../../core/network-diagram/forward-pass-phases";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import { speedNamed } from "../../core/state/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
 import { TraceACaseState } from "./trace-a-case-state";

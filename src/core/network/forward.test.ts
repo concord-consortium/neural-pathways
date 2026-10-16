@@ -1,6 +1,6 @@
 import { forward, predictedClass, wordCounts } from "./forward";
-import { toyNetwork } from "./toy-network";
-import fixture from "./__fixtures__/toy-network-conversations.json";
+import { fixtureNetwork } from "./__fixtures__/alien3-network";
+import fixture from "./__fixtures__/alien3-conversations.json";
 
 const conversations = fixture.conversations;
 
@@ -16,20 +16,24 @@ describe("wordCounts", () => {
 
 describe("forward", () => {
   it("returns word counts and one array per layer", () => {
-    const pass = forward(toyNetwork, conversations[0].text);
-    expect(pass.input).toEqual(wordCounts(toyNetwork.vocabulary, conversations[0].text));
+    const pass = forward(fixtureNetwork, conversations[0].text);
+    expect(pass.input).toEqual(wordCounts(fixtureNetwork.vocabulary, conversations[0].text));
     expect(pass.layers.map(layer => layer.length)).toEqual([10, 8, 6, 2]);
   });
 
   it("feeds a repeated word its count", () => {
-    const { input } = forward(toyNetwork, "hakku hakku tovril hakku");
-    expect(input[toyNetwork.vocabulary.indexOf("hakku")]).toBe(3);
-    expect(input[toyNetwork.vocabulary.indexOf("tovril")]).toBe(1);
+    const { input } = forward(fixtureNetwork, "hakku hakku tovril hakku");
+    expect(input[fixtureNetwork.vocabulary.indexOf("hakku")]).toBe(3);
+    expect(input[fixtureNetwork.vocabulary.indexOf("tovril")]).toBe(1);
     expect(input.reduce((sum, x) => sum + x, 0)).toBe(4);
   });
 
   it("ignores unknown words and splits on any whitespace", () => {
-    expect(forward(toyNetwork, "hakku\nzzz   tovril")).toEqual(forward(toyNetwork, "hakku tovril"));
+    expect(forward(fixtureNetwork, "hakku\nzzz   tovril")).toEqual(forward(fixtureNetwork, "hakku tovril"));
+  });
+
+  it.each(conversations)("predicts the model's class for $id", ({ text, classification }) => {
+    expect(predictedClass(forward(fixtureNetwork, text))).toBe(classification);
   });
 });
 
