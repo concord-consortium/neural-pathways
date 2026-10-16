@@ -137,9 +137,23 @@ describe("alien3Loadings", () => {
       .toThrow("The alien3 data has no loadings. Run npm run generate:alien to generate it.");
   });
 
-  it("refuses an index with more than one fit", () => {
+  it("names the fits when the index has more than one", () => {
     const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
     const metadata = { ...fixtureMetadata, fa_fits: { [name]: fit, other: fit } };
-    expect(() => alien3Loadings({ metadata, items: [] })).toThrow(/no loadings/);
+    expect(() => alien3Loadings({ metadata, items: [] }))
+      .toThrow(`The alien3 data has more than one fit (${name}, other). Run npm run generate:alien to generate it.`);
+  });
+
+  it("says so when the index has no fit", () => {
+    const metadata = { ...fixtureMetadata, fa_fits: {} };
+    expect(() => alien3Loadings({ metadata, items: [] }))
+      .toThrow("The alien3 data has no fit. Run npm run generate:alien to generate it.");
+  });
+
+  it("says so when the fit's loadings are empty", () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: { ...fit, loadings: [] } } };
+    expect(() => alien3Loadings({ metadata, items: [] }))
+      .toThrow("The alien3 data has empty loadings. Run npm run generate:alien to generate it.");
   });
 });

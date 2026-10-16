@@ -112,10 +112,20 @@ export function alien3Network(index: S3Index): Network {
 
 /** The alien3 fit's loadings, [neuron][pathway]. Throws unless the index has exactly one fit, with loadings. */
 export function alien3Loadings(index: S3Index): number[][] {
-  const fits = Object.values(index.metadata.fa_fits);
-  const loadings = fits.length === 1 ? fits[0].loadings : undefined;
+  const regenerate = "Run npm run generate:alien to generate it.";
+  const names = Object.keys(index.metadata.fa_fits);
+  if (names.length === 0) {
+    throw new Error(`The alien3 data has no fit. ${regenerate}`);
+  }
+  if (names.length > 1) {
+    throw new Error(`The alien3 data has more than one fit (${names.join(", ")}). ${regenerate}`);
+  }
+  const loadings = index.metadata.fa_fits[names[0]].loadings;
   if (!loadings) {
-    throw new Error("The alien3 data has no loadings. Run npm run generate:alien to generate it.");
+    throw new Error(`The alien3 data has no loadings. ${regenerate}`);
+  }
+  if (loadings.length === 0) {
+    throw new Error(`The alien3 data has empty loadings. ${regenerate}`);
   }
   return loadings[0].map((_, neuron) => loadings.map(row => row[neuron]));
 }
