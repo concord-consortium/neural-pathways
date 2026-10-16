@@ -35,6 +35,12 @@ describe("forward", () => {
   it.each(conversations)("predicts the model's class for $id", ({ text, classification }) => {
     expect(predictedClass(forward(fixtureNetwork, text))).toBe(classification);
   });
+
+  it.each(conversations)("wins by the classification margin for $id", ({ text, classification }) => {
+    const { layers } = forward(fixtureNetwork, text);
+    const logits = layers[layers.length - 1];
+    expect(logits[classification] - logits[1 - classification]).toBeGreaterThanOrEqual(0.1);
+  });
 });
 
 describe("predictedClass", () => {
