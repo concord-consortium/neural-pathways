@@ -19,7 +19,8 @@ The lesson's first view: follow one conversation through the network, a layer at
   and switching views. Only this view uses it, so it lives here rather than in `src/core/state/`.
 
 The network, the diagram, the conversation card and the data loading live in `src/core/`, where
-Extract Pathways and Investigate Pathways can use them.
+Extract Pathways and Investigate Pathways can use them. The network is the one the generator fits to
+the alien3 data; the view reads it from the index (`alien3Network`).
 
 ## Size
 

@@ -156,9 +156,13 @@ Block by block:
   attribute even though the ground truth doesn't.
 - **Activations block** — the 14-neuron activation model's summary. Covered in
   detail in section 4.
-- **Self-checks** — nine `PASS`/`FAIL` lines, each with the measured value it
-  was judged on. Healthy: all nine read `PASS`. Any `FAIL` also prints exit
-  code 1 from `npm run generate:alien`. Section 5 covers each check.
+- **Network block** (alien3 only) — the fitted network's shape, how many epochs fitting took and
+  what stopped it, the time, and the smallest margin. Healthy: `stopped by the margin`, in a second
+  or two. `stopped by the cap` means fitting ran out of epochs; the network checks then fail and say
+  to try another `network.seed`.
+- **Self-checks** — nine `PASS`/`FAIL` lines for the four-pathway dataset and eleven for alien3,
+  each with the measured value it was judged on. Healthy: all of them read `PASS`. Any `FAIL` also
+  prints exit code 1 from `npm run generate:alien`. Section 5 covers each check.
 
 A bug is any block whose numbers don't match the description above — e.g. a
 variance split that's badly off, a pathway correlation far from 0, or a
@@ -183,6 +187,20 @@ word-sum variance split (target -> realized; what SCALE was tuned for)
 
 Healthy, same as the four-pathway block: each line's two percentages sit close
 together.
+
+Alien3's summary also has a `network` block after the activations block, and its self-checks end
+with the two network checks:
+
+```
+network
+  30 -> 10 -> 8 -> 6 -> 2, stopped by the margin after 900 epochs in 1.4 s
+  smallest margin 0.166
+
+self-checks
+  ...
+  PASS  network-reproduces-classification all 800 conversations, smallest margin 0.166 (minimum 0.1)
+  PASS  network-tracks-activations        weakest unit tracks neuron 10 at r 0.880 (minimum 0.85)
+```
 
 ## 3. Requested versus achieved
 
@@ -250,7 +268,7 @@ What to read from it:
 Files on disk: `ls dist/alien-data/activations | head` lists bucket files; each holds
 `{ "reviews": [{ "id", "activations": [14 numbers] }] }`.
 
-## 5. The nine self-checks
+## 5. The self-checks
 
 Each subsection: what it measures, what a failure means, what to change.
 
@@ -380,6 +398,20 @@ identifiability floor (8 neurons) with room to spare at the shipped seed, so a f
 here on an otherwise-unmodified config points first at the seed, not at the neuron
 count or `SCALE`'s target variance.
 
+### network-reproduces-classification (alien3 only)
+
+Runs every conversation through the fitted network, as written to `index.json`, and measures how
+far its logit for the conversation's `classification` beats the other's. A failure means the
+network would show a different prediction than the dataset for the conversations it names. If the
+detail says fitting stopped at `network.maxEpochs`, change `network.seed` in `generator/alien-config.ts`;
+a different starting point usually settles within the cap.
+
+### network-tracks-activations (alien3 only)
+
+Correlates each tracking unit with the authored neuron it follows. A failure means a unit no
+longer looks like its neuron, so its edges and gauges could contradict the loading bars. Try
+another `network.seed`, or a larger `activationWeight`.
+
 ## 6. Changing a parameter and confirming it took
 
 Open `generator/alien-config.ts` and, in `fourPathwayConfig`'s
@@ -400,7 +432,7 @@ achieved 0.652` to:
 ```
 
 — the achieved column tracks the new request, the ceiling is unchanged (it only
-depends on the value shares, not `targetR`), and all nine self-checks still
+depends on the value shares, not `targetR`), and all nine four-pathway self-checks still
 print `PASS` (the activations block is untouched too — it's built from the
 pathway scores, not the attributes, so its numbers match section 2 exactly).
 Now put it back: change `targetR` back to `0.65` and rerun
@@ -456,7 +488,7 @@ self-checks
 Every number moved — the variance split is off by a point or two instead of
 exact, the pathway correlations are larger (though still well inside the 0.12
 orthogonality limit), the rarest word count changed from 291 to 302 — and eight
-of the nine checks still pass, same as at the shipped seed. **The ninth,
+of the nine four-pathway checks still pass, same as at the shipped seed. **The ninth,
 `fa-recovers-pathways`, fails here**: only `P0` comes back as its own factor in
 authored order — `P1`, `P2` and `P3` come back permuted (as `F2`, `F3` and `F1`)
 with every score correlation and loading cosine below the 0.94/0.97 thresholds
@@ -533,7 +565,7 @@ Delete the line you added and confirm `git diff generator/alien-config.ts` is
 empty.
 
 **After both exercises**, run `npm run generate:alien` once more and confirm it
-prints all eighteen `PASS` lines — nine per dataset, across both summaries —
+prints all twenty `PASS` lines — nine for the four-pathway dataset and eleven for alien3, across both summaries —
 and exits 0 — the config is back to what ships.
 
 ## 9. Inspecting the output files
