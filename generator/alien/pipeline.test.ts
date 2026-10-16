@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { fourPathwayConfig } from "../alien-config";
+import { fourPathwayConfig, threePathwayConfig } from "../alien-config";
 import { generate } from "./pipeline";
 import { runChecks } from "./checks";
 import { formatSummary } from "./summary";
@@ -39,5 +39,35 @@ describe("formatSummary", () => {
     expect(summary).toContain("reconstruction R2");
     expect(summary).toContain("refit explained variance by pathway count");
     expect(summary).toContain("word-sum variance split");
+  });
+});
+
+describe("generate with a network", () => {
+  // Fitting the alien3 network takes a second or two.
+  jest.setTimeout(60000);
+
+  it("fits one only when the config asks", () => {
+    expect(generate(fourPathwayConfig).dataset.index.metadata.network).toBeUndefined();
+    const run = generate(threePathwayConfig);
+    expect(run.network?.stoppedBy).toBe("margin");
+    expect(run.dataset.index.metadata.network).toBe(run.network?.network);
+    expect(run.dataset.index.metadata.network?.layers.map(layer => layer.biases.length)).toEqual([10, 8, 6, 2]);
+    expect(run.dataset.index.metadata.network?.vocabulary)
+      .toEqual(threePathwayConfig.vocabulary.map(entry => entry.word).sort());
+  });
+
+  it("leaves every other value the generator emits as it was", () => {
+    const withNetwork = generate(threePathwayConfig).dataset.index;
+    const without = generate({ ...threePathwayConfig, network: undefined }).dataset.index;
+    const { network, ...metadata } = withNetwork.metadata;
+    expect(network).toBeDefined();
+    expect(JSON.stringify({ ...withNetwork, metadata })).toBe(JSON.stringify(without));
+  });
+
+  it("reports the network in the summary", () => {
+    const run = generate(threePathwayConfig);
+    const summary = formatSummary(run, runChecks(run));
+    expect(summary).toMatch(/network\n {2}30 -> 10 -> 8 -> 6 -> 2, stopped by the margin after \d+ epochs/);
+    expect(summary).toMatch(/smallest margin 0\.\d{3}/);
   });
 });

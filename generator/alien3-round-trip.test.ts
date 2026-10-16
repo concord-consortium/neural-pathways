@@ -44,6 +44,10 @@ afterAll(() => {
 });
 
 describe("alien3 generator output read by core's loader", () => {
+  it("carries the fitted network in the index", () => {
+    expect(index.metadata.network?.layers.map(layer => layer.biases.length)).toEqual([10, 8, 6, 2]);
+  });
+
   it("reads every generated conversation from the index", () => {
     expect(index.items).toHaveLength(threePathwayConfig.conversationCount);
   });
