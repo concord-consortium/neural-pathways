@@ -71,8 +71,8 @@ The 10 pathway neurons fit in every option: they are as many as today's input la
 
 ![Today's network, 10 → 8 → 6 → 2](1-today-10-8-6-2.svg)
 
-The stand-in network the views draw now. Factor analysis can't recover the alien pathways from its
-hidden layers.
+The 10 → 8 → 6 → 2 network the views draw now, fitted to the alien3 data. Factor analysis still can't
+recover the pathways from its hidden layers.
 
 ## A. Straight columns
 

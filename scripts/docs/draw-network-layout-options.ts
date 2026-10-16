@@ -316,7 +316,7 @@ const OPTIONS: Option[] = [
   {
     file: "1-today-10-8-6-2.svg",
     title: "Today: 10 → 8 → 6 → 2 (for reference)",
-    subtitle: "The toy network. Factor analysis can't recover the alien pathways from it.",
+    subtitle: "The 10 → 8 → 6 → 2 network the views draw. Factor analysis can't recover the pathways from its hidden layers.",
     columns: [inputs(10), { count: 8, caption: "Hidden Layer 1" }, { count: 6, caption: "Hidden Layer 2" }, outputs],
   },
   {
