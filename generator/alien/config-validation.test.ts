@@ -1,10 +1,14 @@
 import * as path from "path";
-import { fourPathwayConfig } from "../alien-config";
+import { fourPathwayConfig, threePathwayConfig } from "../alien-config";
 import { validateConfig } from "./config-validation";
 import { AlienConfig } from "./config-types";
 
 function clone(): AlienConfig {
   return JSON.parse(JSON.stringify(fourPathwayConfig)) as AlienConfig;
+}
+
+function cloneThree(): AlienConfig {
+  return JSON.parse(JSON.stringify(threePathwayConfig)) as AlienConfig;
 }
 
 describe("validateConfig", () => {
@@ -216,5 +220,48 @@ describe("validateConfig", () => {
     const config = clone();
     config.targetVarianceShares = [0.55, 0.35, 0.1, 0];
     expect(() => validateConfig(config)).toThrow(/targetVarianceShares/);
+  });
+});
+
+describe("validateConfig's network rules", () => {
+  it("accepts the shipped three-pathway config, which fits a network", () => {
+    expect(threePathwayConfig.network).toBeDefined();
+    expect(() => validateConfig(threePathwayConfig)).not.toThrow();
+  });
+
+  it("rejects tracking layers that don't add up to the neuron count", () => {
+    const config = cloneThree();
+    config.network!.hiddenSizes = [10, 8, 5];
+    expect(() => validateConfig(config)).toThrow(/13 units, but there are 14 neurons/);
+  });
+
+  it("rejects a network with no tracking layer", () => {
+    const config = cloneThree();
+    config.network!.hiddenSizes = [10];
+    expect(() => validateConfig(config)).toThrow(/embedding and at least one tracking layer/);
+  });
+
+  it("rejects a target scale tanh can't reach", () => {
+    const config = cloneThree();
+    config.network!.targetScale = 1;
+    expect(() => validateConfig(config)).toThrow(/targetScale/);
+  });
+
+  it("rejects a negative margin", () => {
+    const config = cloneThree();
+    config.network!.margin = -0.1;
+    expect(() => validateConfig(config)).toThrow(/margin/);
+  });
+
+  it("rejects a fractional checkEvery", () => {
+    const config = cloneThree();
+    config.network!.checkEvery = 2.5;
+    expect(() => validateConfig(config)).toThrow(/checkEvery/);
+  });
+
+  it("rejects a tracking threshold above 1", () => {
+    const config = cloneThree();
+    config.thresholds.networkTrackingMin = 1.2;
+    expect(() => validateConfig(config)).toThrow(/networkTrackingMin/);
   });
 });
