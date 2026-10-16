@@ -6,7 +6,7 @@ export interface NetworkLayer {
   activation: "tanh" | "linear";
 }
 
-/** A small feed-forward network whose input is which vocabulary words a text contains. */
+/** A small feed-forward network whose input is how many times each vocabulary word appears in a text. */
 export interface Network {
   /** The input words, in input order. */
   vocabulary: readonly string[];
