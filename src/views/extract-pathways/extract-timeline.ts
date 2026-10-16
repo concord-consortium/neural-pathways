@@ -3,6 +3,7 @@ import { collectAllDuration, collectAllSceneAt } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { deckRestScene, ExtractScene, pathwaysRestScene, restScene } from "./extract-scene";
 import { DECK_MARKER, PATHWAYS_MARKER } from "./extract-steps";
+import { Loadings } from "./pathways-layout";
 import { EXTRACT_MS, extractPathwaysSceneAt } from "./pathways-timeline";
 import { setupDuration, setupSceneAt } from "./setup-timeline";
 
@@ -10,9 +11,11 @@ import { setupDuration, setupSceneAt } from "./setup-timeline";
  * Extract Pathways' timeline, for a deck of `deckSize` conversations. The segment to marker 1 is
  * Setup; from n to n + 1, below the deck, collects conversation n; and a segment to DECK_MARKER is
  * Collect All Conversations, from wherever it starts; and the segment to PATHWAYS_MARKER is
- * Extract Pathways, from the deck.
+ * Extract Pathways, from the deck, with the bars of `loadings`.
  */
-export function extractTimeline(columnSizes: readonly number[], deckSize: number): StepTimeline<ExtractScene> {
+export function extractTimeline(
+  columnSizes: readonly number[], deckSize: number, loadings: Loadings,
+): StepTimeline<ExtractScene> {
   return {
     duration: ({ from, to }) => {
       if (to === 1) {
@@ -29,7 +32,7 @@ export function extractTimeline(columnSizes: readonly number[], deckSize: number
     sceneAt: (marker, frame) => {
       if (!frame) {
         if (marker === PATHWAYS_MARKER) {
-          return pathwaysRestScene(columnSizes, deckSize);
+          return pathwaysRestScene(columnSizes, deckSize, loadings);
         }
         return marker === DECK_MARKER ? deckRestScene(columnSizes, deckSize) : restScene(columnSizes, marker);
       }
@@ -37,7 +40,7 @@ export function extractTimeline(columnSizes: readonly number[], deckSize: number
         return setupSceneAt(columnSizes, frame.t);
       }
       if (frame.to === PATHWAYS_MARKER) {
-        return extractPathwaysSceneAt(columnSizes, deckSize, frame.t);
+        return extractPathwaysSceneAt(columnSizes, deckSize, loadings, frame.t);
       }
       if (frame.to === DECK_MARKER) {
         return collectAllSceneAt(columnSizes, frame.from - 1, deckSize, frame.t);

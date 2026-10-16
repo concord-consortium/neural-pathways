@@ -1,3 +1,4 @@
+import { fixtureLoadings } from "../../core/network/__fixtures__/alien3-network";
 import { emptyScene, fullScene } from "../../core/network-diagram/scene";
 import { setOffset } from "./deck-layout";
 import { deckRestScene, finishedDeck, hiddenCount, pathwaysRestScene, restScene } from "./extract-scene";
@@ -68,7 +69,7 @@ describe("finishedDeck", () => {
 
 describe("pathwaysRestScene", () => {
   it("is the deck slid half off the canvas, and the finished pathways", () => {
-    const scene = pathwaysRestScene(SIZES, 800);
+    const scene = pathwaysRestScene(SIZES, 800, fixtureLoadings);
     expect(scene.deck).toMatchObject({ slide: 1, done: true });
     expect(scene.pathways).toMatchObject({
       slide: 1, particles: undefined, flying: undefined, lines: 1, done: true,

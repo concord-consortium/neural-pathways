@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
+import { fixtureLoadings, fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
 import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
@@ -26,7 +26,8 @@ const geometry = extractGeometry(SIZES, 0);
 function renderDrawing(scene: ExtractScene) {
   return render(
     <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
-      headingId="panel-head" deckSize={passes.length} />,
+      headingId="panel-head" deckSize={passes.length}
+      loadings={fixtureLoadings} />,
   );
 }
 
@@ -76,7 +77,8 @@ describe("ExtractDrawing", () => {
       <>
         <h2 id="panel-head">The Network → Activated Pathways</h2>
         <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS}
-          scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length} />
+          scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length}
+          loadings={fixtureLoadings} />
       </>,
     );
     const group = screen.getByRole("group", { name: "The Network → Activated Pathways" });
@@ -231,22 +233,22 @@ describe("ExtractDrawing", () => {
   });
 
   it("draws the pathways beside the slid deck, and describes them, once Extract Pathways is done", () => {
-    renderDrawing(pathwaysRestScene(SIZES, 20));
+    renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings));
     expect(screen.getByRole("img", {
       name: "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 conversations.",
     })).toBeInTheDocument();
     expect(screen.getAllByTestId("pathway-line")).toHaveLength(42);
-    const dx = pathwaysLayout(geometry, 20).liftedDx;
+    const dx = pathwaysLayout(geometry, 20, fixtureLoadings).liftedDx;
     expect(screen.getByTestId("lifted-column")).toHaveAttribute("transform", `translate(${dx},0)`);
   });
 
   it("shows the particle canvas only while the particles fly", () => {
     jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
     try {
-      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, 3000));
+      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, 3000));
       expect(screen.getByTestId("particles")).toBeInTheDocument();
       unmount();
-      renderDrawing(pathwaysRestScene(SIZES, 20));
+      renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings));
       expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
     } finally {
       jest.restoreAllMocks();

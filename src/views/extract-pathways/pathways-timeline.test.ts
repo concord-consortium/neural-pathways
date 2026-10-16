@@ -1,9 +1,10 @@
+import { fixtureLoadings } from "../../core/network/__fixtures__/alien3-network";
 import { pathwaysRestScene } from "./extract-scene";
 import { PARTICLES_MS } from "./particles";
 import { EXTRACT_MS, extractPathwaysSceneAt, PATHWAY_MS, pathwayStart } from "./pathways-timeline";
 
 const SIZES = [10, 8, 6, 2];
-const at = (t: number) => extractPathwaysSceneAt(SIZES, 800, t);
+const at = (t: number) => extractPathwaysSceneAt(SIZES, 800, fixtureLoadings, t);
 const PARTICLES_AT = 1700;
 
 describe("extractPathwaysSceneAt", () => {
@@ -59,6 +60,6 @@ describe("extractPathwaysSceneAt", () => {
   });
 
   it("ends on the pathways at rest", () => {
-    expect(at(EXTRACT_MS)).toEqual(pathwaysRestScene(SIZES, 800));
+    expect(at(EXTRACT_MS)).toEqual(pathwaysRestScene(SIZES, 800, fixtureLoadings));
   });
 });

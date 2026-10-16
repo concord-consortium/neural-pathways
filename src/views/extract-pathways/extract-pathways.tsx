@@ -1,7 +1,7 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
-import { alien3Dataset, alien3Network } from "../../core/datasets/alien3-dataset";
+import { alien3Dataset, alien3Loadings, alien3Network } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
 import { useViewState } from "../../core/state/view-state-context";
 import { StepPlayer } from "../../core/steps/step-player";
@@ -19,10 +19,11 @@ const PANEL_TITLE = "The Network → Activated Pathways";
 
 /** Lift the hidden neurons out of the network and collect conversations' activations from them. */
 export const ExtractPathways: React.FC = observer(function ExtractPathways() {
-  // Checked when the index arrives, so data without a network shows the alert rather than breaking
-  // the view.
+  // Checked when the index arrives, so data without a network or loadings shows the alert rather than
+  // breaking the view.
   const onLoaded = useCallback((index: S3Index) => {
     alien3Network(index);
+    alien3Loadings(index);
   }, []);
   const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
   return (
@@ -40,12 +41,13 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
   const state = useViewState(ExtractPathwaysState);
   const panelHeadId = useId();
   const network = alien3Network(index);
+  const loadings = useMemo(() => alien3Loadings(index), [index]);
   const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
   const { passes, scales } = indexPasses(network, index);
   const limit = Math.min(MAX_COLLECTED, passes.length);
   const size = deckSize(passes.length);
   const buttons = useMemo(() => extractButtons(limit), [limit]);
-  const timeline = useMemo(() => extractTimeline(columnSizes, size), [columnSizes, size]);
+  const timeline = useMemo(() => extractTimeline(columnSizes, size, loadings), [columnSizes, size, loadings]);
   const player = useMemo(() => new StepPlayer(timeline, extractProgress(state, limit, size), state),
     [timeline, state, limit, size]);
   // Stop the player when the view unmounts. A layout effect, so no existing run can finish and
@@ -71,7 +73,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { i
             {() => (
               <ExtractDrawing network={network} passes={passes} scales={scales}
                 outputLabels={alien3Dataset.classificationLabels} scene={player.scene} headingId={panelHeadId}
-                deckSize={size} />
+                deckSize={size} loadings={loadings} />
             )}
           </Observer>
         </div>

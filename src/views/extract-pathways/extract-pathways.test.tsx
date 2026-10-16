@@ -94,6 +94,16 @@ describe("ExtractPathways", () => {
       "The alien3 data has no network. Run npm run generate:alien to generate it.");
   });
 
+  it("says to generate the data when the fit has no loadings", async () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: { ...fit, loadings: undefined } } };
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The conversations could not be loaded: The alien3 data has no loadings. "
+      + "Run npm run generate:alien to generate it.");
+  });
+
   it("says so when there are no conversations", async () => {
     mockedFetchIndex.mockResolvedValue({ ...index, items: [] });
     showView();

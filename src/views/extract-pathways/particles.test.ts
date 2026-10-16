@@ -1,5 +1,5 @@
 import { forward } from "../../core/network/forward";
-import { fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
+import { fixtureLoadings, fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
 import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import { centerShift, deckMid, deckWidth, setOffset } from "./deck-layout";
 import { extractGeometry } from "./extract-geometry";
@@ -24,13 +24,20 @@ describe("seededRandom", () => {
 });
 
 describe("particlePlan", () => {
-  const { particles, need } = particlePlan();
+  it("works the plan out once for each set of loadings", () => {
+    expect(particlePlan(fixtureLoadings)).toBe(particlePlan(fixtureLoadings));
+    const halved = fixtureLoadings.map(row => row.map(loading => loading / 2));
+    expect(particlePlan(halved)).not.toBe(particlePlan(fixtureLoadings));
+    expect(particlePlan(halved).need).toEqual(particlePlan(fixtureLoadings).need);
+  });
+
+  const { particles, need } = particlePlan(fixtureLoadings);
 
   it("shares about 1,500 particles among the bars by length, at least 4 each", () => {
     expect(need).toHaveLength(42);
     expect(Math.min(...need)).toBeGreaterThanOrEqual(4);
     expect(Math.abs(particles.length - 1500)).toBeLessThan(42);
-    const lengths = barLengths();
+    const lengths = barLengths(fixtureLoadings);
     expect(need[lengths.indexOf(Math.max(...lengths))]).toBe(Math.max(...need));
   });
 
@@ -41,8 +48,8 @@ describe("particlePlan", () => {
 
 describe("landedCounts", () => {
   it("counts none at the start and every bar's share at the end", () => {
-    expect(landedCounts(0).every(n => n === 0)).toBe(true);
-    expect(landedCounts(PARTICLES_MS)).toEqual(particlePlan().need);
+    expect(landedCounts(fixtureLoadings, 0).every(n => n === 0)).toBe(true);
+    expect(landedCounts(fixtureLoadings, PARTICLES_MS)).toEqual(particlePlan(fixtureLoadings).need);
   });
 });
 
@@ -109,7 +116,7 @@ describe("faceSources", () => {
   });
 
   it("targets bars that are laid out for the same deck", () => {
-    const layout = pathwaysLayout(g, 800);
-    expect(layout.bars).toHaveLength(particlePlan().need.length);
+    const layout = pathwaysLayout(g, 800, fixtureLoadings);
+    expect(layout.bars).toHaveLength(particlePlan(fixtureLoadings).need.length);
   });
 });

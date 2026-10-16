@@ -25,8 +25,9 @@ the deck.
 - `transitions.ts`: a value carried by CSS-style transitions, each starting from wherever the last
   left it.
 - `deck-drawing.tsx`: the deck's sets, memoized (see `DeckSet`), and the depth shading of its faces.
-- `pathways-layout.ts`: the stand-in loadings, and where the loading bars, their zero rules and the
-  pathway boxes go once the deck and the lifted column have slid.
+- `pathways-layout.ts`: where the loading bars, their zero rules and the pathway boxes go once the
+  deck and the lifted column have slid, for the alien3 fit's loadings (`alien3Loadings`), which the
+  view reads from the index.
 - `particles.ts`: the particles that carry the deck's readings to the bars: a seeded plan of their
   timing, their curves, and the gauges on the deck's faces they leave from.
 - `pathways-drawing.tsx`: the bars, the copies flying to the boxes, the boxes and the lines, in

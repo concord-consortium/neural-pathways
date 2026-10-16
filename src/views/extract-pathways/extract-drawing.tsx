@@ -15,7 +15,7 @@ import {
 import { ExtractScene } from "./extract-scene";
 import { Flight, flightDuration, Placed, placeCopy } from "./flight";
 import { ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
-import { pathwaysLayout } from "./pathways-layout";
+import { Loadings, pathwaysLayout } from "./pathways-layout";
 import "./extract-drawing.scss";
 
 /** The label's drop-in, overshooting as it lands (the prototype's bounceIn). */
@@ -138,6 +138,8 @@ interface ExtractDrawingProps {
   headingId: string;
   /** How many conversations the deck holds. */
   deckSize: number;
+  /** The alien3 fit's loadings, [neuron][pathway], which the loading bars draw. */
+  loadings: Loadings;
 }
 
 /**
@@ -149,7 +151,7 @@ interface ExtractDrawingProps {
  * the panel is already a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
-  network, passes, scales, outputLabels, scene, headingId, deckSize,
+  network, passes, scales, outputLabels, scene, headingId, deckSize, loadings,
 }) => {
   // Until the host is measured, and in jsdom, which can't measure it: the narrowest layout.
   const [hostRef, size] = useElementSize<HTMLDivElement>({ width: 0, height: CANVAS_HEIGHT });
@@ -160,7 +162,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
   }, [hostRef, scrollerRef]);
   const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
   const geometry = useMemo(() => extractGeometry(columnSizes, size.width), [columnSizes, size.width]);
-  const pathways = useMemo(() => pathwaysLayout(geometry, deckSize), [geometry, deckSize]);
+  const pathways = useMemo(() => pathwaysLayout(geometry, deckSize, loadings), [geometry, deckSize, loadings]);
   const names = useMemo(() => hiddenNames(columnSizes), [columnSizes]);
   const clipId = `extract-deck-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const { width, height, networkX, network: layout, hidden, lifted, deck } = geometry;
@@ -223,7 +225,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
       </svg>
       {scene.pathways?.particles !== undefined && (
         <ParticleCanvas t={scene.pathways.particles} geometry={geometry} passes={passes} size={deckSize}
-          layout={pathways} />
+          layout={pathways} loadings={loadings} />
       )}
     </div>
   );
