@@ -1,8 +1,9 @@
-import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
+import React, { useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { alien3Dataset, alien3Loadings, alien3Network } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
+import { Network } from "../../core/network/network";
 import { useViewState } from "../../core/state/view-state-context";
 import { StepPlayer } from "../../core/steps/step-player";
 import { StepRow } from "../../core/steps/step-row";
@@ -13,35 +14,57 @@ import { ExtractDrawing } from "./extract-drawing";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 import { extractButtons, extractProgress, MAX_COLLECTED } from "./extract-steps";
 import { extractTimeline } from "./extract-timeline";
+import { checkLoadingsShape, Loadings } from "./pathways-layout";
 import "./extract-pathways.scss";
 
 const PANEL_TITLE = "The Network → Activated Pathways";
 
+/** What the view draws from the index: its network and loadings, or why it can't. */
+type Fitted = { network: Network; loadings: Loadings } | { error: Error };
+
+/** Read the fitted network and loadings without throwing, so the alert can be rendered for bad data on any mount. */
+function readFitted(index: S3Index): Fitted {
+  try {
+    const network = alien3Network(index);
+    const loadings = alien3Loadings(index);
+    // The lifted neurons are the columns between the first and the last, as the canvas draws them.
+    const hiddenNeurons = network.layers.slice(1, -1).reduce((sum, layer) => sum + layer.biases.length, 0);
+    checkLoadingsShape(loadings, hiddenNeurons);
+    return { network, loadings };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error : new Error(String(error)) };
+  }
+}
+
 /** Lift the hidden neurons out of the network and collect conversations' activations from them. */
 export const ExtractPathways: React.FC = observer(function ExtractPathways() {
-  // Checked when the index arrives, so data without a network or loadings shows the alert rather than
-  // breaking the view.
-  const onLoaded = useCallback((index: S3Index) => {
-    alien3Network(index);
-    alien3Loadings(index);
-  }, []);
-  const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
+  const indexState = useDatasetIndex(alien3Dataset);
+  // Checked when the index is ready, on every mount, so data without a network or loadings shows the
+  // alert rather than breaking the view.
+  const fitted = useMemo(
+    () => (indexState.status === "ready" ? readFitted(indexState.index) : undefined), [indexState]);
   return (
     <div className="extract-pathways">
       <h1 className="extract-pathways__title">Extract Pathways</h1>
       {indexState.status === "loading" && <p>Loading conversations…</p>}
       {indexState.status === "error" &&
         <p role="alert">The conversations could not be loaded: {indexState.error.message}</p>}
-      {indexState.status === "ready" && <ExtractPathwaysBody index={indexState.index} />}
+      {fitted && "error" in fitted && <p role="alert">The conversations could not be loaded: {fitted.error.message}</p>}
+      {indexState.status === "ready" && fitted && !("error" in fitted) &&
+        <ExtractPathwaysBody index={indexState.index} network={fitted.network} loadings={fitted.loadings} />}
     </div>
   );
 });
 
-const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index }: { index: S3Index }) {
+interface BodyProps {
+  index: S3Index;
+  network: Network;
+  loadings: Loadings;
+}
+
+const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, network, loadings }: BodyProps) {
   const state = useViewState(ExtractPathwaysState);
   const panelHeadId = useId();
-  const network = alien3Network(index);
-  const loadings = useMemo(() => alien3Loadings(index), [index]);
   const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
   const { passes, scales } = indexPasses(network, index);
   const limit = Math.min(MAX_COLLECTED, passes.length);

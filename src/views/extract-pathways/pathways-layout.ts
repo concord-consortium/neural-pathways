@@ -65,6 +65,14 @@ export interface PathwaysLayout {
   boxes: PathwayBox[];
 }
 
+/** Throws unless `loadings` has a row for each of `neurons` neurons, PATHWAYS to a row. */
+export function checkLoadingsShape(loadings: Loadings, neurons: number): void {
+  if (loadings.length !== neurons || loadings.some(row => row.length !== PATHWAYS)) {
+    throw new Error(`Expected loadings for ${neurons} neurons on ${PATHWAYS} pathways, got `
+      + `${loadings.length} rows of ${[...new Set(loadings.map(row => row.length))].join(", ")}`);
+  }
+}
+
 /**
  * Where everything Extract Pathways adds goes, once the deck of `size` has slid half off the
  * canvas and the lifted column has followed it to COLUMN_GAP clear of what still shows. `loadings` has
@@ -72,10 +80,7 @@ export interface PathwaysLayout {
  */
 export function pathwaysLayout(geometry: ExtractGeometry, size: number, loadings: Loadings): PathwaysLayout {
   const { lifted, deck } = geometry;
-  if (loadings.length !== lifted.ys.length || loadings.some(row => row.length !== PATHWAYS)) {
-    throw new Error(`Expected loadings for ${lifted.ys.length} neurons on ${PATHWAYS} pathways, got `
-      + `${loadings.length} rows of ${[...new Set(loadings.map(row => row.length))].join(", ")}`);
-  }
+  checkLoadingsShape(loadings, lifted.ys.length);
   const shownRight = (deck.r * deckWidth(size)) / 2;
   const liftedDx = shownRight + COLUMN_GAP + lifted.r - lifted.x;
   const x = lifted.x + liftedDx;

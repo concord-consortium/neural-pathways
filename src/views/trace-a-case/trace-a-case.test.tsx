@@ -173,6 +173,19 @@ describe("TraceACase", () => {
       "The alien3 data has no network. Run npm run generate:alien to generate it.");
   });
 
+  it("says to generate the data again when the view is opened a second time on the same index", async () => {
+    const { network: _network, ...metadata } = index.metadata;
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    const alert = "The conversations could not be shown: " +
+      "The alien3 data has no network. Run npm run generate:alien to generate it.";
+    const { unmount } = render(viewWith(new SharedState({})));
+    expect(await screen.findByRole("alert")).toHaveTextContent(alert);
+    unmount();
+    // The index is cached now, so this mount starts ready and renders before any onLoaded would run.
+    showView();
+    expect(screen.getByRole("alert")).toHaveTextContent(alert);
+  });
+
   it("says the conversations couldn't be shown when correcting the conversation fails", async () => {
     const shared = new SharedState({});
     jest.spyOn(shared, "ensureValidConversation").mockImplementation(() => {

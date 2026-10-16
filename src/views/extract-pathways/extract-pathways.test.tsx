@@ -104,6 +104,29 @@ describe("ExtractPathways", () => {
       + "Run npm run generate:alien to generate it.");
   });
 
+  it("says to generate the data again when the view is opened a second time on the same index", async () => {
+    const { network: _network, ...metadata } = fixtureMetadata;
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    const alert = "The conversations could not be loaded: " +
+      "The alien3 data has no network. Run npm run generate:alien to generate it.";
+    const { unmount } = showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(alert);
+    unmount();
+    // The index is cached now, so this mount starts ready and renders before any onLoaded would run.
+    showView();
+    expect(screen.getByRole("alert")).toHaveTextContent(alert);
+  });
+
+  it("names both shapes when the loadings don't match the network's hidden neurons", async () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const loadings = fit.loadings!.map(pathway => pathway.slice(1));
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: { ...fit, loadings } } };
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The conversations could not be loaded: Expected loadings for 14 neurons on 3 pathways, got 13 rows of 3");
+  });
+
   it("says so when there are no conversations", async () => {
     mockedFetchIndex.mockResolvedValue({ ...index, items: [] });
     showView();

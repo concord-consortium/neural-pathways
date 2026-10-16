@@ -10,6 +10,7 @@ import { conversationFilterFor, idsFor } from "../../core/filter/conversation-fi
 import { FilterBar } from "../../core/filter/filter-bar";
 import { useConversationFilter } from "../../core/filter/use-conversation-filter";
 import { indexPasses } from "../../core/network/index-passes";
+import { Network } from "../../core/network/network";
 import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
 import { validConversationId } from "../../core/state/conversation";
@@ -25,6 +26,15 @@ import "./trace-a-case.scss";
 /** Gives the stylesheet the diagram's smallest layout, which it sizes the network panel from. */
 const LAYOUT_STYLE = { "--diagram-min-height": `${MIN_HEIGHT}px` } as React.CSSProperties;
 
+/** The index's fitted network, or why it has none. Doesn't throw, so the alert can be rendered on any mount. */
+function readNetwork(index: S3Index): { network: Network } | { error: Error } {
+  try {
+    return { network: alien3Network(index) };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error : new Error(String(error)) };
+  }
+}
+
 /** Follow one conversation through the network, a layer at a time. */
 export const TraceACase: React.FC = observer(function TraceACase() {
   const shared = useSharedState();
@@ -32,11 +42,13 @@ export const TraceACase: React.FC = observer(function TraceACase() {
   // The list is the stored query's matches: a query still being typed never moves the stored
   // conversation.
   const onLoaded = useCallback((index: S3Index) => {
-    // Checked here, so data without a network shows the alert rather than breaking the view.
-    alien3Network(index);
     shared.ensureValidConversation(idsFor(conversationFilterFor(index), shared.query ?? ""));
   }, [shared]);
   const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
+  // Checked when the index is ready, on every mount, so data without a network shows the alert rather
+  // than breaking the view.
+  const fitted = useMemo(
+    () => (indexState.status === "ready" ? readNetwork(indexState.index) : undefined), [indexState]);
 
   return (
     <div className="trace-a-case">
@@ -46,12 +58,15 @@ export const TraceACase: React.FC = observer(function TraceACase() {
         <p role="alert">
           The conversations could not be {indexState.failed === "load" ? "loaded" : "shown"}: {indexState.error.message}
         </p>}
-      {indexState.status === "ready" && <TraceACaseBody index={indexState.index} />}
+      {fitted && "error" in fitted &&
+        <p role="alert">The conversations could not be shown: {fitted.error.message}</p>}
+      {indexState.status === "ready" && fitted && !("error" in fitted) &&
+        <TraceACaseBody index={indexState.index} network={fitted.network} />}
     </div>
   );
 });
 
-const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3Index }) {
+const TraceACaseBody = observer(function TraceACaseBody({ index, network }: { index: S3Index; network: Network }) {
   const shared = useSharedState();
   const state = useViewState(TraceACaseState);
   const { ids, bar } = useConversationFilter(conversationFilterFor(index));
@@ -61,7 +76,6 @@ const TraceACaseBody = observer(function TraceACaseBody({ index }: { index: S3In
   // The generated attributes a student can see. The derived target, prediction and
   // model_correct aren't among them, and the hidden ones wait to be commissioned.
   const indicatorAttributes = useMemo(() => (index.metadata.attributes ?? []).filter(a => !a.hidden), [index]);
-  const network = alien3Network(index);
   const timeline = useMemo(() => traceTimeline(network.layers.map(layer => layer.biases.length)), [network]);
   const { passes, scales } = indexPasses(network, index);
   const networkHeadId = useId();
