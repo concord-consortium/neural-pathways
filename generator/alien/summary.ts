@@ -115,7 +115,7 @@ export function formatSummary(run: GeneratorRun, checks: CheckResult[]): string 
   }
   lines.push("self-checks");
   for (const check of checks) {
-    lines.push(`  ${check.passed ? "PASS" : "FAIL"}  ${pad(check.name, 26)}${check.detail}`);
+    lines.push(`  ${check.passed ? "PASS" : "FAIL"}  ${pad(check.name, 34)}${check.detail}`);
   }
 
   return lines.join("\n");
