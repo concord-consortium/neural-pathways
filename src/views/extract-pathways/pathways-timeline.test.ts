@@ -50,7 +50,7 @@ describe("extractPathwaysSceneAt", () => {
     expect(at(pathwayStart(1) + 1500).pathways!.boxes.map(box => box.opacity)).toEqual([1, 1, 0]);
   });
 
-  it("sends a pathway's bar copies 380 ms apart in all, each fading from 82% of its flight time", () => {
+  it("sends a pathway's bar copies about 27 ms apart, each fading from 82% of its flight time", () => {
     expect([copyLeaves(0), copyLeaves(13)]).toEqual([200, 200 + Math.round((13 * 380) / 14)]);
     const start = pathwayStart(0);
     const leaving = at(start + copyLeaves(13) - 1).pathways!.flying!.copies;
@@ -59,13 +59,13 @@ describe("extractPathwaysSceneAt", () => {
     const fades = start + copyLeaves(0) + Math.round(COPY_FLY_MS * 0.82);
     expect(at(fades).pathways!.flying!.copies[0].opacity).toBe(1);
     expect(at(fades + 50).pathways!.flying!.copies[0].opacity).toBeLessThan(1);
-    // The fade runs a little past the landing, so a copy still shows, faintly, as it lands.
+    // See COPY_FADE_AT.
     expect(at(arrival(0)).pathways!.flying!.copies[0].opacity).toBeGreaterThan(0);
   });
 
   it("steps a box up a fourteenth as each bar copy lands", () => {
-    // Each step takes 140 ms, longer than the 27 ms or so between arrivals, so the box trails
-    // its latest step by up to two more.
+    // Each step takes 140 ms, longer than the 27 ms or so between arrivals, so the box lags its
+    // target by up to three fourteenths.
     for (let k = 0; k < 13; k++) {
       const opacity = at(arrival(k + 1) - 1).pathways!.boxes[0].opacity;
       expect([k, opacity > Math.max(0, (k - 2) / 14) && opacity < (k + 1) / 14]).toEqual([k, true]);
