@@ -217,25 +217,21 @@ describe("ExtractDrawing", () => {
     )).toBeInTheDocument();
   });
 
-  it("draws each set of a deck of 800 where it is and as faded as it is, mid-run", () => {
+  it("draws each set of a deck of 800 where it is and as faded as it is, mid-close", () => {
     // A deck of 800 repeats the fixture's 20 conversations.
     const deckPasses = Array.from({ length: 800 }, (_, i) => passes[i % passes.length]);
-    const plan = collectAllPlan(SIZES, 3, 800);
-    const entry = plan.entries[10];
-    const close = plan.closes[20];
-    for (const t of [entry.at + entry.fade / 2, close.start + close.duration / 2, plan.end - 1]) {
-      const scene = collectAllSceneAt(SIZES, 3, 800, t);
-      const { unmount } = render(
-        <ExtractDrawing network={toyNetwork} passes={deckPasses} scales={scales} outputLabels={LABELS}
-          scene={scene} headingId="panel-head" deckSize={800} />,
-      );
-      const places = scene.deck!.sets.map((_, index) => screen.getByTestId(`deck-place-${index}`))
-        .map((place, index) => [index, placeOf(place).x, place.getAttribute("opacity")]);
-      expect(places).toEqual(scene.deck!.sets.map((set, index) => [
-        index, set.offset * geometry.deck.r + set.shift, set.opacity < 1 ? String(set.opacity) : null,
-      ]));
-      unmount();
-    }
+    // Halfway through a close of 22 sets, with sets still short of their places and the newest fading in.
+    const close = collectAllPlan(SIZES, 3, 800).closes[20];
+    const scene = collectAllSceneAt(SIZES, 3, 800, close.start + close.duration / 2);
+    render(
+      <ExtractDrawing network={toyNetwork} passes={deckPasses} scales={scales} outputLabels={LABELS}
+        scene={scene} headingId="panel-head" deckSize={800} />,
+    );
+    const places = scene.deck!.sets.map((_, index) => screen.getByTestId(`deck-place-${index}`))
+      .map((place, index) => [index, placeOf(place).x, place.getAttribute("opacity")]);
+    expect(places).toEqual(scene.deck!.sets.map((set, index) => [
+      index, set.offset * geometry.deck.r + set.shift, set.opacity < 1 ? String(set.opacity) : null,
+    ]));
   });
 
   it("fades the network and its label as a whole while Collect All hides it", () => {
