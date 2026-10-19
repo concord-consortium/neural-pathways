@@ -1,13 +1,12 @@
 import type { ForwardPass } from "../../core/network/forward";
 import type { ExtractGeometry } from "./extract-geometry";
 
-// The deck that Collect All Conversations builds, after the prototype's runExtract: CUBE_TOTAL,
-// CB_NSETS, centreCube, colGap, cbSetLeft, cbSetX, cbSetEnter, cbSetGap, cbSetMove and cbSetHold.
-// Sets are numbered from 0, so set 0 is the one in front. Offsets and widths are in deck radii
-// (the deck's `r`), so they hold at any canvas width. src/views/README.md says where the
-// prototype is.
+// The deck that Collect All builds, after the prototype's runExtract: CUBE_TOTAL, CB_NSETS,
+// centreCube, colGap, cbSetLeft, cbSetX, cbSetEnter, cbSetGap, cbSetMove and cbSetHold. Offsets and
+// widths are in deck radii (the deck's `r`), since a radius is the step from one column to the
+// next. src/views/README.md says where the prototype is.
 
-/** Columns in a set: the columns that move together as one slab of the deck. */
+/** Columns in a set (see docs/glossary.md). */
 export const SET_SIZE = 20;
 /** The most sets a deck has. */
 export const MAX_SETS = 40;
@@ -64,7 +63,7 @@ export function deckWidth(size: number): number {
 
 /**
  * How far right of where its columns are drawn set `set` sits once a deck of `size` columns is
- * centered on what is drawn. Each set is a neuron's width left of the one in front of it.
+ * centered on what is drawn.
  */
 export function setOffset(set: number, size: number): number {
   return deckWidth(size) / 2 - 1 - 2 * set;
@@ -85,7 +84,7 @@ export function columnsWithSets(sets: number, size: number): number {
   return Math.min(sets * SET_SIZE, size);
 }
 
-/** The middle of the deck's room: halfway between the canvas's left edge and the lifted column's. */
+/** The middle of the deck's room: halfway between the canvas's left edge and the lifted column's left edge. */
 export function deckMid(geometry: Pick<ExtractGeometry, "lifted">): number {
   return (geometry.lifted.x - geometry.lifted.r) / 2;
 }
@@ -100,7 +99,7 @@ export function centerShift(geometry: Pick<ExtractGeometry, "lifted" | "deck">):
 
 /**
  * The beat that starts as column `column` of set 0 arrives, until the next one, in a run that
- * started with `from` columns in: 900 ms for the run's first column down to 240 for the set's last,
+ * started with `from` columns in: 900 ms for the run's first column down to 240 for a full set's last,
  * on a smoothstep across the columns the run adds, so the run has the same shape wherever it starts.
  */
 export function columnGap(column: number, from: number): number {
