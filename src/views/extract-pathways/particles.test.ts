@@ -134,7 +134,7 @@ describe("faceSources", () => {
     expect(faceSources(g, quiet, 20)).toHaveLength(faceSources(g, passes, 20).length - 1);
   });
 
-  it("takes the right face, then the front face, then the tops, back set first", () => {
+  it("takes the right face, then the front face, then the top, back set first", () => {
     const shows = (set: number, column: number) => columnValues(passes, set, column)
       .flatMap((v, row) => (g.deck.r * Math.min(1, Math.abs(v)) >= MIN_GAUGE ? [row] : []));
     /** Where the source for a gauge of a deck of 40 is: its fill's center, in its sign's color. */
@@ -168,7 +168,7 @@ describe("faceSources", () => {
     expect(faceSources(g, passes, 50)).toHaveLength(rightFace + drawn(1, 19) + tops(50));
   });
 
-  it("targets bars as long as the plan shares the particles by", () => {
+  it("lays out the bars at the lengths the plan shares particles by", () => {
     const layout = pathwaysLayout(g, 800);
     expect(layout.bars.map(bar => bar.length)).toEqual(barLengths());
   });
