@@ -84,7 +84,10 @@ export function columnsWithSets(sets: number, size: number): number {
   return Math.min(sets * SET_SIZE, size);
 }
 
-/** The middle of the deck's room: halfway between the canvas's left edge and the lifted column's left edge. */
+/**
+ * The middle of the deck's room: halfway between the canvas's left edge and the lifted column's
+ * left edge.
+ */
 export function deckMid(geometry: Pick<ExtractGeometry, "lifted">): number {
   return (geometry.lifted.x - geometry.lifted.r) / 2;
 }
@@ -99,8 +102,9 @@ export function centerShift(geometry: Pick<ExtractGeometry, "lifted" | "deck">):
 
 /**
  * The beat that starts as column `column` of set 0 arrives, until the next one, in a run that
- * started with `from` columns in: 900 ms for the run's first column down to 240 for a full set's last,
- * on a smoothstep across the columns the run adds, so the run has the same shape wherever it starts.
+ * started with `from` columns in: 900 ms for the run's first column down to 240 for a full set's
+ * last, on a smoothstep across the columns the run adds, so the run has the same shape wherever it
+ * starts.
  */
 export function columnGap(column: number, from: number): number {
   const first = Math.min(from, SET_SIZE - 2);
@@ -124,7 +128,7 @@ export function setGap(set: number, sets: number): number {
   return Math.round(80 + 360 * Math.pow(1 - t, 1.9));
 }
 
-/** How long a set takes to close up after a beat of `gap`: a little longer, between 90 and 300 ms. */
+/** How long a set takes to close up after a beat of `gap`: 1.15 times the beat, held between 90 and 300 ms. */
 export function setMove(gap: number): number {
   return Math.max(90, Math.min(300, Math.round(gap * 1.15)));
 }
