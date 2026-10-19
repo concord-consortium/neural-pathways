@@ -55,8 +55,8 @@ let plan: { particles: Particle[]; need: number[] } | undefined;
 
 /**
  * Every particle's bar and timing. Each bar gets particles in proportion to its length, at least 4,
- * so every bar is built at the same rate. It depends on nothing but the loadings, so it is worked
- * out once.
+ * so each particle adds about the same length to its bar. It depends on nothing but the loadings,
+ * so it is worked out once.
  */
 export function particlePlan(): { particles: Particle[]; need: number[] } {
   if (plan) {
