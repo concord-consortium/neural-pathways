@@ -1,7 +1,8 @@
 # Extract Pathways
 
-The lesson's second view: lift the 14 hidden neurons out of the network, then collect the
-activations of conversations run through it, one column of the deck each.
+The lesson's second view: lift the 14 hidden neurons out of the network, collect the activations
+of conversations run through it into a deck, one column each, then draw the three pathways from
+the deck.
 
 ## What's here
 
@@ -14,8 +15,8 @@ activations of conversations run through it, one column of the deck each.
 - `extract-steps.ts`: the buttons and the marker, on the shared step system in
   `src/core/steps/`.
 - `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `collect-all-timeline.ts`,
-  `extract-timeline.ts`: what the view draws at any moment, as pure functions of the marker and the
-  time into a segment, at the prototype's "Med" speed.
+  `extract-timeline.ts`, `pathways-timeline.ts`: what the view draws at any moment, as pure
+  functions of the marker and the time into a segment, at the prototype's "Med" speed.
 - `extract-geometry.ts`, `flight.ts`, `extract-drawing.tsx`: the canvas. The network sits in the
   middle, the lifted column in the right strip, the deck in the left (see `ExtractDrawing`). Copies
   of the hidden neurons fly on curved paths, landing in order and settling.
@@ -24,6 +25,12 @@ activations of conversations run through it, one column of the deck each.
 - `transitions.ts`: a value carried by CSS-style transitions, each starting from wherever the last
   left it.
 - `deck-drawing.tsx`: the deck's sets, memoized (see `DeckSet`), and the depth shading of its faces.
+- `pathways-layout.ts`: the stand-in loadings, and where the loading bars, their zero rules and the
+  pathway boxes go once the deck and the lifted column have slid.
+- `particles.ts`: the particles that carry the deck's readings to the bars: a seeded plan of their
+  timing, their curves, and the gauges on the deck's faces they leave from.
+- `pathways-drawing.tsx`: the bars, the bar copies flying to the boxes, the boxes and the lines, in
+  SVG; and the particles, painted on the particle canvas over the SVG while they fly.
 
 ## Size
 
@@ -33,8 +40,9 @@ fits inside the designed size of 1024 × 562, but its height doesn't yet.
 The minimum layout width, 993 px, is the canvas's narrowest layout, 959 px (`minCanvasWidth` in
 `extract-geometry.ts`), with the panel's border and the app's 16 px gutters. At 959, the finished
 deck of 800 fits between the canvas's left edge and the lifted column with 10 px clear each side,
-and the left strip holds the deck's columns collected by hand. Narrower, the canvas scrolls
-sideways inside its panel and the step row wraps, down to 320 px.
+and the left strip holds the deck's columns collected by hand. Once Extract Pathways is done, the
+pathway labels end inside the canvas too. Narrower, the canvas scrolls sideways inside its panel
+and the step row wraps, down to 320 px.
 
 About sits at the right end of the step row, with the steps centered on the panel. Below 894 px it
 goes on its own line below the steps.
@@ -54,7 +62,6 @@ down below 680 px, as it does in an Interactive 562 px tall.
 ## Still to come
 
 The view still needs:
-- Extract Pathways;
 - picking a neuron or a pathway to see its loadings;
 - to fit the 562 px designed height;
 - the activation legend.

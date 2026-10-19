@@ -14,6 +14,8 @@ import {
 } from "./extract-geometry";
 import { ExtractScene } from "./extract-scene";
 import { Flight, flightDuration, Placed, placeCopy } from "./flight";
+import { ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
+import { pathwaysLayout } from "./pathways-layout";
 import "./extract-drawing.scss";
 
 /** The label's drop-in, overshooting as it lands (the prototype's bounceIn). */
@@ -30,11 +32,16 @@ const conversations = (n: number) => `${n} conversation${n === 1 ? "" : "s"}`;
 /**
  * What the drawing shows, for screen readers. The lifted column and the deck columns still in
  * flight aren't counted. While Collect All builds the deck, it counts the conversations collected by
- * hand, and once the deck is done it says all of them are.
+ * hand, and once the deck is done it says all of them are. Once Extract Pathways is done it describes
+ * the pathways; while it runs, the deck.
  */
 export function describeScene(scene: ExtractScene, hidden: number): string {
   const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
   const { deck } = scene;
+  if (scene.pathways?.done && deck) {
+    return `The ${hidden} hidden neurons, with their loadings on three pathways drawn from all `
+      + `${conversations(deck.collected)}.`;
+  }
   if (deck) {
     return deck.done
       ? `The network's ${hidden} hidden neurons lifted out, and all ${conversations(deck.collected)} collected.`
@@ -137,10 +144,12 @@ interface ExtractDrawingProps {
 /**
  * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, and the
  * deck in the left strip, until Collect All moves it to the middle of the room left of the lifted
- * column; drawn as `scene` says. Drawn at full size and as wide as its container, but
- * never narrower than `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard
- * can reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since
- * the panel is already a region with that name.
+ * column. Extract Pathways then slides both left and draws the pathways beside the column
+ * (`PathwaysLayer`), with the particles on the particle canvas over the SVG (`ParticleCanvas`). Drawn
+ * as `scene` says, at full size and as wide as its container, but never narrower than
+ * `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard can reach and scroll
+ * it (`useKeyboardScrollable`). It is a group named by the panel heading, since the panel is already
+ * a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
   network, passes, scales, outputLabels, scene, headingId, deckSize,
@@ -154,6 +163,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
   }, [hostRef, scrollerRef]);
   const columnSizes = useMemo(() => network.layers.map(layer => layer.biases.length), [network]);
   const geometry = useMemo(() => extractGeometry(columnSizes, size.width), [columnSizes, size.width]);
+  const pathways = useMemo(() => pathwaysLayout(geometry, deckSize), [geometry, deckSize]);
   const names = useMemo(() => hiddenNames(columnSizes), [columnSizes]);
   const clipId = `extract-deck-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const { width, height, networkX, network: layout, hidden, lifted, deck } = geometry;
@@ -187,7 +197,8 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
         )}
         {scene.lifted && (
           <LiftedColumn flights={liftedFlights} lifted={lifted} names={names} flight={scene.lifted.flight}
-            opacity={scene.lifted.opacity} labelOpacity={scene.lifted.labelOpacity} dx={0} />
+            opacity={scene.lifted.opacity} labelOpacity={scene.lifted.labelOpacity}
+            dx={scene.pathways ? scene.pathways.liftedSlide * pathways.liftedDx : 0} />
         )}
         {scene.deck
           ? (
@@ -206,12 +217,17 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
               </g>
             );
           })}
+        {scene.pathways && <PathwaysLayer pathways={scene.pathways} layout={pathways} />}
         {scene.label && scene.networkOpacity > 0 && (
           <g opacity={scene.networkOpacity < 1 ? scene.networkOpacity : undefined}>
             <ConversationLabel x={networkX + NETWORK_WIDTH / 2} n={scene.label.n} bounce={scene.label.bounce} />
           </g>
         )}
       </svg>
+      {scene.pathways?.particles !== undefined && (
+        <ParticleCanvas t={scene.pathways.particles} geometry={geometry} passes={passes} size={deckSize}
+          layout={pathways} />
+      )}
     </div>
   );
 };
