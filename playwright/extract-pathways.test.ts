@@ -167,6 +167,7 @@ test.describe("About", () => {
 
   test("ends the step row at the minimum layout width, with the steps centered on the panel", async ({ page }) => {
     await openAt(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA);
+    await expect(page.getByRole("img", { name: "The network." })).toHaveAttribute("width", String(NARROWEST_CANVAS));
     const aboutBox = await box(about(page));
     const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
     const panelBox = await box(panel(page));

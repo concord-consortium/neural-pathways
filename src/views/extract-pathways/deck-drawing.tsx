@@ -67,11 +67,11 @@ export const rightSector: Shape = (cx, cy, r) => {
 
 /** How a column is shaded: each field is left out when there is nothing to draw. */
 export interface Shading {
-  /** brightness() on every row but the top. */
+  /** brightness() on every row but the top row. */
   body?: number;
   /** A black overlay on the top circle. */
   top?: { shape: Shape; opacity: number };
-  /** The corner's extra overlay on the right half of every row but the top, so it reads as the right face. */
+  /** The corner's extra overlay on the right half of every row but the top row, so it reads as the right face. */
   cornerBody?: number;
   /** The corner's overlay on the right face's share of its top circle. */
   cornerTop?: number;

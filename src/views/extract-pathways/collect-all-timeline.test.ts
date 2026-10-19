@@ -93,7 +93,7 @@ describe("collectAllSceneAt", () => {
     expect(settled.sets[0].columns).toBe(6);
   });
 
-  it("brings set 0's last columns in over one another, and hands each label to the next", () => {
+  it("brings set 0's last columns in at once, and hands each label to the next", () => {
     const plan = collectAllPlan(SIZES, 3, 800);
     const last = plan.beats[plan.beats.length - 1];
     expect(last.column).toBe(19);

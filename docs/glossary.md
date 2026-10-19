@@ -35,7 +35,7 @@ one thing, or one name for two things, settle it and add it here.
 
 - **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup,
   Collect a Conversation, Collect All Conversations and Extract Pathways. Not a point or a stretch
-  of the timeline. Comments and test titles call Collect All Conversations "Collect All"; its full
+  of the timeline. Comments, tests and docs call Collect All Conversations "Collect All"; its full
   name is for the button's label.
 - **marker:** a point on a view's timeline where the scene rests and progress is stored. 0 is the
   start.
@@ -73,15 +73,15 @@ one thing, or one name for two things, settle it and add it here.
   `minCanvasWidth` and "half off the canvas". Not the particle canvas.
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
-- **room:** the deck's room, the canvas between its left edge and the lifted column's left edge.
-  Collect All centers the deck in it (`deckMid`).
+- **room:** the stretch of canvas the deck is centered in, from the canvas's left edge to the lifted
+  column's left edge (`deckMid`).
 - **set:** 20 columns of the deck that move as one; the last set holds fewer when the conversations
-  don't fill it. Collect All fills the first one a column at a time and adds the rest
-  behind it, up to 40. Sets are numbered from 0, so set 0 is the one in front.
+  don't fill it. Collect All fills the first one a column at a time and adds the rest behind it,
+  up to 40. Sets are numbered from 0, so set 0 is the one in front.
 - **face:** one of the deck's visible surfaces: the right face is set 0's columns, and the front
   face is each set's last column, where the set in front leaves it showing. Set 0's last column,
-  the corner, is on both. The top is each column's topmost drawn gauge, which only the particles
-  leave from.
+  the corner, is on both. Every other column is inside. The top is each column's topmost drawn
+  gauge, which only the particles leave from.
 - **copy:** one flown circle in the lifted column or the deck.
 - **bar copy:** a flown copy of a loading bar, on its way to its pathway box. Not "copy" alone.
 - **collection:** one conversation collected by hand, by Collect a Conversation or at the start of
