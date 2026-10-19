@@ -41,8 +41,8 @@ The minimum layout width, 993 px, is the canvas's narrowest layout, 959 px (`min
 `extract-geometry.ts`), with the panel's border and the app's 16 px gutters. At 959, the finished
 deck of 800 fits between the canvas's left edge and the lifted column with 10 px clear each side,
 and the left strip holds the deck's columns collected by hand. Once Extract Pathways is done, the
-pathway labels end inside the canvas too. Narrower, the canvas scrolls
-sideways inside its panel and the step row wraps, down to 320 px.
+pathway labels end inside the canvas too. Narrower, the canvas scrolls sideways inside its panel
+and the step row wraps, down to 320 px.
 
 About sits at the right end of the step row, with the steps centered on the panel. Below 894 px it
 goes on its own line below the steps.
