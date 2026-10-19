@@ -224,7 +224,6 @@ describe("ExtractDrawing", () => {
     expect(opacity).toBeLessThan(1);
     // eslint-disable-next-line testing-library/no-node-access -- the label's fade is on its parent group
     const labelOpacity = Number(screen.getByText("Conversation 3").parentElement!.getAttribute("opacity"));
-    expect(labelOpacity).toBeGreaterThan(0);
-    expect(labelOpacity).toBeLessThan(1);
+    expect(labelOpacity).toBe(opacity);
   });
 });
