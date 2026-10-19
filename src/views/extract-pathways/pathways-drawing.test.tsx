@@ -7,7 +7,7 @@ import fixture from "../../core/network/__fixtures__/toy-network-conversations.j
 import { finishedPathways, PathwaysScene } from "./extract-scene";
 import { extractGeometry } from "./extract-geometry";
 import { kickScale, mixColor, ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
-import { faceSources, particleAt, particlePlan, particleTarget } from "./particles";
+import { faceSources, PARTICLE_R, particleAt, particlePlan, particleTarget } from "./particles";
 import { BOX_SIDE, pathwaysLayout } from "./pathways-layout";
 import { COPY_END_SCALE } from "./pathways-timeline";
 
@@ -144,34 +144,49 @@ describe("ParticleCanvas", () => {
   afterEach(() => jest.restoreAllMocks());
 
   function mockContext() {
-    const painted: { x: number; y: number; color: string; alpha: number }[] = [];
+    const painted: { x: number; y: number; r: number; color: string; alpha: number }[] = [];
+    /** Each frame's clear, then how many dots it painted. */
+    const frames: { cleared: number[]; dots: number }[] = [];
     const context = {
-      setTransform: jest.fn(), clearRect: jest.fn(), beginPath: jest.fn(), globalAlpha: 1, fillStyle: "",
-      arc: jest.fn((x: number, y: number) => painted.push({ x, y, color: "", alpha: 0 })),
+      setTransform: jest.fn(), beginPath: jest.fn(), globalAlpha: 1, fillStyle: "",
+      clearRect: jest.fn((...cleared: number[]) => frames.push({ cleared, dots: 0 })),
+      arc: jest.fn((x: number, y: number, r: number) => {
+        painted.push({ x, y, r, color: "", alpha: 0 });
+        frames[frames.length - 1].dots++;
+      }),
       fill: jest.fn((): void => {
         Object.assign(painted[painted.length - 1], { color: context.fillStyle, alpha: context.globalAlpha });
       }),
     };
     jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(context as any);
-    return { context, painted };
+    return { context, painted, frames };
   }
 
   it("paints each particle in flight where it is, in its source's color, hidden from screen readers", () => {
-    const { context, painted } = mockContext();
+    const { painted } = mockContext();
     render(<ParticleCanvas t={2000} geometry={geometry} passes={passes} size={20} layout={layout} />);
     expect(screen.getByTestId("particles")).toHaveAttribute("aria-hidden", "true");
-    expect(context.clearRect).toHaveBeenCalled();
     const sources = faceSources(geometry, passes, 20);
     const { particles, need } = particlePlan();
     const expected = particles.flatMap(particle => {
-      // The prototype steps through the sources 7919 at a time.
+      // SOURCE_STEP, written out so that a change to it fails here.
       const source = sources[(particle.order * 7919) % sources.length];
       const target = particleTarget(particle, layout.bars[particle.bar], need[particle.bar]);
       const placed = particleAt(particle, 2000, source, target);
-      return placed ? [{ x: placed.x, y: placed.y, color: source.color, alpha: placed.opacity }] : [];
+      return placed ? [{ x: placed.x, y: placed.y, r: PARTICLE_R, color: source.color, alpha: placed.opacity }] : [];
     });
     expect(expected.length).toBeGreaterThan(0);
     expect(painted).toEqual(expected);
+  });
+
+  it("clears the whole canvas before painting each frame", () => {
+    const { frames } = mockContext();
+    const { rerender } = render(
+      <ParticleCanvas t={2000} geometry={geometry} passes={passes} size={20} layout={layout} />,
+    );
+    rerender(<ParticleCanvas t={2100} geometry={geometry} passes={passes} size={20} layout={layout} />);
+    expect(frames.map(frame => frame.cleared)).toEqual([0, 1].map(() => [0, 0, geometry.width, geometry.height]));
+    frames.forEach(frame => expect(frame.dots).toBeGreaterThan(0));
   });
 
   it("paints at the device's pixel ratio", () => {
