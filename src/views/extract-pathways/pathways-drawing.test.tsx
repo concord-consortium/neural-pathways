@@ -179,7 +179,7 @@ describe("ParticleCanvas", () => {
     expect(painted).toEqual(expected);
   });
 
-  it("clears the whole canvas before painting each frame", () => {
+  it("clears the whole particle canvas before painting each frame", () => {
     const { frames } = mockContext();
     const { rerender } = render(
       <ParticleCanvas t={2000} geometry={geometry} passes={passes} size={20} layout={layout} />,
