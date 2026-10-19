@@ -233,7 +233,7 @@ test("in a narrow window, Animate and the speed wrap below the panel's title", a
   expect(controls!.y).toBeGreaterThanOrEqual(title!.y + title!.height);
 });
 
-test("Collect All Conversations builds the deck of all 800", async ({ page }) => {
+test("Collect All builds the deck of all 800", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Collect All Conversations" }).click();
   await expect(page.getByRole("img", { name: DECK })).toBeVisible();

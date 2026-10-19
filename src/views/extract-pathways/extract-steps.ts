@@ -4,7 +4,7 @@ import { ExtractPathwaysState } from "./extract-pathways-state";
 
 /** The most conversations Collect a Conversation gathers one at a time, as in the prototype. */
 export const MAX_COLLECTED = 10;
-/** Where the timeline rests once Collect All Conversations has built the deck. */
+/** Where the timeline rests once Collect All has built the deck. */
 export const DECK_MARKER = MAX_COLLECTED + 2;
 /** Where it rests once Extract Pathways has drawn the pathways. */
 export const PATHWAYS_MARKER = DECK_MARKER + 1;
