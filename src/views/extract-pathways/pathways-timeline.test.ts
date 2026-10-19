@@ -84,11 +84,14 @@ describe("extractPathwaysSceneAt", () => {
     expect(lifting.bars![0].muted).toBe(1);
     expect(lifting.bars![1].muted).toBe(0);
     expect(lifting.lines).toBe(0);
+    // Pathway 1's bars stay gray while the other pathways' copies fly.
+    expect([1, 2].map(pathway => at(pathwayStart(pathway) + 600).pathways!.bars![0].muted)).toEqual([1, 1]);
     expect(at(EXTRACT_MS - LINES_MS - 1).pathways!.lines).toBe(0);
     expect(at(EXTRACT_MS - LINES_MS + 100).pathways!.lines).toBeGreaterThan(0);
     const ending = at(EXTRACT_MS - 1).pathways!;
     expect(ending.bars!.every(bar => bar.muted === 0)).toBe(true);
     expect(ending.lines).toBeGreaterThan(0.99);
+    expect(ending.done).toBe(false);
   });
 
   it("ends on the pathways at rest", () => {
