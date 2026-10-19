@@ -42,9 +42,9 @@ export function extractProgress(state: ExtractPathwaysState, limit: number, deck
 /**
  * Setup always starts over. Collect a Conversation collects the next one, jumping Setup to its end
  * first if it isn't done, until `limit` are in; from the deck or the pathways it starts the
- * collecting over. Collect All Conversations builds the deck from wherever the collecting stopped;
- * from the deck or the pathways, it starts the collecting over, as Collect a Conversation does. Extract Pathways is
- * not built yet.
+ * collecting over. Collect All builds the deck from wherever the collecting stopped; from the deck
+ * or the pathways, it starts the collecting over, as Collect a Conversation does. Extract Pathways
+ * is not built yet.
  */
 export function extractButtons(limit: number): readonly StepButton[] {
   return [
