@@ -109,9 +109,9 @@ alien3's `index.json`. It is words → 10 → 8 → 6 → 2: an embedding of 10,
 track the 14 neurons above in order, then two logits, Wait and Approach.
 
 It approximates the activations; it doesn't produce them. Each tracking unit follows its neuron's
-standardized activation, times 0.3, as closely as the words allow. Each neuron's noise isn't a
+standardized activation, times 0.75, as closely as the words allow. Each neuron's noise isn't a
 function of the words, which caps a unit at the square root of the neuron's communality, 0.92 to
-0.99 here; the shipped network's units reach 0.88 to 0.97. Its outputs reproduce `classification`
+0.99 here; the shipped network's units reach 0.87 to 0.95. Its outputs reproduce `classification`
 for every conversation.
 
 Two self-checks hold it there, judged on the network as written to `index.json` and run through

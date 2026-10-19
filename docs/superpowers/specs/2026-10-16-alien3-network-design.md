@@ -50,9 +50,10 @@ Making the network generate the data is a follow-up story, NPW-70 (see [Follow-u
 | Which neuron each hidden unit tracks | Hidden Layer 1's 8 units track authored neurons 0–7; Hidden Layer 2's 6 track 8–13. | The order Extract Pathways' lifted column and the prototype's loadings already use. |
 | Input | Word counts: a word used three times feeds 3. | Pathway scores add up every occurrence of a word. In the probe, with counts, the hidden units reach r 0.91–0.98 against their neurons; with presence, 0.83–0.88. The input layer isn't drawn, so nothing visible changes. |
 | Where the network is fitted | In the generator, on every build. | The network can never drift from the data it approximates: a config or seed change refits it. |
-| Training time | About 1–1.5 s, on top of today's ~5 s generation. | Early stopping, a classification weight of 0.5 and a seed chosen to settle quickly. An epoch cap bounds the worst case. |
+| Training time | About 2.4 s, on top of today's ~2 s generation. | Early stopping, a classification weight of 0.5 and a seed chosen to settle quickly. An epoch cap bounds the worst case. The larger target scale below costs about a second more than 0.3 would. |
 | How exactly the classification must match | All 800 conversations, each by a logit margin of at least 0.1. | Step 4 must give the dataset's prediction. Without a margin, a conversation just on the right side could flip between Node and a browser, whose `Math.tanh` may differ in the last bit. |
-| How closely the activations must match | Every hidden unit correlates with its authored neuron at r ≥ 0.85. | Each neuron's random noise isn't a function of the words, which caps any word-based unit at r 0.92–0.99 (the square root of its communality). 0.85 keeps signs, rankings and bands; the probe gives 0.88–0.98. |
+| How closely the activations must match | Every hidden unit correlates with its authored neuron at r ≥ 0.85. | Each neuron's random noise isn't a function of the words, which caps any word-based unit at r 0.92–0.99 (the square root of its communality). 0.85 keeps signs, rankings and bands; the shipped network's units reach 0.87–0.95. |
+| How large the hidden activations are | `targetScale` 0.75: a typical conversation fills a hidden gauge about halfway (median 46% in Hidden Layer 1, 53% in Hidden Layer 2). | The diagram draws hidden values unscaled. At 0.3 the median gauge was about 20% full, and most hidden nodes looked nearly empty. 0.75 costs about a second of training and lowers the weakest unit's r from 0.88 to 0.87. |
 | Where the network goes | `metadata.network` in alien3's `index.json`. | The views already load it, so the network arrives with the data it was fitted to. About 9 KB. |
 | Which datasets get a network | alien3 only, by an opt-in config field. | Only alien3 has views that draw a network. |
 | The story's word-hover check | Doesn't apply. | The story asks that hovering a neuron shows it driven by words that fit its pathway. The words → input layer is undrawn and stays a black box; nothing in either view attributes a neuron to words. |
@@ -86,7 +87,7 @@ export interface NetworkConfig {
 network?: NetworkConfig;
 ```
 
-alien3's values: `hiddenSizes: [10, 8, 6]`, `targetScale: 0.3`, `activationWeight: 5`,
+alien3's values: `hiddenSizes: [10, 8, 6]`, `targetScale: 0.75`, `activationWeight: 5`,
 `classificationWeight: 0.5`, `learningRate: 0.01`, `margin: 0.1`, `checkEvery: 50`,
 `maxEpochs: 6000`, and a `seed` chosen during implementation as the first that passes both checks
 quickly.

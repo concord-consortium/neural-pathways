@@ -116,12 +116,14 @@ export const threePathwayConfig: AlienConfig = {
   errorRateWhenBiasOff: 0.03,
   logitScale: 2.5,
   // Trace a Case and Extract Pathways draw this network, so its shape is theirs: an embedding of
-  // 10, then 8 and 6 units tracking the 14 neurons in order. The training settings and the seed
-  // reach every classification by the margin in about 900 epochs.
+  // 10, then 8 and 6 units tracking the 14 neurons in order. A target scale of 0.75 fills the
+  // hidden layers' gauges about halfway on a typical conversation; smaller scales leave them
+  // mostly empty. The training settings and the seed reach every classification by the margin in
+  // about 1,500 epochs.
   network: {
     seed: 1,
     hiddenSizes: [10, 8, 6],
-    targetScale: 0.3,
+    targetScale: 0.75,
     activationWeight: 5,
     classificationWeight: 0.5,
     learningRate: 0.01,

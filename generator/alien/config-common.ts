@@ -373,7 +373,7 @@ export const THRESHOLDS: Thresholds = {
   faLoadingRecoveryMin: 0.97,
   // Each authored neuron carries noise the words can't predict, which caps a word-fed unit at the
   // square root of the neuron's communality, 0.92 to 0.99 here. 0.85 keeps signs, rankings and
-  // bands; the shipped network's weakest unit is at 0.88.
+  // bands; the shipped network's weakest unit is at 0.87.
   networkTrackingMin: 0.85,
 };
 
