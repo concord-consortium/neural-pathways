@@ -168,8 +168,15 @@ describe("faceSources", () => {
     expect(faceSources(g, passes, 50)).toHaveLength(rightFace + drawn(1, 19) + tops(50));
   });
 
-  it("lays out the bars at the lengths the plan shares particles by", () => {
+  it("lands each bar's last particle at the bar's full length", () => {
     const layout = pathwaysLayout(g, 800);
-    expect(layout.bars.map(bar => bar.length)).toEqual(barLengths());
+    const { particles, need } = particlePlan();
+    const ends = layout.bars.map((bar, b) => {
+      const last = particles.filter(particle => particle.bar === b)[need[b] - 1];
+      return [b, particleTarget(last, bar, need[b]).x];
+    });
+    expect(ends).toEqual(layout.bars.map((bar, b) => [
+      b, bar.zero + (bar.loading >= 0 ? barLengths()[b] : -barLengths()[b]),
+    ]));
   });
 });
