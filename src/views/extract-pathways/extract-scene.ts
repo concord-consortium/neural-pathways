@@ -23,7 +23,7 @@ export interface DeckSetScene {
   lastOpacity: number;
 }
 
-/** The deck once Collect All Conversations has started. ExtractDrawing's DeckDrawing draws it. */
+/** The deck once Collect All has started. ExtractDrawing's DeckDrawing draws it. */
 export interface DeckScene {
   /** How far the deck has moved from the left strip toward the middle of its room, 0–1. */
   centered: number;

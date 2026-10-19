@@ -93,6 +93,30 @@ describe("collectAllSceneAt", () => {
     expect(settled.sets[0].columns).toBe(6);
   });
 
+  it("brings set 0's last columns in over one another, and hands each label to the next", () => {
+    const plan = collectAllPlan(SIZES, 3, 800);
+    const last = plan.beats[plan.beats.length - 1];
+    expect(last.column).toBe(19);
+    // The last beats are shorter than a column takes to settle, so several arrive at once.
+    const crowded = collectAllSceneAt(SIZES, 3, 800, last.start + 10).deck!;
+    expect(crowded.arriving.length).toBeGreaterThan(1);
+    expect(crowded.arriving[crowded.arriving.length - 1].column).toBe(19);
+    // As the last beat starts, column 18's label fades out while column 19's fades in.
+    const handing = collectAllSceneAt(SIZES, 3, 800, last.start + 75).deck!.labels;
+    expect(handing.map(label => label.column)).toEqual([18, 19]);
+    handing.forEach(label => {
+      expect(label.opacity).toBeGreaterThan(0);
+      expect(label.opacity).toBeLessThan(1);
+    });
+    expect(collectAllSceneAt(SIZES, 3, 800, last.start + 200).deck!.labels).toEqual([{ column: 19, opacity: 1 }]);
+    // The last label fades as the count fades in.
+    const fading = collectAllSceneAt(SIZES, 3, 800, plan.countAt + 160).deck!.labels;
+    expect(fading).toHaveLength(1);
+    expect(fading[0].opacity).toBeGreaterThan(0);
+    expect(fading[0].opacity).toBeLessThan(1);
+    expect(collectAllSceneAt(SIZES, 3, 800, plan.countAt + 320).deck!.labels).toEqual([]);
+  });
+
   it("counts set 0, then each set as it closes", () => {
     const plan = collectAllPlan(SIZES, 3, 800);
     expect(collectAllSceneAt(SIZES, 3, 800, plan.countAt - 1).deck!.count).toBeUndefined();

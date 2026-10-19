@@ -257,7 +257,7 @@ function deckAt(plan: CollectAllPlan, t: number): DeckScene {
 }
 
 /**
- * Collect All Conversations, `t` ms into a run that started with `collected` in, for a deck of
+ * Collect All, `t` ms into a run that started with `collected` in, for a deck of
  * `size`. It collects by hand up to BY_HAND first. Then the network fades and the lifted column
  * comes back to full strength while the deck moves to the middle of its room; set 0 fills one
  * labeled column at a time; the count appears; set 1 comes in a column at a time and closes up;

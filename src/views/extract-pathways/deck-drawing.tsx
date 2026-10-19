@@ -23,9 +23,8 @@ const COUNT_RISE = 12;
 export type Face = "right" | "front" | "corner" | "inside";
 
 /**
- * Set 0's columns are the right face, each set's last column is the front face where it shows (see
- * `onFrontFace`), and set 0's last is both. `setColumns` is how many the set holds once all its
- * columns are in.
+ * The face a column is part of, as the glossary defines the faces; `onFrontFace` says where a last
+ * column shows. `setColumns` is how many the set holds once all its columns are in.
  */
 export function faceOf(set: number, column: number, setColumns: number): Face {
   const front = onFrontFace(set, column, setColumns);
@@ -108,7 +107,7 @@ export function rowClipId(prefix: string, row: number): string {
 
 interface DeckColumnProps {
   passes: readonly ForwardPass[];
-  /** The deck's first column, where every column is drawn before its transform places it. */
+  /** The deck's first column (see `DeckColumn`). */
   firstColumn: ColumnGeometry;
   set: number;
   column: number;

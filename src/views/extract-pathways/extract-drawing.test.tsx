@@ -6,7 +6,7 @@ import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
-import { collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
+import { collectAllPlan, collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
 import { deckRestScene, ExtractScene, pathwaysRestScene, restScene } from "./extract-scene";
@@ -219,6 +219,27 @@ describe("ExtractDrawing", () => {
     )).toBeInTheDocument();
   });
 
+  it("draws each set of a deck of 800 where it is and as faded as it is, mid-run", () => {
+    // A deck of 800 repeats the fixture's 20 conversations.
+    const deckPasses = Array.from({ length: 800 }, (_, i) => passes[i % passes.length]);
+    const plan = collectAllPlan(SIZES, 3, 800);
+    const entry = plan.entries[10];
+    const close = plan.closes[20];
+    for (const t of [entry.at + entry.fade / 2, close.start + close.duration / 2, plan.end - 1]) {
+      const scene = collectAllSceneAt(SIZES, 3, 800, t);
+      const { unmount } = render(
+        <ExtractDrawing network={toyNetwork} passes={deckPasses} scales={scales} outputLabels={LABELS}
+          scene={scene} headingId="panel-head" deckSize={800} />,
+      );
+      const places = scene.deck!.sets.map((_, index) => screen.getByTestId(`deck-place-${index}`))
+        .map((place, index) => [index, placeOf(place).x, place.getAttribute("opacity")]);
+      expect(places).toEqual(scene.deck!.sets.map((set, index) => [
+        index, set.offset * geometry.deck.r + set.shift, set.opacity < 1 ? String(set.opacity) : null,
+      ]));
+      unmount();
+    }
+  });
+
   it("fades the network and its label as a whole while Collect All hides it", () => {
     renderDrawing(collectAllSceneAt(SIZES, 3, 20, 650));
     const opacity = Number(screen.getByTestId("network").getAttribute("opacity"));
@@ -226,8 +247,7 @@ describe("ExtractDrawing", () => {
     expect(opacity).toBeLessThan(1);
     // eslint-disable-next-line testing-library/no-node-access -- the label's fade is on its parent group
     const labelOpacity = Number(screen.getByText("Conversation 3").parentElement!.getAttribute("opacity"));
-    expect(labelOpacity).toBeGreaterThan(0);
-    expect(labelOpacity).toBeLessThan(1);
+    expect(labelOpacity).toBe(opacity);
   });
 
   it("draws the pathways beside the slid deck, and describes them, once Extract Pathways is done", () => {

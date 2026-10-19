@@ -20,7 +20,7 @@ the deck.
 - `extract-geometry.ts`, `flight.ts`, `extract-drawing.tsx`: the canvas. The network sits in the
   middle, the lifted column in the right strip, the deck in the left (see `ExtractDrawing`). Copies
   of the hidden neurons fly on curved paths, landing in order and settling.
-- `deck-layout.ts`: the deck that Collect All Conversations builds: its size, its sets of 20, where
+- `deck-layout.ts`: the deck that Collect All builds: its size, its sets of 20, where
   each set sits in deck radii, and the timings that depend on a column or a set.
 - `transitions.ts`: a value carried by CSS-style transitions, each starting from wherever the last
   left it.
