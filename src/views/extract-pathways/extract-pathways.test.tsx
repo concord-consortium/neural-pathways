@@ -9,6 +9,7 @@ import { ViewStateProvider } from "../../core/state/view-state-context";
 import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { clearDatasetIndexCache } from "../../core/use-dataset-index";
+import { collectAllDuration } from "./collect-all-timeline";
 import { collectDuration } from "./collect-timeline";
 import { ExtractPathways } from "./extract-pathways";
 import { ExtractPathwaysState } from "./extract-pathways-state";
@@ -45,6 +46,7 @@ function showView(state = new ExtractPathwaysState({})) {
 const button = (name: string) => screen.getByRole("button", { name });
 const drawing = (name: string) => screen.getByRole("img", { name });
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
+const DECK = "The network's 14 hidden neurons lifted out, and all 20 conversations collected.";
 const collectedLabel = (n: number) =>
   `The network, with its 14 hidden neurons lifted out and ${n} conversation${n === 1 ? "" : "s"} collected.`;
 
@@ -68,7 +70,7 @@ describe("ExtractPathways", () => {
     expect(screen.getByRole("region", { name: "The Network → Activated Pathways" })).toBeInTheDocument();
     expect(button("Setup")).toHaveAttribute("aria-disabled", "false");
     expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "false");
-    expect(button("Collect All Conversations")).toHaveAttribute("aria-disabled", "true");
+    expect(button("Collect All Conversations")).toHaveAttribute("aria-disabled", "false");
     expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "true");
     expect(button("Reset")).toHaveAttribute("aria-disabled", "true");
   });
@@ -154,6 +156,32 @@ describe("ExtractPathways", () => {
     fireEvent.click(within(panel).getByRole("checkbox", { name: "Animate" }));
     expect(state.animate).toBe(false);
     expect(within(panel).getByRole("slider", { name: "Animation speed" })).toBeDisabled();
+  });
+
+  it("builds the deck of every conversation with Collect All, and stores it", async () => {
+    setReducedMotion(true);
+    const { state } = showView();
+    await screen.findByRole("img", { name: "The network." });
+    fireEvent.click(button("Collect All Conversations"));
+    expect(drawing(DECK)).toBeInTheDocument();
+    expect(screen.getByText("20 Conversations")).toBeInTheDocument();
+    expect(state).toMatchObject({ setupDone: true, collected: 20, deckDone: true, pathwaysDone: false });
+    expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("opens on a stored deck at the size of the conversations loaded", async () => {
+    showView(new ExtractPathwaysState({ setupDone: true, collected: 800, deckDone: true }));
+    expect(await screen.findByRole("img", { name: DECK })).toBeInTheDocument();
+    expect(screen.getByText("20 Conversations")).toBeInTheDocument();
+  });
+
+  it("starts collecting by hand over again after the deck", async () => {
+    setReducedMotion(true);
+    const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true }));
+    await screen.findByRole("img", { name: DECK });
+    fireEvent.click(button("Collect a Conversation"));
+    expect(drawing(collectedLabel(1))).toBeInTheDocument();
+    expect(state).toMatchObject({ collected: 1, deckDone: false });
   });
 
   describe("animated", () => {
@@ -267,6 +295,57 @@ describe("ExtractPathways", () => {
       showView(state);
       expect(await screen.findByRole("img", { name: collectedLabel(1) })).toBeInTheDocument();
       expect(screen.queryAllByTestId(/^deck-column-/)).toHaveLength(1);
+    });
+
+    it("plays Collect All from three collected, storing the deck only when it ends", async () => {
+      const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 3 }));
+      await screen.findByRole("img", { name: collectedLabel(3) });
+      jest.useFakeTimers();
+      fireEvent.click(button("Collect All Conversations"));
+      expect(button("Collect All Conversations")).toHaveAttribute("aria-current", "step");
+      act(() => jest.advanceTimersByTime(5000));
+      expect(state.deckDone).toBe(false);
+      expect(drawing(collectedLabel(3))).toBeInTheDocument();
+      act(() => jest.advanceTimersByTime(collectAllDuration(SIZES, 3, 20)));
+      expect(state).toMatchObject({ collected: 20, deckDone: true });
+      expect(drawing(DECK)).toBeInTheDocument();
+    });
+
+    it("starts over when Setup is pressed during Collect All", async () => {
+      const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 3 }));
+      await screen.findByRole("img", { name: collectedLabel(3) });
+      jest.useFakeTimers();
+      fireEvent.click(button("Collect All Conversations"));
+      act(() => jest.advanceTimersByTime(5000));
+      fireEvent.click(button("Setup"));
+      expect(state).toMatchObject({ setupDone: false, collected: 0, deckDone: false });
+      expect(screen.queryByTestId("deck")).not.toBeInTheDocument();
+      act(() => jest.advanceTimersByTime(collectAllDuration(SIZES, 3, 20)));
+      expect(state).toMatchObject({ deckDone: false });
+    });
+
+    it("keeps where Collect All started when the view goes away during it", async () => {
+      const state = new ExtractPathwaysState({ setupDone: true, collected: 3 });
+      const { unmount } = showView(state);
+      await screen.findByRole("img", { name: collectedLabel(3) });
+      jest.useFakeTimers();
+      fireEvent.click(button("Collect All Conversations"));
+      act(() => jest.advanceTimersByTime(5000));
+      unmount();
+      act(() => jest.advanceTimersByTime(60_000));
+      expect(state).toMatchObject({ collected: 3, deckDone: false });
+    });
+
+    it("finishes Collect All when Animate is turned off during it", async () => {
+      const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 3 }));
+      await screen.findByRole("img", { name: collectedLabel(3) });
+      jest.useFakeTimers();
+      fireEvent.click(button("Collect All Conversations"));
+      act(() => jest.advanceTimersByTime(5000));
+      fireEvent.click(screen.getByRole("checkbox", { name: "Animate" }));
+      act(() => jest.advanceTimersByTime(20));
+      expect(state.deckDone).toBe(true);
+      expect(drawing(DECK)).toBeInTheDocument();
     });
   });
 });

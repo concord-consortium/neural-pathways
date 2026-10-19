@@ -2,6 +2,8 @@
   "version": 1,
   "setupDone": true,
   "collected": 3,
+  "deckDone": false,
+  "pathwaysDone": false,
   "animate": false,
   "speed": -100,
   "$modelType": "npw/ExtractPathwaysState"

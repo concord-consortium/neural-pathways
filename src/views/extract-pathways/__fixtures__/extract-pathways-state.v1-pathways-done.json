@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "setupDone": true,
+  "collected": 800,
+  "deckDone": true,
+  "pathwaysDone": true,
+  "animate": true,
+  "speed": 0,
+  "$modelType": "npw/ExtractPathwaysState"
+}

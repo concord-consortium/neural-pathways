@@ -7,8 +7,10 @@ import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { COLUMN_CAPTIONS, MIN_GAUGE, NetworkDrawing } from "../../core/network-diagram/network-drawing";
 import { useElementSize } from "../../core/use-element-size";
 import { useKeyboardScrollable } from "../../core/use-keyboard-scrollable";
+import { DeckDrawing, rowClipId } from "./deck-drawing";
+import { hiddenValues } from "./deck-layout";
 import {
-  CANVAS_HEIGHT, deckPosition, extractGeometry, LABEL_Y, NETWORK_WIDTH,
+  CANVAS_HEIGHT, ColumnGeometry, deckPosition, extractGeometry, LABEL_Y, NETWORK_WIDTH,
 } from "./extract-geometry";
 import { ExtractScene } from "./extract-scene";
 import { Flight, flightDuration, Placed, placeCopy } from "./flight";
@@ -23,26 +25,27 @@ function hiddenNames(columnSizes: readonly number[]): string[] {
     Array.from({ length: n }, (_, k) => `${COLUMN_CAPTIONS[i + 1]} Neuron ${k + 1}`));
 }
 
-/** A conversation's hidden activations: Hidden Layer 1's, then Hidden Layer 2's. */
-function hiddenValues(pass: ForwardPass): number[] {
-  return pass.layers.slice(1, -1).flat();
-}
+const conversations = (n: number) => `${n} conversation${n === 1 ? "" : "s"}`;
 
 /**
  * What the drawing shows, for screen readers. The lifted column and the deck columns still in
- * flight aren't counted.
+ * flight aren't counted. While Collect All builds the deck, it counts the conversations collected by
+ * hand, and once the deck is done it says all of them are.
  */
 export function describeScene(scene: ExtractScene, hidden: number): string {
+  const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
+  const { deck } = scene;
+  if (deck) {
+    return deck.done
+      ? `The network's ${hidden} hidden neurons lifted out, and all ${conversations(deck.collected)} collected.`
+      : `${lifted} and ${conversations(deck.collected)} collected.`;
+  }
   const landed = flightDuration(hidden);
   if (!scene.lifted || scene.lifted.flight < landed) {
     return "The network.";
   }
-  const collected = scene.deck.filter(column => column.flight >= landed).length;
-  const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
-  if (collected === 0) {
-    return `${lifted}.`;
-  }
-  return `${lifted} and ${collected} conversation${collected === 1 ? "" : "s"} collected.`;
+  const collected = scene.collections.filter(column => column.flight >= landed).length;
+  return collected === 0 ? `${lifted}.` : `${lifted} and ${conversations(collected)} collected.`;
 }
 
 interface CopyProps {
@@ -72,6 +75,36 @@ function Copy({ index, placed, r, name, value, clipId }: CopyProps) {
   );
 }
 
+interface LiftedColumnProps {
+  flights: readonly Flight[];
+  lifted: ColumnGeometry;
+  names: readonly string[];
+  flight: number;
+  opacity: number;
+  labelOpacity: number;
+  /** How far it has moved right, in px; negative is left. */
+  dx: number;
+}
+
+/** The lifted column and its label. Memoized on plain values. */
+const LiftedColumn = React.memo(function LiftedColumn(
+  { flights, lifted, names, flight, opacity, labelOpacity, dx }: LiftedColumnProps,
+) {
+  return (
+    <g data-testid="lifted-column" transform={dx ? `translate(${dx},0)` : undefined}>
+      {/* The label names the column and isn't dimmed with it, as in the prototype. */}
+      <text x={lifted.x} y={LABEL_Y} textAnchor="middle" className="extract-drawing__label" opacity={labelOpacity}>
+        Hidden Layer Neurons
+      </text>
+      <g data-testid="lifted-copies" opacity={opacity < 1 ? opacity : undefined}>
+        {flights.map((_, k) => (
+          <Copy key={k} index={k} placed={placeCopy(flights, k, flight)} r={lifted.r} name={names[k]} />
+        ))}
+      </g>
+    </g>
+  );
+});
+
 /** "Conversation n", dropping in and settling while `bounce` runs from 0 to 1. */
 function ConversationLabel({ x, n, bounce }: { x: number; n: number; bounce: number }) {
   const landed = bounce >= 1;
@@ -97,17 +130,20 @@ interface ExtractDrawingProps {
   scene: ExtractScene;
   /** The id of the heading that names the drawing's panel, which names the drawing too. */
   headingId: string;
+  /** How many conversations the deck holds. */
+  deckSize: number;
 }
 
 /**
- * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, the
- * deck in the left, drawn as `scene` says. Drawn at full size and as wide as its container, but
+ * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, and the
+ * deck in the left strip, until Collect All moves it to the middle of the room left of the lifted
+ * column; drawn as `scene` says. Drawn at full size and as wide as its container, but
  * never narrower than `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard
  * can reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since
  * the panel is already a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
-  network, passes, scales, outputLabels, scene, headingId,
+  network, passes, scales, outputLabels, scene, headingId, deckSize,
 }) => {
   // Until the host is measured, and in jsdom, which can't measure it: the narrowest layout.
   const [hostRef, size] = useElementSize<HTMLDivElement>({ width: 0, height: CANVAS_HEIGHT });
@@ -138,40 +174,42 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
         width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         <defs>
           <clipPath id={clipId}><circle r={deck.r} /></clipPath>
+          {deck.ys.map((y, row) => (
+            <clipPath key={row} id={rowClipId(clipId, row)}><circle cx={deck.x} cy={y} r={deck.r} /></clipPath>
+          ))}
         </defs>
-        <g transform={`translate(${networkX},0)`}>
-          <NetworkDrawing network={network} layout={layout} pass={pass} scales={scales} outputLabels={outputLabels}
-            scene={scene.network} />
-        </g>
-        {scene.lifted && (
-          <g data-testid="lifted-column">
-            {/* The label names the column and isn't dimmed with it, as in the prototype. */}
-            <text x={lifted.x} y={LABEL_Y} textAnchor="middle" className="extract-drawing__label"
-              opacity={scene.lifted.labelOpacity}>
-              Hidden Layer Neurons
-            </text>
-            <g data-testid="lifted-copies" opacity={scene.lifted.opacity < 1 ? scene.lifted.opacity : undefined}>
-              {liftedFlights.map((_, k) => (
-                <Copy key={k} index={k} placed={placeCopy(liftedFlights, k, scene.lifted!.flight)} r={lifted.r}
-                  name={names[k]} />
-              ))}
-            </g>
+        {scene.networkOpacity > 0 && (
+          <g data-testid="network" transform={`translate(${networkX},0)`}
+            opacity={scene.networkOpacity < 1 ? scene.networkOpacity : undefined}>
+            <NetworkDrawing network={network} layout={layout} pass={pass} scales={scales} outputLabels={outputLabels}
+              scene={scene.network} />
           </g>
         )}
-        {scene.deck.map((column, c) => {
-          const flights = deckFlights(c);
-          const values = hiddenValues(passes[column.conversation - 1]);
-          return (
-            <g key={c} data-testid={`deck-column-${c}`}>
-              {flights.map((_, k) => (
-                <Copy key={k} index={k} placed={placeCopy(flights, k, column.flight)} r={deck.r} name={names[k]}
-                  value={values[k]} clipId={clipId} />
-              ))}
-            </g>
-          );
-        })}
-        {scene.label && (
-          <ConversationLabel x={networkX + NETWORK_WIDTH / 2} n={scene.label.n} bounce={scene.label.bounce} />
+        {scene.lifted && (
+          <LiftedColumn flights={liftedFlights} lifted={lifted} names={names} flight={scene.lifted.flight}
+            opacity={scene.lifted.opacity} labelOpacity={scene.lifted.labelOpacity} dx={0} />
+        )}
+        {scene.deck
+          ? (
+            <DeckDrawing deck={scene.deck} geometry={geometry} passes={passes} names={names} clipPrefix={clipId}
+              size={deckSize} />
+          )
+          : scene.collections.map((column, c) => {
+            const flights = deckFlights(c);
+            const values = hiddenValues(passes[column.conversation - 1]);
+            return (
+              <g key={c} data-testid={`deck-column-${c}`}>
+                {flights.map((_, k) => (
+                  <Copy key={k} index={k} placed={placeCopy(flights, k, column.flight)} r={deck.r} name={names[k]}
+                    value={values[k]} clipId={clipId} />
+                ))}
+              </g>
+            );
+          })}
+        {scene.label && scene.networkOpacity > 0 && (
+          <g opacity={scene.networkOpacity < 1 ? scene.networkOpacity : undefined}>
+            <ConversationLabel x={networkX + NETWORK_WIDTH / 2} n={scene.label.n} bounce={scene.label.bounce} />
+          </g>
         )}
       </svg>
     </div>

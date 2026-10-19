@@ -33,8 +33,10 @@ one thing, or one name for two things, settle it and add it here.
 
 ## The step system
 
-- **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup and
-  Collect a Conversation. Not a point or a stretch of the timeline.
+- **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup,
+  Collect a Conversation, Collect All Conversations and Extract Pathways. Not a point or a stretch
+  of the timeline. Comments, tests and docs call Collect All Conversations "Collect All"; its full
+  name is for the button's label.
 - **marker:** a point on a view's timeline where the scene rests and progress is stored. 0 is the
   start.
 - **segment:** the stretch of timeline between two markers, `{ from, to }`, which a step plays.
@@ -69,12 +71,22 @@ one thing, or one name for two things, settle it and add it here.
 
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
+- **room:** the stretch of canvas the deck is centered in, from the canvas's left edge to the lifted
+  column's left edge (`deckMid`).
+- **set:** 20 columns of the deck that move as one; the last set holds fewer when the conversations
+  don't fill it. Collect All fills the first one a column at a time and adds the rest behind it,
+  up to 40. Sets are numbered from 0, so set 0 is the one in front.
+- **face:** one of the deck's visible surfaces: the right face is set 0's columns, and the front
+  face is each set's last column, where the set in front leaves it showing. Set 0's last column,
+  the corner, is on both. Every other column is inside.
 - **copy:** one flown circle in the lifted column or the deck.
-- **collection:** one press of Collect a Conversation, from the network running the conversation
-  to its column landing in the deck. `collected` counts the ones done.
+- **collection:** one conversation collected by hand, by Collect a Conversation or at the start of
+  Collect All, from the network running it to its column landing in the deck.
+  `collected` counts them, and holds the deck's size once the deck is done; a scene's
+  `collections` are the ones in flight or landed.
 - **stage:** a part of the extraction whose completion is stored: Setup (`setupDone`), the
-  collections (`collected`), and later the cube and the pathways. A stage still playing isn't
-  stored.
+  collections (`collected`), the deck (`deckDone`) and the pathways (`pathwaysDone`). A stage still
+  playing isn't stored.
 
 ## Layout
 
