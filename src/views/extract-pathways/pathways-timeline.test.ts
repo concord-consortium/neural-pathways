@@ -84,7 +84,7 @@ describe("extractPathwaysSceneAt", () => {
     expect(lifting.bars![0].muted).toBe(1);
     expect(lifting.bars![1].muted).toBe(0);
     expect(lifting.lines).toBe(0);
-    // Pathway 1's bars stay gray while the other pathways' copies fly.
+    // Pathway 0's bar for neuron 0 stays gray while pathways 1 and 2 send their bar copies.
     expect([1, 2].map(pathway => at(pathwayStart(pathway) + 600).pathways!.bars![0].muted)).toEqual([1, 1]);
     expect(at(EXTRACT_MS - LINES_MS - 1).pathways!.lines).toBe(0);
     expect(at(EXTRACT_MS - LINES_MS + 100).pathways!.lines).toBeGreaterThan(0);
