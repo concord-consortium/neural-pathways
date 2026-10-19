@@ -70,8 +70,7 @@ one thing, or one name for two things, settle it and add it here.
 ## Extract Pathways
 
 - **canvas:** Extract Pathways' drawing area, the SVG that `ExtractDrawing` lays out, as in
-  `minCanvasWidth` and "half off the canvas". Not the particles' `<canvas>` element, which is the
-  particle canvas.
+  `minCanvasWidth` and "half off the canvas". Not the particle canvas.
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
 - **room:** the deck's room, the canvas between its left edge and the lifted column's left edge.
@@ -81,7 +80,8 @@ one thing, or one name for two things, settle it and add it here.
   behind it, up to 40. Sets are numbered from 0, so set 0 is the one in front.
 - **face:** one of the deck's visible surfaces: the right face is set 0's columns, and the front
   face is each set's last column, where the set in front leaves it showing. Set 0's last column,
-  the corner, is on both.
+  the corner, is on both. The top is each column's topmost drawn gauge, which only the particles
+  leave from.
 - **copy:** one flown circle in the lifted column or the deck.
 - **bar copy:** a flown copy of a loading bar, on its way to its pathway box. Not "copy" alone.
 - **collection:** one conversation collected by hand, by Collect a Conversation or at the start of
@@ -92,7 +92,7 @@ one thing, or one name for two things, settle it and add it here.
   collections (`collected`), the deck (`deckDone`) and the pathways (`pathwaysDone`). A stage still
   playing isn't stored.
 - **loading bar:** one loading, drawn beside the lifted column: three to a neuron, one per
-  pathway, from zero toward its sign, as long as its loading's size, in its sign's color.
+  pathway, from zero toward its sign, in proportion to its loading's size, in its sign's color.
 - **particle:** one dot carrying a reading from the deck's faces to a loading bar while Extract
   Pathways builds the bars.
 - **particle canvas:** the `<canvas>` over the SVG that the particles are painted on while they fly.
