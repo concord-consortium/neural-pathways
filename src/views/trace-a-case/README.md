@@ -24,14 +24,15 @@ the alien3 data; the view reads it from the index (`alien3Network`).
 
 ## Size
 
-The minimum layout size (see `docs/accessibility.md`) is 889 × 523 px as an Interactive, inside the
+The minimum layout size (see `docs/accessibility.md`) is 910 × 524 px as an Interactive, inside the
 designed size of 1024 × 562.
 
-The minimum layout width, 889 px, holds two columns: the card's 447 px, a 10 px gap, and the network
-panel's 400 px make 857 px, inside the app's 16 px gutters.
+The minimum layout width, 910 px, holds two columns: the card's 447 px, a 10 px gap, and the step
+row, 421 px. The step row holds Step 1 to Step 4, Reset and About on one line, and is wider than the
+network panel's narrowest, 382 px. Together that is 878 px, inside the app's 16 px gutters.
 
-The minimum layout height, 523 px, adds up from the top:
-- the title and its margins, 81 px;
+The minimum layout height, 524 px, adds up from the top:
+- the title and its margins, 82 px: a 32 px heading's line and its 0.67em margins make 81.9 px;
 - a 9 px gap;
 - the filter bar and the step row, 44 px;
 - a 9 px gap;
@@ -43,6 +44,8 @@ counted.
 
 Narrower than its minimum layout width, it still works, but no reviewed design covers it:
 - The columns stack, and the page scrolls down. It is about 1,100 to 1,250 px tall.
+- About stays at the right end of the step row, and wraps onto its own line below the steps when
+  the row is too narrow for both.
 - Below 414 px, the diagram scrolls sideways inside its panel. That is the diagram's narrowest
   layout, 380 px, with the network panel's border and the app's gutters. Everything else wraps or
   stacks, and the page doesn't scroll sideways even at 320 px.
@@ -52,5 +55,4 @@ Narrower than its minimum layout width, it still works, but no reviewed design c
 The view still needs:
 - node hover and the pinned readout;
 - Step 1's word flights;
-- the activation legend;
-- About.
+- the activation legend.

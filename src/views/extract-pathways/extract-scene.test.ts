@@ -72,7 +72,7 @@ describe("pathwaysRestScene", () => {
     const scene = pathwaysRestScene(SIZES, 800, fixtureLoadings);
     expect(scene.deck).toMatchObject({ slide: 1, done: true });
     expect(scene.pathways).toMatchObject({
-      slide: 1, particles: undefined, flying: undefined, lines: 1, done: true,
+      liftedSlide: 1, particles: undefined, flying: undefined, lines: 1, done: true,
       boxes: [1, 2, 3].map(() => ({ opacity: 1, kick: undefined })),
     });
     expect(scene.pathways!.bars).toHaveLength(42);

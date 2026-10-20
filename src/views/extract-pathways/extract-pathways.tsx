@@ -1,12 +1,13 @@
 import React, { useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
+import { AboutButton } from "../../core/about/about-button";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { alien3Dataset, alien3Loadings, alien3Network } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
 import { Network } from "../../core/network/network";
 import { useViewState } from "../../core/state/view-state-context";
 import { StepPlayer } from "../../core/steps/step-player";
-import { StepRow } from "../../core/steps/step-row";
+import { StepButtonGroup } from "../../core/steps/step-button-group";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { deckSize } from "./deck-layout";
@@ -15,7 +16,11 @@ import { ExtractPathwaysState } from "./extract-pathways-state";
 import { extractButtons, extractProgress, MAX_COLLECTED } from "./extract-steps";
 import { extractTimeline } from "./extract-timeline";
 import { checkLoadingsShape, Loadings } from "./pathways-layout";
+import about from "./about.md";
 import "./extract-pathways.scss";
+
+/** The view's title, in its heading, its About and the app's list of views. */
+export const EXTRACT_PATHWAYS_TITLE = "Extract Pathways";
 
 const PANEL_TITLE = "The Network → Activated Pathways";
 
@@ -36,7 +41,10 @@ function readFitted(index: S3Index): Fitted {
   }
 }
 
-/** Lift the hidden neurons out of the network and collect conversations' activations from them. */
+/**
+ * Lift the hidden neurons out of the network, collect conversations' activations from them into a
+ * deck, and draw the three pathways from it.
+ */
 export const ExtractPathways: React.FC = observer(function ExtractPathways() {
   const indexState = useDatasetIndex(alien3Dataset);
   // Checked when the index is ready, on every mount, so data without a network or loadings shows the
@@ -45,7 +53,7 @@ export const ExtractPathways: React.FC = observer(function ExtractPathways() {
     () => (indexState.status === "ready" ? readFitted(indexState.index) : undefined), [indexState]);
   return (
     <div className="extract-pathways">
-      <h1 className="extract-pathways__title">Extract Pathways</h1>
+      <h1 className="extract-pathways__title">{EXTRACT_PATHWAYS_TITLE}</h1>
       {indexState.status === "loading" && <p>Loading conversations…</p>}
       {indexState.status === "error" &&
         <p role="alert">The conversations could not be loaded: {indexState.error.message}</p>}
@@ -83,8 +91,13 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
 
   return (
     <>
-      <div className="extract-pathways__steps">
-        <StepRow player={player} buttons={buttons} />
+      <div className="extract-pathways__step-row">
+        <div className="extract-pathways__steps">
+          <StepButtonGroup player={player} buttons={buttons} />
+        </div>
+        <div className="extract-pathways__about">
+          <AboutButton title={EXTRACT_PATHWAYS_TITLE} markdown={about} />
+        </div>
       </div>
       <section className="extract-pathways__network" aria-labelledby={panelHeadId}>
         <div className="extract-pathways__network-head">

@@ -82,7 +82,7 @@ speed. The target, with what is built marked:
 | View | Model | Keeps |
 |---|---|---|
 | Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id (built); Animate on/off (built); speed (−100 slow, 0 normal, 100 fast) (built) |
-| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`), how many conversations are collected (`collected`), whether the deck is done (`deckDone`) (built); whether the pathways are done (`pathwaysDone`) (built); Animate (built); speed (built) |
+| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`), how many conversations are collected (`collected`), whether the deck is done (`deckDone`) and whether the pathways are done (`pathwaysDone`); Animate; speed (all built) |
 | Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
 | Prediction Chain | `npw/PredictionChainState` | The step each conversation is on (0 to 4), by id; Animate; speed |
 | Correlations | `npw/CorrelationsState` | Measures or Graphs; the open detail card, by attribute key and pathway number |

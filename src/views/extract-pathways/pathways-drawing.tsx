@@ -39,13 +39,13 @@ export function kickScale(p: number): number {
   return 1;
 }
 
-/** Scales an SVG element about its own center, as CSS does with transform-box: fill-box. */
+/** Applies `transform` to an SVG element about its own center. */
 const aboutCenter = (transform: string): React.CSSProperties =>
   ({ transformBox: "fill-box", transformOrigin: "center", transform });
 
 /**
- * The lines, the zero rules, the loading bars, the copies in flight, and the boxes with their
- * labels, under the boxes and over the lines, as `pathways` says. Nothing until the particles start.
+ * The lines, the zero rules, the loading bars, the boxes with their labels, and the bar copies
+ * in flight, bottom to top, as `pathways` says. Nothing until the particles start.
  */
 export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; layout: PathwaysLayout }) {
   const { bars } = pathways;
@@ -56,7 +56,7 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
   return (
     <g data-testid="pathways">
       {pathways.lines > 0 && (
-        <g opacity={pathways.lines < 1 ? pathways.lines : undefined}>
+        <g data-testid="pathway-lines" opacity={pathways.lines < 1 ? pathways.lines : undefined}>
           {layout.bars.map((bar, b) => {
             const box = layout.boxes[bar.pathway];
             return (
@@ -67,7 +67,8 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
         </g>
       )}
       {layout.rules.map((rule, k) => (
-        <line key={k} className="extract-drawing__zero" x1={rule.x} y1={rule.y1} x2={rule.x} y2={rule.y2} />
+        <line key={k} data-testid="zero-rule" className="extract-drawing__zero"
+          x1={rule.x} y1={rule.y1} x2={rule.x} y2={rule.y2} />
       ))}
       {layout.bars.map((bar, b) => {
         const width = bar.length * bars[b].grown;
@@ -75,6 +76,20 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
           <rect key={b} data-testid="loading-bar" x={bar.loading >= 0 ? bar.zero : bar.zero - width}
             y={bar.y - BAR_HEIGHT / 2} width={width} height={BAR_HEIGHT}
             fill={mixColor(signColor(bar.loading), RULE_COLOR, bars[b].muted)} />
+        );
+      })}
+      {layout.boxes.map((box, p) => {
+        const { opacity, kick } = pathways.boxes[p];
+        return opacity > 0 && (
+          <g key={p} data-testid="pathway-box" opacity={opacity < 1 ? opacity : undefined}>
+            <rect className="extract-drawing__box" x={box.x} y={box.cy - BOX_SIDE / 2} width={BOX_SIDE}
+              height={BOX_SIDE} rx={BOX_CORNER}
+              style={kick === undefined ? undefined : aboutCenter(`scale(${kickScale(kick)})`)} />
+            <text className="extract-drawing__label extract-drawing__pathway" x={box.x + BOX_SIDE + LABEL_GAP}
+              y={box.cy + 4}>
+              {`Pathway ${p + 1}`}
+            </text>
+          </g>
         );
       })}
       {flying?.copies.map((copy, neuron) => {
@@ -90,20 +105,6 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
             width={bar.length} height={BAR_HEIGHT} fill={signColor(bar.loading)}
             opacity={copy.opacity < 1 ? copy.opacity : undefined}
             style={aboutCenter(`translate(${dx}px, ${dy}px) scale(${scale})`)} />
-        );
-      })}
-      {layout.boxes.map((box, p) => {
-        const { opacity, kick } = pathways.boxes[p];
-        return opacity > 0 && (
-          <g key={p} opacity={opacity < 1 ? opacity : undefined}>
-            <rect className="extract-drawing__box" x={box.x} y={box.cy - BOX_SIDE / 2} width={BOX_SIDE}
-              height={BOX_SIDE} rx={BOX_CORNER}
-              style={kick === undefined ? undefined : aboutCenter(`scale(${kickScale(kick)})`)} />
-            <text className="extract-drawing__label extract-drawing__pathway" x={box.x + BOX_SIDE + LABEL_GAP}
-              y={box.cy + 4}>
-              {`Pathway ${p + 1}`}
-            </text>
-          </g>
         );
       })}
     </g>
@@ -122,9 +123,10 @@ interface ParticleCanvasProps {
 }
 
 /**
- * The particles in flight, painted on a canvas over the SVG at the device's pixel ratio. A canvas,
- * because 1,500 dots moving every frame are too many SVG elements to update; they carry no text,
- * so it loses nothing. Hidden from screen readers: the drawing's description covers it.
+ * The particle canvas: the particles in flight, painted on a `<canvas>` over the SVG at the device's
+ * pixel ratio. A `<canvas>`, because 1,500 dots moving every frame are too many SVG elements to
+ * update; they carry no text, so it loses nothing. Hidden from screen readers: the drawing's
+ * description covers it.
  */
 export function ParticleCanvas({ t, geometry, passes, size, layout, loadings }: ParticleCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);

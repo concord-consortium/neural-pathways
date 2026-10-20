@@ -2,9 +2,9 @@ import React from "react";
 import { observer } from "mobx-react-lite";
 import { StepButton } from "./step-button";
 import { StepPlayer } from "./step-player";
-import "./step-row.scss";
+import "./step-button-group.scss";
 
-interface StepRowProps {
+interface StepButtonGroupProps {
   player: StepPlayer<unknown>;
   buttons: readonly StepButton[];
 }
@@ -20,17 +20,17 @@ interface StepRowProps {
  * order, so one that becomes unavailable while it has focus, such as a step reaching its limit,
  * keeps the focus instead of dropping it to the page.
  */
-export const StepRow = observer(function StepRow({ player, buttons }: StepRowProps) {
+export const StepButtonGroup = observer(function StepButtonGroup({ player, buttons }: StepButtonGroupProps) {
   const { marker, currentRun } = player;
   const nothingShown = marker === 0 && !currentRun;
   return (
-    <div className="step-row" role="group" aria-label="Steps">
+    <div className="step-button-group" role="group" aria-label="Steps">
       {buttons.map(button => {
         const isRunning = currentRun?.button === button.key;
         const segment = button.segmentToPlayWhenAt(marker) ?? (isRunning ? currentRun : undefined);
         const current = isRunning || (!currentRun && !!button.showAsCurrentWhenAt?.(marker));
         return (
-          <button key={button.key} type="button" className="step-row__step"
+          <button key={button.key} type="button" className="step-button-group__step"
             aria-current={current ? "step" : undefined}
             aria-disabled={!segment}
             onClick={segment && (() => player.play(button.key, segment))}>
@@ -38,7 +38,7 @@ export const StepRow = observer(function StepRow({ player, buttons }: StepRowPro
           </button>
         );
       })}
-      <button type="button" className="step-row__reset" aria-disabled={nothingShown}
+      <button type="button" className="step-button-group__reset" aria-disabled={nothingShown}
         onClick={nothingShown ? undefined : () => player.reset()}>
         Reset
       </button>

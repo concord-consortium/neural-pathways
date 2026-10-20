@@ -23,14 +23,11 @@ export interface DeckSetScene {
   lastOpacity: number;
 }
 
-/** The deck once Collect All Conversations has started. ExtractDrawing's DeckDrawing draws it. */
+/** The deck once Collect All has started. ExtractDrawing's DeckDrawing draws it. */
 export interface DeckScene {
   /** How far the deck has moved from the left strip toward the middle of its room, 0–1. */
   centered: number;
-  /**
-   * How far Extract Pathways has slid it left, until its middle is on the canvas's left edge, 0–1;
-   * 0 until Extract Pathways is built.
-   */
+  /** How far Extract Pathways has slid it left, until its middle is on the canvas's left edge, 0–1. */
   slide: number;
   /** Every set in, set 0 (in front) first. */
   sets: DeckSetScene[];
@@ -51,12 +48,12 @@ export interface DeckScene {
 /** What Extract Pathways adds to the scene. PathwaysLayer and ParticleCanvas draw it. */
 export interface PathwaysScene {
   /** How far the lifted column has moved to make room, 0–1. */
-  slide: number;
+  liftedSlide: number;
   /** Timeline time into the particles' flight, while they fly. */
   particles: number | undefined;
   /** The 42 bars, neuron by neuron, once the particles start: how far grown and how gray, each 0–1. */
   bars: { grown: number; muted: number }[] | undefined;
-  /** The copies of one pathway's bars in flight to its box: each one's progress and opacity. */
+  /** One pathway's bar copies in flight to its box: each one's progress and opacity. */
   flying: { pathway: number; copies: { progress: number; opacity: number }[] } | undefined;
   /** Each box's opacity, and how far its latest kick has played, 0–1, while one plays. */
   boxes: { opacity: number; kick: number | undefined }[];
@@ -95,8 +92,8 @@ export function hiddenCount(columnSizes: readonly number[]): number {
 /**
  * The scene resting at `marker`, with nothing running: the blank network; then the lifted
  * column; then the last conversation collected in full, under its label, with the deck, spotlit as
- * its flight left it (see `collectSceneAt`). For markers 0 to 11; from the deck on, the timeline
- * rests in `deckRestScene`.
+ * its flight left it (see `collectSceneAt`). For markers 0 to 11; at the deck the timeline rests in
+ * `deckRestScene`, and at the pathways in `pathwaysRestScene`.
  */
 export function restScene(columnSizes: readonly number[], marker: Marker): ExtractScene {
   const collected = Math.max(0, marker - 1);
@@ -146,7 +143,7 @@ export function deckRestScene(columnSizes: readonly number[], size: number): Ext
 /** The pathways when Extract Pathways is done, with `loadings`' bars. */
 export function finishedPathways(loadings: Loadings): PathwaysScene {
   return {
-    slide: 1,
+    liftedSlide: 1,
     particles: undefined,
     bars: barLengths(loadings).map(() => ({ grown: 1, muted: 0 })),
     flying: undefined,

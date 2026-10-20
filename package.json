@@ -12,8 +12,12 @@
     "testEnvironment": "jsdom",
     "transform": {
       "^.+\\.tsx?$": "ts-jest",
-      "\\.svg$": "<rootDir>/jest/svg-transform.js"
+      "\\.svg$": "<rootDir>/jest/svg-transform.js",
+      "\\.md$": "<rootDir>/jest/md-transform.js"
     },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!marked/)"
+    ],
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "testPathIgnorePatterns": [
       "/node_modules/",
@@ -136,6 +140,7 @@
   "dependencies": {
     "core-js": "^3.50.0",
     "liqe": "^3.8.5",
+    "marked": "^18.1.1",
     "mobx": "^7.0.5",
     "mobx-keystone": "^2.3.1",
     "mobx-react-lite": "^5.1.0",

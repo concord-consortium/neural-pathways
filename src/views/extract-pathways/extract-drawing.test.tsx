@@ -6,7 +6,7 @@ import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
-import { collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
+import { collectAllPlan, collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
 import { deckRestScene, ExtractScene, pathwaysRestScene, restScene } from "./extract-scene";
@@ -221,6 +221,23 @@ describe("ExtractDrawing", () => {
     )).toBeInTheDocument();
   });
 
+  it("draws each set of a deck of 800 where it is and as faded as it is, mid-close", () => {
+    // A deck of 800 repeats the fixture's 20 conversations.
+    const deckPasses = Array.from({ length: 800 }, (_, i) => passes[i % passes.length]);
+    // Halfway through a close of 22 sets, with sets still short of their places and the newest fading in.
+    const close = collectAllPlan(SIZES, 3, 800).closes[20];
+    const scene = collectAllSceneAt(SIZES, 3, 800, close.start + close.duration / 2);
+    render(
+      <ExtractDrawing network={fixtureNetwork} passes={deckPasses} scales={scales} outputLabels={LABELS}
+        scene={scene} headingId="panel-head" deckSize={800} loadings={fixtureLoadings} />,
+    );
+    const places = scene.deck!.sets.map((_, index) => screen.getByTestId(`deck-place-${index}`))
+      .map((place, index) => [index, placeOf(place).x, place.getAttribute("opacity")]);
+    expect(places).toEqual(scene.deck!.sets.map((set, index) => [
+      index, set.offset * geometry.deck.r + set.shift, set.opacity < 1 ? String(set.opacity) : null,
+    ]));
+  });
+
   it("fades the network and its label as a whole while Collect All hides it", () => {
     renderDrawing(collectAllSceneAt(SIZES, 3, 20, 650));
     const opacity = Number(screen.getByTestId("network").getAttribute("opacity"));
@@ -228,8 +245,7 @@ describe("ExtractDrawing", () => {
     expect(opacity).toBeLessThan(1);
     // eslint-disable-next-line testing-library/no-node-access -- the label's fade is on its parent group
     const labelOpacity = Number(screen.getByText("Conversation 3").parentElement!.getAttribute("opacity"));
-    expect(labelOpacity).toBeGreaterThan(0);
-    expect(labelOpacity).toBeLessThan(1);
+    expect(labelOpacity).toBe(opacity);
   });
 
   it("draws the pathways beside the slid deck, and describes them, once Extract Pathways is done", () => {
@@ -240,6 +256,34 @@ describe("ExtractDrawing", () => {
     expect(screen.getAllByTestId("pathway-line")).toHaveLength(42);
     const dx = pathwaysLayout(geometry, 20, fixtureLoadings).liftedDx;
     expect(screen.getByTestId("lifted-column")).toHaveAttribute("transform", `translate(${dx},0)`);
+  });
+
+  it("keeps describing the deck while Extract Pathways runs", () => {
+    jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    try {
+      renderDrawing(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, 3000));
+      expect(screen.getByRole(
+        "img", { name: "The network's 14 hidden neurons lifted out, and all 20 conversations collected." },
+      )).toBeInTheDocument();
+    } finally {
+      jest.restoreAllMocks();
+    }
+  });
+
+  it("slides the lifted column toward its place beside the pathways", () => {
+    const columnX = (t: number) => {
+      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, t));
+      const column = screen.getByTestId("lifted-column");
+      const x = column.hasAttribute("transform") ? placeOf(column).x : 0;
+      unmount();
+      return x;
+    };
+    const dx = pathwaysLayout(geometry, 20, fixtureLoadings).liftedDx;
+    expect(columnX(400)).toBe(0);
+    // The column moves left, so dx is negative; at 900 ms it is part of the way there.
+    const share = columnX(900) / dx;
+    expect(share).toBeGreaterThan(0);
+    expect(share).toBeLessThan(1);
   });
 
   it("shows the particle canvas only while the particles fly", () => {

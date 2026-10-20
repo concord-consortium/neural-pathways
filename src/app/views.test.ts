@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { findView, VIEWS } from "./views";
 
 describe("VIEWS", () => {
@@ -27,6 +29,15 @@ describe("VIEWS", () => {
   it("gives every view a title", () => {
     for (const view of VIEWS) {
       expect(view.title.trim()).not.toBe("");
+    }
+  });
+
+  it("gives every view an About text whose headings start at ###", () => {
+    for (const view of VIEWS) {
+      const text = fs.readFileSync(path.join(__dirname, "../views", view.id, "about.md"), "utf8");
+      expect(text.trim()).not.toBe("");
+      // The dialog's own title is the h2, so the text's headings are h3s.
+      expect(text).not.toMatch(/^#{1,2} /m);
     }
   });
 });

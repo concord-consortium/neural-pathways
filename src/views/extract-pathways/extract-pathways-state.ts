@@ -24,7 +24,7 @@ export class ExtractPathwaysState extends ExtendedModel(composeMixins(animatedMi
   setupDone: tProp(types.boolean, false),
   /** How many conversations have been collected into the deck. */
   collected: tProp(countType, 0),
-  /** Whether Collect All Conversations is done: the deck holds every conversation. */
+  /** Whether Collect All is done: the deck holds every conversation. */
   deckDone: tProp(types.boolean, false),
   /** Whether Extract Pathways is done: the three pathways are drawn from the deck. */
   pathwaysDone: tProp(types.boolean, false),

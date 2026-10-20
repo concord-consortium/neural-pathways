@@ -214,7 +214,7 @@ describe("ExtractPathways", () => {
     expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "false");
   });
 
-  it("draws the pathways with Extract Pathways from the start, building the deck on the way", async () => {
+  it("draws the pathways with Extract Pathways from the start, jumping to the deck first", async () => {
     setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });

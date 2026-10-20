@@ -34,7 +34,9 @@ one thing, or one name for two things, settle it and add it here.
 ## The step system
 
 - **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup,
-  Collect a Conversation and Collect All Conversations. Not a point or a stretch of the timeline.
+  Collect a Conversation, Collect All Conversations and Extract Pathways. Not a point or a stretch
+  of the timeline. Comments, tests and docs call Collect All Conversations "Collect All"; its full
+  name is for the button's label.
 - **marker:** a point on a view's timeline where the scene rests and progress is stored. 0 is the
   start.
 - **segment:** the stretch of timeline between two markers, `{ from, to }`, which a step plays.
@@ -67,27 +69,34 @@ one thing, or one name for two things, settle it and add it here.
 
 ## Extract Pathways
 
+- **canvas:** Extract Pathways' drawing area, the SVG that `ExtractDrawing` lays out, as in
+  `minCanvasWidth` and "half off the canvas". Not the particle canvas.
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
 - **deck:** the columns of collected conversations' hidden activations, one column each.
+- **room:** the stretch of canvas the deck is centered in, from the canvas's left edge to the lifted
+  column's left edge (`deckMid`).
 - **set:** 20 columns of the deck that move as one; the last set holds fewer when the conversations
-  don't fill it. Collect All Conversations fills the first one a column at a time and adds the rest
-  behind it, up to 40. Sets are numbered from 0, so set 0 is the one in front.
-- **face:** one of the deck's visible surfaces: the right face is set 0's columns, the front face
-  is each set's last column, where the set in front leaves it showing, and the top is every
-  column's top row. Set 0's last column, the corner, is on both the right and the front face.
+  don't fill it. Collect All fills the first one a column at a time and adds the rest behind it,
+  up to 40. Sets are numbered from 0, so set 0 is the one in front.
+- **face:** one of the deck's visible surfaces: the right face is set 0's columns, and the front
+  face is each set's last column, where the set in front leaves it showing. Set 0's last column,
+  the corner, is on both. Every other column is inside. The top is each column's topmost drawn
+  gauge, which only the particles leave from.
 - **copy:** one flown circle in the lifted column or the deck.
+- **bar copy:** a flown copy of a loading bar, on its way to its pathway box. Not "copy" alone.
 - **collection:** one conversation collected by hand, by Collect a Conversation or at the start of
-  Collect All Conversations, from the network running it to its column landing in the deck.
+  Collect All, from the network running it to its column landing in the deck.
   `collected` counts them, and holds the deck's size once the deck is done; a scene's
   `collections` are the ones in flight or landed.
 - **stage:** a part of the extraction whose completion is stored: Setup (`setupDone`), the
   collections (`collected`), the deck (`deckDone`) and the pathways (`pathwaysDone`). A stage still
   playing isn't stored.
 - **loading bar:** one loading, drawn beside the lifted column: three to a neuron, one per
-  pathway, growing from zero by its loading's size, in its sign's color.
+  pathway, from zero toward its sign, in proportion to its loading's size, in its sign's color.
 - **particle:** one dot carrying a reading from the deck's faces to a loading bar while Extract
-  Pathways builds the bars. Drawn on a canvas, not in the SVG.
-- **pathway box:** the square a pathway is drawn as, built from copies of its 14 loading bars.
+  Pathways builds the bars.
+- **particle canvas:** the `<canvas>` over the SVG that the particles are painted on while they fly.
+- **pathway box:** the square a pathway is drawn as, built from the bar copies of its 14 loading bars.
 - **line:** a loading's connector, from its bar's zero to its pathway box.
 
 ## The fitted network
@@ -107,6 +116,7 @@ one thing, or one name for two things, settle it and add it here.
 
 - **designed size:** the size the views are designed to be used at, 1024 × 562 px as an Interactive
   (see `accessibility.md`).
+- **filter row:** the row of controls above the conversation card, holding the filter bar.
 - **Interactive:** a view embedded on its own in an iframe, as the Activity Player embeds it, via
   `?interactive=<view-id>` (see `src/app/README.md`). The sizes in `accessibility.md` and the
   views' READMEs are an Interactive's, the app's gutters included. Not "frame", which means a run at
@@ -114,6 +124,11 @@ one thing, or one name for two things, settle it and add it here.
 - **minimum layout size:** the narrowest and shortest a view can be while keeping its layout as
   designed, before anything stacks, wraps or scrolls in a way the design doesn't show. Its README
   gives it. Not "designed width", since the designer didn't choose it.
+- **panel head:** the title row at the top of a panel, inside its border. It can hold controls too,
+  such as Animate and the speed. Not "toolbar".
 - **scroller:** an element that scrolls what it holds, such as a drawing wider than its panel.
   `useKeyboardScrollable` makes it reachable by keyboard. Not "region" for the area: its role is
   `group` or `region` (see `accessibility.md`), and "region" means the role.
+- **step row:** the row of controls above the network in Trace a Case and above the drawing in
+  Extract Pathways, holding the steps, Reset and About. `StepButtonGroup` draws the steps and Reset
+  in it. Not "toolbar".
