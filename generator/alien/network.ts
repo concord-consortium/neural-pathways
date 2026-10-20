@@ -112,8 +112,13 @@ export function fitNetwork(input: NetworkFitInput, config: NetworkConfig): Fitte
     }
   }
 
+  // BETA1 and BETA2 to the power of the epochs so far, kept as running products: `**` can differ in
+  // the last bit between Node versions, and Adam grows that into a different network.
+  let beta1Power = 1;
+  let beta2Power = 1;
+
   /** One full-batch step: every conversation's gradient, then one Adam update. */
-  function step(epoch: number): void {
+  function step(): void {
     gradW.forEach(g => g.fill(0));
     gradB.forEach(g => g.fill(0));
     for (let s = 0; s < n; s++) {
@@ -148,8 +153,10 @@ export function fitNetwork(input: NetworkFitInput, config: NetworkConfig): Fitte
         }
       }
     }
-    const c1 = 1 - BETA1 ** epoch;
-    const c2 = 1 - BETA2 ** epoch;
+    beta1Power *= BETA1;
+    beta2Power *= BETA2;
+    const c1 = 1 - beta1Power;
+    const c2 = 1 - beta2Power;
     for (let l = 0; l < layerCount; l++) {
       adam(weights[l], gradW[l], mW[l], vW[l], c1, c2);
       adam(biases[l], gradB[l], mB[l], vB[l], c1, c2);
@@ -160,7 +167,7 @@ export function fitNetwork(input: NetworkFitInput, config: NetworkConfig): Fitte
   let stoppedBy: FittedNetwork["stoppedBy"] = "cap";
   while (epochs < config.maxEpochs) {
     epochs++;
-    step(epochs);
+    step();
     if (epochs % config.checkEvery === 0 && smallestMargin() >= config.margin) {
       stoppedBy = "margin";
       break;

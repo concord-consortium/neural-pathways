@@ -194,11 +194,11 @@ with the two network checks:
 ```
 network
   30 -> 10 -> 8 -> 6 -> 2, stopped by the margin after 1500 epochs in 2.3 s
-  smallest margin 0.159
+  smallest margin 0.156
 
 self-checks
   ...
-  PASS  network-reproduces-classification all 800 conversations, smallest margin 0.159 (minimum 0.1)
+  PASS  network-reproduces-classification all 800 conversations, smallest margin 0.156 (minimum 0.1)
   PASS  network-tracks-activations        weakest unit tracks neuron 10 at r 0.869 (minimum 0.85)
 ```
 
