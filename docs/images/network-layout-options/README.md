@@ -13,7 +13,11 @@ needs each of those neurons to have some variation of its own. Two things follow
   computed from the first, so its variation is copied rather than its own. Factor analysis takes the
   copying as a shared cause and blends the pathways. A second hidden layer can still exist, but
   Extract Pathways can't lift neurons from it.
-- **That layer needs enough inputs.** With 3 pathways, n pathway neurons need 3 + n inputs.
+- **That layer needs enough inputs.** For the network to produce authored pathway scores, each
+  pathway neuron carries the 3 pathways plus quirks of its own, independent of the pathways and of
+  each other. That takes 3 + n independent inputs for n pathway neurons. (A network that only had to
+  match how the neurons vary together could get by with n, but then nothing in it would be a
+  pathway score.)
 
 [../../factor-analysis-dependent-neurons.md](../../factor-analysis-dependent-neurons.md) explains
 both.
