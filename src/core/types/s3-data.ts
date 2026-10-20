@@ -15,7 +15,7 @@ export interface S3Index {
     review_sets: Record<string, { count: number; description: string }>;
     /** Present on generated datasets that carry externally coded attributes. */
     attributes?: AttributeDefinition[];
-    /** The network the alien generator fitted to this dataset. Only alien3 has one. */
+    /** The network the generator fitted to this dataset, when it fitted one. */
     network?: Network;
   };
   items: S3Item[];
