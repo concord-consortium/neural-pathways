@@ -54,7 +54,10 @@ describe("columnValues", () => {
 });
 
 describe("setOffset", () => {
-  it.each([1, 7, 20, 30, 38, 39, 40, 790, 799, 800])("centers what a deck of %p draws on the room's middle", size => {
+  // Full and partial decks, with last sets that do and don't end inside the set in front.
+  const decks = [1, 7, 20, 30, 38, 39, 40, 790, 799, 800];
+
+  it.each(decks)("centers a deck of %p on where its columns are drawn", size => {
     // Set 0's first column's right edge, and the left edge of the column furthest left: a set's last
     // column sits as many radii left of the set's offset as the set has columns, less one.
     const right = setOffset(0, size) + 1;
@@ -75,7 +78,7 @@ describe("setOffset", () => {
 });
 
 describe("deckMid and centerShift", () => {
-  it("put the room's middle halfway between the canvas's left edge and the lifted column's", () => {
+  it("put the room's middle halfway between the canvas's left edge and the lifted column's left edge", () => {
     const g = extractGeometry(SIZES, 995);
     expect(deckMid(g)).toBe((881 - 12) / 2);
     expect(centerShift(g)).toBe((881 - 12) / 2 - 115);
@@ -103,7 +106,7 @@ describe("the deck's timings", () => {
     expect(setGap(39, 40)).toBe(80);
   });
 
-  it("fits each close in its beat, between 90 and 300 ms", () => {
+  it("makes each close 1.15 times its beat, held between 90 and 300 ms", () => {
     expect(setMove(440)).toBe(300);
     expect(setMove(80)).toBe(92);
     expect(setMove(60)).toBe(90);

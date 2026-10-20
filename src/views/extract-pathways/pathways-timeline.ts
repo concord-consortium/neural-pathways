@@ -7,8 +7,8 @@ import { easeBetween } from "./setup-timeline";
 import { transitionAt } from "./transitions";
 
 // The timings below are the prototype's, in ms at its "Med" speed, so each can be checked against
-// its source: particleStage, flyParticles, ptWire, pathwayStep and buildLines.
-// src/views/README.md says where the prototype is.
+// its source: particleStage, ptWire, pathwayStep and buildLines, and for MUTE_MS and KICK_MS its
+// CSS, the .d1a-loadbar transition and d1a-boxkick. src/views/README.md says where the prototype is.
 
 const DECK_SLIDE_MS = 1400;
 /** The lifted column answers the deck's move rather than sharing it. */
@@ -17,16 +17,20 @@ const COLUMN_SLIDE_MS = 1100;
 const PARTICLES_AT = Math.max(DECK_SLIDE_MS, COLUMN_DELAY + COLUMN_SLIDE_MS) + 200;
 const BARS_DONE = PARTICLES_AT + PARTICLES_MS;
 const PATHWAYS_REST = 460;
-/** Within a pathway: the beat before its copies lift, their flight, and the spread of their leaving. */
+// Within a pathway: the beat before its bar copies leave, their flight, and the spread of their
+// leaving.
 const LIFT = 200;
 export const COPY_FLY_MS = 760;
 const COPY_LEAD = 380;
-/** A copy fades over the last 22% of its flight, starting 82% of the way. */
+/**
+ * A bar copy fades for 22% of its flight time, starting 82% of the way through it, so it still
+ * shows, faintly, as it lands.
+ */
 const COPY_FADE_AT = Math.round(COPY_FLY_MS * 0.82);
 const COPY_FADE_MS = Math.round(COPY_FLY_MS * 0.22);
-/** A copy is gone this long after its pathway starts. */
+/** A bar copy is gone this long after its pathway starts. */
 const COPIES_GONE = LIFT + COPY_FLY_MS + COPY_LEAD + 80;
-/** How small a copy is when it reaches its box. */
+/** How small a bar copy is when it reaches its box. */
 export const COPY_END_SCALE = 0.18;
 const PATHWAY_BACK = 320;
 const PATHWAY_HOLD = 460;
@@ -43,14 +47,14 @@ export function pathwayStart(pathway: number): number {
   return BARS_DONE + PATHWAYS_REST + pathway * PATHWAY_MS;
 }
 
-/** When neuron `neuron`'s copy leaves, after its pathway's turn starts. */
+/** When neuron `neuron`'s bar copy leaves, after its pathway's turn starts. */
 export function copyLeaves(neuron: number): number {
   return LIFT + Math.round((neuron * COPY_LEAD) / LOADINGS.length);
 }
 
 function pathwaysAt(t: number): PathwaysScene {
   const neurons = LOADINGS.length;
-  const slide = moveEase(clamp01((t - COLUMN_DELAY) / COLUMN_SLIDE_MS));
+  const liftedSlide = moveEase(clamp01((t - COLUMN_DELAY) / COLUMN_SLIDE_MS));
   const particles = t >= PARTICLES_AT && t < BARS_DONE ? t - PARTICLES_AT : undefined;
   let bars: PathwaysScene["bars"];
   if (t >= PARTICLES_AT) {
@@ -93,7 +97,7 @@ function pathwaysAt(t: number): PathwaysScene {
     };
   });
   return {
-    slide,
+    liftedSlide,
     particles,
     bars,
     flying,
@@ -106,7 +110,7 @@ function pathwaysAt(t: number): PathwaysScene {
 /**
  * Extract Pathways, `t` ms in, from the finished deck of `size`: the deck slides half off the
  * canvas and the lifted column follows; particles fly from the deck's faces onto the loading bars;
- * each pathway's bars send copies to its box, one pathway at a time; then the lines fade in.
+ * each pathway's bars send bar copies to its box, one pathway at a time; then the lines fade in.
  */
 export function extractPathwaysSceneAt(columnSizes: readonly number[], size: number, t: number): ExtractScene {
   const scene = deckRestScene(columnSizes, size);

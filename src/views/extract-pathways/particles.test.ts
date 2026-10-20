@@ -1,7 +1,9 @@
+import { signColor } from "../../core/colors";
 import { forward } from "../../core/network/forward";
+import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import { toyNetwork } from "../../core/network/toy-network";
 import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
-import { centerShift, deckMid, deckWidth, setOffset } from "./deck-layout";
+import { centerShift, columnValues, deckMid, deckWidth, setOffset } from "./deck-layout";
 import { extractGeometry } from "./extract-geometry";
 import {
   faceSources, landedCounts, Particle, particleAt, particlePlan, PARTICLES_MS, particleTarget, seededRandom,
@@ -100,16 +102,81 @@ describe("faceSources", () => {
     expect(sources.some(source => source.x > 0)).toBe(true);
   });
 
-  it("takes every row of a short last set's last column when it shows, as the front face", () => {
-    // Set 2 of a deck of 59 holds 19 columns, and nothing in front covers its last; the top alone
-    // would give that column one source at most.
-    const x = centerShift(g) - deckMid(g) + g.deck.r * setOffset(2, 59) + g.deck.x - 18 * g.deck.r;
-    const fromLastColumn = faceSources(g, passes, 59).filter(source => Math.abs(source.x - x) < 1e-9);
-    expect(fromLastColumn.length).toBeGreaterThan(1);
+  /** How many of a column's gauges are drawn: those tall enough to show. */
+  const drawn = (set: number, column: number) =>
+    columnValues(passes, set, column).filter(v => g.deck.r * Math.min(1, Math.abs(v)) >= MIN_GAUGE).length;
+  /** Each column's top drawn gauge, if it has one. */
+  const tops = (size: number) =>
+    Array.from({ length: size }, (_, i) => i).filter(i => drawn(Math.floor(i / 20), i % 20) > 0).length;
+  /** The right face: every drawn gauge of set 0's 20 columns. */
+  const rightFace = Array.from({ length: 20 }, (_, column) => drawn(0, column)).reduce((sum, n) => sum + n, 0);
+
+  it("takes every drawn gauge of set 0 and each column's top drawn gauge, each at its fill in its sign's color", () => {
+    const sources = faceSources(g, passes, 20);
+    expect(sources).toHaveLength(rightFace + tops(20));
+    // A gauge's fill is centered half its height from the row's middle, toward its sign.
+    const column = 3;
+    const values = columnValues(passes, 0, column);
+    const row = values.findIndex(v => v < 0 && g.deck.r * Math.min(1, -v) >= MIN_GAUGE);
+    const height = g.deck.r * Math.min(1, -values[row]);
+    expect(sources).toContainEqual({
+      x: centerShift(g) - deckMid(g) + g.deck.r * setOffset(0, 20) + g.deck.x - column * g.deck.r,
+      y: g.deck.ys[row] + column * g.deck.r + height / 2,
+      color: signColor(values[row]),
+    });
   });
 
-  it("targets bars that are laid out for the same deck", () => {
+  it("takes a column's top drawn gauge, past a top row too small to draw", () => {
+    // Column 5's top row at 0: the right face loses that gauge, and the top takes the next one.
+    const quiet = passes.map((pass, i) => (
+      i === 5 ? { ...pass, layers: pass.layers.map((layer, k) => (k === 1 ? [0, ...layer.slice(1)] : layer)) } : pass
+    ));
+    expect(faceSources(g, quiet, 20)).toHaveLength(faceSources(g, passes, 20).length - 1);
+  });
+
+  it("takes the right face, then the front face, then the top, back set first", () => {
+    const shows = (set: number, column: number) => columnValues(passes, set, column)
+      .flatMap((v, row) => (g.deck.r * Math.min(1, Math.abs(v)) >= MIN_GAUGE ? [row] : []));
+    /** Where the source for a gauge of a deck of 40 is: its fill's center, in its sign's color. */
+    const source = (set: number, column: number, row: number) => {
+      const v = columnValues(passes, set, column)[row];
+      const half = (g.deck.r * Math.min(1, Math.abs(v))) / 2;
+      const cy = g.deck.ys[row] + column * g.deck.r;
+      return {
+        x: centerShift(g) - deckMid(g) + g.deck.r * setOffset(set, 40) + g.deck.x - column * g.deck.r,
+        y: v >= 0 ? cy - half : cy + half,
+        color: signColor(v),
+      };
+    };
+    const sources = faceSources(g, passes, 40);
+    const front = shows(1, 19).length;
+    expect([
+      sources[0], sources[rightFace - 1], sources[rightFace], sources[rightFace + front], sources[sources.length - 1],
+    ]).toEqual([
+      source(0, 0, shows(0, 0)[0]),
+      source(0, 19, shows(0, 19)[shows(0, 19).length - 1]),
+      source(1, 19, shows(1, 19)[0]),
+      source(1, 0, shows(1, 0)[0]),
+      source(0, 19, shows(0, 19)[0]),
+    ]);
+  });
+
+  it("takes a short last set's last column as the front face only where it shows", () => {
+    // Set 2 of a deck of 59 holds 19 columns, and nothing in front covers its last; set 2 of a deck
+    // of 50 holds 10, and set 1 covers its last.
+    expect(faceSources(g, passes, 59)).toHaveLength(rightFace + drawn(1, 19) + drawn(2, 18) + tops(59));
+    expect(faceSources(g, passes, 50)).toHaveLength(rightFace + drawn(1, 19) + tops(50));
+  });
+
+  it("lands each bar's last particle at the bar's full length", () => {
     const layout = pathwaysLayout(g, 800);
-    expect(layout.bars).toHaveLength(particlePlan().need.length);
+    const { particles, need } = particlePlan();
+    const ends = layout.bars.map((bar, b) => {
+      const last = particles.filter(particle => particle.bar === b)[need[b] - 1];
+      return [b, particleTarget(last, bar, need[b]).x];
+    });
+    expect(ends).toEqual(layout.bars.map((bar, b) => [
+      b, bar.zero + (bar.loading >= 0 ? barLengths()[b] : -barLengths()[b]),
+    ]));
   });
 });

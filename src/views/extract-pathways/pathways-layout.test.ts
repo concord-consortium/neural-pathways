@@ -21,8 +21,10 @@ describe("barLength", () => {
 });
 
 describe("pathwaysLayout", () => {
-  it("slides the lifted column to 100 px clear of the half of the deck still showing", () => {
+  it("slides the lifted column to 100 px clear of the half of the deck still showing, whatever its size", () => {
     expect(g.lifted.x + layout.liftedDx - g.lifted.r).toBeCloseTo((g.deck.r * 99) / 2 + 100);
+    // A deck of 20 is one set, 21 radii wide.
+    expect(g.lifted.x + pathwaysLayout(g, 20).liftedDx - g.lifted.r).toBeCloseTo((g.deck.r * 21) / 2 + 100);
   });
 
   it("puts three bars beside each neuron, one per pathway, 7 apart, on a zero 52 px right of the column's edge", () => {

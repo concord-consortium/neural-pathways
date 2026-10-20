@@ -4,7 +4,7 @@ import { ExtractPathwaysState } from "./extract-pathways-state";
 
 /** The most conversations Collect a Conversation gathers one at a time, as in the prototype. */
 export const MAX_COLLECTED = 10;
-/** Where the timeline rests once Collect All Conversations has built the deck. */
+/** Where the timeline rests once Collect All has built the deck. */
 export const DECK_MARKER = MAX_COLLECTED + 2;
 /** Where it rests once Extract Pathways has drawn the pathways. */
 export const PATHWAYS_MARKER = DECK_MARKER + 1;
@@ -42,9 +42,10 @@ export function extractProgress(state: ExtractPathwaysState, limit: number, deck
 /**
  * Setup always starts over. Collect a Conversation collects the next one, jumping Setup to its end
  * first if it isn't done, until `limit` are in; from the deck or the pathways it starts the
- * collecting over. Collect All Conversations builds the deck from wherever the collecting stopped;
- * from the deck or the pathways, it starts the collecting over, as Collect a Conversation does.
- * Extract Pathways draws the pathways from the deck, which is simply there if it isn't built yet.
+ * collecting over. Collect All builds the deck from wherever the collecting stopped; from the deck
+ * or the pathways, it starts the collecting over, as Collect a Conversation does. Extract Pathways
+ * draws the pathways from the deck, jumping to the finished deck first if Collect All hasn't built
+ * it.
  */
 export function extractButtons(limit: number): readonly StepButton[] {
   return [

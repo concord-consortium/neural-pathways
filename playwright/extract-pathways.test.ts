@@ -1,5 +1,5 @@
 import { test } from "./lib/base-url";
-import { expect, Page } from "@playwright/test";
+import { expect, type Locator, Page } from "@playwright/test";
 
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
 const DECK = "The network's 14 hidden neurons lifted out, and all 800 conversations collected.";
@@ -21,6 +21,11 @@ test("Setup lifts the hidden neurons out of the network, animated", async ({ pag
 
 /** What an Interactive takes from the canvas's width: its 16 px gutters and the panel's borders. */
 const INTERACTIVE_EXTRA = 34;
+/**
+ * The narrowest the canvas is laid out (`minCanvasWidth`): the finished deck needs the room. It
+ * depends on the network the view draws, so it changes when the real network replaces the toy one.
+ */
+const NARROWEST_CANVAS = 959;
 
 /**
  * Opens the view as an Interactive `width` wide, waits until the canvas is laid out at
@@ -46,10 +51,9 @@ async function canvasIn(page: Page, width: number, canvasWidth: number) {
 /** The drawing's scroller: a group named by its panel's heading. */
 const drawingGroup = (page: Page) => page.getByRole("group", { name: "The Network → Activated Pathways" });
 
-// 959 is the narrowest the canvas is laid out (minCanvasWidth): the finished deck needs the room.
-
 test("an Interactive just wide enough holds the canvas at full size without scrolling", async ({ page }) => {
-  expect(await canvasIn(page, 959 + INTERACTIVE_EXTRA, 959)).toEqual({ page: false, drawing: false });
+  const scrolls = await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
+  expect(scrolls).toEqual({ page: false, drawing: false });
   await expect(drawingGroup(page)).not.toHaveAttribute("tabindex");
 });
 
@@ -58,16 +62,17 @@ test("a wider Interactive widens the canvas to fill it", async ({ page }) => {
 });
 
 test("an Interactive a pixel too narrow scrolls the canvas sideways rather than scaling it down", async ({ page }) => {
-  expect(await canvasIn(page, 958 + INTERACTIVE_EXTRA, 959)).toEqual({ page: false, drawing: true });
+  const scrolls = await canvasIn(page, NARROWEST_CANVAS - 1 + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
+  expect(scrolls).toEqual({ page: false, drawing: true });
   await expect(drawingGroup(page)).toHaveAttribute("tabindex", "0");
 });
 
 test("a much narrower Interactive scrolls only the canvas", async ({ page }) => {
-  expect(await canvasIn(page, 600, 959)).toEqual({ page: false, drawing: true });
+  expect(await canvasIn(page, 600, NARROWEST_CANVAS)).toEqual({ page: false, drawing: true });
 });
 
 test("the keyboard can reach and scroll a canvas too wide for its Interactive", async ({ page }) => {
-  await canvasIn(page, 600, 959);
+  await canvasIn(page, 600, NARROWEST_CANVAS);
   // The speed slider is the last control in the panel's head that takes focus, just before the
   // canvas.
   await page.getByRole("slider", { name: "Animation speed" }).focus();
@@ -88,7 +93,7 @@ test("unavailable steps look unavailable in forced-colors mode", async ({ page }
 });
 
 test("the drawing keeps the focus when its Interactive widens and it stops scrolling", async ({ page }) => {
-  await canvasIn(page, 600, 959);
+  await canvasIn(page, 600, NARROWEST_CANVAS);
   await drawingGroup(page).focus();
   await page.setViewportSize({ width: 1300, height: 900 });
   await expect.poll(() => page.locator(".extract-drawing").evaluate(e => e.scrollWidth > e.clientWidth)).toBe(false);
@@ -131,7 +136,7 @@ test("Collect a Conversation stops after ten", async ({ page }) => {
   // aria-disabled, not disabled, so the focus stays on it.
   await expect(collect).toBeFocused();
   await expect(page.getByRole("button", { name: "Collect All Conversations" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Extract Pathways" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Extract Pathways", exact: true })).toBeEnabled();
 });
 
 test("Reset clears everything", async ({ page }) => {
@@ -140,6 +145,61 @@ test("Reset clears everything", async ({ page }) => {
   await page.getByRole("button", { name: "Reset" }).click();
   await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
+});
+
+test.describe("About", () => {
+  /**
+   * The narrowest the step row can be with About beside the centered steps: the steps and, on each
+   * side, a column as wide as About plus the 10 px gap. Measured in 16 px Barlow Condensed.
+   */
+  const STEP_ROW_WIDTH = 670 + 2 * (86 + 10);
+  const about = (page: Page) => page.getByRole("button", { name: "About Extract Pathways" });
+  const box = async (locator: Locator) => (await locator.boundingBox())!;
+  const panel = (page: Page) => page.getByRole("region", { name: "The Network → Activated Pathways" });
+
+  async function openAt(page: Page, width: number) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/?interactive=extract-pathways");
+    await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+  }
+
+  test("ends the step row at the minimum layout width, with the steps centered on the panel", async ({ page }) => {
+    await openAt(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA);
+    await expect(page.getByRole("img", { name: "The network." })).toHaveAttribute("width", String(NARROWEST_CANVAS));
+    const aboutBox = await box(about(page));
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
+    const panelBox = await box(panel(page));
+    expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
+    expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);
+    expect(rowBox.x + rowBox.width / 2).toBeCloseTo(panelBox.x + panelBox.width / 2, 0);
+  });
+
+  test("stays beside the steps in an Interactive just wide enough", async ({ page }) => {
+    await openAt(page, STEP_ROW_WIDTH + 32);
+    const aboutBox = await box(about(page));
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
+    expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
+  });
+
+  test("drops below the steps, at the right, a pixel narrower, without scrolling sideways", async ({ page }) => {
+    await openAt(page, STEP_ROW_WIDTH + 31);
+    const aboutBox = await box(about(page));
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
+    const panelBox = await box(panel(page));
+    expect(aboutBox.y).toBeGreaterThanOrEqual(rowBox.y + rowBox.height);
+    expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth))
+      .toBe(false);
+  });
+
+  test("comes after the steps in the tab order", async ({ page }) => {
+    await openAt(page, 1024);
+    await page.getByRole("button", { name: "Reset" }).focus();
+    await page.keyboard.press("Tab");
+    await expect(about(page)).toBeFocused();
+  });
 });
 
 test("Animate and the speed survive switching views", async ({ page }) => {
@@ -165,6 +225,9 @@ test("Animate and the speed survive switching views", async ({ page }) => {
 test("in a narrow window, Animate and the speed wrap below the panel's title", async ({ page }) => {
   await page.setViewportSize({ width: 480, height: 900 });
   await open(page);
+  // Measured once the web font has loaded: the fallback font is wider, so the controls would
+  // overrun the head.
+  await page.evaluate(() => document.fonts.ready);
   const head = await page.locator(".extract-pathways__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
   const title = await page.getByRole("heading", { name: "The Network → Activated Pathways" }).boundingBox();
@@ -172,7 +235,7 @@ test("in a narrow window, Animate and the speed wrap below the panel's title", a
   expect(controls!.y).toBeGreaterThanOrEqual(title!.y + title!.height);
 });
 
-test("Collect All Conversations builds the deck of all 800", async ({ page }) => {
+test("Collect All builds the deck of all 800", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Collect All Conversations" }).click();
   await expect(page.getByRole("img", { name: DECK })).toBeVisible();
@@ -208,7 +271,7 @@ test("after the deck, Collect a Conversation starts the collecting over", async 
 });
 
 test("at the narrowest canvas, the finished deck fits its room", async ({ page }) => {
-  await canvasIn(page, 959 + INTERACTIVE_EXTRA, 959);
+  await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
   await page.getByRole("button", { name: "Collect All Conversations" }).click();
   const canvas = (await page.getByRole("img", { name: DECK }).boundingBox())!;
   const deck = (await page.getByTestId("deck").boundingBox())!;
@@ -219,8 +282,10 @@ test("at the narrowest canvas, the finished deck fits its room", async ({ page }
 
 test("Extract Pathways from the start jumps to the deck and draws the three pathways", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+  await expect(page.getByTestId("deck")).toBeVisible();
+  await expect(page.getByText("800 Conversations", { exact: true })).toBeVisible();
   for (const n of [1, 2, 3]) {
     await expect(page.getByText(`Pathway ${n}`)).toBeVisible();
   }
@@ -229,7 +294,7 @@ test("Extract Pathways from the start jumps to the deck and draws the three path
 
 test("the pathways survive switching views", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Trace a Case" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
@@ -238,21 +303,21 @@ test("the pathways survive switching views", async ({ page }) => {
 });
 
 test("at the narrowest canvas, the pathway labels fit inside it", async ({ page }) => {
-  await canvasIn(page, 959 + INTERACTIVE_EXTRA, 959);
-  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   const canvas = (await page.getByRole("img", { name: PATHWAYS }).boundingBox())!;
   const label = (await page.getByText("Pathway 3").boundingBox())!;
   expect(label.x + label.width).toBeLessThanOrEqual(canvas.x + canvas.width);
 });
 
-test("Extract Pathways flies its particles on a canvas, and removes it once they land", async ({ page }) => {
+test("Extract Pathways flies its particles on the particle canvas, and removes it once they land", async ({ page }) => {
   await open(page, "no-preference");
   const animate = page.getByRole("checkbox", { name: "Animate" });
   // Build the deck at once, then animate the extraction.
   await animate.uncheck();
   await page.getByRole("button", { name: "Collect All Conversations" }).click();
   await animate.check();
-  await page.getByRole("button", { name: "Extract Pathways" }).click();
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   await expect(page.getByTestId("particles")).toBeVisible({ timeout: 5_000 });
   await expect(page.getByTestId("particles")).toHaveCount(0, { timeout: 10_000 });
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible({ timeout: 15_000 });
