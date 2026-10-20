@@ -55,6 +55,11 @@ describe("fitNetwork", () => {
     expect(Math.min(...margins(fitted))).toBeCloseTo(fitted.smallestMargin, 12);
   });
 
+  it("hasn't reached the margin at the check before that one", () => {
+    const earlier = fitNetwork(input, { ...CONFIG, maxEpochs: fitted.epochs - CONFIG.checkEvery });
+    expect(earlier.stoppedBy).toBe("cap");
+  });
+
   it("tracks its targets, read through the app's forward pass on word counts", () => {
     const tracking = forward(fitted.network, texts[0]).layers.length - 2;
     for (let j = 0; j < 2; j++) {
