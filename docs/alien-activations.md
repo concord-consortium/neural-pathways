@@ -126,4 +126,5 @@ Factor analysis on the network's own activations is not expected to give back th
 pathways and the loadings still come from the activations built above. Generating the activations
 from the network isn't built yet. It needs one hidden layer holding every neuron factor analysis
 reads, each with variation of its own; [factor-analysis-dependent-neurons.md](factor-analysis-dependent-neurons.md)
-explains why.
+explains why, and [images/network-layout-options/](images/network-layout-options/README.md) shows
+ways to draw such a network.
