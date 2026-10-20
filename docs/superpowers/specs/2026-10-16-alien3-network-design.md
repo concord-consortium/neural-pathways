@@ -12,10 +12,11 @@ views to it and to the dataset's real loadings. The network keeps today's shape,
 8 + 6 hidden units approximate the 14 authored activations, and its outputs reproduce the dataset's
 `classification` for all 800 conversations. The dataset itself doesn't change.
 
-Jira: [NPW-34](https://concord-consortium.atlassian.net/browse/NPW-34). Its branch builds on NPW-48
-(PR #46), and PR #48 on this branch already holds two documents from the design work:
-[docs/factor-analysis-dependent-neurons.md](../../factor-analysis-dependent-neurons.md) and
-[docs/images/network-layout-options/](../../images/network-layout-options/README.md).
+Jira: [NPW-34](https://concord-consortium.atlassian.net/browse/NPW-34). Two documents came out of
+the design work. [docs/factor-analysis-dependent-neurons.md](../../factor-analysis-dependent-neurons.md)
+is in its own PR, which this branch builds on. The layout options for a network that generates the
+activations are parked in draft
+[PR #48](https://github.com/concord-consortium/neural-pathways/pull/48), which builds on this one.
 
 The work is one PR (see [PR](#pr)).
 
@@ -362,7 +363,7 @@ come from factor analysis on exactly those values. It carries what this design f
 - the bias reaching the prediction through the words, one-sidedly, which keeps the error-rate
   targets and the detectable-bias check;
 - the layout options for a 13 → 10 → 4 → 2 network
-  ([docs/images/network-layout-options/](../../images/network-layout-options/README.md)).
+  (in draft [PR #48](https://github.com/concord-consortium/neural-pathways/pull/48)).
 
 Open: which layout, and whether giving up pathways drawn from two hidden layers is acceptable.
 
