@@ -140,8 +140,9 @@ describe("alien3Loadings", () => {
   it("names the fits when the index has more than one", () => {
     const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
     const metadata = { ...fixtureMetadata, fa_fits: { [name]: fit, other: fit } };
-    expect(() => alien3Loadings({ metadata, items: [] }))
-      .toThrow(`The alien3 data has more than one factor-analysis fit (${name}, other). Run npm run generate:alien to generate it.`);
+    expect(() => alien3Loadings({ metadata, items: [] })).toThrow(
+      `The alien3 data has more than one factor-analysis fit (${name}, other). `
+      + "Run npm run generate:alien to generate it.");
   });
 
   it("says so when the index has no factor-analysis fit", () => {
