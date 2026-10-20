@@ -48,8 +48,9 @@ generator's port is
 
 ### 0. Standardize, and start from a guess
 
-Each neuron is first rescaled to a mean of 0 and a variance of 1, so a neuron with large raw values
-doesn't dominate just because its numbers are bigger. Each neuron's total variation is then 1. That
+Before the fit, the pipeline rescales each neuron to a mean of 0 and a variance of 1 (scikit-learn's
+`StandardScaler`), so a neuron with large raw values doesn't dominate just because its numbers are
+bigger. Each neuron's total variation is then 1. That
 1 is split between what the pathways explain and the neuron's quirks.
 
 The first guess is that every neuron is equally quirky: every neuron's noise variance starts at 1.
@@ -98,13 +99,12 @@ leftovers.
 
 ### Which way the pathways point
 
-The k pathways found in step 1 are not the only possible answer. Rotate them together, keeping them
-perpendicular to each other, and the rotated pathways explain the neurons' agreement equally well.
-(Any other change, such as stretching one pathway or tilting two toward each other, changes the
-agreement they predict.)
-scikit-learn returns one particular orientation: the pathways' loading patterns are perpendicular to
-each other once each neuron is discounted by its quirks, and the pathways come in order of strength.
-This is its **canonical form**.
+The k pathways found in step 1 are not the only possible answer. Turn them together, as a rigid set
+of axes, and the turned pathways explain the neurons' agreement equally well. (Stretching one
+pathway, or tilting two toward each other, changes the agreement they predict.) scikit-learn returns
+one particular orientation: the one where the pathways' loading patterns are perpendicular to each
+other once each neuron is discounted by its quirks, with the pathways in order of strength. This is
+its **canonical form**.
 
 The quirk estimates decide that orientation, because step 1 finds its directions only after
 discounting each neuron by its quirks. Change which neurons look quiet and the pathways can rotate
@@ -203,7 +203,8 @@ inputs. So, for neurons that carry the pathways and quirks of their own:
 In a constructed test, a network had 3 pathways of uneven strength (55%, 35% and 10% of the shared
 variation). Its first hidden layer had 10–12 neurons, each with its own quirks. Recovery was measured
 two ways: the correlation between each true pathway's scores and the recovered ones, and the cosine
-similarity between the true and recovered loadings.
+similarity between the true and recovered loadings. The numbers below come from one-off probe
+scripts that aren't kept in the repo, so treat them as rough.
 
 - **The first hidden layer alone:** all three pathways came back in order. Score correlations were
   0.90–0.98, with the weakest pathway lowest.
