@@ -52,6 +52,35 @@ export interface ActivationConfig {
   scalerScaleRange: [number, number];
 }
 
+/** The network fitted to a dataset's activations and classification (generator/alien/network.ts). */
+export interface NetworkConfig {
+  /** Seeds the network's own RNG, so fitting it never shifts a value drawn before it. */
+  seed: number;
+  /**
+   * Hidden layer sizes. The first is the embedding, which tracks nothing; each later one tracks the
+   * next authored neurons in order, so together they must hold activations.neuronCount units.
+   */
+  hiddenSizes: number[];
+  /** A tracking unit's target is this times its neuron's standardized activation, inside tanh's range. */
+  targetScale: number;
+  /** The loss's weight on the tracking units' squared error. */
+  activationWeight: number;
+  /** The loss's weight on the cross-entropy against classification. */
+  classificationWeight: number;
+  /** Adam's step size. */
+  learningRate: number;
+  /**
+   * Fitting stops at the first check where every conversation's logit for its classification beats
+   * the other's by this much. The margin keeps a last-bit difference in Math.tanh between Node and a
+   * browser from flipping a prediction.
+   */
+  margin: number;
+  /** Epochs between those checks. maxEpochs must be a multiple of it. */
+  checkEvery: number;
+  /** Fitting stops here whatever the margins; network-reproduces-classification then fails. */
+  maxEpochs: number;
+}
+
 export interface Thresholds {
   /** How far an achieved attribute correlation may sit from its target. */
   correlationTolerance: number;
@@ -71,6 +100,8 @@ export interface Thresholds {
   faScoreRecoveryMin: number;
   /** Smallest |cosine| between a recovered loading row and the authored one. */
   faLoadingRecoveryMin: number;
+  /** Smallest r between a fitted network's tracking unit and the authored neuron it tracks. */
+  networkTrackingMin: number;
 }
 
 export interface AlienConfig {
@@ -114,6 +145,11 @@ export interface AlienConfig {
    * the logit and so cannot move the 0.5 decision boundary or any error rate.
    */
   logitScale: number;
+  /**
+   * Fit a network to this dataset (see NetworkConfig). Only a dataset a view draws a network for
+   * sets it.
+   */
+  network?: NetworkConfig;
 
   /** Non-attribute sentences mixed into every note. */
   fillerFragments: string[];

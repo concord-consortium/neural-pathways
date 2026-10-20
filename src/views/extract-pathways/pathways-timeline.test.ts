@@ -1,3 +1,4 @@
+import { fixtureLoadings } from "../../core/network/__fixtures__/alien3-network";
 import { pathwaysRestScene } from "./extract-scene";
 import { landedCounts, particlePlan, PARTICLES_MS } from "./particles";
 import {
@@ -5,11 +6,11 @@ import {
 } from "./pathways-timeline";
 
 const SIZES = [10, 8, 6, 2];
-const at = (t: number) => extractPathwaysSceneAt(SIZES, 800, t);
+const at = (t: number) => extractPathwaysSceneAt(SIZES, 800, fixtureLoadings, t);
 const PARTICLES_AT = 1700;
 const LINES_MS = 520;
 /** When bar copy `neuron` of pathway 0 reaches its box. */
-const arrival = (neuron: number) => pathwayStart(0) + copyLeaves(neuron) + COPY_FLY_MS;
+const arrival = (neuron: number) => pathwayStart(0) + copyLeaves(neuron, 14) + COPY_FLY_MS;
 
 describe("extractPathwaysSceneAt", () => {
   it("takes about 14 seconds, with the pathways a little over 2 seconds apart", () => {
@@ -32,8 +33,8 @@ describe("extractPathwaysSceneAt", () => {
     const grown = flying.bars!.map(bar => bar.grown);
     expect(Math.min(...grown)).toBeGreaterThan(0);
     expect(Math.max(...grown)).toBeLessThan(1);
-    const { need } = particlePlan();
-    const landed = landedCounts(3000);
+    const { need } = particlePlan(fixtureLoadings);
+    const landed = landedCounts(fixtureLoadings, 3000);
     expect(flying.bars!.map((bar, b) => [b, bar.grown])).toEqual(need.map((n, b) => [b, Math.min(1, landed[b] / n)]));
     const built = at(PARTICLES_AT + PARTICLES_MS).pathways!;
     expect(built.particles).toBeUndefined();
@@ -51,12 +52,12 @@ describe("extractPathwaysSceneAt", () => {
   });
 
   it("sends a pathway's bar copies about 27 ms apart, each fading from 82% of its flight time", () => {
-    expect([copyLeaves(0), copyLeaves(13)]).toEqual([200, 200 + Math.round((13 * 380) / 14)]);
+    expect([copyLeaves(0, 14), copyLeaves(13, 14)]).toEqual([200, 200 + Math.round((13 * 380) / 14)]);
     const start = pathwayStart(0);
-    const leaving = at(start + copyLeaves(13) - 1).pathways!.flying!.copies;
+    const leaving = at(start + copyLeaves(13, 14) - 1).pathways!.flying!.copies;
     expect(leaving[0].progress).toBeGreaterThan(0);
     expect(leaving[13].progress).toBe(0);
-    const fades = start + copyLeaves(0) + Math.round(COPY_FLY_MS * 0.82);
+    const fades = start + copyLeaves(0, 14) + Math.round(COPY_FLY_MS * 0.82);
     expect(at(fades).pathways!.flying!.copies[0].opacity).toBe(1);
     expect(at(fades + 50).pathways!.flying!.copies[0].opacity).toBeLessThan(1);
     // See COPY_FADE_AT.
@@ -95,6 +96,6 @@ describe("extractPathwaysSceneAt", () => {
   });
 
   it("ends on the pathways at rest", () => {
-    expect(at(EXTRACT_MS)).toEqual(pathwaysRestScene(SIZES, 800));
+    expect(at(EXTRACT_MS)).toEqual(pathwaysRestScene(SIZES, 800, fixtureLoadings));
   });
 });

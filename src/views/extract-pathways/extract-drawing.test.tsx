@@ -1,11 +1,11 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { toyNetwork } from "../../core/network/toy-network";
+import { fixtureLoadings, fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
 import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import { collectAllPlan, collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
@@ -18,15 +18,16 @@ import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
 const LABELS = { 0: "wait", 1: "approach" };
-const passes = fixture.conversations.map(c => forward(toyNetwork, c.text));
-const scales = networkScales(toyNetwork, passes);
+const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+const scales = networkScales(fixtureNetwork, passes);
 // jsdom has no ResizeObserver, so the drawing lays out at its narrowest.
 const geometry = extractGeometry(SIZES, 0);
 
 function renderDrawing(scene: ExtractScene) {
   return render(
-    <ExtractDrawing network={toyNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
-      headingId="panel-head" deckSize={passes.length} />,
+    <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
+      headingId="panel-head" deckSize={passes.length}
+      loadings={fixtureLoadings} />,
   );
 }
 
@@ -75,8 +76,9 @@ describe("ExtractDrawing", () => {
     render(
       <>
         <h2 id="panel-head">The Network → Activated Pathways</h2>
-        <ExtractDrawing network={toyNetwork} passes={passes} scales={scales} outputLabels={LABELS}
-          scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length} />
+        <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS}
+          scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length}
+          loadings={fixtureLoadings} />
       </>,
     );
     const group = screen.getByRole("group", { name: "The Network → Activated Pathways" });
@@ -226,8 +228,8 @@ describe("ExtractDrawing", () => {
     const close = collectAllPlan(SIZES, 3, 800).closes[20];
     const scene = collectAllSceneAt(SIZES, 3, 800, close.start + close.duration / 2);
     render(
-      <ExtractDrawing network={toyNetwork} passes={deckPasses} scales={scales} outputLabels={LABELS}
-        scene={scene} headingId="panel-head" deckSize={800} />,
+      <ExtractDrawing network={fixtureNetwork} passes={deckPasses} scales={scales} outputLabels={LABELS}
+        scene={scene} headingId="panel-head" deckSize={800} loadings={fixtureLoadings} />,
     );
     const places = scene.deck!.sets.map((_, index) => screen.getByTestId(`deck-place-${index}`))
       .map((place, index) => [index, placeOf(place).x, place.getAttribute("opacity")]);
@@ -247,19 +249,19 @@ describe("ExtractDrawing", () => {
   });
 
   it("draws the pathways beside the slid deck, and describes them, once Extract Pathways is done", () => {
-    renderDrawing(pathwaysRestScene(SIZES, 20));
+    renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings));
     expect(screen.getByRole("img", {
       name: "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 conversations.",
     })).toBeInTheDocument();
     expect(screen.getAllByTestId("pathway-line")).toHaveLength(42);
-    const dx = pathwaysLayout(geometry, 20).liftedDx;
+    const dx = pathwaysLayout(geometry, 20, fixtureLoadings).liftedDx;
     expect(screen.getByTestId("lifted-column")).toHaveAttribute("transform", `translate(${dx},0)`);
   });
 
   it("keeps describing the deck while Extract Pathways runs", () => {
     jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
     try {
-      renderDrawing(extractPathwaysSceneAt(SIZES, 20, 3000));
+      renderDrawing(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, 3000));
       expect(screen.getByRole(
         "img", { name: "The network's 14 hidden neurons lifted out, and all 20 conversations collected." },
       )).toBeInTheDocument();
@@ -270,13 +272,13 @@ describe("ExtractDrawing", () => {
 
   it("slides the lifted column toward its place beside the pathways", () => {
     const columnX = (t: number) => {
-      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, t));
+      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, t));
       const column = screen.getByTestId("lifted-column");
       const x = column.hasAttribute("transform") ? placeOf(column).x : 0;
       unmount();
       return x;
     };
-    const dx = pathwaysLayout(geometry, 20).liftedDx;
+    const dx = pathwaysLayout(geometry, 20, fixtureLoadings).liftedDx;
     expect(columnX(400)).toBe(0);
     // The column moves left, so dx is negative; at 900 ms it is part of the way there.
     const share = columnX(900) / dx;
@@ -287,10 +289,10 @@ describe("ExtractDrawing", () => {
   it("shows the particle canvas only while the particles fly", () => {
     jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
     try {
-      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, 3000));
+      const { unmount } = renderDrawing(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, 3000));
       expect(screen.getByTestId("particles")).toBeInTheDocument();
       unmount();
-      renderDrawing(pathwaysRestScene(SIZES, 20));
+      renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings));
       expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
     } finally {
       jest.restoreAllMocks();

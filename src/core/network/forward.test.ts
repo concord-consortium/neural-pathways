@@ -1,51 +1,45 @@
-import { forward, predictedClass } from "./forward";
-import { toyNetwork } from "./toy-network";
-import fixture from "./__fixtures__/toy-network-conversations.json";
+import { forward, predictedClass, wordCounts } from "./forward";
+import { fixtureNetwork } from "./__fixtures__/alien3-network";
+import fixture from "./__fixtures__/alien3-conversations.json";
 
-interface FixtureConversation {
-  id: string;
-  text: string;
-  classification: number;
-  expected?: { layers: number[][] };
-}
+const conversations = fixture.conversations;
 
-const conversations = fixture.conversations as FixtureConversation[];
+describe("wordCounts", () => {
+  it("counts each vocabulary word, in vocabulary order", () => {
+    expect(wordCounts(["b", "a", "c"], "a b a\na")).toEqual([1, 3, 0]);
+  });
+
+  it("ignores words outside the vocabulary and splits on any whitespace", () => {
+    expect(wordCounts(["a", "b"], "a\tzzz   b\nzzz a")).toEqual([2, 1]);
+  });
+});
 
 describe("forward", () => {
-  it("returns word presence and one array per layer", () => {
-    const pass = forward(toyNetwork, conversations[0].text);
-    expect(pass.input).toHaveLength(30);
+  it("returns word counts and one array per layer", () => {
+    const pass = forward(fixtureNetwork, conversations[0].text);
+    expect(pass.input).toEqual(wordCounts(fixtureNetwork.vocabulary, conversations[0].text));
     expect(pass.layers.map(layer => layer.length)).toEqual([10, 8, 6, 2]);
   });
 
-  it("marks exactly the vocabulary words present", () => {
-    const { input } = forward(toyNetwork, "yandor aloven");
-    expect(input[toyNetwork.vocabulary.indexOf("aloven")]).toBe(1);
-    expect(input[toyNetwork.vocabulary.indexOf("yandor")]).toBe(1);
-    expect(input.reduce((sum, x) => sum + x, 0)).toBe(2);
-  });
-
-  it("counts a repeated word once", () => {
-    expect(forward(toyNetwork, "hakku hakku tovril")).toEqual(forward(toyNetwork, "hakku tovril"));
+  it("feeds a repeated word its count", () => {
+    const { input } = forward(fixtureNetwork, "hakku hakku tovril hakku");
+    expect(input[fixtureNetwork.vocabulary.indexOf("hakku")]).toBe(3);
+    expect(input[fixtureNetwork.vocabulary.indexOf("tovril")]).toBe(1);
+    expect(input.reduce((sum, x) => sum + x, 0)).toBe(4);
   });
 
   it("ignores unknown words and splits on any whitespace", () => {
-    expect(forward(toyNetwork, "hakku\nzzz   tovril")).toEqual(forward(toyNetwork, "hakku tovril"));
+    expect(forward(fixtureNetwork, "hakku\nzzz   tovril")).toEqual(forward(fixtureNetwork, "hakku tovril"));
   });
 
   it.each(conversations)("predicts the model's class for $id", ({ text, classification }) => {
-    expect(predictedClass(forward(toyNetwork, text))).toBe(classification);
+    expect(predictedClass(forward(fixtureNetwork, text))).toBe(classification);
   });
 
-  it("reproduces the prototype's values", () => {
-    const checked = conversations.filter(c => c.expected);
-    expect(checked).toHaveLength(2);
-    for (const { text, expected } of checked) {
-      const pass = forward(toyNetwork, text);
-      expected!.layers.forEach((layer, l) => {
-        layer.forEach((value, u) => expect(pass.layers[l][u]).toBeCloseTo(value, 5));
-      });
-    }
+  it.each(conversations)("wins by the classification margin for $id", ({ text, classification }) => {
+    const { layers } = forward(fixtureNetwork, text);
+    const logits = layers[layers.length - 1];
+    expect(logits[classification] - logits[1 - classification]).toBeGreaterThanOrEqual(0.1);
   });
 });
 

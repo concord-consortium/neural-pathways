@@ -4,29 +4,11 @@ import type { ExtractGeometry } from "./extract-geometry";
 // Where Extract Pathways draws its bars and boxes, after the prototype's PATH_LOAD, loadBars,
 // buildBars, pathLayout and addPathwayBoxes. src/views/README.md says where the prototype is.
 
-/**
- * The prototype's stand-in loadings, [neuron][pathway]: Hidden Layer 1's 8 neurons, then Hidden
- * Layer 2's 6. They stay until the real network replaces them.
- */
-export const LOADINGS: readonly (readonly number[])[] = [
-  [0.525, -0.008, -0.267],
-  [-0.370, 0.293, -0.116],
-  [-0.135, -0.257, 0.343],
-  [0.227, -0.249, 0.302],
-  [-0.437, -0.177, -0.006],
-  [-0.293, 0.176, 0.039],
-  [0.318, 0.152, -0.238],
-  [-0.567, -0.105, -0.135],
-  [-0.564, -0.016, 0.051],
-  [-0.081, -0.102, -0.045],
-  [-0.585, -0.071, 0.274],
-  [-0.132, -0.163, 0.222],
-  [0.520, 0.215, 0.063],
-  [0.373, -0.011, -0.141],
-];
+/** A fit's loadings, [neuron][pathway]: a row for each lifted neuron, PATHWAYS to a row. */
+export type Loadings = readonly (readonly number[])[];
+
+/** The view is drawn for three pathways: its boxes and its timing count on it. */
 export const PATHWAYS = 3;
-/** The largest |loading| in LOADINGS, which draws BAR_MAX long. */
-const LOADING_MAX = 0.585;
 export const BAR_MAX = 44;
 const BAR_MIN = 1.5;
 export const BAR_HEIGHT = 6;
@@ -42,14 +24,20 @@ export const BOX_SIDE = 34;
 /** From a box's right edge to its label. */
 export const LABEL_GAP = 10;
 
-/** How long a loading's bar is: on one scale for the whole matrix, never shorter than BAR_MIN. */
-export function barLength(loading: number): number {
-  return Math.max(BAR_MIN, (Math.abs(loading) / LOADING_MAX) * BAR_MAX);
+/** The largest |loading|, which draws BAR_MAX long. */
+export function loadingMax(loadings: Loadings): number {
+  return Math.max(...loadings.flat().map(Math.abs));
 }
 
-/** Every bar's length, neuron by neuron, three to a neuron. */
-export function barLengths(): number[] {
-  return LOADINGS.flatMap(row => row.map(barLength));
+/** How long a loading's bar is: on one scale for the whole matrix, where `max` draws BAR_MAX, at least BAR_MIN. */
+export function barLength(loading: number, max: number): number {
+  return Math.max(BAR_MIN, (Math.abs(loading) / max) * BAR_MAX);
+}
+
+/** Every bar's length, neuron by neuron, PATHWAYS to a neuron. */
+export function barLengths(loadings: Loadings): number[] {
+  const max = loadingMax(loadings);
+  return loadings.flatMap(row => row.map(loading => barLength(loading, max)));
 }
 
 /** One loading's bar: it grows from `zero`, right when positive and left when negative. */
@@ -77,20 +65,29 @@ export interface PathwaysLayout {
   boxes: PathwayBox[];
 }
 
+/** Throws unless `loadings` has a row for each of `neurons` neurons, PATHWAYS to a row. */
+export function checkLoadingsShape(loadings: Loadings, neurons: number): void {
+  if (loadings.length !== neurons || loadings.some(row => row.length !== PATHWAYS)) {
+    throw new Error(`Expected loadings for ${neurons} neurons on ${PATHWAYS} pathways, got `
+      + `${loadings.length} rows of ${[...new Set(loadings.map(row => row.length))].join(", ")}`);
+  }
+}
+
 /**
  * Where everything Extract Pathways adds goes, once the deck of `size` has slid half off the
- * canvas and the lifted column has followed it to COLUMN_GAP clear of what still shows.
+ * canvas and the lifted column has followed it to COLUMN_GAP clear of what still shows. `loadings` has
+ * a row for each of the lifted column's neurons, PATHWAYS to a row.
  */
-export function pathwaysLayout(geometry: ExtractGeometry, size: number): PathwaysLayout {
+export function pathwaysLayout(geometry: ExtractGeometry, size: number, loadings: Loadings): PathwaysLayout {
   const { lifted, deck } = geometry;
+  checkLoadingsShape(loadings, lifted.ys.length);
   const shownRight = (deck.r * deckWidth(size)) / 2;
   const liftedDx = shownRight + COLUMN_GAP + lifted.r - lifted.x;
   const x = lifted.x + liftedDx;
   const zero = x + lifted.r + TRACK_GAP + BAR_MAX;
-  // LOADINGS has a row for each of the lifted column's 14 neurons, so lifted.ys[neuron] relies on the
-  // two matching. The real network's loadings must keep that.
-  const bars = LOADINGS.flatMap((row, neuron) => row.map((loading, pathway) => ({
-    neuron, pathway, loading, length: barLength(loading), zero, y: lifted.ys[neuron] + (pathway - 1) * BAR_PITCH,
+  const max = loadingMax(loadings);
+  const bars = loadings.flatMap((row, neuron) => row.map((loading, pathway) => ({
+    neuron, pathway, loading, length: barLength(loading, max), zero, y: lifted.ys[neuron] + (pathway - 1) * BAR_PITCH,
   })));
   const rules = lifted.ys.map(y => ({
     x: zero, y1: y - BAR_PITCH - BAR_HEIGHT / 2, y2: y + BAR_PITCH + BAR_HEIGHT / 2,

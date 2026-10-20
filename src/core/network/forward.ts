@@ -2,16 +2,24 @@ import { conversationWords } from "../conversation-text";
 import { Network } from "./network";
 
 export interface ForwardPass {
-  /** 0/1 word presence, in vocabulary order. */
+  /** How many times each vocabulary word appears, in vocabulary order. */
   input: number[];
   /** Each layer's output, in layer order. The last is the logits. */
   layers: number[][];
 }
 
-/** Runs `text` through the network. A word counts once however often it appears. */
+/** How many times each vocabulary word appears in `text`, in vocabulary order. Other words are ignored. */
+export function wordCounts(vocabulary: readonly string[], text: string): number[] {
+  const counts = new Map<string, number>();
+  for (const word of conversationWords(text)) {
+    counts.set(word, (counts.get(word) ?? 0) + 1);
+  }
+  return vocabulary.map(word => counts.get(word) ?? 0);
+}
+
+/** Runs `text` through the network. A word feeds its count: used three times, it feeds 3. */
 export function forward(network: Network, text: string): ForwardPass {
-  const words = new Set(conversationWords(text));
-  const input = network.vocabulary.map(word => (words.has(word) ? 1 : 0));
+  const input = wordCounts(network.vocabulary, text);
   const layers: number[][] = [];
   let previous: number[] = input;
   for (const layer of network.layers) {

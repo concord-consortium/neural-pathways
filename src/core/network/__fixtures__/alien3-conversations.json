@@ -1,18 +1,10 @@
 {
-  "note": "Real alien3 conversations and the model's classification, taken from dist/alien-data-3/index.json: the first six of each class in index order, then eight close calls picked by hand, four of each class, which the model gives a probability of approach between 0.34 and 0.54. Two of them, one per class, carry the prototype forward pass (neural-net-maker index.html, forward()) rounded to 6 places.",
+  "note": "Real alien3 conversations and the model's classification, taken from dist/alien-data-3/index.json: the first six of each class in index order, then eight close calls picked by hand, four of each class, which the model gives a probability of approach between 0.34 and 0.54.",
   "conversations": [
     {
       "id": "361e65b1002a",
       "text": "yandor quissa\nblikka murrash\naloven sooma nimbar\nchullo ormesh\nyandor sooma quissa",
-      "classification": 0,
-      "expected": {
-        "layers": [
-          [0.96301, 0.188132, -0.327031, 0.809025, 0.900357, 0.891851, 0.734946, 0.943806, -0.476773, 0.999999],
-          [-0.999932, 0.999356, 0.711648, -0.999994, -0.994658, 0.546307, -0.456364, 0.987599],
-          [1, -0.397402, 0.95921, 0.933521, 0.27354, -0.989151],
-          [2.230354, 0.047389]
-        ]
-      }
+      "classification": 0
     },
     {
       "id": "7b117e548ba4",
@@ -42,15 +34,7 @@
     {
       "id": "a830f7c2f4c1",
       "text": "drivek oradda\nkarnok arvek\nluppo tisshak\ntisshak drivek\nchullo karnok\nchullo ishara",
-      "classification": 1,
-      "expected": {
-        "layers": [
-          [-0.408242, 0.024095, 0.57241, 0.242002, 0.659484, 0.445843, -0.970874, -0.632697, 0.512416, -0.996713],
-          [-0.530757, -0.843216, 0.957274, 0.998834, 0.10592, 0.990064, -0.697571, -0.724297],
-          [0.118326, 0.085131, 0.835001, 0.999665, 0.461651, -0.986378],
-          [0.916609, 1.277247]
-        ]
-      }
+      "classification": 1
     },
     {
       "id": "93cee0348448",

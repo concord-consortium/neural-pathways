@@ -2,7 +2,7 @@ import { emptyScene, fullScene, Scene } from "../../core/network-diagram/scene";
 import { Marker } from "../../core/steps/step-player";
 import { columnsInSet, setCount, setOffset } from "./deck-layout";
 import { flightDuration } from "./flight";
-import { barLengths, PATHWAYS } from "./pathways-layout";
+import { barLengths, Loadings, PATHWAYS } from "./pathways-layout";
 
 /**
  * How strongly the hidden neurons are spotlit while copies of them fly out of the network:
@@ -140,12 +140,12 @@ export function deckRestScene(columnSizes: readonly number[], size: number): Ext
   return scene;
 }
 
-/** The pathways when Extract Pathways is done. */
-export function finishedPathways(): PathwaysScene {
+/** The pathways when Extract Pathways is done, with `loadings`' bars. */
+export function finishedPathways(loadings: Loadings): PathwaysScene {
   return {
     liftedSlide: 1,
     particles: undefined,
-    bars: barLengths().map(() => ({ grown: 1, muted: 0 })),
+    bars: barLengths(loadings).map(() => ({ grown: 1, muted: 0 })),
     flying: undefined,
     boxes: Array.from({ length: PATHWAYS }, () => ({ opacity: 1, kick: undefined })),
     lines: 1,
@@ -154,9 +154,9 @@ export function finishedPathways(): PathwaysScene {
 }
 
 /** The scene resting at the pathways: the deck slid half off the canvas, and the finished pathways beside it. */
-export function pathwaysRestScene(columnSizes: readonly number[], size: number): ExtractScene {
+export function pathwaysRestScene(columnSizes: readonly number[], size: number, loadings: Loadings): ExtractScene {
   const scene = deckRestScene(columnSizes, size);
   scene.deck!.slide = 1;
-  scene.pathways = finishedPathways();
+  scene.pathways = finishedPathways(loadings);
   return scene;
 }

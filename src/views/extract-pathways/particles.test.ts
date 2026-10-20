@@ -1,8 +1,8 @@
 import { signColor } from "../../core/colors";
 import { forward } from "../../core/network/forward";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
-import { toyNetwork } from "../../core/network/toy-network";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import { fixtureLoadings, fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
 import { centerShift, columnValues, deckMid, deckWidth, setOffset } from "./deck-layout";
 import { extractGeometry } from "./extract-geometry";
 import {
@@ -26,13 +26,20 @@ describe("seededRandom", () => {
 });
 
 describe("particlePlan", () => {
-  const { particles, need } = particlePlan();
+  it("works the plan out once for each set of loadings", () => {
+    expect(particlePlan(fixtureLoadings)).toBe(particlePlan(fixtureLoadings));
+    const halved = fixtureLoadings.map(row => row.map(loading => loading / 2));
+    expect(particlePlan(halved)).not.toBe(particlePlan(fixtureLoadings));
+    expect(particlePlan(halved).need).toEqual(particlePlan(fixtureLoadings).need);
+  });
+
+  const { particles, need } = particlePlan(fixtureLoadings);
 
   it("shares about 1,500 particles among the bars by length, at least 4 each", () => {
     expect(need).toHaveLength(42);
     expect(Math.min(...need)).toBeGreaterThanOrEqual(4);
     expect(Math.abs(particles.length - 1500)).toBeLessThan(42);
-    const lengths = barLengths();
+    const lengths = barLengths(fixtureLoadings);
     expect(need[lengths.indexOf(Math.max(...lengths))]).toBe(Math.max(...need));
   });
 
@@ -43,8 +50,8 @@ describe("particlePlan", () => {
 
 describe("landedCounts", () => {
   it("counts none at the start and every bar's share at the end", () => {
-    expect(landedCounts(0).every(n => n === 0)).toBe(true);
-    expect(landedCounts(PARTICLES_MS)).toEqual(particlePlan().need);
+    expect(landedCounts(fixtureLoadings, 0).every(n => n === 0)).toBe(true);
+    expect(landedCounts(fixtureLoadings, PARTICLES_MS)).toEqual(particlePlan(fixtureLoadings).need);
   });
 });
 
@@ -90,7 +97,7 @@ describe("particleAt", () => {
 });
 
 describe("faceSources", () => {
-  const base = fixture.conversations.map(c => forward(toyNetwork, c.text));
+  const base = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
   const passes = Array.from({ length: 800 }, (_, i) => base[i % base.length]);
   const g = extractGeometry(SIZES, 0);
 
@@ -169,14 +176,14 @@ describe("faceSources", () => {
   });
 
   it("lands each bar's last particle at the bar's full length", () => {
-    const layout = pathwaysLayout(g, 800);
-    const { particles, need } = particlePlan();
+    const layout = pathwaysLayout(g, 800, fixtureLoadings);
+    const { particles, need } = particlePlan(fixtureLoadings);
     const ends = layout.bars.map((bar, b) => {
       const last = particles.filter(particle => particle.bar === b)[need[b] - 1];
       return [b, particleTarget(last, bar, need[b]).x];
     });
     expect(ends).toEqual(layout.bars.map((bar, b) => [
-      b, bar.zero + (bar.loading >= 0 ? barLengths()[b] : -barLengths()[b]),
+      b, bar.zero + (bar.loading >= 0 ? barLengths(fixtureLoadings)[b] : -barLengths(fixtureLoadings)[b]),
     ]));
   });
 });

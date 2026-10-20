@@ -99,6 +99,22 @@ one thing, or one name for two things, settle it and add it here.
 - **pathway box:** the square a pathway is drawn as, built from the bar copies of its 14 loading bars.
 - **line:** a loading's connector, from its bar's zero to its pathway box.
 
+## The fitted network
+
+- **authored activations:** the 14 per-neuron activations the generator builds from pathway scores,
+  loadings and noise (`activations.standardized`, and `activations.raw` on the wire). Built so that
+  factor analysis on them gives back the authored pathways.
+- **fitted network:** the network the generator fits to approximate the authored activations and
+  reproduce `classification` (`fitNetwork`, `metadata.network`, `alien3Network`). It is fitted,
+  not trained: it reproduces these 800 conversations, with nothing held out.
+- **fit:** two kinds, so say which where both could be meant: a **factor-analysis fit**, one entry
+  of `fa_fits`, whose loadings and pathway scores the views show; and the fitted network.
+- **tracking unit:** a hidden unit after the embedding, fitted toward one authored neuron. Hidden
+  Layer 1's unit *u* tracks neuron *u*; Hidden Layer 2's unit *u* tracks neuron 8 + *u*.
+- **noise ceiling:** the most a word-fed unit can correlate with its authored neuron, √(1 − its
+  noise variance).
+- **margin:** how far a conversation's logit for its classification beats the other's.
+
 ## Layout
 
 - **designed size:** the size the views are designed to be used at, 1024 × 562 px as an Interactive

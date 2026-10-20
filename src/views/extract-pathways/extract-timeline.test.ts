@@ -1,3 +1,4 @@
+import { fixtureLoadings } from "../../core/network/__fixtures__/alien3-network";
 import { collectAllDuration, collectAllSceneAt } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { deckRestScene, pathwaysRestScene, restScene } from "./extract-scene";
@@ -6,7 +7,7 @@ import { EXTRACT_MS, extractPathwaysSceneAt } from "./pathways-timeline";
 import { setupDuration, setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
-const timeline = extractTimeline(SIZES, 20);
+const timeline = extractTimeline(SIZES, 20, fixtureLoadings);
 
 describe("extractTimeline", () => {
   it("times the segment to 1 as Setup, and the segment to n + 1 as collecting conversation n", () => {
@@ -40,8 +41,8 @@ describe("extractTimeline", () => {
 
   it("times, rests and draws the segment to the pathways as Extract Pathways", () => {
     expect(timeline.duration({ from: 12, to: 13 })).toBe(EXTRACT_MS);
-    expect(timeline.sceneAt(13)).toEqual(pathwaysRestScene(SIZES, 20));
+    expect(timeline.sceneAt(13)).toEqual(pathwaysRestScene(SIZES, 20, fixtureLoadings));
     expect(timeline.sceneAt(12, { button: "extract", from: 12, to: 13, t: 3000 }))
-      .toEqual(extractPathwaysSceneAt(SIZES, 20, 3000));
+      .toEqual(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, 3000));
   });
 });

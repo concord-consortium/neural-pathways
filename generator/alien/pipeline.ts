@@ -4,6 +4,7 @@ import { validateConfig } from "./config-validation";
 import { AlienConfig } from "./config-types";
 import { Corpus, buildCorpus } from "./conversations";
 import { Dataset, buildDataset } from "./emit";
+import { FittedNetwork, fitNetwork } from "./network";
 import { Outcomes, solveOutcomes } from "./outcomes";
 import { TemplateNoteRenderer, renderNotes } from "./notes";
 import { createRng } from "./rng";
@@ -16,6 +17,8 @@ export interface GeneratorRun {
   notes: string[];
   activations: Activations;
   dataset: Dataset;
+  /** Present when config.network asks for one; also in dataset.index.metadata.network. */
+  network?: FittedNetwork;
 }
 
 /**
@@ -36,5 +39,17 @@ export function generate(config: AlienConfig): GeneratorRun {
   const activations = buildActivations(corpus.scores, config, rng);
   const dataset = buildDataset({ corpus, solvedAttributes, outcomes, notes, activations, config });
 
-  return { config, corpus, solvedAttributes, outcomes, notes, activations, dataset };
+  // Fitted from the finished dataset, with its own RNG, so it changes nothing drawn above.
+  let network: FittedNetwork | undefined;
+  if (config.network) {
+    network = fitNetwork({
+      vocabulary: config.vocabulary.map(entry => entry.word).sort(),
+      texts: dataset.texts,
+      targets: activations.standardized,
+      classification: outcomes.classification,
+    }, config.network);
+    dataset.index.metadata.network = network.network;
+  }
+
+  return { config, corpus, solvedAttributes, outcomes, notes, activations, dataset, network };
 }

@@ -3,21 +3,21 @@ import { render, screen } from "@testing-library/react";
 import { NetworkDrawing } from "./network-drawing";
 import { layoutNetwork } from "./layout";
 import { fullScene, Scene } from "./scene";
-import { toyNetwork } from "../network/toy-network";
+import { fixtureNetwork } from "../network/__fixtures__/alien3-network";
 import { forward } from "../network/forward";
 import { networkScales } from "../network/network-scales";
-import fixture from "../network/__fixtures__/toy-network-conversations.json";
+import fixture from "../network/__fixtures__/alien3-conversations.json";
 
 const SIZES = [10, 8, 6, 2];
 const LABELS = { 0: "wait", 1: "approach" };
-const passes = fixture.conversations.map(c => forward(toyNetwork, c.text));
-const scales = networkScales(toyNetwork, passes);
+const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+const scales = networkScales(fixtureNetwork, passes);
 const layout = layoutNetwork(SIZES, 537, 440);
 
 function renderDrawing(scene: Scene) {
   return render(
     <svg>
-      <NetworkDrawing network={toyNetwork} layout={layout} pass={passes[0]} scales={scales} outputLabels={LABELS}
+      <NetworkDrawing network={fixtureNetwork} layout={layout} pass={passes[0]} scales={scales} outputLabels={LABELS}
         scene={scene} />
     </svg>,
   );
@@ -77,7 +77,7 @@ describe("NetworkDrawing", () => {
     expect(screen.getByTestId("node-1-0")).not.toHaveAttribute("opacity");
     rerender(
       <svg>
-        <NetworkDrawing network={toyNetwork} layout={layout} pass={passes[0]} scales={scales}
+        <NetworkDrawing network={fixtureNetwork} layout={layout} pass={passes[0]} scales={scales}
           outputLabels={LABELS} scene={spotlit(0.25)} />
       </svg>,
     );
