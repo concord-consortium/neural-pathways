@@ -68,7 +68,9 @@ The first guess is that every neuron is equally quirky: every neuron's noise var
 4. **Remove the quirks' share.** In each of those directions, the quirks contribute 1 unit, so a
    pattern's shared strength is its eigenvalue minus 1. A pattern no stronger than the quirks alone
    is worth nothing.
-5. **Undo the rescaling.** Multiply back by each neuron's noise standard deviation. The result is
+5. **Size each pattern by its shared strength.** The shared strength is a variance, so scale each
+   direction by its square root.
+6. **Undo the rescaling.** Multiply back by each neuron's noise standard deviation. The result is
    the loadings: how strongly each neuron responds to each of the k pathways.
 
 ### 2. Re-estimate the quirks, given the pathways
@@ -96,8 +98,10 @@ leftovers.
 
 ### Which way the pathways point
 
-The k pathways found in step 1 are not the only possible answer. Any rotation of them, any other
-set of k directions spanning the same space, explains the neurons' agreement equally well.
+The k pathways found in step 1 are not the only possible answer. Rotate them together, keeping them
+perpendicular to each other, and the rotated pathways explain the neurons' agreement equally well.
+(Any other change, such as stretching one pathway or tilting two toward each other, changes the
+agreement they predict.)
 scikit-learn returns one particular orientation: the pathways' loading patterns are perpendicular to
 each other once each neuron is discounted by its quirks, and the pathways come in order of strength.
 This is its **canonical form**.
@@ -112,7 +116,8 @@ strength are the easiest to rotate together.
 Once the pathways are found, an input's **pathway scores** are estimated from its neuron values. The
 estimate is a weighted combination of the neurons, and each neuron's weight grows with its loading
 and shrinks with its noise variance. Quiet neurons count most. A neuron whose noise variance is near
-zero counts almost without limit.
+zero pins the estimate to what it reads: on the mix of pathways that neuron measures, it outweighs
+every other neuron.
 
 ## Why a dependent neuron distorts the result
 
@@ -145,7 +150,8 @@ the name for a noise variance driven to zero. From then on:
 
 - In step 1 it is divided by almost nothing, so its agreement with other neurons outweighs
   everything else, and it decides which way the pathways point.
-- In scoring, it gets nearly unlimited weight.
+- In scoring, it pins the pathway scores to what it reads, outweighing every other neuron on the
+  pathways it carries.
 
 It doesn't look exactly like any one pathway. It is a blend, built from first-layer values that
 carry their own quirks. So the pathways tilt toward the blend, and pathways of similar strength
@@ -168,14 +174,22 @@ evidence factor analysis trusts.
 
 ### Counting the sources of variation
 
-There is also a counting argument. With k pathways and n neurons, the model has k + n independent
-sources of variation: one per pathway, plus each neuron's own quirks. For the model to fit, the
-neurons have to supply all of them.
+There is also a counting argument, for neurons built the way the factor analysis model describes
+them: each one the pathway scores mixed in at its own strengths, plus quirks of its own that are
+independent of the pathways and of every other neuron's. That is how the generator builds the alien3
+activations, and what a network would have to do to produce authored pathway scores. With k pathways
+and n neurons, that is k + n independent sources of variation: one per pathway, plus each neuron's
+own quirks. The neurons have to carry all of them.
+
+Matching only the agreement between the neurons asks for less. Factor analysis sees nothing but the
+covariance, and any covariance among n neurons can be produced from n independent inputs. Neurons
+built that way can fit the model, but nothing in the inputs is a pathway score for the fitted scores
+to recover.
 
 A neuron computed from other neurons can only recombine the sources those neurons already have. It
 can't add new ones. In a linear layer this is exact. A nonlinear activation such as tanh bends its
 input, which adds a little genuinely new variation, but not much and not independently of the
-inputs. So:
+inputs. So, for neurons that carry the pathways and quirks of their own:
 
 - **A layer computed from an earlier layer can't add independent neurons.** Its "quirks" are
   borrowed from the earlier layer, so they correlate with it.
