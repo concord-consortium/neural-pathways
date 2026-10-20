@@ -105,11 +105,11 @@ export function formatSummary(run: GeneratorRun, checks: CheckResult[]): string 
   lines.push("");
 
   if (run.network) {
-    const { network, stoppedBy, epochs, trainingMs, smallestMargin } = run.network;
+    const { network, stoppedBy, epochs, fitMs, smallestMargin } = run.network;
     const shape = [network.vocabulary.length, ...network.layers.map(layer => layer.biases.length)];
     lines.push("network");
     lines.push(`  ${shape.join(" -> ")}, stopped by the ${stoppedBy} after ${epochs} epochs `
-      + `in ${(trainingMs / 1000).toFixed(1)} s`);
+      + `in ${(fitMs / 1000).toFixed(1)} s`);
     lines.push(`  smallest margin ${smallestMargin.toFixed(3)}`);
     lines.push("");
   }

@@ -3,8 +3,8 @@ import { S3FaFit, S3Index } from "../../types/s3-data";
 import { Network } from "../network";
 import snapshot from "./alien3-network.json";
 
-// The network the generator fitted to alien3, and its fit, as one run emitted them (see the JSON's
-// note). Tests use it so they never read dist/.
+// The network the generator fitted to alien3, and its factor-analysis fit, as one run emitted them
+// (see the JSON's note). Tests use it so they never read dist/.
 
 export const fixtureNetwork = snapshot.network as Network;
 

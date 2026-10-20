@@ -1,7 +1,7 @@
 import { pearson } from "../../src/core/math/statistics";
 import { forward } from "../../src/core/network/forward";
 import { NetworkConfig } from "./config-types";
-import { fitNetwork, NetworkTrainingInput } from "./network";
+import { fitNetwork, NetworkFitInput } from "./network";
 import { createRng } from "./rng";
 
 // Sixty made-up conversations of six words from four, so most repeat a word. Two neurons the words
@@ -18,7 +18,7 @@ const standardize = (column: number[]) => {
   return column.map(v => (v - mean) / sd);
 };
 const columns = [0, 1].map(j => standardize(raw.map(row => row[j])));
-const input: NetworkTrainingInput = {
+const input: NetworkFitInput = {
   vocabulary: VOCABULARY,
   texts,
   targets: texts.map((_, s) => [columns[0][s], columns[1][s]]),

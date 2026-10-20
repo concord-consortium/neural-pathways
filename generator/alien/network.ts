@@ -3,10 +3,10 @@ import { Network } from "../../src/core/network/network";
 import { NetworkConfig } from "./config-types";
 import { createRng } from "./rng";
 
-export interface NetworkTrainingInput {
+export interface NetworkFitInput {
   /** The input words, in input order. */
   vocabulary: string[];
-  /** One per conversation, as emitted, so training reads them as the app's forward pass does. */
+  /** One per conversation, as emitted, so fitting reads them as the app's forward pass does. */
   texts: string[];
   /** [conversation][neuron]: the authored standardized activations the tracking units follow. */
   targets: number[][];
@@ -22,7 +22,7 @@ export interface FittedNetwork {
   stoppedBy: "margin" | "cap";
   /** How far the closest conversation's logit for its class beats the other's, when fitting stopped. */
   smallestMargin: number;
-  trainingMs: number;
+  fitMs: number;
 }
 
 const BETA1 = 0.9;
@@ -41,7 +41,7 @@ const CLASSES = 2;
  * The arithmetic matches forward() in src/core/network/forward.ts operation for operation, so the
  * margins fitting stops on are the ones the app computes.
  */
-export function fitNetwork(input: NetworkTrainingInput, config: NetworkConfig): FittedNetwork {
+export function fitNetwork(input: NetworkFitInput, config: NetworkConfig): FittedNetwork {
   const started = Date.now();
   const { vocabulary, texts, targets, classification } = input;
   const n = texts.length;
@@ -176,5 +176,5 @@ export function fitNetwork(input: NetworkTrainingInput, config: NetworkConfig): 
       activation: l < layerCount - 1 ? "tanh" : "linear",
     })),
   };
-  return { network, epochs, stoppedBy, smallestMargin: smallestMargin(), trainingMs: Date.now() - started };
+  return { network, epochs, stoppedBy, smallestMargin: smallestMargin(), fitMs: Date.now() - started };
 }

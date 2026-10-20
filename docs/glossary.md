@@ -104,9 +104,12 @@ one thing, or one name for two things, settle it and add it here.
 - **authored activations:** the 14 per-neuron activations the generator builds from pathway scores,
   loadings and noise (`activations.standardized`, and `activations.raw` on the wire). What the
   pathways are fitted from.
-- **fitted network:** the network the generator trains to approximate the authored activations and
-  reproduce `classification` (`fitNetwork`, `metadata.network`, `alien3Network`).
-- **tracking unit:** a hidden unit after the embedding, trained toward one authored neuron. Hidden
+- **fitted network:** the network the generator fits to approximate the authored activations and
+  reproduce `classification` (`fitNetwork`, `metadata.network`, `alien3Network`). It is fitted,
+  not trained: it reproduces these 800 conversations, with nothing held out.
+- **fit:** two kinds, so say which where both could be meant: a **factor-analysis fit**, one entry
+  of `fa_fits`, whose loadings and pathway scores the views show; and the fitted network.
+- **tracking unit:** a hidden unit after the embedding, fitted toward one authored neuron. Hidden
   Layer 1's unit *u* tracks neuron *u*; Hidden Layer 2's unit *u* tracks neuron 8 + *u*.
 - **noise ceiling:** the most a word-fed unit can correlate with its authored neuron, √(1 − its
   noise variance).

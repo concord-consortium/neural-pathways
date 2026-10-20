@@ -110,15 +110,18 @@ export function alien3Network(index: S3Index): Network {
   return network;
 }
 
-/** The alien3 fit's loadings, [neuron][pathway]. Throws unless the index has exactly one fit, with loadings. */
+/**
+ * The alien3 factor-analysis fit's loadings, [neuron][pathway]. Throws unless the index has exactly one
+ * factor-analysis fit, with a full matrix of loadings.
+ */
 export function alien3Loadings(index: S3Index): number[][] {
   const regenerate = "Run npm run generate:alien to generate it.";
   const names = Object.keys(index.metadata.fa_fits);
   if (names.length === 0) {
-    throw new Error(`The alien3 data has no fit. ${regenerate}`);
+    throw new Error(`The alien3 data has no factor-analysis fit. ${regenerate}`);
   }
   if (names.length > 1) {
-    throw new Error(`The alien3 data has more than one fit (${names.join(", ")}). ${regenerate}`);
+    throw new Error(`The alien3 data has more than one factor-analysis fit (${names.join(", ")}). ${regenerate}`);
   }
   const loadings = index.metadata.fa_fits[names[0]].loadings;
   if (!loadings) {

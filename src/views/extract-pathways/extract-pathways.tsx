@@ -25,10 +25,10 @@ export const EXTRACT_PATHWAYS_TITLE = "Extract Pathways";
 const PANEL_TITLE = "The Network → Activated Pathways";
 
 /** What the view draws from the index: its network and loadings, or why it can't. */
-type Fitted = { network: Network; loadings: Loadings } | { error: Error };
+type FromIndex = { network: Network; loadings: Loadings } | { error: Error };
 
-/** Read the fitted network and loadings without throwing, so the alert can be rendered for bad data on any mount. */
-function readFitted(index: S3Index): Fitted {
+/** The index's fitted network and loadings, or the error reading them. */
+function readFromIndex(index: S3Index): FromIndex {
   try {
     const network = alien3Network(index);
     const loadings = alien3Loadings(index);
@@ -49,17 +49,18 @@ export const ExtractPathways: React.FC = observer(function ExtractPathways() {
   const indexState = useDatasetIndex(alien3Dataset);
   // Checked when the index is ready, on every mount, so data without a network or loadings shows the
   // alert rather than breaking the view.
-  const fitted = useMemo(
-    () => (indexState.status === "ready" ? readFitted(indexState.index) : undefined), [indexState]);
+  const fromIndex = useMemo(
+    () => (indexState.status === "ready" ? readFromIndex(indexState.index) : undefined), [indexState]);
   return (
     <div className="extract-pathways">
       <h1 className="extract-pathways__title">{EXTRACT_PATHWAYS_TITLE}</h1>
       {indexState.status === "loading" && <p>Loading conversations…</p>}
       {indexState.status === "error" &&
         <p role="alert">The conversations could not be loaded: {indexState.error.message}</p>}
-      {fitted && "error" in fitted && <p role="alert">The conversations could not be shown: {fitted.error.message}</p>}
-      {indexState.status === "ready" && fitted && !("error" in fitted) &&
-        <ExtractPathwaysBody index={indexState.index} network={fitted.network} loadings={fitted.loadings} />}
+      {fromIndex && "error" in fromIndex &&
+        <p role="alert">The conversations could not be shown: {fromIndex.error.message}</p>}
+      {indexState.status === "ready" && fromIndex && !("error" in fromIndex) &&
+        <ExtractPathwaysBody index={indexState.index} network={fromIndex.network} loadings={fromIndex.loadings} />}
     </div>
   );
 });

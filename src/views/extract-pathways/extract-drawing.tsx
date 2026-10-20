@@ -139,7 +139,7 @@ interface ExtractDrawingProps {
   headingId: string;
   /** How many conversations the deck holds. */
   deckSize: number;
-  /** The alien3 fit's loadings, [neuron][pathway], which the loading bars draw. */
+  /** The alien3 factor-analysis fit's loadings, [neuron][pathway], which the loading bars draw. */
   loadings: Loadings;
 }
 

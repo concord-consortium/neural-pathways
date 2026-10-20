@@ -31,7 +31,7 @@ export const TRACE_A_CASE_TITLE = "Trace a Case";
 /** Gives the stylesheet the diagram's smallest layout, which it sizes the network panel from. */
 const LAYOUT_STYLE = { "--diagram-min-height": `${MIN_HEIGHT}px` } as React.CSSProperties;
 
-/** The index's fitted network, or why it has none. Doesn't throw, so the alert can be rendered on any mount. */
+/** The index's fitted network, or the error reading it. */
 function readNetwork(index: S3Index): { network: Network } | { error: Error } {
   try {
     return { network: alien3Network(index) };
@@ -52,7 +52,7 @@ export const TraceACase: React.FC = observer(function TraceACase() {
   const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
   // Checked when the index is ready, on every mount, so data without a network shows the alert rather
   // than breaking the view.
-  const fitted = useMemo(
+  const fromIndex = useMemo(
     () => (indexState.status === "ready" ? readNetwork(indexState.index) : undefined), [indexState]);
 
   return (
@@ -63,10 +63,10 @@ export const TraceACase: React.FC = observer(function TraceACase() {
         <p role="alert">
           The conversations could not be {indexState.failed === "load" ? "loaded" : "shown"}: {indexState.error.message}
         </p>}
-      {fitted && "error" in fitted &&
-        <p role="alert">The conversations could not be shown: {fitted.error.message}</p>}
-      {indexState.status === "ready" && fitted && !("error" in fitted) &&
-        <TraceACaseBody index={indexState.index} network={fitted.network} />}
+      {fromIndex && "error" in fromIndex &&
+        <p role="alert">The conversations could not be shown: {fromIndex.error.message}</p>}
+      {indexState.status === "ready" && fromIndex && !("error" in fromIndex) &&
+        <TraceACaseBody index={indexState.index} network={fromIndex.network} />}
     </div>
   );
 });
