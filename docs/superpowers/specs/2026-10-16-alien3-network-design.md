@@ -51,11 +51,11 @@ Making the network generate the data is a follow-up story, NPW-70 (see [Follow-u
 | Which neuron each hidden unit tracks | Hidden Layer 1's 8 units track authored neurons 0–7; Hidden Layer 2's 6 track 8–13. | The order Extract Pathways' lifted column and the prototype's loadings already use. |
 | Input | Word counts: a word used three times feeds 3. | Pathway scores add up every occurrence of a word. In the probe, with counts, the hidden units reach r 0.91–0.98 against their neurons; with presence, 0.83–0.88. The input layer isn't drawn, so nothing visible changes. |
 | Where the network is fitted | In the generator, on every build. | The network can never drift from the data it approximates: a config or seed change refits it. |
-| Training time | About 2.4 s, on top of today's ~2 s generation. | Early stopping, a classification weight of 0.5 and a seed chosen to settle quickly. An epoch cap bounds the worst case. The larger target scale below costs about a second more than 0.3 would. |
+| Fitting time | About 2.4 s, on top of today's ~2 s generation. | Early stopping, a classification weight of 0.5 and a seed chosen to settle quickly. An epoch cap bounds the worst case. The larger target scale below costs about a second more than 0.3 would. |
 | How exactly the classification must match | All 800 conversations, each by a logit margin of at least 0.1. | Step 4 must give the dataset's prediction. Without a margin, a conversation just on the right side could flip between Node and a browser, whose `Math.tanh` may differ in the last bit. |
-| How closely the activations must match | Every hidden unit correlates with its authored neuron at r ≥ 0.85. | Each neuron's random noise isn't a function of the words, which caps any word-based unit at r 0.92–0.99 (the square root of its communality). 0.85 keeps signs, rankings and bands; the shipped network's units reach 0.87–0.95. |
-| How large the hidden activations are | `targetScale` 0.75: a typical conversation fills a hidden gauge about halfway (median 46% in Hidden Layer 1, 53% in Hidden Layer 2). | The diagram draws hidden values unscaled. At 0.3 the median gauge was about 20% full, and most hidden nodes looked nearly empty. 0.75 costs about a second of training and lowers the weakest unit's r from 0.88 to 0.87. |
-| Where the network goes | `metadata.network` in alien3's `index.json`. | The views already load it, so the network arrives with the data it was fitted to. About 9 KB. |
+| How closely the activations must match | Every hidden unit correlates with its authored neuron at r ≥ 0.85. | Each neuron's random noise isn't a function of the words, which caps any word-fed unit at r 0.92–0.99 (the square root of its communality). 0.85 keeps signs, rankings and bands; the shipped network's units reach 0.87–0.95. |
+| How large the hidden activations are | `targetScale` 0.75: a typical conversation fills a hidden gauge about halfway (median 46% in Hidden Layer 1, 53% in Hidden Layer 2). | The diagram draws hidden values unscaled. At 0.3 the median gauge was about 20% full, and most hidden nodes looked nearly empty. 0.75 costs about a second of fitting and lowers the weakest unit's r from 0.88 to 0.87. |
+| Where the network goes | `metadata.network` in alien3's `index.json`. | The views already load it, so the network arrives with the data it was fitted to. About 10 KB. |
 | Which datasets get a network | alien3 only, by an opt-in config field. | Only alien3 has views that draw a network. |
 | The story's word-hover check | Doesn't apply. | The story asks that hovering a neuron shows it driven by words that fit its pathway. The words → input layer is undrawn and stays a black box; nothing in either view attributes a neuron to words. |
 | PRs | One. | Two PRs would need a temporary `input: "presence" \| "counts"` field so the toy network kept working between them. |
@@ -68,7 +68,7 @@ Making the network generate the data is a follow-up story, NPW-70 (see [Follow-u
 
 ```ts
 export interface NetworkConfig {
-  /** Seeds the network's own RNG, so training never shifts any value drawn before it. */
+  /** Seeds the network's own RNG, so fitting never shifts any value drawn before it. */
   seed: number;
   /** Hidden layer sizes. The first is the undrawn embedding; the rest track the authored neurons in order. */
   hiddenSizes: number[];
@@ -77,11 +77,11 @@ export interface NetworkConfig {
   activationWeight: number;
   classificationWeight: number;
   learningRate: number;
-  /** Training stops at the first check where every classification clears this logit margin. */
+  /** Fitting stops at the first check where every classification clears this logit margin. */
   margin: number;
-  /** How many epochs between those checks. */
+  /** Epochs between those checks. maxEpochs must be a multiple of it. */
   checkEvery: number;
-  /** Training stops here whatever the margin; the check then fails. */
+  /** Fitting stops here whatever the margins; network-reproduces-classification then fails. */
   maxEpochs: number;
 }
 
@@ -95,13 +95,16 @@ quickly.
 
 `THRESHOLDS` gains `networkTrackingMin: 0.85`.
 
-`validateConfig` adds: the tracking layers' sizes (`hiddenSizes` after the first) add up to
-`activations.neuronCount`; every size, weight, rate and count is positive; `margin` is not negative.
+`validateConfig` adds: `hiddenSizes` holds an embedding and at least one tracking layer, each a
+positive whole number, and the tracking layers' sizes add up to `activations.neuronCount`;
+`targetScale` lies strictly between 0 and 1; every weight and the learning rate are positive;
+`margin` is not negative; `checkEvery` and `maxEpochs` are positive whole numbers, and `maxEpochs` is
+a multiple of `checkEvery`, so the last epoch is a check; `networkTrackingMin` lies in (0, 1].
 
 ### The stage: `generator/alien/network.ts`
 
 ```ts
-export interface NetworkTrainingInput {
+export interface NetworkFitInput {
   vocabulary: string[];
   texts: string[];
   targets: number[][];
@@ -110,23 +113,23 @@ export interface NetworkTrainingInput {
 
 export interface FittedNetwork {
   network: Network;
-  /** The epoch training stopped at, and whether the margin or the cap stopped it. */
+  /** The epoch fitting stopped at, and whether the margin or the cap stopped it. */
   epochs: number;
   stoppedBy: "margin" | "cap";
   smallestMargin: number;
-  trainingMs: number;
+  fitMs: number;
 }
 
-export function fitNetwork(input: NetworkTrainingInput, config: NetworkConfig): FittedNetwork;
+export function fitNetwork(input: NetworkFitInput, config: NetworkConfig): FittedNetwork;
 ```
 
-It takes only what it trains on, so its tests can run it on a few made-up conversations.
+It takes only what it fits to, so its tests can run it on a few made-up conversations.
 
 - **Placement:** last in `generate`, after `buildDataset`, and only when `config.network` is set.
   `GeneratorRun` gains `network?: FittedNetwork`. It draws only from `createRng(config.network.seed)`,
   so the dataset is identical, value for value, to what the generator emits today.
 - **Inputs:** the vocabulary sorted alphabetically, and each conversation's emitted text encoded by
-  the same function the forward pass uses (see [The forward pass](#the-forward-pass)), so training
+  the same function the forward pass uses (see [The forward pass](#the-forward-pass)), so fitting
   and the app see the same numbers.
 - **Targets:** `targetScale` times `activations.standardized`. Hidden layer *k* after the embedding
   tracks the next `hiddenSizes[k]` neurons.
@@ -140,7 +143,7 @@ It takes only what it trains on, so its tests can run it on a few made-up conver
 - **Output:** a `Network` in the app's shape, which `forward()` runs on word counts (see
   [The forward pass](#the-forward-pass)).
 
-The probe this is based on is described in [Training probe](#training-probe).
+The probe this is based on is described in [Fitting probe](#fitting-probe).
 
 ### Emitting
 
@@ -157,7 +160,7 @@ on `JSON.parse(JSON.stringify(network))`, the weights exactly as emitted, throug
 
 - **`network-reproduces-classification`:** every conversation's logit for its `classification`
   beats the other by at least `margin`. Detail: the smallest margin and, on failure, how many
-  conversations fall short and the first few ids, plus whether training stopped at the cap, with a
+  conversations fall short and the first few ids, plus whether fitting stopped at the cap, with a
   hint to try another `network.seed`.
 - **`network-tracks-activations`:** each tracking unit's activations across the corpus correlate
   with its authored neuron's standardized activations at r ≥ `networkTrackingMin`. Detail: the
@@ -170,8 +173,9 @@ generated.
 
 ### Summary
 
-`printSummary` adds a `network` block after `activations`: the shape, the epochs and what stopped
-training, and the training time.
+`formatSummary` adds a `network` block after `activations`: the shape, the epochs and what stopped
+fitting, the fitting time, and the smallest margin. The check-name column widens from 26 to 34
+characters to fit the new checks' names.
 
 ## The app
 
@@ -189,7 +193,7 @@ The type doesn't change. The behavior of `forward()` does.
 ### The forward pass
 
 `forward(network, text)` feeds each vocabulary word's count instead of 0 or 1. The counting is its
-own export, which the generator's training also uses:
+own export, which the generator's fitting also uses:
 
 ```ts
 /** How many times each vocabulary word appears in `text`, in vocabulary order. */
@@ -205,14 +209,17 @@ export function wordCounts(vocabulary: readonly string[], text: string): number[
 ```ts
 /** The network the generator fitted to this index. Throws if the index has none. */
 export function alien3Network(index: S3Index): Network;
-/** The alien3 fit's loadings as [neuron][pathway]. Throws if the fit has none. */
+/**
+ * The alien3 factor-analysis fit's loadings as [neuron][pathway]. Throws unless the index has
+ * exactly one factor-analysis fit, with a full matrix of loadings.
+ */
 export function alien3Loadings(index: S3Index): number[][];
 ```
 
-Each throws an error naming the missing field and saying to run `npm run generate:alien`. Both views
-call them in `useDatasetIndex`'s `onLoaded`, so data without a network shows the views' existing
-"could not be loaded" alert rather than breaking the page. Trace a Case already passes an
-`onLoaded`; it calls them there too.
+Each throws an error naming what is missing and saying to run `npm run generate:alien`. Both views
+read them when the index is ready, on every mount, so data without a network shows the view's alert
+("The conversations could not be shown: …") rather than breaking the page. A check in
+`useDatasetIndex`'s `onLoaded` would miss a second mount, which starts on the cached index.
 
 ### Trace a Case
 
@@ -224,15 +231,19 @@ call them in `useDatasetIndex`'s `onLoaded`, so data without a network shows the
 
 - The network comes from `alien3Network(index)`, and `COLUMN_SIZES` moves into the body, as in
   Trace a Case.
-- `LOADINGS`, `LOADING_MAX` and `PATHWAYS` stop being constants in `pathways-layout.ts`:
-  - `barLength(loading, loadingMax)`, `barLengths(loadings)` and
-    `pathwaysLayout(geometry, size, loadings)` take them;
-  - so do their callers in `pathways-timeline.ts`, `particles.ts` and `extract-scene.ts`;
-  - the largest |loading| is computed from the loadings;
-  - `PATHWAYS` stays 3, since the view's timing and boxes are drawn for three, and the loadings are
-    checked against it.
-- `pathwaysLayout` throws if the loadings don't have a row per lifted neuron, each `PATHWAYS` long.
-  Today's comment says the rows and the neurons must match; the check enforces it.
+- `LOADINGS` and `LOADING_MAX` stop being constants in `pathways-layout.ts`:
+  - `barLength(loading, max)`, `barLengths(loadings)` and `pathwaysLayout(geometry, size, loadings)`
+    take the loadings or their largest |loading|, which `loadingMax(loadings)` computes;
+  - so do their callers: `particlePlan(loadings)` and `landedCounts(loadings, t)` in `particles.ts`,
+    `copyLeaves(neuron, neurons)` and `extractPathwaysSceneAt` in `pathways-timeline.ts`,
+    `finishedPathways` and `pathwaysRestScene` in `extract-scene.ts`, `extractTimeline`, and
+    `ExtractDrawing`'s and `ParticleCanvas`' props;
+  - `PATHWAYS` stays a constant, 3, since the view's timing and boxes are drawn for three, and the
+    loadings are checked against it.
+- `checkLoadingsShape(loadings, neurons)` throws if the loadings don't have a row per lifted neuron,
+  each `PATHWAYS` long. `pathwaysLayout` calls it, and so does the view when it reads the index, so
+  loadings of the wrong shape show the alert. Today's comment says the rows and the neurons must
+  match; the check enforces it.
 - The drawing's description is unchanged: it counts the lifted neurons from the network, and says
   three pathways, which `PATHWAYS` and the loadings check keep true.
 
@@ -244,7 +255,9 @@ change, because the weights do.
 
 ### Removed
 
-`toy-network.ts` and `toy-network.test.ts`, and the stand-in `LOADINGS`.
+`toy-network.ts` and `toy-network.test.ts`, the stand-in `LOADINGS`, and the prototype's expected
+passes in the conversations fixture with the test that checked the toy network against them. The
+fixture is renamed `alien3-conversations.json`.
 
 ## Tests
 
@@ -252,17 +265,18 @@ change, because the weights do.
 
 - `fitNetwork` on a small fixture (a few words, a handful of conversations): it reaches its
   targets and its classifications, and the same seed gives identical weights.
-- Early stopping: it doesn't stop while any conversation is under the margin, and reports `"cap"`
-  when `maxEpochs` runs out first.
-- Each new check can fail: fed a network with one classification flipped, one under the margin,
-  and one unit that doesn't track its neuron, each reports the failure it should. Fed a passing
-  network, each passes.
+- Early stopping: it stops at the first check where every conversation clears the margin (fitting
+  one check fewer hits the cap), and reports `"cap"` when `maxEpochs` runs out first.
+- Each new check can fail, on the shipped run changed around its network: with one
+  classification flipped, with the margin raised past every conversation's, and with the
+  activations reversed across conversations, each reports the failure it should. Each fails 0.001
+  above the value it measures and passes 0.001 below. A run that hit the cap gets the seed hint.
 - The checks read the network from the dataset's `metadata.network`, so a dataset with no network
   fails both.
 - `generate` with and without `network` set produces identical datasets, apart from
   `metadata.network`, which only the first has.
-- `validateConfig` refuses tracking sizes that don't add up to `neuronCount`, and the other new
-  rules.
+- `validateConfig` refuses tracking sizes that don't add up to `neuronCount`, and each other new
+  rule, by its exact message.
 - The four-pathway config still runs nine checks; alien3 runs eleven.
 
 ### Jest: the app
@@ -276,7 +290,8 @@ change, because the weights do.
 - The tests switch from `toyNetwork` to a fixture network: a snapshot of the network and fit one
   generation emitted, in `src/core/network/__fixtures__/`. The 20 fixture conversations are alien3
   conversations, so the snapshot classifies every one by the margin. The toy weights can't be the
-  fixture: on word counts they misclassify 7 of the 20.
+  fixture: on word counts they misclassify 7 of the 20. A generator test compares the snapshot with
+  what the generator emits, so it can't fall behind.
 - Both views show the load-error alert for an index without a network.
 
 ### The build
@@ -307,13 +322,16 @@ that bar's direction, on conversations that score high on it.
 Under a new heading, "The fitted network":
 
 - **authored activations:** the 14 per-neuron activations the generator builds from pathway scores,
-  loadings and noise (`activations.standardized`, and `activations.raw` on the wire). What the
-  pathways are fitted from.
-- **fitted network:** the network the generator trains to approximate the authored activations and
-  reproduce `classification` (`fitNetwork`, `metadata.network`, `alien3Network`).
-- **tracking unit:** a hidden unit after the embedding, trained toward one authored neuron. Hidden
-  Layer 1's unit *u* tracks neuron *u*; Hidden Layer 2's tracks neuron 8 + *u*.
-- **noise ceiling:** the most a word-based unit can correlate with its authored neuron, √(1 − its
+  loadings and noise (`activations.standardized`, and `activations.raw` on the wire). Built so that
+  factor analysis on them gives back the authored pathways.
+- **fitted network:** the network the generator fits to approximate the authored activations and
+  reproduce `classification` (`fitNetwork`, `metadata.network`, `alien3Network`). It is fitted,
+  not trained: it reproduces these 800 conversations, with nothing held out.
+- **fit:** two kinds, so say which where both could be meant: a **factor-analysis fit**, one entry
+  of `fa_fits`, whose loadings and pathway scores the views show; and the fitted network.
+- **tracking unit:** a hidden unit after the embedding, fitted toward one authored neuron. Hidden
+  Layer 1's unit *u* tracks neuron *u*; Hidden Layer 2's unit *u* tracks neuron 8 + *u*.
+- **noise ceiling:** the most a word-fed unit can correlate with its authored neuron, √(1 − its
   noise variance).
 - **margin:** how far a conversation's logit for its classification beats the other's.
 
@@ -327,9 +345,9 @@ Nothing in this story is view state: no saved fields change, and nothing new sur
 | The loadings | `buildActivations`, at build (unchanged) | `alien3Loadings`, then Extract Pathways | Same |
 | The forward passes and scales | `indexPasses`, on first view mount | Both views | Cached per network object and index, for the page's life |
 
-## Training probe
+## Fitting probe
 
-A throwaway TypeScript probe trained words → 10 → 8 → 6 → 2 on alien3 with full-batch Adam:
+A throwaway TypeScript probe fitted words → 10 → 8 → 6 → 2 on alien3 with full-batch Adam:
 
 | Input | Stopping | Classification weight | Classifications | Tracking r | Time |
 |---|---|---|---|---|---|
@@ -341,7 +359,7 @@ A throwaway TypeScript probe trained words → 10 → 8 → 6 → 2 on alien3 wi
 All rows use an activation weight of 5. Noise ceilings: 0.92–0.99. The first two rows are one seed
 each; the last two give the range over three seeds. Time depends on the seed, so the chosen seed
 sets the build's cost. The tracking units settle within about 500 epochs; the rest
-of training goes to the few conversations whose classification depends on `resource_stressed`,
+of the fitting goes to the few conversations whose classification depends on `resource_stressed`,
 which the words don't carry and the network has to memorize.
 
 ## PR
@@ -349,7 +367,7 @@ which the words don't carry and the network has to memorize.
 One PR, with commits in this order: the forward pass on word counts; the network config;
 `fitNetwork`; emitting and the summary; the checks; the fixture snapshot and the accessors; both
 views on the fitted network, removing the toy network; Extract Pathways' loadings; docs. The
-forward pass switches first, so the checks and the training run the same arithmetic as the app.
+forward pass switches first, so the checks and the fitting run the same arithmetic as the app.
 
 ## Follow-up
 
