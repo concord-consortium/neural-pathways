@@ -33,9 +33,11 @@ npm run generate:alien
 ```
 
 On this machine this finishes in about 5 seconds, about half of it fitting
-alien3's network. Two consecutive runs produce byte-identical
-`index.json` files for both datasets, because the seed and every other input are
-fixed in `generator/alien-config.ts`.
+alien3's network. Two consecutive runs produce byte-identical `index.json` files
+for both datasets, because the seed and every other input are fixed in
+`generator/alien-config.ts`. The fitted network's weights are the same on every
+run on one machine, but differ between kinds of machine, such as an arm64 Mac
+and CI's x86-64 Linux; both networks pass the checks.
 
 It writes:
 

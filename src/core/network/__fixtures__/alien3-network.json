@@ -1,5 +1,5 @@
 {
-  "note": "The network the alien generator fitted to alien3, and its factor-analysis fit, as one run of npm run generate:alien wrote them to dist/alien-data-3/index.json. It classifies every conversation in alien3-conversations.json by the margin. generator/alien/pipeline.test.ts fails when the generator's output stops matching it. To regenerate it, copy metadata.network and the fa_fits entry from a fresh dist/alien-data-3/index.json into network, fitName and fit.",
+  "note": "The network the alien generator fitted to alien3, and its factor-analysis fit, as one run of npm run generate:alien wrote them to dist/alien-data-3/index.json. It classifies every conversation in alien3-conversations.json by the margin. generator/alien/pipeline.test.ts fails when the generator's fit or the network's shape stops matching it. The weights differ from machine to machine, so a fresh run's won't match these exactly. To regenerate it, copy metadata.network and the fa_fits entry from a fresh dist/alien-data-3/index.json into network, fitName and fit.",
   "fitName": "alien-fa-3",
   "fit": {
     "source_split": "alien3",

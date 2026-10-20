@@ -290,8 +290,9 @@ fixture is renamed `alien3-conversations.json`.
 - The tests switch from `toyNetwork` to a fixture network: a snapshot of the network and fit one
   generation emitted, in `src/core/network/__fixtures__/`. The 20 fixture conversations are alien3
   conversations, so the snapshot classifies every one by the margin. The toy weights can't be the
-  fixture: on word counts they misclassify 7 of the 20. A generator test compares the snapshot with
-  what the generator emits, so it can't fall behind.
+  fixture: on word counts they misclassify 7 of the 20. A generator test compares the snapshot's
+  factor-analysis fit and network shape with what the generator emits. Its weights can't be
+  compared: an arm64 Mac and CI's x86-64 Linux fit different ones.
 - Both views show the load-error alert for an index without a network.
 
 ### The build
