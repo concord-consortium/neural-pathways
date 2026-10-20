@@ -102,8 +102,8 @@ one thing, or one name for two things, settle it and add it here.
 ## The fitted network
 
 - **authored activations:** the 14 per-neuron activations the generator builds from pathway scores,
-  loadings and noise (`activations.standardized`, and `activations.raw` on the wire). What the
-  pathways are fitted from.
+  loadings and noise (`activations.standardized`, and `activations.raw` on the wire). Built so that
+  factor analysis on them gives back the authored pathways.
 - **fitted network:** the network the generator fits to approximate the authored activations and
   reproduce `classification` (`fitNetwork`, `metadata.network`, `alien3Network`). It is fitted,
   not trained: it reproduces these 800 conversations, with nothing held out.
