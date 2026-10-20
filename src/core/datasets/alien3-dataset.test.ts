@@ -156,4 +156,13 @@ describe("alien3Loadings", () => {
     expect(() => alien3Loadings({ metadata, items: [] }))
       .toThrow("The alien3 data has empty loadings. Run npm run generate:alien to generate it.");
   });
+
+  it("says so when the fit's pathways have loadings for different numbers of neurons", () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const loadings = fit.loadings!.map((row, pathway) => (pathway === 1 ? row.slice(1) : row));
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: { ...fit, loadings } } };
+    expect(() => alien3Loadings({ metadata, items: [] })).toThrow(
+      "The alien3 data's pathways have loadings for different numbers of neurons (14, 13, 14). "
+      + "Run npm run generate:alien to generate it.");
+  });
 });

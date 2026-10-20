@@ -127,5 +127,10 @@ export function alien3Loadings(index: S3Index): number[][] {
   if (loadings.length === 0) {
     throw new Error(`The alien3 data has empty loadings. ${regenerate}`);
   }
+  // The transpose below reads every pathway's row as long as the first.
+  if (loadings.some(row => row.length !== loadings[0].length)) {
+    throw new Error("The alien3 data's pathways have loadings for different numbers of neurons "
+      + `(${loadings.map(row => row.length).join(", ")}). ${regenerate}`);
+  }
   return loadings[0].map((_, neuron) => loadings.map(row => row[neuron]));
 }
