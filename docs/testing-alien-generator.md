@@ -32,8 +32,8 @@ testing.
 npm run generate:alien
 ```
 
-On this machine this finishes in about a second — `ts-node`'s startup dominates,
-the generation itself is fast. Two consecutive runs produce byte-identical
+On this machine this finishes in about 5 seconds, about half of it fitting
+alien3's network. Two consecutive runs produce byte-identical
 `index.json` files for both datasets, because the seed and every other input are
 fixed in `generator/alien-config.ts`.
 
@@ -47,7 +47,7 @@ It writes:
 - `dist/alien-data/activations/*.json` — raw 14-neuron activation buckets, one
   file per two-hex-character prefix of the conversation id.
 - `dist/alien-data-3/index.json` — the three-pathway dataset's review index,
-  same shape as above.
+  same shape as above, plus the fitted network in `metadata.network`.
 - `dist/alien-data-3/shap/alien-fa-3/*.json` — its SHAP word-attribution
   buckets, same layout as above.
 - `dist/alien-data-3/activations/*.json` — raw 14-neuron activation buckets, one
@@ -121,15 +121,15 @@ activations
   refit explained variance by pathway count   1: 0.480  2: 0.655  3: 0.806  4: 0.912  5: 0.914
 
 self-checks
-  PASS  shap-additivity           largest deviation 1.78e-15 (limit 1.00e-9)
-  PASS  note-evidence             all 800 notes attest all 9 attributes exactly once
-  PASS  achieved-correlations     largest gap 0.0038 (tolerance 0.02)
-  PASS  word-coverage             rarest word appears in 291 conversations (minimum 100)
-  PASS  truth-is-unbiased         corr(target, resource_stressed) = 0.0120 (limit 0.08). ...
-  PASS  bias-is-detectable        corr(model_correct, resource_stressed) = -0.2846 (minimum magnitude 0.2). ...
-  PASS  decoys-are-decoys         largest decoy correlation 0.0597 (limit 0.15)
-  PASS  pathways-are-orthogonal   largest off-diagonal |r| 0.0212 (limit 0.12)
-  PASS  fa-recovers-pathways      P0->F0 r 0.994 cos 1.000, P1->F1 r 0.977 cos 0.993, P2->F2 r 0.971 cos 0.993, P3->F3 r 0.959 cos 0.998 (minimums r 0.94, cos 0.97)
+  PASS  shap-additivity                   largest deviation 1.78e-15 (limit 1.00e-9)
+  PASS  note-evidence                     all 800 notes attest all 9 attributes exactly once
+  PASS  achieved-correlations             largest gap 0.0038 (tolerance 0.02)
+  PASS  word-coverage                     rarest word appears in 291 conversations (minimum 100)
+  PASS  truth-is-unbiased                 corr(target, resource_stressed) = 0.0120 (limit 0.08). ...
+  PASS  bias-is-detectable                corr(model_correct, resource_stressed) = -0.2846 (minimum magnitude 0.2). ...
+  PASS  decoys-are-decoys                 largest decoy correlation 0.0597 (limit 0.15)
+  PASS  pathways-are-orthogonal           largest off-diagonal |r| 0.0212 (limit 0.12)
+  PASS  fa-recovers-pathways              P0->F0 r 0.994 cos 1.000, P1->F1 r 0.977 cos 0.993, P2->F2 r 0.971 cos 0.993, P3->F3 r 0.959 cos 0.998 (minimums r 0.94, cos 0.97)
 
 wrote 800 conversations to /Users/.../dist/alien-data
 ```
@@ -157,9 +157,9 @@ Block by block:
 - **Activations block** — the 14-neuron activation model's summary. Covered in
   detail in section 4.
 - **Network block** (alien3 only) — the fitted network's shape, how many epochs fitting took and
-  what stopped it, the time, and the smallest margin. Healthy: `stopped by the margin`, in a second
-  or two. `stopped by the cap` means fitting ran out of epochs; the network checks then fail and say
-  to try another `network.seed`.
+  what stopped it, the time, and the smallest margin. Healthy: `stopped by the margin`, in two or
+  three seconds. `stopped by the cap` means fitting ran out of epochs;
+  `network-reproduces-classification` then fails and says to try another `network.seed`.
 - **Self-checks** — nine `PASS`/`FAIL` lines for the four-pathway dataset and eleven for alien3,
   each with the measured value it was judged on. Healthy: all of them read `PASS`. Any `FAIL` also
   prints exit code 1 from `npm run generate:alien`. Section 5 covers each check.
@@ -408,8 +408,8 @@ a different starting point usually settles within the cap.
 
 ### network-tracks-activations (alien3 only)
 
-Correlates each tracking unit with the authored neuron it follows. A failure means a unit no
-longer looks like its neuron, so its edges and gauges could contradict the loading bars. Try
+Correlates each tracking unit with the authored neuron it follows. A failure means a unit doesn't
+follow its neuron closely enough, so its edges and gauges could contradict the loading bars. Try
 another `network.seed`, or a larger `activationWeight`.
 
 ## 6. Changing a parameter and confirming it took
@@ -474,15 +474,15 @@ pathway x pathway correlation
   P3  -0.054  0.072   -0.015  1.000
 
 self-checks
-  PASS  shap-additivity           largest deviation 2.66e-15 (limit 1.00e-9)
-  PASS  note-evidence             all 800 notes attest all 9 attributes exactly once
-  PASS  achieved-correlations     largest gap 0.0016 (tolerance 0.02)
-  PASS  word-coverage             rarest word appears in 302 conversations (minimum 100)
-  PASS  truth-is-unbiased         corr(target, resource_stressed) = 0.0066 (limit 0.08). ...
-  PASS  bias-is-detectable        corr(model_correct, resource_stressed) = -0.2846 (minimum magnitude 0.2). ...
-  PASS  decoys-are-decoys         largest decoy correlation 0.0783 (limit 0.15)
-  PASS  pathways-are-orthogonal   largest off-diagonal |r| 0.0722 (limit 0.12)
-  FAIL  fa-recovers-pathways      P1 came back as factor 2, not in the authored order; P1 scores r 0.807 < 0.94; P1 loadings cos 0.917 < 0.97; P2 came back as factor 3, not in the authored order; P2 scores r 0.894 < 0.94; P2 loadings cos 0.956 < 0.97; P3 came back as factor 1, not in the authored order; P3 scores r 0.862 < 0.94; P3 loadings cos 0.736 < 0.97. Recovered: P0->F0 r 0.994 cos 0.999, P1->F2 r 0.807 cos 0.917, P2->F3 r 0.894 cos 0.956, P3->F1 r 0.862 cos 0.736
+  PASS  shap-additivity                   largest deviation 2.66e-15 (limit 1.00e-9)
+  PASS  note-evidence                     all 800 notes attest all 9 attributes exactly once
+  PASS  achieved-correlations             largest gap 0.0016 (tolerance 0.02)
+  PASS  word-coverage                     rarest word appears in 302 conversations (minimum 100)
+  PASS  truth-is-unbiased                 corr(target, resource_stressed) = 0.0066 (limit 0.08). ...
+  PASS  bias-is-detectable                corr(model_correct, resource_stressed) = -0.2846 (minimum magnitude 0.2). ...
+  PASS  decoys-are-decoys                 largest decoy correlation 0.0783 (limit 0.15)
+  PASS  pathways-are-orthogonal           largest off-diagonal |r| 0.0722 (limit 0.12)
+  FAIL  fa-recovers-pathways              P1 came back as factor 2, not in the authored order; P1 scores r 0.807 < 0.94; P1 loadings cos 0.917 < 0.97; P2 came back as factor 3, not in the authored order; P2 scores r 0.894 < 0.94; P2 loadings cos 0.956 < 0.97; P3 came back as factor 1, not in the authored order; P3 scores r 0.862 < 0.94; P3 loadings cos 0.736 < 0.97. Recovered: P0->F0 r 0.994 cos 0.999, P1->F2 r 0.807 cos 0.917, P2->F3 r 0.894 cos 0.956, P3->F1 r 0.862 cos 0.736
 ```
 
 Every number moved — the variance split is off by a point or two instead of
@@ -565,8 +565,8 @@ Delete the line you added and confirm `git diff generator/alien-config.ts` is
 empty.
 
 **After both exercises**, run `npm run generate:alien` once more and confirm it
-prints all twenty `PASS` lines — nine for the four-pathway dataset and eleven for alien3, across both summaries —
-and exits 0 — the config is back to what ships.
+prints twenty `PASS` lines, nine for the four-pathway dataset and eleven for alien3,
+and exits 0. The config is back to what ships.
 
 ## 9. Inspecting the output files
 
