@@ -188,6 +188,15 @@ describe("runChecks on a dataset with a network", () => {
     expect(result.detail).toMatch(/^800 conversations under the 1000 margin/);
   });
 
+  it("fails just above the smallest margin and passes just below it", () => {
+    const [, smallest] = find(checks3, "network-reproduces-classification").detail.match(/smallest margin (0\.\d{3})/)!;
+    const at = (margin: number) => find(runChecks({
+      ...run3, config: { ...run3.config, network: { ...run3.config.network!, margin } },
+    }), "network-reproduces-classification");
+    expect(at(Number(smallest) + 0.001).passed).toBe(false);
+    expect(at(Number(smallest) - 0.001).passed).toBe(true);
+  });
+
   it("says to try another seed when fitting ran out of epochs", () => {
     const rigged = {
       ...run3,
@@ -206,6 +215,17 @@ describe("runChecks on a dataset with a network", () => {
     const result = find(runChecks(rigged), "network-tracks-activations");
     expect(result.passed).toBe(false);
     expect(result.detail).toMatch(/neuron 0 r -?0\.\d{3}/);
+  });
+
+  it("fails just above the weakest unit's r, naming only that unit, and passes just below it", () => {
+    const [, neuron, r] = find(checks3, "network-tracks-activations").detail.match(/neuron (\d+) at r (0\.\d{3})/)!;
+    const at = (networkTrackingMin: number) => find(runChecks({
+      ...run3, config: { ...run3.config, thresholds: { ...run3.config.thresholds, networkTrackingMin } },
+    }), "network-tracks-activations");
+    const above = at(Number(r) + 0.001);
+    expect(above.passed).toBe(false);
+    expect(above.detail).toBe(`neuron ${neuron} r ${r} (minimum ${Number(r) + 0.001})`);
+    expect(at(Number(r) - 0.001).passed).toBe(true);
   });
 
   it("fails both when the dataset carries no network", () => {
