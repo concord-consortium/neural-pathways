@@ -90,7 +90,7 @@ describe("ExtractPathways", () => {
     mockedFetchIndex.mockResolvedValue({ ...index, metadata });
     showView();
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      `The conversations could not be loaded: ` +
+      `The conversations could not be shown: ` +
       "The alien3 data has no network. Run npm run generate:alien to generate it.");
   });
 
@@ -100,14 +100,14 @@ describe("ExtractPathways", () => {
     mockedFetchIndex.mockResolvedValue({ ...index, metadata });
     showView();
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The conversations could not be loaded: The alien3 data has no loadings. "
+      "The conversations could not be shown: The alien3 data has no loadings. "
       + "Run npm run generate:alien to generate it.");
   });
 
   it("says to generate the data again when the view is opened a second time on the same index", async () => {
     const { network: _network, ...metadata } = fixtureMetadata;
     mockedFetchIndex.mockResolvedValue({ ...index, metadata });
-    const alert = "The conversations could not be loaded: " +
+    const alert = "The conversations could not be shown: " +
       "The alien3 data has no network. Run npm run generate:alien to generate it.";
     const { unmount } = showView();
     expect(await screen.findByRole("alert")).toHaveTextContent(alert);
@@ -124,7 +124,7 @@ describe("ExtractPathways", () => {
     mockedFetchIndex.mockResolvedValue({ ...index, metadata });
     showView();
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The conversations could not be loaded: Expected loadings for 14 neurons on 3 pathways, got 13 rows of 3");
+      "The conversations could not be shown: Expected loadings for 14 neurons on 3 pathways, got 13 rows of 3");
   });
 
   it("says so when there are no conversations", async () => {

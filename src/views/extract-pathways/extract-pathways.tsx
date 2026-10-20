@@ -57,7 +57,7 @@ export const ExtractPathways: React.FC = observer(function ExtractPathways() {
       {indexState.status === "loading" && <p>Loading conversations…</p>}
       {indexState.status === "error" &&
         <p role="alert">The conversations could not be loaded: {indexState.error.message}</p>}
-      {fitted && "error" in fitted && <p role="alert">The conversations could not be loaded: {fitted.error.message}</p>}
+      {fitted && "error" in fitted && <p role="alert">The conversations could not be shown: {fitted.error.message}</p>}
       {indexState.status === "ready" && fitted && !("error" in fitted) &&
         <ExtractPathwaysBody index={indexState.index} network={fitted.network} loadings={fitted.loadings} />}
     </div>
