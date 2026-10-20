@@ -264,4 +264,32 @@ describe("validateConfig's network rules", () => {
     config.thresholds.networkTrackingMin = 1.2;
     expect(() => validateConfig(config)).toThrow(/networkTrackingMin/);
   });
+
+  it.each([
+    ["hiddenSizes", [0, 8, 6],
+      "network.hiddenSizes needs an embedding and at least one tracking layer, each a positive whole number"],
+    ["targetScale", 0, "network.targetScale 0 must lie strictly between 0 and 1"],
+    ["activationWeight", -1, "network.activationWeight -1 must be positive"],
+    ["classificationWeight", 0, "network.classificationWeight 0 must be positive"],
+    ["learningRate", 0, "network.learningRate 0 must be positive"],
+    ["maxEpochs", 0, "network.maxEpochs 0 must be a positive whole number"],
+    ["maxEpochs", 6010, "network.maxEpochs 6010 must be a multiple of network.checkEvery 50"],
+    ["checkEvery", 7000, "network.maxEpochs 6000 must be a multiple of network.checkEvery 7000"],
+  ] as const)("rejects network.%s %p", (field, value, message) => {
+    const config = cloneThree();
+    (config.network as unknown as Record<string, unknown>)[field] = value;
+    expect(() => validateConfig(config)).toThrow(message);
+  });
+
+  it("rejects a tracking threshold of 0", () => {
+    const config = cloneThree();
+    config.thresholds.networkTrackingMin = 0;
+    expect(() => validateConfig(config)).toThrow("networkTrackingMin 0 must lie in (0, 1]");
+  });
+
+  it("accepts a margin of 0", () => {
+    const config = cloneThree();
+    config.network!.margin = 0;
+    expect(() => validateConfig(config)).not.toThrow();
+  });
 });

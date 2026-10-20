@@ -267,6 +267,12 @@ function checkNetwork(config: AlienConfig): void {
       throw new Error(`network.${name} ${network[name]} must be a positive whole number`);
     }
   }
+  // So the last epoch is a check, and "cap" means the margin was missed.
+  if (network.maxEpochs % network.checkEvery !== 0) {
+    throw new Error(
+      `network.maxEpochs ${network.maxEpochs} must be a multiple of network.checkEvery ${network.checkEvery}`,
+    );
+  }
   const minimum = config.thresholds.networkTrackingMin;
   if (!(minimum > 0 && minimum <= 1)) throw new Error(`networkTrackingMin ${minimum} must lie in (0, 1]`);
 }

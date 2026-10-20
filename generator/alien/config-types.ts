@@ -75,7 +75,7 @@ export interface NetworkConfig {
    * browser from flipping a prediction.
    */
   margin: number;
-  /** Epochs between those checks. */
+  /** Epochs between those checks. maxEpochs must be a multiple of it. */
   checkEvery: number;
   /** Fitting stops here whatever the margins; network-reproduces-classification then fails. */
   maxEpochs: number;
