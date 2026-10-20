@@ -2,7 +2,8 @@
  * @jest-environment node
  */
 import { fourPathwayConfig, threePathwayConfig } from "../alien-config";
-import { generate } from "./pipeline";
+import snapshot from "../../src/core/network/__fixtures__/alien3-network.json";
+import { generate, GeneratorRun } from "./pipeline";
 import { runChecks } from "./checks";
 import { formatSummary } from "./summary";
 
@@ -43,12 +44,15 @@ describe("formatSummary", () => {
 });
 
 describe("generate with a network", () => {
-  // Fitting the alien3 network takes a second or two.
+  // Fitting the alien3 network takes two or three seconds, so the block fits it once.
   jest.setTimeout(60000);
+  let run: GeneratorRun;
+  beforeAll(() => {
+    run = generate(threePathwayConfig);
+  });
 
   it("fits one only when the config asks", () => {
     expect(generate(fourPathwayConfig).dataset.index.metadata.network).toBeUndefined();
-    const run = generate(threePathwayConfig);
     expect(run.network?.stoppedBy).toBe("margin");
     expect(run.dataset.index.metadata.network).toBe(run.network?.network);
     expect(run.dataset.index.metadata.network?.layers.map(layer => layer.biases.length)).toEqual([10, 8, 6, 2]);
@@ -57,7 +61,7 @@ describe("generate with a network", () => {
   });
 
   it("leaves every other value the generator emits as it was", () => {
-    const withNetwork = generate(threePathwayConfig).dataset.index;
+    const withNetwork = run.dataset.index;
     const without = generate({ ...threePathwayConfig, network: undefined }).dataset.index;
     const { network, ...metadata } = withNetwork.metadata;
     expect(network).toBeDefined();
@@ -65,9 +69,14 @@ describe("generate with a network", () => {
   });
 
   it("reports the network in the summary", () => {
-    const run = generate(threePathwayConfig);
     const summary = formatSummary(run, runChecks(run));
     expect(summary).toMatch(/network\n {2}30 -> 10 -> 8 -> 6 -> 2, stopped by the margin after \d+ epochs/);
     expect(summary).toMatch(/smallest margin 0\.\d{3}/);
+  });
+
+  it("emits the network and fit the app's tests use, so the snapshot can't fall behind", () => {
+    // See the snapshot's note for how to regenerate it.
+    expect(run.network?.network).toEqual(snapshot.network);
+    expect(run.dataset.index.metadata.fa_fits[snapshot.fitName]).toEqual(snapshot.fit);
   });
 });
