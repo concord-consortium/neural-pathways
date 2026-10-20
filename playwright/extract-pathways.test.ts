@@ -23,7 +23,7 @@ test("Setup lifts the hidden neurons out of the network, animated", async ({ pag
 const INTERACTIVE_EXTRA = 34;
 /**
  * The narrowest the canvas is laid out (`minCanvasWidth`): the finished deck needs the room. It
- * depends on the network the view draws, so it changes when the real network replaces the toy one.
+ * depends on the network's layer sizes.
  */
 const NARROWEST_CANVAS = 959;
 
