@@ -61,7 +61,10 @@ export interface NetworkConfig {
    * next authored neurons in order, so together they must hold activations.neuronCount units.
    */
   hiddenSizes: number[];
-  /** A tracking unit's target is this times its neuron's standardized activation, inside tanh's range. */
+  /**
+   * A tracking unit's target is this times its neuron's standardized activation. Below 1, so a
+   * typical target sits inside tanh's range.
+   */
   targetScale: number;
   /** The loss's weight on the tracking units' squared error. */
   activationWeight: number;

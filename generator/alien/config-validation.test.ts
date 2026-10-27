@@ -243,7 +243,7 @@ describe("validateConfig's network rules", () => {
       "network.hiddenSizes needs an embedding and at least one tracking layer, each a positive whole number");
   });
 
-  it("rejects a target scale tanh can't reach", () => {
+  it("rejects a target scale of 1 or more", () => {
     const config = cloneThree();
     config.network!.targetScale = 1;
     expect(() => validateConfig(config)).toThrow("network.targetScale 1 must lie strictly between 0 and 1");

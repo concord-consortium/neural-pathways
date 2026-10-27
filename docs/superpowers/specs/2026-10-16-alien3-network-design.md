@@ -72,7 +72,7 @@ export interface NetworkConfig {
   seed: number;
   /** Hidden layer sizes. The first is the undrawn embedding; the rest track the authored neurons in order. */
   hiddenSizes: number[];
-  /** Hidden-unit targets are this times the authored standardized activation, inside tanh's range. */
+  /** Hidden-unit targets are this times the authored standardized activation. Below 1, so a typical target sits inside tanh's range. */
   targetScale: number;
   activationWeight: number;
   classificationWeight: number;
