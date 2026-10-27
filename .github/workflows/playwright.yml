@@ -9,6 +9,8 @@ jobs:
   playwright:
     name: Run Playwright Tests
     runs-on: ubuntu-latest
+    # Without a limit, a stalled browser or apt install would hold the runner for GitHub's 6-hour default.
+    timeout-minutes: 30
     permissions:
       id-token: write
       contents: read
