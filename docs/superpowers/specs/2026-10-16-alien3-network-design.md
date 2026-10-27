@@ -53,7 +53,7 @@ Making the network generate the data is a follow-up story, NPW-70 (see [Follow-u
 | Where the network is fitted | In the generator, on every build. | The network can never drift from the data it approximates: a config or seed change refits it. |
 | Fitting time | About 2.4 s, on top of today's ~2 s generation. | Early stopping, a classification weight of 0.5 and a seed chosen to settle quickly. An epoch cap bounds the worst case. The larger target scale below costs about a second more than 0.3 would. |
 | How exactly the classification must match | All 800 conversations, each by a logit margin of at least 0.1. | Step 4 must give the dataset's prediction. Without a margin, a conversation just on the right side could flip between Node and a browser, whose `Math.tanh` may differ in the last bit. |
-| How closely the activations must match | Every hidden unit correlates with its authored neuron at r ≥ 0.85. | Each neuron's random noise isn't a function of the words, which caps any word-fed unit at r 0.92–0.99 (the square root of its communality). 0.85 keeps signs, rankings and bands; the shipped network's units reach 0.87–0.95. |
+| How closely the activations must match | Every tracking unit correlates with its authored neuron at r ≥ 0.85. | Each neuron's random noise isn't a function of the words, which caps any word-fed unit at about r 0.92–0.99 (the square root of its communality). 0.85 keeps signs, rankings and bands; the shipped network's units reach 0.87–0.95. |
 | How large the hidden activations are | `targetScale` 0.75: a typical conversation fills a hidden gauge about halfway (median 46% in Hidden Layer 1, 53% in Hidden Layer 2). | The diagram draws hidden values unscaled. At 0.3 the median gauge was about 20% full, and most hidden nodes looked nearly empty. 0.75 costs about a second of fitting and lowers the weakest unit's r from 0.88 to 0.87. |
 | Where the network goes | `metadata.network` in alien3's `index.json`. | The views already load it, so the network arrives with the data it was fitted to. About 10 KB. |
 | Which datasets get a network | alien3 only, by an opt-in config field. | Only alien3 has views that draw a network. |
@@ -72,7 +72,10 @@ export interface NetworkConfig {
   seed: number;
   /** Hidden layer sizes. The first is the undrawn embedding; the rest track the authored neurons in order. */
   hiddenSizes: number[];
-  /** Hidden-unit targets are this times the authored standardized activation. Below 1, so a typical target sits inside tanh's range. */
+  /**
+   * Hidden-unit targets are this times the authored standardized activation. Below 1, so a
+   * typical target sits inside tanh's range.
+   */
   targetScale: number;
   activationWeight: number;
   classificationWeight: number;
@@ -98,8 +101,9 @@ quickly.
 `validateConfig` adds: `hiddenSizes` holds an embedding and at least one tracking layer, each a
 positive whole number, and the tracking layers' sizes add up to `activations.neuronCount`;
 `targetScale` lies strictly between 0 and 1; every weight and the learning rate are positive
-and finite; `margin` is finite and not negative; `checkEvery` and `maxEpochs` are positive whole numbers, and `maxEpochs` is
-a multiple of `checkEvery`, so the last epoch is a check; `networkTrackingMin` lies in (0, 1].
+and finite; `margin` is finite and not negative; `checkEvery` and `maxEpochs` are positive whole
+numbers, and `maxEpochs` is a multiple of `checkEvery`, so the last epoch is a check;
+`networkTrackingMin` lies in (0, 1].
 
 ### The stage: `generator/alien/network.ts`
 
