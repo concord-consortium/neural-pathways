@@ -242,8 +242,8 @@ classifier's two hidden layers of 6 neurons each (see [data/terminology.md](data
 The classifier's layers are computed from the CLS embedding, so those 12 neurons depend on the
 other 768.
 
-Among 768 independent neurons, the effect may be diluted. But the 12 are close to exact functions
-of the rest, so factor analysis may treat them as nearly noiseless and lean on them heavily. That
+Among the 768 embedding neurons, the effect may be diluted. But the 12 are exact, though nonlinear,
+functions of the rest, so factor analysis may treat them as nearly noiseless and lean on them heavily. That
 could shape the strongest pathway in particular. Nobody has checked this. One way to check is to
 refit without the 12 and compare the pathways, and to look at the noise variances the existing fits
 give those neurons.
