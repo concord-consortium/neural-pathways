@@ -111,8 +111,9 @@ one thing, or one name for two things, settle it and add it here.
   of `fa_fits`, whose loadings and pathway scores the views show; and the fitted network.
 - **tracking unit:** a hidden unit after the embedding, fitted toward one authored neuron. Hidden
   Layer 1's unit *u* tracks neuron *u*; Hidden Layer 2's unit *u* tracks neuron 8 + *u*.
-- **noise ceiling:** the most a word-fed unit can correlate with its authored neuron, √(1 − its
-  noise variance).
+- **noise ceiling:** about the most a word-fed unit can correlate with its authored neuron: √(1 − its
+  noise variance), which is the square root of its communality (see
+  [alien-activations.md](alien-activations.md#the-fitted-network)).
 - **margin:** how far a conversation's logit for its classification beats the other's.
 
 ## Layout
