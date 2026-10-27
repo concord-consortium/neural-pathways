@@ -88,9 +88,9 @@ describe("generate with a network", () => {
   });
 
   it("emits the factor-analysis fit the app's tests use, and a network of the snapshot's shape", () => {
-    // See the snapshot's note for how to regenerate it. The fitted weights can't be compared: an
-    // arm64 Mac and CI's x86-64 Linux fit different ones, because Math.tanh and its kin may round
-    // differently on each, and 1,500 epochs grow that into a different network.
+    // See the snapshot's note for how to regenerate it. The fitted weights can't be compared: in
+    // practice an arm64 Mac and CI's x86-64 Linux fit different ones (see
+    // docs/testing-alien-generator.md).
     expect(run.dataset.index.metadata.fa_fits[snapshot.fitName]).toEqual(snapshot.fit);
     const shape = (network: Network) => [network.vocabulary, network.layers.map(layer => layer.biases.length)];
     expect(shape(run.network!.network)).toEqual(shape(snapshot.network as Network));
