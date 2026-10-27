@@ -63,11 +63,14 @@ describe("generate with a network", () => {
   });
 
   it("leaves every other value the generator emits as it was", () => {
-    const withNetwork = run.dataset.index;
-    const without = generate({ ...threePathwayConfig, network: undefined }).dataset.index;
-    const { network, ...metadata } = withNetwork.metadata;
+    const without = generate({ ...threePathwayConfig, network: undefined }).dataset;
+    const { network, ...metadata } = run.dataset.index.metadata;
     expect(network).toBeDefined();
-    expect(JSON.stringify({ ...withNetwork, metadata })).toBe(JSON.stringify(without));
+    /** The dataset as JSON, with its buckets' maps as entries. */
+    const emitted = (dataset: typeof without) => JSON.stringify({
+      ...dataset, shapBuckets: [...dataset.shapBuckets], activationBuckets: [...dataset.activationBuckets],
+    });
+    expect(emitted({ ...run.dataset, index: { ...run.dataset.index, metadata } })).toBe(emitted(without));
   });
 
   it("reports the network in the summary", () => {
