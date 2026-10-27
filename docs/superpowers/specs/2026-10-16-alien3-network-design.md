@@ -97,8 +97,8 @@ quickly.
 
 `validateConfig` adds: `hiddenSizes` holds an embedding and at least one tracking layer, each a
 positive whole number, and the tracking layers' sizes add up to `activations.neuronCount`;
-`targetScale` lies strictly between 0 and 1; every weight and the learning rate are positive;
-`margin` is not negative; `checkEvery` and `maxEpochs` are positive whole numbers, and `maxEpochs` is
+`targetScale` lies strictly between 0 and 1; every weight and the learning rate are positive
+and finite; `margin` is finite and not negative; `checkEvery` and `maxEpochs` are positive whole numbers, and `maxEpochs` is
 a multiple of `checkEvery`, so the last epoch is a check; `networkTrackingMin` lies in (0, 1].
 
 ### The stage: `generator/alien/network.ts`

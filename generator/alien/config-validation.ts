@@ -259,9 +259,13 @@ function checkNetwork(config: AlienConfig): void {
     throw new Error(`network.targetScale ${network.targetScale} must lie strictly between 0 and 1`);
   }
   for (const name of ["activationWeight", "classificationWeight", "learningRate"] as const) {
-    if (!(network[name] > 0)) throw new Error(`network.${name} ${network[name]} must be positive`);
+    if (!(Number.isFinite(network[name]) && network[name] > 0)) {
+      throw new Error(`network.${name} ${network[name]} must be positive and finite`);
+    }
   }
-  if (!(network.margin >= 0)) throw new Error(`network.margin ${network.margin} must not be negative`);
+  if (!(Number.isFinite(network.margin) && network.margin >= 0)) {
+    throw new Error(`network.margin ${network.margin} must be finite and not negative`);
+  }
   for (const name of ["checkEvery", "maxEpochs"] as const) {
     if (!Number.isInteger(network[name]) || network[name] < 1) {
       throw new Error(`network.${name} ${network[name]} must be a positive whole number`);
