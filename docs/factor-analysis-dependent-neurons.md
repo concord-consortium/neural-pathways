@@ -11,8 +11,8 @@ This note explains why, starting with how factor analysis works, for readers who
 
 ## What factor analysis assumes
 
-Run many inputs through a network and record one number per neuron per input. Each neuron then has
-a column of values, one per input.
+Run many examples through a network and record one number per neuron per example. Each neuron then
+has a list of values, one per example.
 
 Factor analysis assumes each neuron's value is built from two parts:
 
@@ -27,8 +27,8 @@ neuron value = (a few hidden causes, each mixed in at this neuron's own strength
 - The quirks are the neuron's **noise**. Factor analysis measures them as each neuron's **noise
   variance**: how much of its variation is its own.
 
-Factor analysis never sees the pathways. All it sees is how the neurons **move together** across
-the inputs, through how much each pair of neurons varies together (their covariance). If two neurons
+Factor analysis never sees the pathways. All it sees is how the neurons **move together** across the
+examples, through how much each pair of neurons varies together (their covariance). If two neurons
 tend to rise and fall together, it takes that as evidence of a shared pathway. A neuron's quirks
 belong to it alone, so they never make it move with another neuron.
 
@@ -48,8 +48,9 @@ generator's port is
 
 ### 0. Standardize, and start from a guess
 
-Each neuron is first rescaled to a mean of 0 and a variance of 1, so a neuron with large raw values
-doesn't dominate just because its numbers are bigger. Each neuron's total variation is then 1. That
+Before the fit, the pipeline rescales each neuron to a mean of 0 and a variance of 1 (scikit-learn's
+`StandardScaler`), so a neuron with large raw values doesn't dominate just because its numbers are
+bigger. Each neuron's total variation is then 1. That
 1 is split between what the pathways explain and the neuron's quirks.
 
 The first guess is that every neuron is equally quirky: every neuron's noise variance starts at 1.
@@ -68,7 +69,9 @@ The first guess is that every neuron is equally quirky: every neuron's noise var
 4. **Remove the quirks' share.** In each of those directions, the quirks contribute 1 unit, so a
    pattern's shared strength is its eigenvalue minus 1. A pattern no stronger than the quirks alone
    is worth nothing.
-5. **Undo the rescaling.** Multiply back by each neuron's noise standard deviation. The result is
+5. **Size each pattern by its shared strength.** The shared strength is a variance, so scale each
+   direction by its square root.
+6. **Undo the rescaling.** Multiply back by each neuron's noise standard deviation. The result is
    the loadings: how strongly each neuron responds to each of the k pathways.
 
 ### 2. Re-estimate the quirks, given the pathways
@@ -89,30 +92,29 @@ Go back to step 1 with the new quirk estimates. A neuron that turned out quieter
 the next pass, which shifts the pathways, which shifts the quirks again. The loop stops when another
 pass barely improves how well the model explains the data (its log-likelihood).
 
-So each pass finds the pathways first and then the quirks as what's left. But the very first
-pathways come from the guess that all neurons are equally quirky, and every later pass depends on
-the quirks the pass before it found. The final pathways are the ones that agree with their own
-leftovers.
+The final pathways are the ones that agree with their own leftovers.
 
 ### Which way the pathways point
 
-The k pathways found in step 1 are not the only possible answer. Any rotation of them, any other
-set of k directions spanning the same space, explains the neurons' agreement equally well.
-scikit-learn returns one particular orientation: the pathways' loading patterns are perpendicular to
-each other once each neuron is discounted by its quirks, and the pathways come in order of strength.
-This is its **canonical form**.
+The k pathways found in step 1 are not the only possible answer. Turn them together, as a rigid set
+of axes, and the turned pathways explain the neurons' agreement equally well. (Stretching one
+pathway, or tilting two toward each other, changes the agreement they predict.) scikit-learn returns
+one particular orientation: the one where the pathways' loading patterns are perpendicular to each
+other once each neuron is discounted by its quirks, with the pathways in order of strength. This is
+its **canonical form**.
 
 The quirk estimates decide that orientation, because step 1 finds its directions only after
 discounting each neuron by its quirks. Change which neurons look quiet and the pathways can rotate
 into each other, even when the space they span stays about the same. Two pathways of similar
 strength are the easiest to rotate together.
 
-### Scoring an input
+### Scoring an example
 
-Once the pathways are found, an input's **pathway scores** are estimated from its neuron values. The
-estimate is a weighted combination of the neurons, and each neuron's weight grows with its loading
-and shrinks with its noise variance. Quiet neurons count most. A neuron whose noise variance is near
-zero counts almost without limit.
+Once the pathways are found, an example's **pathway scores** are estimated from its neuron values.
+The estimate is a weighted combination of the neurons, and each neuron's weight grows with its
+loading and shrinks with its noise variance. Quiet neurons count most. A neuron whose noise variance
+is near zero pins the estimate to what it reads: on the mix of pathways that neuron measures, it
+outweighs every other neuron.
 
 ## Why a dependent neuron distorts the result
 
@@ -145,11 +147,10 @@ the name for a noise variance driven to zero. From then on:
 
 - In step 1 it is divided by almost nothing, so its agreement with other neurons outweighs
   everything else, and it decides which way the pathways point.
-- In scoring, it gets nearly unlimited weight.
+- In scoring, it pins the pathway scores (see [Scoring an example](#scoring-an-example)).
 
-It doesn't look exactly like any one pathway. It is a blend, built from first-layer values that
-carry their own quirks. So the pathways tilt toward the blend, and pathways of similar strength
-rotate into each other.
+It is a blend of pathways, not any one of them. So the pathways tilt toward the blend, and pathways
+of similar strength rotate into each other.
 
 ### Failure 2: copied quirks look like a pathway
 
@@ -161,21 +162,29 @@ does.
 
 ### Why "computed from" doesn't mean "ignored"
 
-It is natural to expect a dependent neuron to add nothing, since it carries no new information.
-But factor analysis can't tell where a column of numbers came from. It sees only how the columns
+It is natural to expect a dependent neuron to add nothing, since it carries no new information. But
+factor analysis can't tell where a neuron's values came from. It sees only how the neurons' values
 move together. A dependent neuron adds *more* agreement, not less, and agreement is exactly the
 evidence factor analysis trusts.
 
 ### Counting the sources of variation
 
-There is also a counting argument. With k pathways and n neurons, the model has k + n independent
-sources of variation: one per pathway, plus each neuron's own quirks. For the model to fit, the
-neurons have to supply all of them.
+There is also a counting argument, for neurons built the way the factor analysis model describes
+them: each one the pathway scores mixed in at its own strengths, plus quirks of its own that are
+independent of the pathways and of every other neuron's. That is how the generator builds the alien
+activations, and what a network would have to do to produce authored pathway scores. With k pathways
+and n neurons, that is k + n independent sources of variation: one per pathway, plus each neuron's
+own quirks. The neurons have to carry all of them.
+
+Matching only the agreement between the neurons asks for less. Factor analysis sees nothing but the
+covariance, and any covariance among n neurons can be produced from n independent inputs. Neurons
+built that way can fit the model, but nothing in the inputs is a pathway score for the fitted scores
+to recover.
 
 A neuron computed from other neurons can only recombine the sources those neurons already have. It
 can't add new ones. In a linear layer this is exact. A nonlinear activation such as tanh bends its
 input, which adds a little genuinely new variation, but not much and not independently of the
-inputs. So:
+inputs. So, for neurons that carry the pathways and quirks of their own:
 
 - **A layer computed from an earlier layer can't add independent neurons.** Its "quirks" are
   borrowed from the earlier layer, so they correlate with it.
@@ -187,25 +196,29 @@ inputs. So:
 ## What it looks like in practice
 
 In a constructed test, a network had 3 pathways of uneven strength (55%, 35% and 10% of the shared
-variation). Its first hidden layer had 10–12 neurons, each with its own quirks. Recovery was measured
-two ways: the correlation between each true pathway's scores and the recovered ones, and the cosine
-similarity between the true and recovered loadings.
+variation). Its first hidden layer had 10–12 neurons, each with its own quirks. Recovery was
+measured two ways: the correlation between each true pathway's scores and the recovered ones, and
+the cosine similarity between the true and recovered loadings. The numbers below come from one-off
+probe scripts that aren't kept in the repo, so treat them as rough.
 
 - **The first hidden layer alone:** all three pathways came back in order. Score correlations were
   0.90–0.98, with the weakest pathway lowest.
 - **Adding 2–6 second-layer neurons built to follow the pathways:** factor analysis gave every one
   of them a noise variance of 0.00 to 0.06, nearly always at the floor. Recovery got worse in every
-  run, with the lowest pathway's score correlation falling to 0.6–0.9. Most often the two strongest
-  pathways rotated into each other, sometimes swapping places.
+  trial, with the weakest pathway's score correlation falling to 0.6–0.9. Most often the two
+  strongest pathways rotated into each other, sometimes swapping places.
 - **Adding 2–6 second-layer neurons with arbitrary weights:** these kept more noise variance,
-  because tanh bends their inputs, but recovery still fell. In 17 of 18 runs at least one pathway
-  dropped below 0.94, to as low as 0.6, and the weakest pathway was usually hit hardest. The one run
-  that passed did so by luck.
+  because tanh bends their inputs, but recovery still fell. In 17 of 18 trials at least one
+  pathway's score correlation dropped below 0.94, the least the generator's `fa-recovers-pathways`
+  check accepts (see [alien-activations.md](alien-activations.md#how-the-activations-are-built)), to
+  as low as 0.6, and the weakest pathway was usually hit hardest. The one trial that kept every
+  pathway at 0.94 or above did so by luck.
 - **Feeding the same first layer from too few inputs**, so its neurons had to share their quirks,
   failed the same way, even with no second layer.
 
 Fewer neurons is not the fix either. There is a lower limit on how many neurons factor analysis
-needs to tell k pathways apart: (n − k)² ≥ n + k, which is 6 for 3 pathways. In the same test,
+needs to tell k pathways apart: (n − k)² ≥ n + k, which is 6 for 3 pathways (see
+[alien-activations.md](alien-activations.md#why-14-neurons)). In the same test,
 recovery of the weakest pathway was unreliable below about 10 neurons, even when every neuron was
 independent.
 
@@ -223,13 +236,14 @@ independent.
 
 ## An open question about the yelp fits
 
-The yelp pathways were fitted on 780 activations: the 768-value CLS embedding plus the
+The yelp pathways were fitted on 780 neurons' activations: the 768-value CLS embedding plus the
 classifier's two hidden layers of 6 neurons each (see [data/terminology.md](data/terminology.md)).
 The classifier's layers are computed from the CLS embedding, so those 12 neurons depend on the
 other 768.
 
-Among 768 independent neurons, the effect may be diluted. But the 12 are close to exact functions
-of the rest, so factor analysis may treat them as nearly noiseless and lean on them heavily. That
-could shape the strongest pathway in particular. Nobody has checked this. One way to check is to
-refit without the 12 and compare the pathways, and to look at the noise variances the existing fits
-give those neurons.
+Among the 768 embedding neurons, the effect may be diluted. But the 12 are exact, though nonlinear,
+functions of the rest, so factor analysis may treat them as nearly noiseless and lean on them
+heavily. That could decide which way the pathways point, as in
+[Failure 1](#failure-1-the-echo-is-trusted-too-much). Nobody has checked this. One way to check is
+to refit without the 12 and compare the pathways, and to look at the noise variances the existing
+fits give those neurons.
