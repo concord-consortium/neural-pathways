@@ -24,7 +24,6 @@ export const EXTRACT_PATHWAYS_TITLE = "Extract Pathways";
 
 const PANEL_TITLE = "The Network → Activated Pathways";
 
-/** What the view draws from the index: its network and loadings, or why it can't. */
 type FromIndex = { network: Network; loadings: Loadings } | { error: Error };
 
 /** The index's fitted network and loadings, or the error reading them. */

@@ -54,7 +54,7 @@ export interface ActivationConfig {
 
 /** The network fitted to a dataset's activations and classification (generator/alien/network.ts). */
 export interface NetworkConfig {
-  /** Seeds the network's own RNG, so fitting it never shifts a value drawn before it. */
+  /** Seeds the network's own RNG, which sets its starting weights. */
   seed: number;
   /**
    * Hidden layer sizes. The first is the embedding, which tracks nothing; each later one tracks the

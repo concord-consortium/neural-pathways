@@ -31,12 +31,9 @@ const EPSILON = 1e-8;
 const CLASSES = 2;
 
 /**
- * Fits words → hiddenSizes → 2 logits, indexed by class, by full-batch Adam on word counts. Each
- * hidden layer after the first tracks the next authored neurons, `targetScale` times their
- * standardized activations; the logits learn `classification` by softmax cross-entropy. Fitting
- * stops at the first check, every `checkEvery` epochs, where every conversation's logit for its
- * class beats the other's by `margin`, or at `maxEpochs`. Its only randomness is
- * `createRng(config.seed)`, which seeds the starting weights.
+ * Fits words → hiddenSizes → 2 logits, indexed by class, by full-batch Adam on word counts, as
+ * NetworkConfig describes: the tracking units toward the authored activations, the logits toward
+ * `classification` by softmax cross-entropy.
  *
  * The arithmetic matches forward() in src/core/network/forward.ts operation for operation, so the
  * margins fitting stops on are the ones the app computes.

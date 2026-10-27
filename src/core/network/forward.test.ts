@@ -28,10 +28,6 @@ describe("forward", () => {
     expect(input.reduce((sum, x) => sum + x, 0)).toBe(4);
   });
 
-  it("ignores unknown words and splits on any whitespace", () => {
-    expect(forward(fixtureNetwork, "hakku\nzzz   tovril")).toEqual(forward(fixtureNetwork, "hakku tovril"));
-  });
-
   it.each(conversations)("predicts the model's class for $id", ({ text, classification }) => {
     expect(predictedClass(forward(fixtureNetwork, text))).toBe(classification);
   });

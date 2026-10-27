@@ -17,7 +17,7 @@ export function wordCounts(vocabulary: readonly string[], text: string): number[
   return vocabulary.map(word => counts.get(word) ?? 0);
 }
 
-/** Runs `text` through the network. A word feeds its count: used three times, it feeds 3. */
+/** Runs `text` through the network, fed its `wordCounts`. */
 export function forward(network: Network, text: string): ForwardPass {
   const input = wordCounts(network.vocabulary, text);
   const layers: number[][] = [];
