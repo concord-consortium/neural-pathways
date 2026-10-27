@@ -212,14 +212,17 @@ scripts that aren't kept in the repo, so treat them as rough.
   run, with the lowest pathway's score correlation falling to 0.6–0.9. Most often the two strongest
   pathways rotated into each other, sometimes swapping places.
 - **Adding 2–6 second-layer neurons with arbitrary weights:** these kept more noise variance,
-  because tanh bends their inputs, but recovery still fell. In 17 of 18 runs at least one pathway
-  dropped below 0.94, to as low as 0.6, and the weakest pathway was usually hit hardest. The one run
-  that passed did so by luck.
+  because tanh bends their inputs, but recovery still fell. In 17 of 18 runs at least one pathway's
+  score correlation dropped below 0.94, the least the generator's `fa-recovers-pathways` check
+  accepts (see [alien-activations.md](alien-activations.md#how-the-activations-are-built)), to as
+  low as 0.6, and the weakest pathway was usually hit hardest. The one run that kept every pathway at
+  0.94 or above did so by luck.
 - **Feeding the same first layer from too few inputs**, so its neurons had to share their quirks,
   failed the same way, even with no second layer.
 
 Fewer neurons is not the fix either. There is a lower limit on how many neurons factor analysis
-needs to tell k pathways apart: (n − k)² ≥ n + k, which is 6 for 3 pathways. In the same test,
+needs to tell k pathways apart: (n − k)² ≥ n + k, which is 6 for 3 pathways (see
+[alien-activations.md](alien-activations.md#why-14-neurons)). In the same test,
 recovery of the weakest pathway was unreliable below about 10 neurons, even when every neuron was
 independent.
 
