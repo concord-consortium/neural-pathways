@@ -186,6 +186,8 @@ describe("runChecks on a dataset with a network", () => {
     const result = find(runChecks(rigged), "network-reproduces-classification");
     expect(result.passed).toBe(false);
     expect(result.detail).toMatch(/^800 conversations under the 1000 margin/);
+    // Fitting stopped by the margin, so another seed is no remedy.
+    expect(result.detail).not.toContain("network.seed");
   });
 
   it("fails just above the smallest margin and passes just below it", () => {
