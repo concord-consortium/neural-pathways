@@ -87,7 +87,7 @@ describe("generate with a network", () => {
     expect(emitted).toEqual(fixture.conversations);
   });
 
-  it("emits the fit the app's tests use, and a network of the snapshot's shape", () => {
+  it("emits the factor-analysis fit the app's tests use, and a network of the snapshot's shape", () => {
     // See the snapshot's note for how to regenerate it. The fitted weights can't be compared: an
     // arm64 Mac and CI's x86-64 Linux fit different ones, because Math.tanh and its kin may round
     // differently on each, and 1,500 epochs grow that into a different network.

@@ -209,7 +209,7 @@ describe("runChecks on a dataset with a network", () => {
       .toMatch(/stopped at network\.maxEpochs \(6000\); try another network\.seed/);
   });
 
-  it("fails network-tracks-activations when the activations are shuffled across conversations", () => {
+  it("fails network-tracks-activations when the activations are reversed across conversations", () => {
     const rigged = {
       ...run3,
       activations: { ...run3.activations, standardized: [...run3.activations.standardized].reverse() },

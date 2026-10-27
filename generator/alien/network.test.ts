@@ -4,8 +4,8 @@ import { NetworkConfig } from "./config-types";
 import { fitNetwork, NetworkFitInput } from "./network";
 import { createRng } from "./rng";
 
-// Sixty made-up conversations of six words from four, so most repeat a word. Two neurons the words
-// determine, standardized, and a class the words determine too.
+// Sixty made-up conversations of six words from four, so every one repeats a word. Two neurons the
+// words determine, standardized, and a class the words determine too.
 const VOCABULARY = ["a", "b", "c", "d"];
 const rng = createRng(7);
 const texts = Array.from({ length: 60 }, () =>
