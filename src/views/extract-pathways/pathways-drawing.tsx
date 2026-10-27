@@ -6,7 +6,7 @@ import { ExtractGeometry } from "./extract-geometry";
 import { PathwaysScene } from "./extract-scene";
 import { easeX } from "./flight";
 import { faceSources, PARTICLE_R, particleAt, particlePlan, particleTarget, SOURCE_STEP } from "./particles";
-import { BAR_HEIGHT, BOX_SIDE, LABEL_GAP, PathwaysLayout } from "./pathways-layout";
+import { BAR_HEIGHT, BOX_SIDE, LABEL_GAP, Loadings, PathwaysLayout } from "./pathways-layout";
 import { COPY_END_SCALE } from "./pathways-timeline";
 
 /** The box's kick (the prototype's d1a-boxkick): keyframes of time and scale, each eased. */
@@ -118,6 +118,8 @@ interface ParticleCanvasProps {
   passes: readonly ForwardPass[];
   size: number;
   layout: PathwaysLayout;
+  /** The loadings the bars are drawn from, which set how many particles each bar gets. */
+  loadings: Loadings;
 }
 
 /**
@@ -126,7 +128,7 @@ interface ParticleCanvasProps {
  * update; they carry no text, so it loses nothing. Hidden from screen readers: the drawing's
  * description covers it.
  */
-export function ParticleCanvas({ t, geometry, passes, size, layout }: ParticleCanvasProps) {
+export function ParticleCanvas({ t, geometry, passes, size, layout, loadings }: ParticleCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const sources = useMemo(() => faceSources(geometry, passes, size), [geometry, passes, size]);
   const { width, height } = geometry;
@@ -146,7 +148,7 @@ export function ParticleCanvas({ t, geometry, passes, size, layout }: ParticleCa
     if (sources.length === 0) {
       return;
     }
-    const { particles, need } = particlePlan();
+    const { particles, need } = particlePlan(loadings);
     for (const particle of particles) {
       const source = sources[(particle.order * SOURCE_STEP) % sources.length];
       const target = particleTarget(particle, layout.bars[particle.bar], need[particle.bar]);
@@ -160,7 +162,7 @@ export function ParticleCanvas({ t, geometry, passes, size, layout }: ParticleCa
       context.arc(placed.x, placed.y, PARTICLE_R, 0, 2 * Math.PI);
       context.fill();
     }
-  }, [t, sources, layout, width, height]);
+  }, [t, sources, layout, loadings, width, height]);
   return (
     <canvas ref={ref} data-testid="particles" aria-hidden="true" className="extract-drawing__particles"
       style={{ width, height }} />

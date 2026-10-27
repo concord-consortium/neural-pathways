@@ -371,6 +371,9 @@ export const THRESHOLDS: Thresholds = {
   // See docs/alien-activations.md.
   faScoreRecoveryMin: 0.94,
   faLoadingRecoveryMin: 0.97,
+  // Each neuron's noise ceiling caps how closely words can track it; see docs/alien-activations.md.
+  // 0.85 keeps signs, rankings and bands.
+  networkTrackingMin: 0.85,
 };
 
 /**

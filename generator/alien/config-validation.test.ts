@@ -1,10 +1,14 @@
 import * as path from "path";
-import { fourPathwayConfig } from "../alien-config";
+import { fourPathwayConfig, threePathwayConfig } from "../alien-config";
 import { validateConfig } from "./config-validation";
 import { AlienConfig } from "./config-types";
 
 function clone(): AlienConfig {
   return JSON.parse(JSON.stringify(fourPathwayConfig)) as AlienConfig;
+}
+
+function cloneThree(): AlienConfig {
+  return JSON.parse(JSON.stringify(threePathwayConfig)) as AlienConfig;
 }
 
 describe("validateConfig", () => {
@@ -216,5 +220,81 @@ describe("validateConfig", () => {
     const config = clone();
     config.targetVarianceShares = [0.55, 0.35, 0.1, 0];
     expect(() => validateConfig(config)).toThrow(/targetVarianceShares/);
+  });
+});
+
+describe("validateConfig's network rules", () => {
+  it("accepts the shipped three-pathway config, which fits a network", () => {
+    expect(threePathwayConfig.network).toBeDefined();
+    expect(() => validateConfig(threePathwayConfig)).not.toThrow();
+  });
+
+  it("rejects tracking layers that don't add up to the neuron count", () => {
+    const config = cloneThree();
+    config.network!.hiddenSizes = [10, 8, 5];
+    expect(() => validateConfig(config)).toThrow(
+      "network.hiddenSizes after the embedding hold 13 units, but there are 14 neurons to track");
+  });
+
+  it("rejects a network with no tracking layer", () => {
+    const config = cloneThree();
+    config.network!.hiddenSizes = [10];
+    expect(() => validateConfig(config)).toThrow(
+      "network.hiddenSizes needs an embedding and at least one tracking layer, each a positive whole number");
+  });
+
+  it("rejects a target scale of 1 or more", () => {
+    const config = cloneThree();
+    config.network!.targetScale = 1;
+    expect(() => validateConfig(config)).toThrow("network.targetScale 1 must lie strictly between 0 and 1");
+  });
+
+  it("rejects a negative margin", () => {
+    const config = cloneThree();
+    config.network!.margin = -0.1;
+    expect(() => validateConfig(config)).toThrow("network.margin -0.1 must be finite and not negative");
+  });
+
+  it("rejects a fractional checkEvery", () => {
+    const config = cloneThree();
+    config.network!.checkEvery = 2.5;
+    expect(() => validateConfig(config)).toThrow("network.checkEvery 2.5 must be a positive whole number");
+  });
+
+  it("rejects a tracking threshold above 1", () => {
+    const config = cloneThree();
+    config.thresholds.networkTrackingMin = 1.2;
+    expect(() => validateConfig(config)).toThrow("networkTrackingMin 1.2 must lie in (0, 1]");
+  });
+
+  it.each([
+    ["hiddenSizes", [0, 8, 6],
+      "network.hiddenSizes needs an embedding and at least one tracking layer, each a positive whole number"],
+    ["targetScale", 0, "network.targetScale 0 must lie strictly between 0 and 1"],
+    ["activationWeight", -1, "network.activationWeight -1 must be positive and finite"],
+    ["activationWeight", Infinity, "network.activationWeight Infinity must be positive and finite"],
+    ["classificationWeight", 0, "network.classificationWeight 0 must be positive and finite"],
+    ["learningRate", 0, "network.learningRate 0 must be positive and finite"],
+    ["learningRate", Infinity, "network.learningRate Infinity must be positive and finite"],
+    ["margin", Infinity, "network.margin Infinity must be finite and not negative"],
+    ["maxEpochs", 0, "network.maxEpochs 0 must be a positive whole number"],
+    ["maxEpochs", 6010, "network.maxEpochs 6010 must be a multiple of network.checkEvery 50"],
+    ["checkEvery", 7000, "network.maxEpochs 6000 must be a multiple of network.checkEvery 7000"],
+  ] as const)("rejects network.%s %p", (field, value, message) => {
+    const config = cloneThree();
+    (config.network as unknown as Record<string, unknown>)[field] = value;
+    expect(() => validateConfig(config)).toThrow(message);
+  });
+
+  it("rejects a tracking threshold of 0", () => {
+    const config = cloneThree();
+    config.thresholds.networkTrackingMin = 0;
+    expect(() => validateConfig(config)).toThrow("networkTrackingMin 0 must lie in (0, 1]");
+  });
+
+  it("accepts a margin of 0", () => {
+    const config = cloneThree();
+    config.network!.margin = 0;
+    expect(() => validateConfig(config)).not.toThrow();
   });
 });

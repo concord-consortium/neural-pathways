@@ -100,3 +100,32 @@ npm run analyze:activation-floor
 ```
 
 It regenerates both datasets several times over and takes under a minute.
+
+## The fitted network
+
+Trace a Case and Extract Pathways draw a network the generator fits to the alien3 data on every
+build (`fitNetwork` in `generator/alien/network.ts`), and read it from `metadata.network` in
+alien3's `index.json`. It is words → 10 → 8 → 6 → 2: an embedding of 10, then 8 and 6 units that
+track the 14 neurons above in order, then two logits, Wait and Approach.
+
+It approximates the activations; it doesn't produce them. Each tracking unit is fitted toward its
+neuron's standardized activation, times 0.75, as closely as the words allow. The units come out at
+about two-thirds of that target, partly because about 17% of the targets lie beyond tanh's reach,
+so a typical hidden gauge is about half full. Each neuron's noise isn't a function of the words, which
+caps how closely a unit can correlate with it at about the square root of the neuron's communality,
+√(1 − its noise variance): its noise ceiling, 0.92 to 0.99 here. The shipped network's units reach
+0.87 to 0.95. Its outputs reproduce `classification` for every conversation.
+
+Two self-checks hold it there, judged on the network as written to `index.json` and run through
+the app's forward pass:
+
+- `network-reproduces-classification`: every conversation's logit for its classification beats
+  the other's by at least 0.1, so a last-bit difference in `Math.tanh` between Node and a browser
+  can't flip a prediction.
+- `network-tracks-activations`: every tracking unit correlates with its neuron at r ≥ 0.85.
+
+Factor analysis on the network's own activations is not expected to give back the pathways. The
+pathways and loadings the views show are the authored ones, and the activations above are built
+from them. Generating the activations from the network isn't built yet. It needs one hidden layer
+holding every neuron factor analysis reads, each with variation of its own;
+[factor-analysis-dependent-neurons.md](factor-analysis-dependent-neurons.md) explains why.

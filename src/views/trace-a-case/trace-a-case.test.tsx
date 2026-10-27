@@ -4,7 +4,8 @@ import { spokenText } from "../../core/conversation-card/__fixtures__/spoken-tex
 import * as conversationCard from "../../core/conversation-card/conversation-card";
 import { fetchIndex } from "../../core/data-loader";
 import { phaseDuration } from "../../core/network-diagram/forward-pass-phases";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
+import { fixtureMetadata } from "../../core/network/__fixtures__/alien3-network";
 import { speedNamed } from "../../core/state/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
 import { TraceACaseState } from "./trace-a-case-state";
@@ -43,7 +44,7 @@ const attributes: AttributeDefinition[] = [
 const items = [0, 6, 1].map(i => fixture.conversations[i])
   .map((c, i) => item(c.id, c.text, c.classification, i + 2));
 const ids = items.map(i => i.id);
-const index: S3Index = { metadata: { fa_fits: {}, review_sets: {}, attributes }, items };
+const index: S3Index = { metadata: { ...fixtureMetadata, attributes }, items };
 
 function viewWith(shared: SharedState, state = new TraceACaseState({})) {
   return (
@@ -161,6 +162,28 @@ describe("TraceACase", () => {
     mockedFetchIndex.mockRejectedValue(new Error("offline"));
     showView();
     expect(await screen.findByRole("alert")).toHaveTextContent("The conversations could not be loaded: offline");
+  });
+
+  it("says to generate the data when the index has no network", async () => {
+    const { network: _network, ...metadata } = index.metadata;
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      `The conversations could not be shown: ` +
+      "The alien3 data has no network. Run npm run generate:alien to generate it.");
+  });
+
+  it("says to generate the data again when the view is opened a second time on the same index", async () => {
+    const { network: _network, ...metadata } = index.metadata;
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    const alert = "The conversations could not be shown: " +
+      "The alien3 data has no network. Run npm run generate:alien to generate it.";
+    const { unmount } = render(viewWith(new SharedState({})));
+    expect(await screen.findByRole("alert")).toHaveTextContent(alert);
+    unmount();
+    // The index is cached now, so this mount starts ready and renders before any onLoaded would run.
+    showView();
+    expect(screen.getByRole("alert")).toHaveTextContent(alert);
   });
 
   it("says the conversations couldn't be shown when correcting the conversation fails", async () => {

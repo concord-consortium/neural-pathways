@@ -4,7 +4,7 @@ import { Point } from "../../core/network-diagram/layout";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import { centerShift, columnsInSet, columnValues, deckMid, onFrontFace, setCount, setOffset } from "./deck-layout";
 import type { ExtractGeometry } from "./extract-geometry";
-import { Bar, barLengths } from "./pathways-layout";
+import { Bar, barLengths, Loadings } from "./pathways-layout";
 
 // The particles that carry the deck's readings to the loading bars, after the prototype's
 // faceGauges, flyParticles and ptFrame. Its Math.random is a seeded generator here, so a moment
@@ -51,18 +51,19 @@ export interface Particle {
   pull: number;
 }
 
-let plan: { particles: Particle[]; need: number[] } | undefined;
+const plans = new WeakMap<Loadings, { particles: Particle[]; need: number[] }>();
 
 /**
  * Every particle's bar and timing. Each bar gets particles in proportion to its length, at least 4,
  * so each particle adds about the same length to its bar. It depends on nothing but the loadings,
- * so it is worked out once.
+ * so it is worked out once for each.
  */
-export function particlePlan(): { particles: Particle[]; need: number[] } {
-  if (plan) {
-    return plan;
+export function particlePlan(loadings: Loadings): { particles: Particle[]; need: number[] } {
+  const known = plans.get(loadings);
+  if (known) {
+    return known;
   }
-  const lengths = barLengths();
+  const lengths = barLengths(loadings);
   const total = lengths.reduce((sum, length) => sum + length, 0);
   const need = lengths.map(length => Math.max(4, Math.round((PARTICLE_COUNT * length) / total)));
   const random = seededRandom(SEED);
@@ -77,13 +78,14 @@ export function particlePlan(): { particles: Particle[]; need: number[] } {
       particles.push({ bar, index, order: particles.length, leave, fly, rise, pull });
     }
   });
-  plan = { particles, need };
+  const plan = { particles, need };
+  plans.set(loadings, plan);
   return plan;
 }
 
 /** How many of each bar's particles have landed `t` ms into the flight. */
-export function landedCounts(t: number): number[] {
-  const { particles, need } = particlePlan();
+export function landedCounts(loadings: Loadings, t: number): number[] {
+  const { particles, need } = particlePlan(loadings);
   const landed = need.map(() => 0);
   for (const particle of particles) {
     if (t >= particle.leave + particle.fly) {

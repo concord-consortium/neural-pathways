@@ -2,7 +2,7 @@ import { clamp01 } from "../../core/network-diagram/easing";
 import { moveEase } from "./collect-all-timeline";
 import { deckRestScene, ExtractScene, PathwaysScene } from "./extract-scene";
 import { landedCounts, particlePlan, PARTICLES_MS } from "./particles";
-import { barLengths, LOADINGS, PATHWAYS } from "./pathways-layout";
+import { barLengths, Loadings, PATHWAYS } from "./pathways-layout";
 import { easeBetween } from "./setup-timeline";
 import { transitionAt } from "./transitions";
 
@@ -47,20 +47,20 @@ export function pathwayStart(pathway: number): number {
   return BARS_DONE + PATHWAYS_REST + pathway * PATHWAY_MS;
 }
 
-/** When neuron `neuron`'s bar copy leaves, after its pathway's turn starts. */
-export function copyLeaves(neuron: number): number {
-  return LIFT + Math.round((neuron * COPY_LEAD) / LOADINGS.length);
+/** When neuron `neuron` of `neurons` sends its bar copy, after its pathway's turn starts. */
+export function copyLeaves(neuron: number, neurons: number): number {
+  return LIFT + Math.round((neuron * COPY_LEAD) / neurons);
 }
 
-function pathwaysAt(t: number): PathwaysScene {
-  const neurons = LOADINGS.length;
+function pathwaysAt(loadings: Loadings, t: number): PathwaysScene {
+  const neurons = loadings.length;
   const liftedSlide = moveEase(clamp01((t - COLUMN_DELAY) / COLUMN_SLIDE_MS));
   const particles = t >= PARTICLES_AT && t < BARS_DONE ? t - PARTICLES_AT : undefined;
   let bars: PathwaysScene["bars"];
   if (t >= PARTICLES_AT) {
-    const landed = particles === undefined ? undefined : landedCounts(particles);
-    const { need } = particlePlan();
-    bars = barLengths().map((_, bar) => {
+    const landed = particles === undefined ? undefined : landedCounts(loadings, particles);
+    const { need } = particlePlan(loadings);
+    bars = barLengths(loadings).map((_, bar) => {
       const grays = pathwayStart(bar % PATHWAYS) + LIFT;
       return {
         grown: landed ? Math.min(1, landed[bar] / need[bar]) : 1,
@@ -78,7 +78,7 @@ function pathwaysAt(t: number): PathwaysScene {
       flying = {
         pathway,
         copies: Array.from({ length: neurons }, (__, neuron) => {
-          const leaves = start + copyLeaves(neuron);
+          const leaves = start + copyLeaves(neuron, neurons);
           return {
             progress: clamp01((t - leaves) / COPY_FLY_MS),
             opacity: 1 - easeBetween(0, 1, t, leaves + COPY_FADE_AT, COPY_FADE_MS),
@@ -86,7 +86,7 @@ function pathwaysAt(t: number): PathwaysScene {
         }),
       };
     }
-    const arrivals = Array.from({ length: neurons }, (__, neuron) => start + copyLeaves(neuron) + COPY_FLY_MS);
+    const arrivals = Array.from({ length: neurons }, (__, neuron) => start + copyLeaves(neuron, neurons) + COPY_FLY_MS);
     const landed = arrivals.filter(arrival => t >= arrival);
     const last = landed[landed.length - 1];
     return {
@@ -108,13 +108,16 @@ function pathwaysAt(t: number): PathwaysScene {
 }
 
 /**
- * Extract Pathways, `t` ms in, from the finished deck of `size`: the deck slides half off the
- * canvas and the lifted column follows; particles fly from the deck's faces onto the loading bars;
- * each pathway's bars send bar copies to its box, one pathway at a time; then the lines fade in.
+ * Extract Pathways, `t` ms in, from the finished deck of `size`, with the bars of `loadings`: the
+ * deck slides half off the canvas and the lifted column follows; particles fly from the deck's faces
+ * onto the loading bars; each pathway's bars send bar copies to its box, one pathway at a time; then
+ * the lines fade in.
  */
-export function extractPathwaysSceneAt(columnSizes: readonly number[], size: number, t: number): ExtractScene {
+export function extractPathwaysSceneAt(
+  columnSizes: readonly number[], size: number, loadings: Loadings, t: number,
+): ExtractScene {
   const scene = deckRestScene(columnSizes, size);
   scene.deck!.slide = moveEase(clamp01(t / DECK_SLIDE_MS));
-  scene.pathways = pathwaysAt(t);
+  scene.pathways = pathwaysAt(loadings, t);
   return scene;
 }

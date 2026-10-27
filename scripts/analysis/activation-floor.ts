@@ -16,9 +16,12 @@ function sweep(base: AlienConfig): void {
   console.log("  neurons  explained  " + Array.from({ length: base.pathwayCount }, (_, p) => `P${p}`).join("  "));
   for (const explainedVarianceTotal of EXPLAINED_TOTALS) {
     for (const neuronCount of NEURON_COUNTS) {
+      // The sweep measures factor analysis on the authored activations, so it fits no network, whose
+      // tracking layers are sized for 14 neurons.
       const config: AlienConfig = {
         ...base,
         activations: { ...base.activations, neuronCount, explainedVarianceTotal },
+        network: undefined,
       };
       if ((neuronCount - base.pathwayCount) ** 2 < neuronCount + base.pathwayCount) continue;
       const prefix = `  ${String(neuronCount).padEnd(7)}  ${explainedVarianceTotal.toFixed(1).padEnd(9)}  `;

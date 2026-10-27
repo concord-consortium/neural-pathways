@@ -239,6 +239,48 @@ function checkActivations(config: AlienConfig): void {
   }
 }
 
+function checkNetwork(config: AlienConfig): void {
+  const network = config.network;
+  if (!network) return;
+  const { hiddenSizes } = network;
+  if (hiddenSizes.length < 2 || hiddenSizes.some(size => !Number.isInteger(size) || size < 1)) {
+    throw new Error(
+      "network.hiddenSizes needs an embedding and at least one tracking layer, each a positive whole number",
+    );
+  }
+  const tracked = hiddenSizes.slice(1).reduce((sum, size) => sum + size, 0);
+  if (tracked !== config.activations.neuronCount) {
+    throw new Error(
+      `network.hiddenSizes after the embedding hold ${tracked} units, but there are `
+      + `${config.activations.neuronCount} neurons to track`,
+    );
+  }
+  if (!(network.targetScale > 0 && network.targetScale < 1)) {
+    throw new Error(`network.targetScale ${network.targetScale} must lie strictly between 0 and 1`);
+  }
+  for (const name of ["activationWeight", "classificationWeight", "learningRate"] as const) {
+    if (!(Number.isFinite(network[name]) && network[name] > 0)) {
+      throw new Error(`network.${name} ${network[name]} must be positive and finite`);
+    }
+  }
+  if (!(Number.isFinite(network.margin) && network.margin >= 0)) {
+    throw new Error(`network.margin ${network.margin} must be finite and not negative`);
+  }
+  for (const name of ["checkEvery", "maxEpochs"] as const) {
+    if (!Number.isInteger(network[name]) || network[name] < 1) {
+      throw new Error(`network.${name} ${network[name]} must be a positive whole number`);
+    }
+  }
+  // So the last epoch is a check, and "cap" means the margin was missed.
+  if (network.maxEpochs % network.checkEvery !== 0) {
+    throw new Error(
+      `network.maxEpochs ${network.maxEpochs} must be a multiple of network.checkEvery ${network.checkEvery}`,
+    );
+  }
+  const minimum = config.thresholds.networkTrackingMin;
+  if (!(minimum > 0 && minimum <= 1)) throw new Error(`networkTrackingMin ${minimum} must lie in (0, 1]`);
+}
+
 export function validateConfig(config: AlienConfig): void {
   if (config.targetVarianceShares.length !== config.pathwayCount) {
     throw new Error("targetVarianceShares must have one entry per pathway");
@@ -255,4 +297,5 @@ export function validateConfig(config: AlienConfig): void {
   checkFragmentsAreDistinguishable(config);
   checkBias(config);
   checkActivations(config);
+  checkNetwork(config);
 }

@@ -1,4 +1,5 @@
 import { S3Index, S3Item } from "../types/s3-data";
+import { Network } from "../network/network";
 import { AttributeDefinition } from "../types/attributes";
 import { DatasetDefinition, validateAttributeKeys } from "./dataset-definition";
 
@@ -99,3 +100,40 @@ export const alien3Dataset = createAlienDataset({
   label: "Alien Conversations (3 pathways)",
   baseUrl: "alien-data-3/",
 });
+
+/** The network the generator fitted to the alien3 data. Throws when the index has none. */
+export function alien3Network(index: S3Index): Network {
+  const { network } = index.metadata;
+  if (!network) {
+    throw new Error("The alien3 data has no network. Run npm run generate:alien to generate it.");
+  }
+  return network;
+}
+
+/**
+ * The alien3 factor-analysis fit's loadings, [neuron][pathway]. Throws unless the index has exactly one
+ * factor-analysis fit, with a full matrix of loadings.
+ */
+export function alien3Loadings(index: S3Index): number[][] {
+  const regenerate = "Run npm run generate:alien to generate it.";
+  const names = Object.keys(index.metadata.fa_fits);
+  if (names.length === 0) {
+    throw new Error(`The alien3 data has no factor-analysis fit. ${regenerate}`);
+  }
+  if (names.length > 1) {
+    throw new Error(`The alien3 data has more than one factor-analysis fit (${names.join(", ")}). ${regenerate}`);
+  }
+  const loadings = index.metadata.fa_fits[names[0]].loadings;
+  if (!loadings) {
+    throw new Error(`The alien3 data has no loadings. ${regenerate}`);
+  }
+  if (loadings.length === 0) {
+    throw new Error(`The alien3 data has empty loadings. ${regenerate}`);
+  }
+  // The transpose below reads every pathway's row as long as the first.
+  if (loadings.some(row => row.length !== loadings[0].length)) {
+    throw new Error("The alien3 data's pathways have loadings for different numbers of neurons "
+      + `(${loadings.map(row => row.length).join(", ")}). ${regenerate}`);
+  }
+  return loadings[0].map((_, neuron) => loadings.map(row => row[neuron]));
+}

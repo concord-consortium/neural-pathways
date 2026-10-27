@@ -4,16 +4,16 @@ import { DIAGRAM_DEFAULT_SIZE, NetworkDiagram } from "./network-diagram";
 import { popScale } from "./network-drawing";
 import { layoutNetwork } from "./layout";
 import { emptyScene, fullScene, Scene } from "./scene";
-import { toyNetwork } from "../network/toy-network";
+import { fixtureNetwork } from "../network/__fixtures__/alien3-network";
 import { ForwardPass, forward, predictedClass } from "../network/forward";
 import { BandThresholds, magnitudeBand, networkScales } from "../network/network-scales";
 import { NEGATIVE_COLOR, POSITIVE_COLOR, signColor } from "../colors";
-import fixture from "../network/__fixtures__/toy-network-conversations.json";
+import fixture from "../network/__fixtures__/alien3-conversations.json";
 
 const SIZES = [10, 8, 6, 2];
 const LABELS = { 0: "wait", 1: "approach" };
-const passes = fixture.conversations.map(c => forward(toyNetwork, c.text));
-const scales = networkScales(toyNetwork, passes);
+const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+const scales = networkScales(fixtureNetwork, passes);
 const waitPass = passes[0];       // classification 0
 const approachPass = passes[6];   // classification 1
 // jsdom has no ResizeObserver, so the diagram draws at its default size.
@@ -24,7 +24,7 @@ function renderDiagram(scene: Scene, pass: ForwardPass = waitPass) {
   return render(
     <>
       <h2 id="network-head">The Network</h2>
-      <NetworkDiagram network={toyNetwork} pass={pass} scales={scales} outputLabels={LABELS} scene={scene}
+      <NetworkDiagram network={fixtureNetwork} pass={pass} scales={scales} outputLabels={LABELS} scene={scene}
         headingId="network-head" />
     </>,
   );
@@ -71,7 +71,7 @@ describe("NetworkDiagram", () => {
   it("colors and bands the near half by activation and the far half by activation × weight", () => {
     renderDiagram(fullScene(SIZES));
     const activation = waitPass.layers[1][2];
-    const contribution = activation * toyNetwork.layers[2].weights[3][2];
+    const contribution = activation * fixtureNetwork.layers[2].weights[3][2];
     const near = screen.getByTestId("edge-near-1-2-3");
     const far = screen.getByTestId("edge-far-1-2-3");
     expect(near).toHaveAttribute("stroke", signColor(activation));
@@ -83,7 +83,7 @@ describe("NetworkDiagram", () => {
   it("bands each gap against its own thresholds", () => {
     // Every nonzero value is thick in gaps 0 and 2, and thin in gap 1.
     const perGap = { ...scales, edgeThresholds: [[0, 0], [Infinity, Infinity], [0, 0]] as BandThresholds[] };
-    render(<NetworkDiagram network={toyNetwork} pass={waitPass} scales={perGap} outputLabels={LABELS}
+    render(<NetworkDiagram network={fixtureNetwork} pass={waitPass} scales={perGap} outputLabels={LABELS}
       scene={fullScene(SIZES)} headingId="network-head" />);
     const widths = (gap: number) => new Set(
       screen.getAllByTestId(new RegExp(`^edge-(near|far)-${gap}-`)).map(edge => edge.getAttribute("stroke-width")));
@@ -101,7 +101,7 @@ describe("NetworkDiagram", () => {
 
   it("wires the output edges to the right class", () => {
     renderDiagram(fullScene(SIZES));
-    const contribution = waitPass.layers[2][0] * toyNetwork.layers[3].weights[1][0];
+    const contribution = waitPass.layers[2][0] * fixtureNetwork.layers[3].weights[1][0];
     expect(screen.getByTestId("edge-far-2-0-1")).toHaveAttribute("stroke", signColor(contribution));
     // Approach (class 1) is drawn on top.
     const approachEdge = screen.getByTestId("edge-near-2-0-1");
@@ -124,24 +124,26 @@ describe("NetworkDiagram", () => {
 
   it("fills each gauge from the center by the node's value", () => {
     renderDiagram(fullScene(SIZES));
-    const negative = waitPass.layers[1][0];
-    const positive = waitPass.layers[1][1];
-    expect(negative).toBeLessThan(0);
-    expect(positive).toBeGreaterThan(0);
-    const node0 = layout.nodes[1][0];
-    const node1 = layout.nodes[1][1];
-    expect(numberAttr("gauge-1-0", "y")).toBeCloseTo(node0.y);
-    expect(numberAttr("gauge-1-0", "height")).toBeCloseTo(R * Math.min(1, -negative));
-    expect(screen.getByTestId("gauge-1-0")).toHaveAttribute("fill", NEGATIVE_COLOR);
-    expect(numberAttr("gauge-1-1", "y")).toBeCloseTo(node1.y - R * Math.min(1, positive));
-    expect(screen.getByTestId("gauge-1-1")).toHaveAttribute("fill", POSITIVE_COLOR);
+    const values = waitPass.layers[1];
+    const n = values.findIndex(v => v < 0);
+    const p = values.findIndex(v => v > 0);
+    expect(n).toBeGreaterThanOrEqual(0);
+    expect(p).toBeGreaterThanOrEqual(0);
+    const nodeN = layout.nodes[1][n];
+    const nodeP = layout.nodes[1][p];
+    expect(numberAttr(`gauge-1-${n}`, "y")).toBeCloseTo(nodeN.y);
+    expect(numberAttr(`gauge-1-${n}`, "height")).toBeCloseTo(R * Math.min(1, -values[n]));
+    expect(screen.getByTestId(`gauge-1-${n}`)).toHaveAttribute("fill", NEGATIVE_COLOR);
+    expect(numberAttr(`gauge-1-${p}`, "y")).toBeCloseTo(nodeP.y - R * Math.min(1, values[p]));
+    expect(screen.getByTestId(`gauge-1-${p}`)).toHaveAttribute("fill", POSITIVE_COLOR);
   });
 
   it("fills a gauge part way", () => {
     const scene = fullScene(SIZES);
-    scene.nodeFill[1][1] = 0.5;
+    const p = waitPass.layers[1].findIndex(v => v > 0);
+    scene.nodeFill[1][p] = 0.5;
     renderDiagram(scene);
-    expect(numberAttr("gauge-1-1", "height")).toBeCloseTo(R * 0.5 * Math.min(1, waitPass.layers[1][1]));
+    expect(numberAttr(`gauge-1-${p}`, "height")).toBeCloseTo(R * 0.5 * Math.min(1, waitPass.layers[1][p]));
   });
 
   it("draws output gauges against the logit scale", () => {

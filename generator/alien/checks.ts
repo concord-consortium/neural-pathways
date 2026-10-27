@@ -1,4 +1,6 @@
 import { pearson } from "../../src/core/math/statistics";
+import { forward } from "../../src/core/network/forward";
+import { Network } from "../../src/core/network/network";
 import { solvedFor } from "./attributes";
 import { factorScores, fitFactorAnalysis } from "./factor-analysis";
 import { GeneratorRun } from "./pipeline";
@@ -259,8 +261,68 @@ function faRecoversPathways(run: GeneratorRun): CheckResult {
   };
 }
 
+/**
+ * The network as written to index.json, read back the way the app will read it, so the network
+ * checks judge exactly what the app loads.
+ */
+function emittedNetwork(run: GeneratorRun): Network | undefined {
+  const { network } = run.dataset.index.metadata;
+  return network && (JSON.parse(JSON.stringify(network)) as Network);
+}
+
+const NO_NETWORK = "0 networks in index.json, though the config asks for one";
+
+function networkReproducesClassification(run: GeneratorRun, network: Network | undefined, margin: number): CheckResult {
+  const name = "network-reproduces-classification";
+  if (!network) return { name, passed: false, detail: NO_NETWORK };
+  const { dataset, outcomes } = run;
+  const short: string[] = [];
+  let smallest = Infinity;
+  dataset.texts.forEach((text, i) => {
+    const logits = forward(network, text).layers[network.layers.length - 1];
+    const own = outcomes.classification[i];
+    const lead = logits[own] - logits[1 - own];
+    smallest = Math.min(smallest, lead);
+    if (!(lead >= margin)) short.push(dataset.ids[i]);
+  });
+  const capped = run.network?.stoppedBy === "cap"
+    ? ` Fitting stopped at network.maxEpochs (${run.network.epochs}); try another network.seed.`
+    : "";
+  return {
+    name,
+    passed: short.length === 0,
+    detail: short.length === 0
+      ? `all ${dataset.texts.length} conversations, smallest margin ${smallest.toFixed(3)} (minimum ${margin})`
+      : `${short.length} conversations under the ${margin} margin, first ${short.slice(0, 3).join(", ")}; `
+        + `smallest margin ${smallest.toFixed(3)}.${capped}`,
+  };
+}
+
+/**
+ * Each tracking unit against the authored neuron it follows. The tracking units are the hidden
+ * layers after the embedding, in order, one per neuron.
+ */
+function networkTracksActivations(run: GeneratorRun, network: Network | undefined): CheckResult {
+  const name = "network-tracks-activations";
+  if (!network) return { name, passed: false, detail: NO_NETWORK };
+  const { config, dataset, activations } = run;
+  const minimum = config.thresholds.networkTrackingMin;
+  const units = dataset.texts.map(text => forward(network, text).layers.slice(1, -1).flat());
+  const rs = activations.standardized[0].map((_, j) =>
+    pearson(units.map(row => row[j]), activations.standardized.map(row => row[j])).r ?? 0);
+  const weakest = rs.reduce((low, r, j) => (r < rs[low] ? j : low), 0);
+  const below = rs.map((r, j) => ({ r, j })).filter(entry => !(entry.r >= minimum));
+  return {
+    name,
+    passed: below.length === 0,
+    detail: below.length === 0
+      ? `weakest unit tracks neuron ${weakest} at r ${rs[weakest].toFixed(3)} (minimum ${minimum})`
+      : `${below.map(entry => `neuron ${entry.j} r ${entry.r.toFixed(3)}`).join("; ")} (minimum ${minimum})`,
+  };
+}
+
 export function runChecks(run: GeneratorRun): CheckResult[] {
-  return [
+  const results = [
     shapAdditivity(run),
     noteEvidence(run),
     achievedCorrelations(run),
@@ -271,6 +333,14 @@ export function runChecks(run: GeneratorRun): CheckResult[] {
     pathwaysAreOrthogonal(run),
     faRecoversPathways(run),
   ];
+  if (run.config.network) {
+    const network = emittedNetwork(run);
+    results.push(
+      networkReproducesClassification(run, network, run.config.network.margin),
+      networkTracksActivations(run, network),
+    );
+  }
+  return results;
 }
 
 export function checksPassed(results: CheckResult[]): boolean {

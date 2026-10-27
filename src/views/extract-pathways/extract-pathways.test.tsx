@@ -1,7 +1,8 @@
 import React from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
-import fixture from "../../core/network/__fixtures__/toy-network-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
+import { fixtureMetadata } from "../../core/network/__fixtures__/alien3-network";
 import { speedNamed } from "../../core/state/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
 import * as viewStateContext from "../../core/state/view-state-context";
@@ -33,7 +34,7 @@ function item(id: string, text: string, classification: number): S3Item {
 }
 
 const items = fixture.conversations.map(c => item(c.id, c.text, c.classification));
-const index: S3Index = { metadata: { fa_fits: {}, review_sets: {} }, items };
+const index: S3Index = { metadata: fixtureMetadata, items };
 
 function showView(state = new ExtractPathwaysState({})) {
   const utils = render(
@@ -82,6 +83,48 @@ describe("ExtractPathways", () => {
     mockedFetchIndex.mockRejectedValue(new Error("offline"));
     showView();
     expect(await screen.findByRole("alert")).toHaveTextContent("offline");
+  });
+
+  it("says to generate the data when the index has no network", async () => {
+    const { network: _network, ...metadata } = fixtureMetadata;
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      `The conversations could not be shown: ` +
+      "The alien3 data has no network. Run npm run generate:alien to generate it.");
+  });
+
+  it("says to generate the data when the fit has no loadings", async () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: { ...fit, loadings: undefined } } };
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The conversations could not be shown: The alien3 data has no loadings. "
+      + "Run npm run generate:alien to generate it.");
+  });
+
+  it("says to generate the data again when the view is opened a second time on the same index", async () => {
+    const { network: _network, ...metadata } = fixtureMetadata;
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    const alert = "The conversations could not be shown: " +
+      "The alien3 data has no network. Run npm run generate:alien to generate it.";
+    const { unmount } = showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(alert);
+    unmount();
+    // The index is cached now, so this mount starts ready and renders before any onLoaded would run.
+    showView();
+    expect(screen.getByRole("alert")).toHaveTextContent(alert);
+  });
+
+  it("names both shapes when the loadings don't match the network's hidden neurons", async () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const loadings = fit.loadings!.map(pathway => pathway.slice(1));
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: { ...fit, loadings } } };
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata });
+    showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The conversations could not be shown: Expected loadings for 14 neurons on 3 pathways, got 13 rows of 3");
   });
 
   it("says so when there are no conversations", async () => {

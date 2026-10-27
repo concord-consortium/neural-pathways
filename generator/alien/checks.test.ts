@@ -1,13 +1,13 @@
-import { fourPathwayConfig } from "../alien-config";
+import { fourPathwayConfig, threePathwayConfig } from "../alien-config";
 import { assignByShares } from "./attributes";
-import { generate } from "./pipeline";
-import { runChecks } from "./checks";
+import { generate, GeneratorRun } from "./pipeline";
+import { CheckResult, runChecks } from "./checks";
 
 const run = generate(fourPathwayConfig);
 const checks = runChecks(run);
 
 describe("runChecks", () => {
-  it("reports all nine checks", () => {
+  it("reports nine checks for a dataset without a network", () => {
     expect(checks).toHaveLength(9);
     expect(checks.map(c => c.name)).toEqual([
       "shap-additivity",
@@ -143,5 +143,98 @@ describe("runChecks", () => {
     for (let p = 0; p < fourPathwayConfig.pathwayCount; p++) {
       expect(result.detail).toMatch(new RegExp(`P${p}->F${p} r [01]\\.\\d+ cos [01]\\.\\d+`));
     }
+  });
+});
+
+describe("runChecks on a dataset with a network", () => {
+  let run3: GeneratorRun;
+  let checks3: CheckResult[];
+  const find = (results: CheckResult[], name: string) => results.find(c => c.name === name)!;
+
+  beforeAll(() => {
+    run3 = generate(threePathwayConfig);
+    checks3 = runChecks(run3);
+  }, 60000);
+
+  it("adds the two network checks after the nine", () => {
+    expect(checks3.map(c => c.name).slice(9)).toEqual([
+      "network-reproduces-classification",
+      "network-tracks-activations",
+    ]);
+  });
+
+  it("passes on the shipped config, stating the measured values", () => {
+    const failed = checks3.filter(check => !check.passed);
+    expect(failed.map(f => `${f.name}: ${f.detail}`)).toEqual([]);
+    expect(find(checks3, "network-reproduces-classification").detail)
+      .toMatch(/^all 800 conversations, smallest margin 0\.\d{3} \(minimum 0\.1\)$/);
+    expect(find(checks3, "network-tracks-activations").detail)
+      .toMatch(/^weakest unit tracks neuron \d+ at r 0\.\d{3} \(minimum 0\.85\)$/);
+  });
+
+  it("fails when a classification is flipped, naming the conversation", () => {
+    const flipped = [...run3.outcomes.classification];
+    flipped[0] = 1 - flipped[0];
+    const rigged = { ...run3, outcomes: { ...run3.outcomes, classification: flipped } };
+    const result = find(runChecks(rigged), "network-reproduces-classification");
+    expect(result.passed).toBe(false);
+    expect(result.detail).toContain(run3.dataset.ids[0]);
+  });
+
+  it("fails when conversations clear their class by less than the margin", () => {
+    const rigged = { ...run3, config: { ...run3.config, network: { ...run3.config.network!, margin: 1000 } } };
+    const result = find(runChecks(rigged), "network-reproduces-classification");
+    expect(result.passed).toBe(false);
+    expect(result.detail).toMatch(/^800 conversations under the 1000 margin/);
+    // Fitting stopped by the margin, so another seed is no remedy.
+    expect(result.detail).not.toContain("network.seed");
+  });
+
+  it("fails just above the smallest margin and passes just below it", () => {
+    const [, smallest] = find(checks3, "network-reproduces-classification").detail.match(/smallest margin (0\.\d{3})/)!;
+    const at = (margin: number) => find(runChecks({
+      ...run3, config: { ...run3.config, network: { ...run3.config.network!, margin } },
+    }), "network-reproduces-classification");
+    expect(at(Number(smallest) + 0.001).passed).toBe(false);
+    expect(at(Number(smallest) - 0.001).passed).toBe(true);
+  });
+
+  it("says to try another seed when fitting ran out of epochs", () => {
+    const rigged = {
+      ...run3,
+      config: { ...run3.config, network: { ...run3.config.network!, margin: 1000 } },
+      network: { ...run3.network!, stoppedBy: "cap" as const, epochs: 6000 },
+    };
+    expect(find(runChecks(rigged), "network-reproduces-classification").detail)
+      .toMatch(/stopped at network\.maxEpochs \(6000\); try another network\.seed/);
+  });
+
+  it("fails network-tracks-activations when the activations are reversed across conversations", () => {
+    const rigged = {
+      ...run3,
+      activations: { ...run3.activations, standardized: [...run3.activations.standardized].reverse() },
+    };
+    const result = find(runChecks(rigged), "network-tracks-activations");
+    expect(result.passed).toBe(false);
+    expect(result.detail).toMatch(/neuron 0 r -?0\.\d{3}/);
+  });
+
+  it("fails just above the weakest unit's r, naming only that unit, and passes just below it", () => {
+    const [, neuron, r] = find(checks3, "network-tracks-activations").detail.match(/neuron (\d+) at r (0\.\d{3})/)!;
+    const at = (networkTrackingMin: number) => find(runChecks({
+      ...run3, config: { ...run3.config, thresholds: { ...run3.config.thresholds, networkTrackingMin } },
+    }), "network-tracks-activations");
+    const above = at(Number(r) + 0.001);
+    expect(above.passed).toBe(false);
+    expect(above.detail).toBe(`neuron ${neuron} r ${r} (minimum ${Number(r) + 0.001})`);
+    expect(at(Number(r) - 0.001).passed).toBe(true);
+  });
+
+  it("fails both when the dataset carries no network", () => {
+    const { network: _network, ...metadata } = run3.dataset.index.metadata;
+    const rigged = { ...run3, dataset: { ...run3.dataset, index: { ...run3.dataset.index, metadata } } };
+    const results = runChecks(rigged);
+    expect(find(results, "network-reproduces-classification").passed).toBe(false);
+    expect(find(results, "network-tracks-activations").passed).toBe(false);
   });
 });
