@@ -232,37 +232,39 @@ describe("validateConfig's network rules", () => {
   it("rejects tracking layers that don't add up to the neuron count", () => {
     const config = cloneThree();
     config.network!.hiddenSizes = [10, 8, 5];
-    expect(() => validateConfig(config)).toThrow(/13 units, but there are 14 neurons/);
+    expect(() => validateConfig(config)).toThrow(
+      "network.hiddenSizes after the embedding hold 13 units, but there are 14 neurons to track");
   });
 
   it("rejects a network with no tracking layer", () => {
     const config = cloneThree();
     config.network!.hiddenSizes = [10];
-    expect(() => validateConfig(config)).toThrow(/embedding and at least one tracking layer/);
+    expect(() => validateConfig(config)).toThrow(
+      "network.hiddenSizes needs an embedding and at least one tracking layer, each a positive whole number");
   });
 
   it("rejects a target scale tanh can't reach", () => {
     const config = cloneThree();
     config.network!.targetScale = 1;
-    expect(() => validateConfig(config)).toThrow(/targetScale/);
+    expect(() => validateConfig(config)).toThrow("network.targetScale 1 must lie strictly between 0 and 1");
   });
 
   it("rejects a negative margin", () => {
     const config = cloneThree();
     config.network!.margin = -0.1;
-    expect(() => validateConfig(config)).toThrow(/margin/);
+    expect(() => validateConfig(config)).toThrow("network.margin -0.1 must be finite and not negative");
   });
 
   it("rejects a fractional checkEvery", () => {
     const config = cloneThree();
     config.network!.checkEvery = 2.5;
-    expect(() => validateConfig(config)).toThrow(/checkEvery/);
+    expect(() => validateConfig(config)).toThrow("network.checkEvery 2.5 must be a positive whole number");
   });
 
   it("rejects a tracking threshold above 1", () => {
     const config = cloneThree();
     config.thresholds.networkTrackingMin = 1.2;
-    expect(() => validateConfig(config)).toThrow(/networkTrackingMin/);
+    expect(() => validateConfig(config)).toThrow("networkTrackingMin 1.2 must lie in (0, 1]");
   });
 
   it.each([
