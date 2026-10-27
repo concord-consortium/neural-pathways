@@ -153,9 +153,8 @@ the name for a noise variance driven to zero. From then on:
 - In scoring, it pins the pathway scores to what it reads, outweighing every other neuron on the
   pathways it carries.
 
-It doesn't look exactly like any one pathway. It is a blend, built from first-layer values that
-carry their own quirks. So the pathways tilt toward the blend, and pathways of similar strength
-rotate into each other.
+It is a blend of pathways, not any one of them. So the pathways tilt toward the blend, and pathways
+of similar strength rotate into each other.
 
 ### Failure 2: copied quirks look like a pathway
 
