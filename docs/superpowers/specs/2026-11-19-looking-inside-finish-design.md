@@ -171,7 +171,8 @@ pointer cursor, and aren't focusable.
 the drawing, 10 px wider than the circle and one row's pitch tall, so neighbors touch and moving down
 a column doesn't flicker. The output pills are a second target for their neuron (12616–12621). The
 cursor is a pointer only on targets of reached neurons (2364–2373). Each target carries a `<title>`:
-the neuron's name before it is reached, and "Activation = −0.42" after (13004–13007).
+the neuron's name before it is reached, and "Activation: −0.42" after (`actLine`, 12981, and
+13004–13007).
 
 **Highlight** (12647–12729, CSS 2327–2354). While a reached neuron is hovered or focused, or
 pinned:
