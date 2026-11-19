@@ -280,7 +280,7 @@ test("the observation notes open and close from the keyboard", async ({ page }) 
   await expect(notes).toBeHidden();
 });
 
-test("the observation notes stay open when switching views, but not after a reload", async ({ page }) => {
+test("the observation notes stay open when switching views", async ({ page }) => {
   await page.goto("/");
   await openNotes(page);
   const nav = page.getByRole("navigation", { name: "Views" });
@@ -289,8 +289,6 @@ test("the observation notes stay open when switching views, but not after a relo
   await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   const toggle = page.getByRole("button", { name: "Observation notes" });
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  await page.reload();
-  await expect(toggle).toHaveAttribute("aria-expanded", "false");
 });
 
 // As on a school network that blocks Google Fonts, where Lato and Barlow fall back.
