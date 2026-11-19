@@ -47,6 +47,10 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
   };
 
   const onKeyDown = (event: React.KeyboardEvent, neuron: NeuronRef) => {
+    // Leave browser and OS shortcuts such as Alt+Left (Back) alone.
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onToggle(neuron);
