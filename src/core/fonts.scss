@@ -1,4 +1,13 @@
-// The lesson's font stacks, for anything that names one more than once.
+// The lesson's font stacks. Lato and Barlow Condensed come from Google Fonts, which
+// src/app/index.html loads.
+
+// Body text: the page's default, the observation notes, the About dialog, and the drawings' small
+// labels.
+$body-font: "Lato", sans-serif;
+
+// Panel titles, headings, buttons, chips, and labels such as the filter's, the speed control's and
+// the output pills'.
+$label-font: "Barlow Condensed", sans-serif;
 
 // Code-like text and counts: the filter's query and help, and the card's count.
 $mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;

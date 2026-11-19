@@ -1,4 +1,5 @@
 @use "../../core/colors" as colors;
+@use "../../core/fonts" as fonts;
 
 // The canvas is drawn at full size and never scaled; see minCanvasWidth for why it scrolls instead.
 .extract-drawing {
@@ -20,7 +21,7 @@
 }
 
 .extract-drawing__label {
-  font-family: "Lato", sans-serif;
+  font-family: fonts.$body-font;
   font-size: 14px;
   fill: colors.$ink;
   pointer-events: none;

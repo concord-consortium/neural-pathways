@@ -1,5 +1,6 @@
 @use "sass:color";
 @use "./colors" as colors;
+@use "./fonts" as fonts;
 
 // The lesson's buttons, from the prototype's step buttons: white with a 2 px rule, in capitals. Each
 // button adds its own hover and pressed states.
@@ -11,7 +12,7 @@
   border-radius: 5px;
   background: #fff;
   color: colors.$ink-2;
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: fonts.$label-font;
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.04em;

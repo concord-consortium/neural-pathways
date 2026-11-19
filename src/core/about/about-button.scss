@@ -1,5 +1,6 @@
 @use "../button";
 @use "../colors" as colors;
+@use "../fonts" as fonts;
 
 // The prototype's About button: a step button with the ⓘ before its word.
 .about-button {
@@ -44,7 +45,7 @@
   background: #fff;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   color: colors.$ink;
-  font-family: "Lato", sans-serif;
+  font-family: fonts.$body-font;
 
   &[open] {
     display: flex;

@@ -1,4 +1,5 @@
 @use "../colors" as colors;
+@use "../fonts" as fonts;
 
 // The Animate checkbox and the speed slider, from the prototype's .nnm-animtoggle and .nnm-speed.
 // Where it sits in its row is up to the row.
@@ -7,7 +8,7 @@
   flex-shrink: 0;
   align-items: center;
   gap: 10px;
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: fonts.$label-font;
   font-weight: 600;
   text-transform: uppercase;
 }
