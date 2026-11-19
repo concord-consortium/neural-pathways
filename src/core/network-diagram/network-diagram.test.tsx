@@ -58,7 +58,7 @@ describe("NetworkDiagram", () => {
     }
     expect(screen.getByText("APPROACH")).toBeInTheDocument();
     expect(screen.getByText("WAIT")).toBeInTheDocument();
-    // The prototype dropped the captions over the pills in v1.2.
+    // No caption over the pills, as in the prototype.
     expect(screen.queryByText(/Class:/)).not.toBeInTheDocument();
   });
 
