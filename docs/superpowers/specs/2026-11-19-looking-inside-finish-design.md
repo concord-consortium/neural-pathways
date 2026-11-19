@@ -298,8 +298,8 @@ Input Layer readout pinned during Step 2 gains its sentence when Step 2 ends.
 
 The ticket also lists an output readout for before Step 4 ("**Approach** — one of the two numbers
 the network ends on. The larger one is the answer."). The outputs aren't reached before Step 4, in
-v1.4 (13018–13023) as here, so it can never show. Scott chose to leave it out; the PR notes it for
-Jie and Michael.
+v1.4 (13018–13023) as here, so it can never show. Scott chose to leave it out. It was never
+visible in the prototype, so it needs no sign-off from the designers.
 
 **Live region.** The box is `aria-live="polite"`, so a screen reader hears the prompt after each
 step and the readout on a pin. NPW-49's announcements will build on it.
