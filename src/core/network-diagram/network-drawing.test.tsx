@@ -6,11 +6,11 @@ import { fullScene, Scene } from "./scene";
 import { fixtureNetwork } from "../network/__fixtures__/alien3-network";
 import { forward } from "../network/forward";
 import { networkScales } from "../network/network-scales";
-import fixture from "../network/__fixtures__/alien3-conversations.json";
+import fixture from "../network/__fixtures__/alien3-messages.json";
 
 const SIZES = [10, 8, 6, 2];
 const LABELS = { 0: "wait", 1: "approach" };
-const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+const passes = fixture.messages.map(c => forward(fixtureNetwork, c.text));
 const scales = networkScales(fixtureNetwork, passes);
 const layout = layoutNetwork(SIZES, 537, 440);
 

@@ -2,7 +2,7 @@ import { clamp01, cubicBezier, ease } from "./easing";
 import { emptyScene, Scene } from "./scene";
 
 /**
- * The four phases of one conversation's forward pass through the network, as a function of time,
+ * The four phases of one message's forward pass through the network, as a function of time,
  * at the prototype's "Med" speed (neural-net-maker index.html: fillInputs, runFan, revealAnswer).
  * Phase p fills column p − 1; phases 2–4 first play the fan of edges into it, one source unit at a
  * time. A view can play each phase as a segment of its own, or several within one segment.

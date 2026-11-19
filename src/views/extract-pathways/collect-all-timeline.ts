@@ -13,7 +13,7 @@ import { lerp, Transition, transitionAt } from "./transitions";
 // addColumn, settleXY, nameColumn, showCount, dropName, cbSetTwo, cbHeadPair, cbLayout and
 // cbAddSet. src/views/README.md says where the prototype is.
 
-/** Collect All collects by hand, as Collect a Conversation does, until this many are in. */
+/** Collect All collects by hand, as Collect a Message does, until this many are in. */
 export const BY_HAND = 3;
 const HANDOVER_REST = 450;
 const HIDE_MS = 420;
@@ -71,7 +71,7 @@ interface Close {
 
 /** When each part of a Collect All run happens, in ms from the run's start. */
 export interface CollectAllPlan {
-  /** The conversations collected by hand first, in order. */
+  /** The messages collected by hand first, in order. */
   byHand: number[];
   /** When the hand-over starts. */
   handOver: number;

@@ -5,13 +5,12 @@ import { findView, VIEWS } from "./views";
 describe("VIEWS", () => {
   it("lists the lesson views in lesson order", () => {
     expect(VIEWS.map(view => view.id)).toEqual([
-      "trace-a-case",
+      "looking-inside",
       "extract-pathways",
       "investigate-pathways",
-      "prediction-chain",
+      "model-reasoning",
+      "contextual-factors",
       "correlations",
-      "investigate-unknown-pathway",
-      "correlations-part-2",
     ]);
   });
 

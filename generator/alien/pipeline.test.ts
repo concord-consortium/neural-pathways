@@ -4,7 +4,7 @@
 import { fourPathwayConfig, threePathwayConfig } from "../alien-config";
 import { Network } from "../../src/core/network/network";
 import snapshot from "../../src/core/network/__fixtures__/alien3-network.json";
-import fixture from "../../src/core/network/__fixtures__/alien3-conversations.json";
+import fixture from "../../src/core/network/__fixtures__/alien3-messages.json";
 import { generate, GeneratorRun } from "./pipeline";
 import { runChecks } from "./checks";
 import { formatSummary } from "./summary";
@@ -80,11 +80,11 @@ describe("generate with a network", () => {
   });
 
   it("emits the conversations the app's tests use, with their texts and classifications", () => {
-    const emitted = fixture.conversations.map(({ id }) => {
+    const emitted = fixture.messages.map(({ id }) => {
       const i = run.dataset.ids.indexOf(id);
       return { id, text: run.dataset.texts[i], classification: run.outcomes.classification[i] };
     });
-    expect(emitted).toEqual(fixture.conversations);
+    expect(emitted).toEqual(fixture.messages);
   });
 
   it("emits the factor-analysis fit the app's tests use, and a network of the snapshot's shape", () => {

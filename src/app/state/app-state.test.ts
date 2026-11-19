@@ -15,8 +15,7 @@ class Counter extends Model({ count: tProp(types.number, 0) }) {
 @model("test/AppStateOther")
 class Other extends Model({}) {}
 
-// A registry with two views sharing one model, like Correlations and Correlations Part 2, and a
-// view that keeps no state.
+// A registry with two views sharing one model, and a view that keeps no state.
 const testViews = [
   { id: "first", stateModel: Counter },
   { id: "second", stateModel: Counter },

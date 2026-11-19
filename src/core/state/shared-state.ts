@@ -1,7 +1,7 @@
 import "./setup";
 import { action, observable } from "mobx";
 import { Model, model, modelAction, tProp, types } from "mobx-keystone";
-import { validConversationId } from "./conversation";
+import { validMessageId } from "./message";
 
 /**
  * The state every view reads and writes, carried from one interactive to the next in the Activity
@@ -15,8 +15,8 @@ export class SharedState extends Model({
   version: tProp(types.literal(1), 1),
   /** The filter query every view uses. Unset: no query has been set. "": the student cleared it. */
   query: tProp(types.maybe(types.string)),
-  /** The current conversation, in every view that shows one. Unset until a view first loads its conversations. */
-  conversationId: tProp(types.maybe(types.string)),
+  /** The current message, in every view that shows one. Unset until a view first loads its messages. */
+  messageId: tProp(types.maybe(types.string)),
 }) {
   /** The filter bar's text while it differs from `query`; unset otherwise. Volatile: see docs/view-state.md. */
   @observable accessor queryDraft: string | undefined = undefined;
@@ -32,30 +32,30 @@ export class SharedState extends Model({
   }
 
   /**
-   * Stores a query the student has finished typing, and corrects the conversation against its
+   * Stores a query the student has finished typing, and corrects the message against its
    * matches. One action, so one undo can reverse both; see docs/undo.md.
    */
   @modelAction
   setQueryAndCorrect(query: string, ids: readonly string[]) {
     this.query = query;
     this.queryDraft = undefined;
-    this.ensureValidConversation(ids);
+    this.ensureValidMessage(ids);
   }
 
   @modelAction
-  setConversationId(conversationId: string | undefined) {
-    this.conversationId = conversationId;
+  setMessageId(messageId: string | undefined) {
+    this.messageId = messageId;
   }
 
   /**
-   * Called by a view that shows a conversation when its list of conversations arrives or changes,
-   * so the next view opens on the same conversation.
+   * Called by a view that shows a message when its list of messages arrives or changes,
+   * so the next view opens on the same message.
    */
   @modelAction
-  ensureValidConversation(ids: readonly string[]) {
-    const id = validConversationId(this.conversationId, ids);
-    if (id !== this.conversationId) {
-      this.conversationId = id;
+  ensureValidMessage(ids: readonly string[]) {
+    const id = validMessageId(this.messageId, ids);
+    if (id !== this.messageId) {
+      this.messageId = id;
     }
   }
 }

@@ -20,7 +20,7 @@ import about from "./about.md";
 import "./extract-pathways.scss";
 
 /** The view's title, in its heading, its About and the app's list of views. */
-export const EXTRACT_PATHWAYS_TITLE = "Extract Pathways";
+export const EXTRACT_PATHWAYS_TITLE = "Extract the Neural Pathways";
 
 const PANEL_TITLE = "The Network → Activated Pathways";
 
@@ -41,7 +41,7 @@ function readFromIndex(index: S3Index): FromIndex {
 }
 
 /**
- * Lift the hidden neurons out of the network, collect conversations' activations from them into a
+ * Lift the hidden neurons out of the network, collect messages' activations from them into a
  * deck, and draw the three pathways from it.
  */
 export const ExtractPathways: React.FC = observer(function ExtractPathways() {
@@ -53,11 +53,11 @@ export const ExtractPathways: React.FC = observer(function ExtractPathways() {
   return (
     <div className="extract-pathways">
       <h1 className="extract-pathways__title">{EXTRACT_PATHWAYS_TITLE}</h1>
-      {indexState.status === "loading" && <p>Loading conversations…</p>}
+      {indexState.status === "loading" && <p>Loading messages…</p>}
       {indexState.status === "error" &&
-        <p role="alert">The conversations could not be loaded: {indexState.error.message}</p>}
+        <p role="alert">The messages could not be loaded: {indexState.error.message}</p>}
       {fromIndex && "error" in fromIndex &&
-        <p role="alert">The conversations could not be shown: {fromIndex.error.message}</p>}
+        <p role="alert">The messages could not be shown: {fromIndex.error.message}</p>}
       {indexState.status === "ready" && fromIndex && !("error" in fromIndex) &&
         <ExtractPathwaysBody index={indexState.index} network={fromIndex.network} loadings={fromIndex.loadings} />}
     </div>
@@ -86,7 +86,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
   useLayoutEffect(() => () => player.stop(), [player]);
 
   if (passes.length === 0) {
-    return <p>No conversations.</p>;
+    return <p>No messages.</p>;
   }
 
   return (

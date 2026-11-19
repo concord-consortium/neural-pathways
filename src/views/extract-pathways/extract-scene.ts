@@ -35,11 +35,11 @@ export interface DeckScene {
   arriving: { column: number; dx: number; opacity: number }[];
   /** How deep the faces' shading is: see deck-drawing's `shading`. */
   shade: number;
-  /** "Conversation n" beside column n − 1 of set 0, while it shows. */
+  /** "Message n" beside column n − 1 of set 0, while it shows. */
   labels: { column: number; opacity: number }[];
-  /** "n Conversations" over the deck, once set 0 is full. */
+  /** "n Messages" over the deck, once set 0 is full. */
   count: { n: number; opacity: number } | undefined;
-  /** How many conversations the drawing's description counts as collected. */
+  /** How many messages the drawing's description counts as collected. */
   collected: number;
   /** Whether the deck is finished. */
   done: boolean;
@@ -61,23 +61,23 @@ export interface PathwaysScene {
   done: boolean;
 }
 
-/** What Extract Pathways draws at one moment. The timelines build these; ExtractDrawing draws them. */
+/** What Extract the Neural Pathways draws at one moment. The timelines build these; ExtractDrawing draws them. */
 export interface ExtractScene {
   /** The network: its fills, edges, answer and spotlight. */
   network: Scene;
   /** The network's opacity as a whole: 0 once Collect All has hidden it. */
   networkOpacity: number;
-  /** Which conversation the network shows, 1-based; undefined until the first collection starts. */
+  /** Which message the network shows, 1-based; undefined until the first collection starts. */
   shown: number | undefined;
-  /** "Conversation n" over the network, and how far its bounce has gone, 0–1. */
+  /** "Message n" over the network, and how far its bounce has gone, 0–1. */
   label: { n: number; bounce: number } | undefined;
   /** The lifted column, once its copies have left. `flight` is ms since they left. */
   lifted: { flight: number; opacity: number; labelOpacity: number } | undefined;
   /**
-   * The collections so far, in order: the conversation each adds to the deck, and `flight`, ms since
+   * The collections so far, in order: the message each adds to the deck, and `flight`, ms since
    * its copies left. Empty once Collect All has started, when `deck` holds their columns.
    */
-  collections: { conversation: number; flight: number }[];
+  collections: { message: number; flight: number }[];
   /** The deck, in sets, once Collect All has started; the columns collected by hand are set 0's first. */
   deck: DeckScene | undefined;
   /** What Extract Pathways adds, once it has started. */
@@ -91,7 +91,7 @@ export function hiddenCount(columnSizes: readonly number[]): number {
 
 /**
  * The scene resting at `marker`, with nothing running: the blank network; then the lifted
- * column; then the last conversation collected in full, under its label, with the deck, spotlit as
+ * column; then the last message collected in full, under its label, with the deck, spotlit as
  * its flight left it (see `collectSceneAt`). For markers 0 to 11; at the deck the timeline rests in
  * `deckRestScene`, and at the pathways in `pathwaysRestScene`.
  */
@@ -107,7 +107,7 @@ export function restScene(columnSizes: readonly number[], marker: Marker): Extra
     shown: collected > 0 ? collected : undefined,
     label: collected > 0 ? { n: collected, bounce: 1 } : undefined,
     lifted: marker >= 1 ? { flight: landed, opacity: 1 - spotlight, labelOpacity: 1 } : undefined,
-    collections: Array.from({ length: collected }, (_, c) => ({ conversation: c + 1, flight: landed })),
+    collections: Array.from({ length: collected }, (_, c) => ({ message: c + 1, flight: landed })),
     deck: undefined,
     pathways: undefined,
   };

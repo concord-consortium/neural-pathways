@@ -8,7 +8,7 @@ describe("getInteractiveViewId", () => {
 
   it("returns the interactive param", () => {
     expect(getInteractiveViewId("?interactive=correlations")).toBe("correlations");
-    expect(getInteractiveViewId("?a=1&interactive=trace-a-case")).toBe("trace-a-case");
+    expect(getInteractiveViewId("?a=1&interactive=looking-inside")).toBe("looking-inside");
   });
 
   it("returns an empty string when the param is present but empty", () => {
@@ -32,7 +32,7 @@ describe("getHashViewId", () => {
 
 describe("viewHash", () => {
   it("builds a hash that getHashViewId reads back", () => {
-    expect(viewHash("prediction-chain")).toBe("#view=prediction-chain");
-    expect(getHashViewId(viewHash("prediction-chain"))).toBe("prediction-chain");
+    expect(viewHash("model-reasoning")).toBe("#view=model-reasoning");
+    expect(getHashViewId(viewHash("model-reasoning"))).toBe("model-reasoning");
   });
 });

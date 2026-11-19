@@ -1,0 +1,121 @@
+@use "../../core/colors" as colors;
+@use "../../core/panel";
+
+$diagram-padding: 8px;
+// The network panel's height around the diagram: its head, the diagram's padding and its border.
+$network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
+// The step row at its narrowest, on one line: Step 1 to Step 4 and Reset (329.4 px), a 6 px gap and
+// About (85.3 px), rounded up, in 16 px Barlow Condensed. It is wider than the network panel's
+// narrowest, 382 px, so it sets the second column's minimum.
+$step-row-width: 421px;
+// The two columns at their narrowest: the card's 447 px, the 10 px gap and the step row. This sets
+// the view's minimum layout width.
+$two-columns-width: 447px + 10px + $step-row-width;
+
+// At least the window's height, so the layout below the title can fill what is left of it.
+.looking-inside {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding-bottom: 16px;
+  container-type: inline-size;
+}
+
+// Two columns, each a row of controls over a panel, as in the prototype: the filter row over the
+// message card, the step row over the network. The two rows line up, so the two panels start
+// on the same line. They take at least $two-columns-width, which sets the view's minimum layout
+// width.
+//
+// The layout takes the height the title leaves, and the panel row grows into it, up to 800 px so a
+// very tall window doesn't leave the network floating in empty space. It stops at the network
+// panel's smallest, 380 px: the diagram's smallest layout plus $network-chrome. Below that the
+// panels run past the window and the page scrolls. min-height: 0 because the browser measures the
+// layout's content height with the row at its 800 px most, which would otherwise be its minimum.
+//
+// --diagram-min-height is MIN_HEIGHT from layout.ts, set on this element by the view, so the
+// diagram's smallest layout is written down once.
+.looking-inside__layout {
+  display: grid;
+  flex: 1 1 0;
+  min-height: 0;
+  grid-template-columns: 447px minmax($step-row-width, 1fr);
+  grid-template-rows: auto minmax(calc(var(--diagram-min-height) + #{$network-chrome}), 800px);
+  grid-template-areas:
+    "filter-row   step-row"
+    "message network";
+  align-content: start;
+  align-items: start;
+  gap: 9px 10px;
+}
+
+// Too narrow for both columns: stack them, keeping each row of controls above its panel. Each panel is as
+// tall as its content, and the layout as tall as the panels. This is below the view's minimum
+// layout width, so the page may scroll down (see docs/accessibility.md). Below 382 px of view width
+// (414 as an Interactive), the diagram's smallest layout (MIN_WIDTH in layout.ts) and the panel's
+// border, the diagram scrolls sideways inside its panel.
+@container (width < #{$two-columns-width}) {
+  .looking-inside__layout {
+    flex: none;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas:
+      "filter-row"
+      "message"
+      "step-row"
+      "network";
+  }
+}
+
+.looking-inside__filter-row {
+  grid-area: filter-row;
+  min-width: 0;
+}
+
+// The steps, then About at the right end of the row. When the row is too narrow for both, About
+// wraps onto a line of its own, still at the right.
+.looking-inside__step-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  grid-area: step-row;
+  min-width: 0;
+}
+
+.looking-inside__about {
+  margin-left: auto;
+}
+
+// The two panels stretch to their row, so they are the same height.
+.looking-inside__message {
+  grid-area: message;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.looking-inside__network {
+  @include panel.panel;
+  grid-area: network;
+  align-self: stretch;
+}
+
+.looking-inside__network-head {
+  @include panel.panel-head-with-controls;
+}
+
+.looking-inside__network-title {
+  @include panel.panel-head-title;
+}
+
+// 440 px tall when the panel's height comes from its content (stacked), and otherwise the panel's
+// height less the head. Never smaller than the diagram's smallest layout.
+.looking-inside__diagram {
+  flex: 1 1 440px;
+  width: 100%;
+  max-width: 537px;
+  min-height: var(--diagram-min-height);
+  margin: 0 auto;
+  padding: $diagram-padding 0;
+}

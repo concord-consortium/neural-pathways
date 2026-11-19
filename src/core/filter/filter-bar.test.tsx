@@ -45,12 +45,12 @@ describe("FilterBar", () => {
     expect(input()).toHaveValue("n:2");
   });
 
-  it("counts every conversation as one number", () => {
+  it("counts every message as one number", () => {
     showBar({ status: { matched: 800, total: 800 } });
     expect(input()).toHaveAccessibleDescription("800");
   });
 
-  it("counts the matches out of all the conversations", () => {
+  it("counts the matches out of all the messages", () => {
     showBar({ status: { matched: 64, total: 800 } });
     expect(input()).toHaveAccessibleDescription("64 of 800");
   });

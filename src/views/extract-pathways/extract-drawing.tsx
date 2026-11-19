@@ -27,11 +27,11 @@ function hiddenNames(columnSizes: readonly number[]): string[] {
     Array.from({ length: n }, (_, k) => `${COLUMN_CAPTIONS[i + 1]} Neuron ${k + 1}`));
 }
 
-const conversations = (n: number) => `${n} conversation${n === 1 ? "" : "s"}`;
+const messages = (n: number) => `${n} message${n === 1 ? "" : "s"}`;
 
 /**
  * What the drawing shows, for screen readers. The lifted column and the deck columns still in
- * flight aren't counted. While Collect All builds the deck, it counts the conversations collected by
+ * flight aren't counted. While Collect All builds the deck, it counts the messages collected by
  * hand, and once the deck is done it says all of them are. Once Extract Pathways is done it describes
  * the pathways; while it runs, the deck.
  */
@@ -40,19 +40,19 @@ export function describeScene(scene: ExtractScene, hidden: number): string {
   const { deck } = scene;
   if (scene.pathways?.done && deck) {
     return `The ${hidden} hidden neurons, with their loadings on three pathways drawn from all `
-      + `${conversations(deck.collected)}.`;
+      + `${messages(deck.collected)}.`;
   }
   if (deck) {
     return deck.done
-      ? `The network's ${hidden} hidden neurons lifted out, and all ${conversations(deck.collected)} collected.`
-      : `${lifted} and ${conversations(deck.collected)} collected.`;
+      ? `The network's ${hidden} hidden neurons lifted out, and all ${messages(deck.collected)} collected.`
+      : `${lifted} and ${messages(deck.collected)} collected.`;
   }
   const landed = flightDuration(hidden);
   if (!scene.lifted || scene.lifted.flight < landed) {
     return "The network.";
   }
   const collected = scene.collections.filter(column => column.flight >= landed).length;
-  return collected === 0 ? `${lifted}.` : `${lifted} and ${conversations(collected)} collected.`;
+  return collected === 0 ? `${lifted}.` : `${lifted} and ${messages(collected)} collected.`;
 }
 
 interface CopyProps {
@@ -112,8 +112,8 @@ const LiftedColumn = React.memo(function LiftedColumn(
   );
 });
 
-/** "Conversation n", dropping in and settling while `bounce` runs from 0 to 1. */
-function ConversationLabel({ x, n, bounce }: { x: number; n: number; bounce: number }) {
+/** "Message n", dropping in and settling while `bounce` runs from 0 to 1. */
+function MessageLabel({ x, n, bounce }: { x: number; n: number; bounce: number }) {
   const landed = bounce >= 1;
   const eased = bounceEase(bounce);
   const style = landed ? undefined : {
@@ -121,37 +121,37 @@ function ConversationLabel({ x, n, bounce }: { x: number; n: number; bounce: num
     opacity: ease(clamp01(bounce / 0.45)),
   };
   return (
-    <text x={x} y={LABEL_Y} textAnchor="middle" className="extract-drawing__label extract-drawing__conversation"
+    <text x={x} y={LABEL_Y} textAnchor="middle" className="extract-drawing__label extract-drawing__message"
       style={style}>
-      {`Conversation ${n}`}
+      {`Message ${n}`}
     </text>
   );
 }
 
 interface ExtractDrawingProps {
   network: Network;
-  /** Every conversation's pass, in dataset order. */
+  /** Every message's pass, in dataset order. */
   passes: readonly ForwardPass[];
   scales: NetworkScales;
   outputLabels: Record<number, string>;
   scene: ExtractScene;
   /** The id of the heading that names the drawing's panel, which names the drawing too. */
   headingId: string;
-  /** How many conversations the deck holds. */
+  /** How many messages the deck holds. */
   deckSize: number;
   /** The alien3 factor-analysis fit's loadings, [neuron][pathway], which the loading bars draw. */
   loadings: Loadings;
 }
 
 /**
- * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, and the
- * deck in the left strip, until Collect All moves it to the middle of the room left of the lifted
- * column. Extract Pathways then slides both left and draws the pathways beside the column
- * (`PathwaysLayer`), with the particles on the particle canvas over the SVG (`ParticleCanvas`). Drawn
- * as `scene` says, at full size and as wide as its container, but never narrower than
- * `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard can reach and scroll
- * it (`useKeyboardScrollable`). It is a group named by the panel heading, since the panel is already
- * a region with that name.
+ * Extract the Neural Pathways' canvas: the network in the middle, the lifted column in the right
+ * strip, and the deck in the left strip, until Collect All moves it to the middle of the room left
+ * of the lifted column. Extract Pathways then slides both left and draws the pathways beside the
+ * column (`PathwaysLayer`), with the particles on the particle canvas over the SVG
+ * (`ParticleCanvas`). Drawn as `scene` says, at full size and as wide as its container, but never
+ * narrower than `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard can
+ * reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since
+ * the panel is already a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
   network, passes, scales, outputLabels, scene, headingId, deckSize, loadings,
@@ -209,7 +209,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
           )
           : scene.collections.map((column, c) => {
             const flights = deckFlights(c);
-            const values = hiddenValues(passes[column.conversation - 1]);
+            const values = hiddenValues(passes[column.message - 1]);
             return (
               <g key={c} data-testid={`deck-column-${c}`}>
                 {flights.map((_, k) => (
@@ -222,7 +222,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
         {scene.pathways && <PathwaysLayer pathways={scene.pathways} layout={pathways} />}
         {scene.label && scene.networkOpacity > 0 && (
           <g opacity={scene.networkOpacity < 1 ? scene.networkOpacity : undefined}>
-            <ConversationLabel x={networkX + NETWORK_WIDTH / 2} n={scene.label.n} bounce={scene.label.bounce} />
+            <MessageLabel x={networkX + NETWORK_WIDTH / 2} n={scene.label.n} bounce={scene.label.bounce} />
           </g>
         )}
       </svg>

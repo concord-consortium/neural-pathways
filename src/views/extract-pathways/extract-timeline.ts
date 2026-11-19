@@ -8,8 +8,8 @@ import { EXTRACT_MS, extractPathwaysSceneAt } from "./pathways-timeline";
 import { setupDuration, setupSceneAt } from "./setup-timeline";
 
 /**
- * Extract Pathways' timeline, for a deck of `deckSize` conversations. The segment to marker 1 is
- * Setup, and from n to n + 1, below DECK_MARKER, collects conversation n. A segment to DECK_MARKER
+ * Extract the Neural Pathways' timeline, for a deck of `deckSize` messages. The segment to marker
+ * 1 is Setup, and from n to n + 1, below DECK_MARKER, collects message n. A segment to DECK_MARKER
  * is Collect All, from wherever it starts, and the segment to PATHWAYS_MARKER is the Extract
  * Pathways step, from the deck, with the bars of `loadings`.
  */

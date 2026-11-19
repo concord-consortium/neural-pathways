@@ -4,7 +4,7 @@ import { MAX_COLLECTED } from "./extract-steps";
 
 export const CANVAS_HEIGHT = 440;
 export const NETWORK_WIDTH = 537;
-/** The baseline of "Conversation n" and "Hidden Layer Neurons". */
+/** The baseline of "Message n" and "Hidden Layer Neurons". */
 export const LABEL_Y = 22;
 /** The deck's radius leaves room for this many columns, as the prototype's does. */
 export const DECK_COLUMNS = 20;

@@ -4,17 +4,17 @@ import { AboutButton } from "./about-button";
 
 const MARKDOWN = "What the view is for.\n\n### The point\n\nWhy it matters.";
 
-const aboutButton = () => screen.getByRole("button", { name: "About Trace a Case" });
-const dialog = () => screen.getByRole("dialog", { name: "About Trace a Case" });
+const aboutButton = () => screen.getByRole("button", { name: "About Correlations" });
+const dialog = () => screen.getByRole("dialog", { name: "About Correlations" });
 
 function open() {
-  render(<AboutButton title="Trace a Case" markdown={MARKDOWN} />);
+  render(<AboutButton title="Correlations" markdown={MARKDOWN} />);
   fireEvent.click(aboutButton());
 }
 
 describe("AboutButton", () => {
   it("is named for the view, starting with its visible word, and says it opens a dialog", () => {
-    render(<AboutButton title="Trace a Case" markdown={MARKDOWN} />);
+    render(<AboutButton title="Correlations" markdown={MARKDOWN} />);
     expect(aboutButton()).toHaveTextContent("About");
     expect(aboutButton()).toHaveAttribute("aria-haspopup", "dialog");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -23,7 +23,7 @@ describe("AboutButton", () => {
   it("opens a dialog named by its heading, showing the markdown, with focus on Close", () => {
     open();
     expect(dialog()).toHaveAttribute("open");
-    expect(screen.getByRole("heading", { level: 2, name: "About Trace a Case" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "About Correlations" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "The point" })).toBeInTheDocument();
     expect(screen.getByText("Why it matters.").tagName).toBe("P");
     expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
@@ -31,7 +31,7 @@ describe("AboutButton", () => {
 
   it("shows the text in a group named by the dialog's heading, for when it scrolls", () => {
     open();
-    expect(screen.getByRole("group", { name: "About Trace a Case" })).toHaveTextContent("What the view is for.");
+    expect(screen.getByRole("group", { name: "About Correlations" })).toHaveTextContent("What the view is for.");
   });
 
   it("marks the button as pressed while the dialog is open", () => {
@@ -105,7 +105,7 @@ describe("AboutButton", () => {
   });
 
   it("lets Tab reach a link in its text", () => {
-    render(<AboutButton title="Trace a Case" markdown="See [the glossary](https://example.org)." />);
+    render(<AboutButton title="Correlations" markdown="See [the glossary](https://example.org)." />);
     fireEvent.click(aboutButton());
     // Close comes before the text, so Tab from it is the browser's to move on to the link.
     expect(fireEvent.keyDown(screen.getByRole("button", { name: "Close" }), { key: "Tab" })).toBe(true);
@@ -116,7 +116,7 @@ describe("AboutButton", () => {
   });
 
   it("wraps Shift+Tab from its first control to its last", () => {
-    render(<AboutButton title="Trace a Case" markdown="See [the glossary](https://example.org)." />);
+    render(<AboutButton title="Correlations" markdown="See [the glossary](https://example.org)." />);
     fireEvent.click(aboutButton());
     const link = screen.getByRole("link", { name: "the glossary" });
     act(() => link.focus());
@@ -129,7 +129,7 @@ describe("AboutButton", () => {
   });
 
   it("starts Tab at its first control, and Shift+Tab at its last, when focus is on none of them", () => {
-    render(<AboutButton title="Trace a Case" markdown="See [the glossary](https://example.org)." />);
+    render(<AboutButton title="Correlations" markdown="See [the glossary](https://example.org)." />);
     fireEvent.click(aboutButton());
     const close = screen.getByRole("button", { name: "Close" });
     act(() => close.blur());

@@ -1,16 +1,16 @@
-# Extract Pathways
+# Extract the Neural Pathways
 
 The lesson's second view: lift the 14 hidden neurons out of the network, collect the activations
-of conversations run through it into a deck, one column each, then draw the three pathways from
+of messages run through it into a deck, one column each, then draw the three pathways from
 the deck.
 
 ## What's here
 
-- `extract-pathways.tsx`: the view. It loads the alien3 conversations and shows the step row above
+- `extract-pathways.tsx`: the view. It loads the alien3 messages and shows the step row above
   one full-width panel holding the drawing. The panel's head holds the shared Animate and speed
-  control. There is no filter and no conversation panel.
+  control. There is no filter and no message panel.
 - `extract-pathways-state.ts`: the view's saved state, `ExtractPathwaysState`: whether Setup is
-  done, how many conversations are collected, whether the deck and the pathways are done, and
+  done, how many messages are collected, whether the deck and the pathways are done, and
   Animate and the speed. A stage still playing isn't stored.
 - `extract-steps.ts`: the buttons and the marker, on the shared step system in
   `src/core/steps/`.
@@ -45,7 +45,7 @@ and the left strip holds the deck's columns collected by hand. Once Extract Path
 pathway labels end inside the canvas too. Narrower, the canvas scrolls sideways inside its panel
 and the step row wraps, down to 320 px.
 
-About sits at the right end of the step row, with the steps centered on the panel. Below 894 px it
+About sits at the right end of the step row, with the steps centered on the panel. Below 820 px it
 goes on its own line below the steps.
 
 The minimum layout height, 680 px, adds up from the top:

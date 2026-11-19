@@ -8,22 +8,22 @@ import { flightDuration } from "./flight";
 import { DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
 
 // The timings below are the prototype's, in ms at its "Med" speed, so each can be checked against
-// its source: the "Conversation n" bounce and the replay from collectOne and runSteps, the swaps
-// from setConversation, and the flight from flyColumn. src/views/README.md says where the
-// prototype is.
+// its source: the "Message n" bounce and the replay from collectOne and runSteps, the swaps from
+// setMessage (setConversation in v1.0), and the flight from flyColumn. src/views/README.md says
+// where the prototype is.
 
 /**
- * How a collection runs its conversation through the network:
+ * How a collection runs its message through the network:
  * - `replay`: plays the forward pass's phases, phase 1 at its own speed and the fans faster than in
- *   Trace a Case, which it recalls.
+ *   Looking Inside a Neural Network, which it recalls.
  * - `swap`: drains the network a full layer at a time, holds it blank, then refills it with the new
- *   conversation a full layer at a time, so each new one is seen arriving.
+ *   message a full layer at a time, so each new one is seen arriving.
  * - `quick`: clears everything at once and refills quickly with the edges snapped in, once the
  *   swap's point has been made.
  */
 export type CollectVersion = "replay" | "swap" | "quick";
 
-/** "Conversation n" drops in and settles over this long; the quick swap's is 0.7 of it. */
+/** "Message n" drops in and settles over this long; the quick swap's is 0.7 of it. */
 const BOUNCE_MS = 520;
 const QUICK_BOUNCE_MS = Math.round(BOUNCE_MS * 0.7);
 
@@ -51,7 +51,7 @@ const QUICK_TAIL = 40;
 /** After a swap or a quick swap, before the flight. */
 const NEXT_HOLD = 550;
 
-/** Conversation 1 replays the pass, 2 and 3 swap, and the rest take the quick swap. */
+/** Message 1 replays the pass, 2 and 3 swap, and the rest take the quick swap. */
 export function collectVersion(n: number): CollectVersion {
   return n === 1 ? "replay" : n <= 3 ? "swap" : "quick";
 }
@@ -94,7 +94,7 @@ interface SwapPlan {
   drainAt: number[][];
   /** [gap]: when the edges leaving each layer clear. */
   clearAt: number[];
-  /** When the network is blank and takes the new conversation. */
+  /** When the network is blank and takes the new message. */
   blank: number;
   /** [layer][unit]: when each gauge fills again. */
   fillAt: number[][];
@@ -170,7 +170,7 @@ function quickNetwork(columnSizes: readonly number[], plan: QuickPlan, t: number
 }
 
 /**
- * When the network part begins: at once for the first conversation, and after lifting the last
+ * When the network part begins: at once for the first message, and after lifting the last
  * flight's spotlight for every later one.
  */
 function networkStart(n: number): number {
@@ -198,15 +198,15 @@ export function collectDuration(columnSizes: readonly number[], n: number): numb
 }
 
 /**
- * Collecting conversation `n`, `t` ms in. After the first, it starts by lifting the spotlight the
- * last flight left. Then the network runs the conversation (see `CollectVersion`). Then a spotlight
+ * Collecting message `n`, `t` ms in. After the first, it starts by lifting the spotlight the
+ * last flight left. Then the network runs the message (see `CollectVersion`). Then a spotlight
  * falls on the hidden neurons, fading the rest of the network and the lifted column's copies, while
  * copies of the hidden neurons fly into the nth deck column. It stays until the next collection,
  * as in the prototype.
  */
 export function collectSceneAt(columnSizes: readonly number[], n: number, t: number): ExtractScene {
   const scene = restScene(columnSizes, n);
-  // Ms since the network began running the conversation; negative while the spotlight lifts.
+  // Ms since the network began running the message; negative while the spotlight lifts.
   const networkLocalTime = t - networkStart(n);
   if (networkLocalTime >= 0) {
     switch (collectVersion(n)) {
@@ -243,7 +243,7 @@ export function collectSceneAt(columnSizes: readonly number[], n: number, t: num
     scene.lifted = { ...scene.lifted, opacity: 1 - spotlight };
   }
   if (t >= flyAt) {
-    scene.collections.push({ conversation: n, flight: Math.min(t - flyAt, landed) });
+    scene.collections.push({ message: n, flight: Math.min(t - flyAt, landed) });
   }
   return scene;
 }

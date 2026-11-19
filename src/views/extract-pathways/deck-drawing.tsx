@@ -121,7 +121,7 @@ interface DeckColumnProps {
 }
 
 /**
- * One column of the deck: a conversation's 14 hidden activations, as gauges in the deck's rows.
+ * One column of the deck: a message's 14 hidden activations, as gauges in the deck's rows.
  * Drawn at the deck's first column and placed by its transform, so its rows share one clip each.
  */
 const DeckColumn = React.memo(function DeckColumn(
@@ -208,7 +208,7 @@ interface DeckDrawingProps {
   /** The hidden neurons' names, for set 0's tooltips. */
   names: readonly string[];
   clipPrefix: string;
-  /** How many conversations the deck holds once it is done. */
+  /** How many messages the deck holds once it is done. */
   size: number;
 }
 
@@ -239,7 +239,7 @@ export function DeckDrawing({ deck, geometry, passes, names, clipPrefix, size }:
               <text key={`label-${label.column}`} className="extract-drawing__label" textAnchor="end"
                 x={firstColumn.x - (label.column + 1) * firstColumn.r - LABEL_GAP}
                 y={firstColumn.ys[0] + label.column * firstColumn.r + 4} opacity={label.opacity}>
-                {`Conversation ${label.column + 1}`}
+                {`Message ${label.column + 1}`}
               </text>
             ))}
           </g>
@@ -248,7 +248,7 @@ export function DeckDrawing({ deck, geometry, passes, names, clipPrefix, size }:
       {count && (
         <text className="extract-drawing__label extract-drawing__count" textAnchor="middle" x={countX}
           y={firstColumn.ys[0] - firstColumn.r - COUNT_RISE} opacity={count.opacity < 1 ? count.opacity : undefined}>
-          {`${count.n} Conversation${count.n === 1 ? "" : "s"}`}
+          {`${count.n} Message${count.n === 1 ? "" : "s"}`}
         </text>
       )}
     </>

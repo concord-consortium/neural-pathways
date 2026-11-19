@@ -6,7 +6,7 @@
   width: 100%;
   overflow-x: auto;
 
-  // The ring the step buttons and the conversation card use, drawn inside: the drawing fills its panel
+  // The ring the step buttons and the message card use, drawn inside: the drawing fills its panel
   // edge to edge, so a ring outside it would be cut off at the sides.
   &:focus-visible {
     outline: 2px solid colors.$wait;
@@ -27,7 +27,7 @@
 }
 
 // Scaled about its own center while it bounces in, so it grows in place.
-.extract-drawing__conversation {
+.extract-drawing__message {
   transform-box: fill-box;
   transform-origin: center;
 }

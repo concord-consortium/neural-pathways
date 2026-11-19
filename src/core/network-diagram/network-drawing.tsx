@@ -69,7 +69,7 @@ export interface NetworkDrawingProps {
 }
 
 /**
- * One conversation's pass through the network as an SVG group, laid out by `layout` and drawn as
+ * One message's pass through the network as an SVG group, laid out by `layout` and drawn as
  * far as `scene` says. NetworkDiagram sizes it and wraps it in an SVG of its own; a view that draws
  * more around the network places it in its own SVG. Stateless: views animate it by passing new
  * scenes.

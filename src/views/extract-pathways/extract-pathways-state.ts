@@ -14,17 +14,17 @@ export interface ExtractProgress {
 }
 
 /**
- * Extract Pathways' own state. A stage still playing isn't stored. See docs/view-state.md for the
- * rules on changing the saved form.
+ * Extract the Neural Pathways' own state. A stage still playing isn't stored. See
+ * docs/view-state.md for the rules on changing the saved form.
  */
 @model("npw/ExtractPathwaysState")
 export class ExtractPathwaysState extends ExtendedModel(composeMixins(animatedMixin), {
   version: tProp(types.literal(1), 1),
   /** Whether Setup is done: the hidden neurons are lifted out of the network. */
   setupDone: tProp(types.boolean, false),
-  /** How many conversations have been collected into the deck. */
+  /** How many messages have been collected into the deck. */
   collected: tProp(countType, 0),
-  /** Whether Collect All is done: the deck holds every conversation. */
+  /** Whether Collect All is done: the deck holds every message. */
   deckDone: tProp(types.boolean, false),
   /** Whether Extract Pathways is done: the three pathways are drawn from the deck. */
   pathwaysDone: tProp(types.boolean, false),

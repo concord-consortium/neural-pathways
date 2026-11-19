@@ -9,17 +9,17 @@ test.describe("a placeholder view's About", () => {
     await page.getByRole("button", { name: "About Correlations" }).click();
     const dialog = page.getByRole("dialog", { name: "About Correlations" });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole("heading", { level: 3, name: "Histograms" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { level: 3, name: "The point" })).toBeVisible();
   });
 
   // At 320 px the title takes two lines, which the header's 52 px holds anyway. Doubling the text, as
   // a text-only zoom does, takes it to more.
   test("grows its header for a long title in a narrow window when only the text is zoomed", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 562 });
-    await page.goto("/?interactive=investigate-unknown-pathway");
+    await page.goto("/?interactive=contextual-factors");
     await page.evaluate(() => document.fonts.ready);
-    await page.getByRole("button", { name: "About Investigate Unknown Pathway" }).click();
-    const heading = page.getByRole("heading", { level: 2, name: "About Investigate Unknown Pathway" });
+    await page.getByRole("button", { name: "About Identify Contextual Factors" }).click();
+    const heading = page.getByRole("heading", { level: 2, name: "About Identify Contextual Factors" });
     await page.evaluate(() => {
       const elements = Array.from(document.querySelectorAll<HTMLElement>("dialog *"));
       const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
@@ -36,8 +36,8 @@ test.describe("a placeholder view's About", () => {
 
 // The placeholder views' text is checked in src/app/views-about.test.tsx, which can't load data.
 for (const [id, title, text] of [
-  ["trace-a-case", "Trace a Case", "Students follow a single alien conversation through the model"],
-  ["extract-pathways", "Extract Pathways", "Students stack many cases’ activations"],
+  ["looking-inside", "Looking Inside a Neural Network", "Students follow a single alien message through the model"],
+  ["extract-pathways", "Extract the Neural Pathways", "Students stack many cases’ activations"],
 ]) {
   test(`${title}'s About opens its own text`, async ({ page }) => {
     await page.goto(`/?interactive=${id}`);
@@ -47,12 +47,12 @@ for (const [id, title, text] of [
 }
 
 test.describe("the About dialog", () => {
-  const about = (page: Page) => page.getByRole("button", { name: "About Trace a Case" });
-  const dialog = (page: Page) => page.getByRole("dialog", { name: "About Trace a Case" });
+  const about = (page: Page) => page.getByRole("button", { name: "About Looking Inside a Neural Network" });
+  const dialog = (page: Page) => page.getByRole("dialog", { name: "About Looking Inside a Neural Network" });
 
-  async function openTrace(page: Page, width = 1024, height = 562) {
+  async function openLookingInside(page: Page, width = 1024, height = 562) {
     await page.setViewportSize({ width, height });
-    await page.goto("/?interactive=trace-a-case");
+    await page.goto("/?interactive=looking-inside");
     await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
     // The dialog is placed when it opens, and not again when a font arrives, so measure it in the
     // web fonts.
@@ -60,7 +60,7 @@ test.describe("the About dialog", () => {
   }
 
   test("opens below its button, right edges aligned, with focus on Close", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     await expect(dialog(page)).toBeVisible();
     const buttonBox = await box(about(page));
@@ -70,19 +70,21 @@ test.describe("the About dialog", () => {
     await expect(page.getByRole("button", { name: "Close" })).toBeFocused();
   });
 
-  // Trace a Case's text is taller than the room below its button at the designed size.
+  // At the designed size, Looking Inside a Neural Network's text is taller than the room below its
+  // button.
   test("at the designed size, hangs below its button inside the window, and scrolls its text", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     const buttonBox = await box(about(page));
     const dialogBox = await box(dialog(page));
     expect(dialogBox.y).toBeCloseTo(buttonBox.y + buttonBox.height + 6, 0);
     expect(dialogBox.y + dialogBox.height).toBeLessThanOrEqual(552 + 0.5);
-    await expect(page.getByRole("group", { name: "About Trace a Case" })).toHaveAttribute("tabindex", "0");
+    await expect(page.getByRole("group", { name: "About Looking Inside a Neural Network" }))
+      .toHaveAttribute("tabindex", "0");
   });
 
   test("Enter opens the dialog and it stays open", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).focus();
     await page.keyboard.press("Enter");
     await expect(dialog(page)).toBeVisible();
@@ -90,7 +92,7 @@ test.describe("the About dialog", () => {
   });
 
   test("keeps Tab inside it", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     for (let i = 0; i < 4; i++) {
       await page.keyboard.press("Tab");
@@ -99,7 +101,7 @@ test.describe("the About dialog", () => {
   });
 
   test("closes on Escape and puts focus back on About", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     await page.keyboard.press("Escape");
     await expect(dialog(page)).toBeHidden();
@@ -107,7 +109,7 @@ test.describe("the About dialog", () => {
   });
 
   test("closes on a click outside it and puts focus back on About", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     await page.mouse.click(5, 5);
     await expect(dialog(page)).toBeHidden();
@@ -116,7 +118,7 @@ test.describe("the About dialog", () => {
 
   // At the designed size the text scrolls, so pressing on it focuses it, which re-renders the dialog.
   test("keeps a text selection dragged out over the backdrop, and stays open", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     const text = await box(dialog(page).locator("p").first());
     await page.mouse.move(text.x + 2, text.y + 8);
@@ -128,7 +130,7 @@ test.describe("the About dialog", () => {
   });
 
   test("stays inside the window when it narrows", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     await page.setViewportSize({ width: 360, height: 562 });
     await expect.poll(async () => {
@@ -138,14 +140,14 @@ test.describe("the About dialog", () => {
   });
 
   test("fits a 320 × 562 window, and its text scrolls from the keyboard", async ({ page }) => {
-    await openTrace(page, 320, 562);
+    await openLookingInside(page, 320, 562);
     await about(page).click();
     const b = await box(dialog(page));
     expect(b.x).toBeGreaterThanOrEqual(10 - 0.5);
     expect(b.x + b.width).toBeLessThanOrEqual(310 + 0.5);
     expect(b.y).toBeGreaterThanOrEqual(10 - 0.5);
     expect(b.y + b.height).toBeLessThanOrEqual(552 + 0.5);
-    const text = page.getByRole("group", { name: "About Trace a Case" });
+    const text = page.getByRole("group", { name: "About Looking Inside a Neural Network" });
     await page.keyboard.press("Tab");
     await expect(text).toBeFocused();
     await page.keyboard.press("PageDown");

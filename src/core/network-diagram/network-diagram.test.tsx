@@ -8,11 +8,11 @@ import { fixtureNetwork } from "../network/__fixtures__/alien3-network";
 import { ForwardPass, forward, predictedClass } from "../network/forward";
 import { BandThresholds, magnitudeBand, networkScales } from "../network/network-scales";
 import { NEGATIVE_COLOR, POSITIVE_COLOR, signColor } from "../colors";
-import fixture from "../network/__fixtures__/alien3-conversations.json";
+import fixture from "../network/__fixtures__/alien3-messages.json";
 
 const SIZES = [10, 8, 6, 2];
 const LABELS = { 0: "wait", 1: "approach" };
-const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+const passes = fixture.messages.map(c => forward(fixtureNetwork, c.text));
 const scales = networkScales(fixtureNetwork, passes);
 const waitPass = passes[0];       // classification 0
 const approachPass = passes[6];   // classification 1

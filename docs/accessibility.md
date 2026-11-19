@@ -83,10 +83,12 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
 - No reviewed design covers widths below 1024 px. Down to its minimum layout width a view keeps the
   prototype's layout, but how it stacks, wraps and scrolls below that is ours, not reviewed. The
   views are built to meet 1.4.10 and 2.1.1 there, and checked in Chromium, but may be too cumbersome
-  to be useful to students. At 320 px Extract Pathways' steps wrap into three rows, with About on a
-  fourth, above a canvas that scrolls sideways, and Trace a Case stacks into a page over 1,100 px tall.
-- Extract Pathways' minimum layout height, 680 px, doesn't fit the designed size yet, so in an
-  Interactive 562 px tall its page scrolls down.
+  to be useful to students. At 320 px Extract the Neural Pathways' steps wrap into three rows, with
+  About on a fourth, above a canvas that scrolls sideways, and Looking Inside a Neural Network
+  stacks into a page about 1,510 px tall ([its README](../src/views/looking-inside/README.md) has
+  the heights).
+- Extract the Neural Pathways' minimum layout height, 680 px, doesn't fit the designed size yet, so
+  in an Interactive 562 px tall its page scrolls down.
 
 **Scrollers.** A scroller must work from the keyboard
 ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). It may scroll
@@ -94,24 +96,24 @@ sideways, down or both: the observation notes only scroll down. Chromium and Fir
 scroller with nothing focusable in it reachable by Tab; Safari doesn't.
 - Use `useKeyboardScrollable` (`src/core/use-keyboard-scrollable.ts`). Its comment says when it
   makes the element a Tab stop, and what it isn't for.
-- Give the element its role and name all the time, so they don't come and go with the window's
-  size. It is a `group` when an enclosing landmark or dialog already has its name, as Extract
-  Pathways' drawing and Trace a Case's network diagram are, inside panels named by the same heading,
-  and About's text is, inside its dialog. Otherwise it is a `region` named by its heading, as the
-  observation notes are. A `region` inside a landmark with the same name would list the landmark
-  twice.
+- Give the element its role and name all the time, so they don't come and go with the window's size.
+  It is a `group` when an enclosing landmark or dialog already has its name, as Extract the Neural
+  Pathways' drawing and Looking Inside a Neural Network's network diagram are, inside panels named
+  by the same heading, and About's text is, inside its dialog. Otherwise it is a `region` named by
+  its heading, as the observation notes are. A `region` inside a landmark with the same name would
+  list the landmark twice.
 - A scroller clips what is drawn outside it, so keep the drawing inside its own box, down to a
   fraction of a pixel. The network diagram leaves room for its winning pill to grow as it pops.
 
 ## Keep unavailable buttons in the tab order
 
-A button that can't act right now, such as Previous on the first conversation or Reset with
+A button that can't act right now, such as Previous on the first message or Reset with
 nothing to reset, is *unavailable*: mark it `aria-disabled="true"`, not with the `disabled`
 attribute.
 
 **Why.** A `disabled` button leaves the tab order, and if it has the focus when it becomes
 disabled, the browser drops the focus to the page body. A keyboard user stepping with Next would
-lose their place at the last conversation, which works against
+lose their place at the last message, which works against
 [2.4.3 Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) (A). An
 `aria-disabled` button keeps the focus, and a screen reader still finds it and says it is
 unavailable ("dimmed"), so the controls read the same at the ends as in the middle.

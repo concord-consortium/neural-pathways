@@ -1,8 +1,8 @@
 import { forward, predictedClass, wordCounts } from "./forward";
 import { fixtureNetwork } from "./__fixtures__/alien3-network";
-import fixture from "./__fixtures__/alien3-conversations.json";
+import fixture from "./__fixtures__/alien3-messages.json";
 
-const conversations = fixture.conversations;
+const messages = fixture.messages;
 
 describe("wordCounts", () => {
   it("counts each vocabulary word, in vocabulary order", () => {
@@ -16,8 +16,8 @@ describe("wordCounts", () => {
 
 describe("forward", () => {
   it("returns word counts and one array per layer", () => {
-    const pass = forward(fixtureNetwork, conversations[0].text);
-    expect(pass.input).toEqual(wordCounts(fixtureNetwork.vocabulary, conversations[0].text));
+    const pass = forward(fixtureNetwork, messages[0].text);
+    expect(pass.input).toEqual(wordCounts(fixtureNetwork.vocabulary, messages[0].text));
     expect(pass.layers.map(layer => layer.length)).toEqual([10, 8, 6, 2]);
   });
 
@@ -28,11 +28,11 @@ describe("forward", () => {
     expect(input.reduce((sum, x) => sum + x, 0)).toBe(4);
   });
 
-  it.each(conversations)("predicts the model's class for $id", ({ text, classification }) => {
+  it.each(messages)("predicts the model's class for $id", ({ text, classification }) => {
     expect(predictedClass(forward(fixtureNetwork, text))).toBe(classification);
   });
 
-  it.each(conversations)("wins by the classification margin for $id", ({ text, classification }) => {
+  it.each(messages)("wins by the classification margin for $id", ({ text, classification }) => {
     const { layers } = forward(fixtureNetwork, text);
     const logits = layers[layers.length - 1];
     expect(logits[classification] - logits[1 - classification]).toBeGreaterThanOrEqual(0.1);

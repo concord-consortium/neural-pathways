@@ -66,11 +66,11 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 
   Use the word for the side you are on, and "neuron" in anything a student sees.
 - `network-diagram/`: the shared network diagram. A view says what to show as a `Scene`, and
-  `NetworkDiagram` draws it at the size of its container. `NetworkDrawing` is the same drawing as
-  an SVG group, for a view that draws more around the network. `layout.ts` is its geometry;
-  `easing.ts` has the timing curves; `forward-pass-phases.ts` is the four phases of a
-  conversation's forward pass through the network as a function of time, which Trace a Case plays
-  as its steps and Extract Pathways replays.
+  `NetworkDiagram` draws it at the size of its container. `NetworkDrawing` is the same drawing as an
+  SVG group, for a view that draws more around the network. `layout.ts` is its geometry; `easing.ts`
+  has the timing curves; `forward-pass-phases.ts` is the four phases of a message's forward pass
+  through the network as a function of time, which Looking Inside a Neural Network plays as its
+  steps and Extract the Neural Pathways replays.
 - `steps/`: the step system views share. A view's timeline rests at markers, points where the
   scene is still and progress is stored, and plays segments between them. `StepPlayer` plays the
   segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. It
@@ -82,10 +82,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 - `animation-controls/`: the Animate checkbox and the Slow/Med/Fast speed slider, for any view
   whose state is `Animated`. The step player reads the same two values from the state the view
   gives it, so a view places the control and passes its state to both.
-- `conversation-card/`: the conversation panel the lesson's views share. `ConversationCard` is the
-  shell: the count, previous and next, a screen-reader status, and "No conversations match that
+- `message-card/`: the message panel the lesson's views share. `MessageCard` is the
+  shell: the count, previous and next, a screen-reader status, and "No messages match that
   search." when the list is empty. A view fills its body from the parts beside it:
-  `ConversationWords` (the words, one span each), `ActualLabel` (the true answer as a chip) and
+  `MessageWords` (the words, one span each), `ActualLabel` (the true answer as a chip) and
   `ObservationNotes` (the observer's notes with an attribute indicator for each attribute it is
   given). A view that needs a different body adds a part rather than a flag on the shell.
 - `alien-icons/`: `AlienIcon` and the alien attributes' icons, one `.svg` file per attribute,
@@ -93,14 +93,14 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   (`alien-icon-files.ts`) and SVGR makes each a React component, so a new icon needs only its file.
   Under Jest, `src/test/alien-icon-files.ts` stands in, and `jest/svg-transform.js` runs SVGR.
 - `visually-hidden.scss`: the `visually-hidden` mixin, for text only screen readers read.
-- `conversation-text.ts`: what a conversation's text means to the lesson, such as its list of
-  words (`conversationWords`). Items are plain data, so this is a function that takes the text, not
+- `message-text.ts`: what a message's text means to the lesson, such as its list of
+  words (`messageWords`). Items are plain data, so this is a function that takes the text, not
   a getter on a model.
-- `filter/`: the filter over the conversations. `conversation-filter.ts` builds one flat record per
-  conversation and runs a liqe query over them. Bare words search the alien text and the observer's
+- `filter/`: the filter over the messages. `message-filter.ts` builds one flat record per
+  message and runs a liqe query over them. Bare words search the alien text and the observer's
   notes, case is ignored, and unknown fields and unreadable queries are reported.
   `filter-bar.tsx` is the bar, which takes everything it shows as props, and `filter-help.tsx` is
-  its help popover, which keeps only whether it is open. `use-conversation-filter.ts` ties them to
+  its help popover, which keeps only whether it is open. `use-message-filter.ts` ties them to
   the shared `query` and its volatile draft, `queryDraft`, and gives a view the ids to step
   through. The lab explorer keeps its own search: its fields differ.
 - `colors.ts`, `colors.scss`, `panel.scss`, `button.scss`: the lesson's colors, the panel look, and

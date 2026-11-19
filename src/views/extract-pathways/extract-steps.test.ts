@@ -18,7 +18,7 @@ describe("extractProgress", () => {
     expect(markerOf(fields)).toBe(marker);
   });
 
-  it("reads no more conversations by hand than the limit", () => {
+  it("reads no more messages by hand than the limit", () => {
     expect(markerOf({ setupDone: true, collected: 12 })).toBe(11);
     expect(markerOf({ setupDone: true, collected: 12 }, 3)).toBe(4);
   });
@@ -40,9 +40,9 @@ describe("extractButtons", () => {
   const buttons = extractButtons(MAX_COLLECTED);
   const segments = (marker: number) => buttons.map(b => b.segmentToPlayWhenAt(marker));
 
-  it("are Setup, Collect a Conversation, Collect All Conversations and Extract Pathways", () => {
+  it("are Setup, Collect a Message, Collect All Messages and Extract Pathways", () => {
     expect(buttons.map(b => b.label))
-      .toEqual(["Setup", "Collect a Conversation", "Collect All Conversations", "Extract Pathways"]);
+      .toEqual(["Setup", "Collect a Message", "Collect All Messages", "Extract Pathways"]);
     expect(buttons.every(b => b.showAsCurrentWhenAt === undefined)).toBe(true);
   });
 

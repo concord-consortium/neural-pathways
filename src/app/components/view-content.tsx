@@ -30,8 +30,7 @@ export const ViewContent: React.FC<ViewContentProps> = ({ viewId, appState }) =>
     );
   }
   const ViewComponent = view.component;
-  // Keyed by view id so React state never carries over between views, even two that share a
-  // component, the way Correlations Part 2 could share Correlations'.
+  // Keyed by view id so no React state carries over between views, even two sharing a component.
   return (
     <ViewStateProvider key={view.id} viewId={view.id} view={appState.getViewState(view.id)} shared={appState.shared}>
       <ViewComponent />

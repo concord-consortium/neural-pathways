@@ -1,0 +1,105 @@
+{
+  "note": "Real alien3 messages and the model's classification, taken from dist/alien-data-3/index.json: the first six of each class in index order, then eight close calls picked by hand, four of each class, which the model gives a probability of approach between 0.34 and 0.54.",
+  "messages": [
+    {
+      "id": "361e65b1002a",
+      "text": "yandor quissa\nblikka murrash\naloven sooma nimbar\nchullo ormesh\nyandor sooma quissa",
+      "classification": 0
+    },
+    {
+      "id": "7b117e548ba4",
+      "text": "arvek karnok karnok nimbar arvek\nmellu chullo tovril murrash nimbar\nsooma oradda tovril\nmellu karnok\nquissa luppo kippa karnok oradda quissa",
+      "classification": 0
+    },
+    {
+      "id": "7ca6475a5371",
+      "text": "chullo yandor vaneth kippa welvin ishara\nmellu ishara murrash karnok welvin karnok kippa\ntarrak arvek yandor essulo welvin arvek luppo sooma\nblikka sooma vaneth welvin ulash\nkippa dweshi mellu",
+      "classification": 0
+    },
+    {
+      "id": "783ad68505c8",
+      "text": "quissa ormesh dweshi quissa aloven\nulash luppo ormesh\naloven arvek luppo\nsooma vaneth mellu",
+      "classification": 0
+    },
+    {
+      "id": "76c973189291",
+      "text": "dweshi nimbar yandor essulo\nsooma drivek\ntovril yandor\nmurrash essulo dweshi\nmellu aloven",
+      "classification": 0
+    },
+    {
+      "id": "899c94bec163",
+      "text": "nimbar welvin chullo ishara essulo\nquissa vaneth quissa karnok quissa oradda chullo\nvosh luppo mellu tarrak vosh hakku ormesh nembu\nkarnok sennat ulash dweshi drivek tarrak\nmurrash nembu kippa dweshi murrash oradda\nmurrash oradda dweshi oradda mellu ishara quissa karnok",
+      "classification": 0
+    },
+    {
+      "id": "a830f7c2f4c1",
+      "text": "drivek oradda\nkarnok arvek\nluppo tisshak\ntisshak drivek\nchullo karnok\nchullo ishara",
+      "classification": 1
+    },
+    {
+      "id": "93cee0348448",
+      "text": "dweshi luppo kippa ulash luppo tovril\nkippa nembu murrash chullo hakku krenn murrash mellu\nkrenn essulo aloven aloven luppo essulo\nsennat vaneth murrash drivek drivek vosh\nmurrash ulash ishara chullo vaneth",
+      "classification": 1
+    },
+    {
+      "id": "fd0ea36a1750",
+      "text": "hakku hakku\ndrivek ulash\nkarnok ormesh welvin\nkippa oradda tovril\nessulo essulo tarrak\nkrenn vosh vaneth",
+      "classification": 1
+    },
+    {
+      "id": "b852b8b492e7",
+      "text": "drivek nembu nembu luppo ulash\ndweshi luppo dweshi\narvek arvek sennat sennat\nnembu tisshak oradda tisshak\nsennat aloven ulash luppo dweshi",
+      "classification": 1
+    },
+    {
+      "id": "96813abbda97",
+      "text": "luppo essulo krenn ulash vaneth tarrak drivek\nchullo luppo mellu krenn vosh oradda\nnembu vaneth essulo kippa ishara luppo vosh\nkrenn tarrak dweshi",
+      "classification": 1
+    },
+    {
+      "id": "8e2631797074",
+      "text": "hakku kippa ormesh essulo nembu sooma oradda essulo\nwelvin vosh kippa essulo yandor karnok essulo\nkarnok murrash vosh welvin sooma welvin",
+      "classification": 1
+    },
+    {
+      "id": "28c0cd211f5d",
+      "text": "luppo hakku essulo quissa tarrak tarrak welvin drivek murrash\nyandor karnok sennat\nhakku essulo tarrak yandor\nkippa essulo blikka vosh blikka quissa\nsennat drivek karnok ulash sooma sooma aloven nimbar mellu essulo yandor tarrak",
+      "classification": 1
+    },
+    {
+      "id": "11716b570648",
+      "text": "karnok arvek luppo\nkippa luppo\nmurrash welvin\ndweshi ishara\nessulo vosh kippa\nyandor karnok mellu",
+      "classification": 1
+    },
+    {
+      "id": "eb9fb4e63def",
+      "text": "luppo murrash\nmurrash kippa ormesh mellu yandor\nnimbar mellu essulo aloven yandor\ntisshak drivek vaneth\ntarrak vaneth karnok oradda\ndweshi quissa ulash oradda kippa hakku dweshi drivek",
+      "classification": 1
+    },
+    {
+      "id": "b8380c46d60c",
+      "text": "kippa essulo quissa nimbar essulo essulo dweshi chullo nimbar essulo\ntarrak luppo karnok ulash nimbar karnok drivek tarrak ulash\naloven welvin luppo chullo yandor kippa drivek karnok blikka essulo dweshi kippa",
+      "classification": 1
+    },
+    {
+      "id": "2881457f4e79",
+      "text": "vaneth dweshi nembu arvek karnok ishara dweshi vaneth sennat dweshi murrash vaneth\nulash nimbar dweshi vosh krenn oradda dweshi arvek tovril nembu sooma dweshi\ndweshi karnok sennat dweshi essulo oradda drivek tovril karnok",
+      "classification": 0
+    },
+    {
+      "id": "fafa2c6e934f",
+      "text": "blikka karnok vosh\noradda vaneth chullo ormesh\nsooma sennat tarrak\normesh ormesh nembu essulo\nmurrash arvek tisshak tovril vaneth luppo blikka\nyandor hakku arvek sennat vaneth",
+      "classification": 0
+    },
+    {
+      "id": "dfb40d3895ba",
+      "text": "oradda luppo tisshak essulo blikka vosh ishara nembu drivek vaneth mellu oradda arvek arvek essulo karnok sennat vaneth\nsooma essulo vosh arvek krenn vaneth arvek welvin karnok quissa vaneth luppo\noradda nembu arvek ishara krenn karnok dweshi tisshak ishara",
+      "classification": 0
+    },
+    {
+      "id": "018737ef05b4",
+      "text": "ormesh nembu dweshi sooma\nhakku krenn\ntovril tisshak\ntarrak tisshak sennat blikka\nsennat aloven",
+      "classification": 0
+    }
+  ]
+}

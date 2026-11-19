@@ -2,7 +2,7 @@ import { signColor } from "../../core/colors";
 import { forward } from "../../core/network/forward";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import { fixtureLoadings, fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
-import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { centerShift, columnValues, deckMid, deckWidth, setOffset } from "./deck-layout";
 import { extractGeometry } from "./extract-geometry";
 import {
@@ -97,7 +97,7 @@ describe("particleAt", () => {
 });
 
 describe("faceSources", () => {
-  const base = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+  const base = fixture.messages.map(c => forward(fixtureNetwork, c.text));
   const passes = Array.from({ length: 800 }, (_, i) => base[i % base.length]);
   const g = extractGeometry(SIZES, 0);
 

@@ -2,8 +2,8 @@ import { test } from "./lib/base-url";
 import { expect, type Locator, Page } from "@playwright/test";
 
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
-const DECK = "The network's 14 hidden neurons lifted out, and all 800 conversations collected.";
-const PATHWAYS = "The 14 hidden neurons, with their loadings on three pathways drawn from all 800 conversations.";
+const DECK = "The network's 14 hidden neurons lifted out, and all 800 messages collected.";
+const PATHWAYS = "The 14 hidden neurons, with their loadings on three pathways drawn from all 800 messages.";
 
 async function open(page: Page, reducedMotion: "reduce" | "no-preference" = "reduce") {
   await page.emulateMedia({ reducedMotion });
@@ -106,28 +106,28 @@ test("the drawing keeps the focus when its Interactive widens and it stops scrol
 test("three collections give three deck columns", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Setup" }).click();
-  const collect = page.getByRole("button", { name: "Collect a Conversation" });
+  const collect = page.getByRole("button", { name: "Collect a Message" });
   for (let i = 0; i < 3; i++) {
     await collect.click();
   }
-  await expect(page.getByRole("img", { name: /and 3 conversations collected\.$/ })).toBeVisible();
-  await expect(page.getByText("Conversation 3")).toBeVisible();
+  await expect(page.getByRole("img", { name: /and 3 messages collected\.$/ })).toBeVisible();
+  await expect(page.getByText("Message 3")).toBeVisible();
 });
 
 test("the stage survives switching views", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "Collect a Conversation" }).click();
-  await page.getByRole("button", { name: "Collect a Conversation" }).click();
+  await page.getByRole("button", { name: "Collect a Message" }).click();
+  await page.getByRole("button", { name: "Collect a Message" }).click();
   const nav = page.getByRole("navigation", { name: "Views" });
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
-  await nav.getByRole("link", { name: "Extract Pathways" }).click();
-  await expect(page.getByRole("img", { name: /and 2 conversations collected\.$/ })).toBeVisible();
+  await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
+  await expect(page.getByRole("img", { name: /and 2 messages collected\.$/ })).toBeVisible();
 });
 
-test("Collect a Conversation stops after ten", async ({ page }) => {
+test("Collect a Message stops after ten", async ({ page }) => {
   await open(page);
-  const collect = page.getByRole("button", { name: "Collect a Conversation" });
+  const collect = page.getByRole("button", { name: "Collect a Message" });
   for (let i = 0; i < 10; i++) {
     await collect.click();
   }
@@ -135,13 +135,13 @@ test("Collect a Conversation stops after ten", async ({ page }) => {
   await expect(collect).toBeDisabled();
   // aria-disabled, not disabled, so the focus stays on it.
   await expect(collect).toBeFocused();
-  await expect(page.getByRole("button", { name: "Collect All Conversations" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Collect All Messages" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Extract Pathways", exact: true })).toBeEnabled();
 });
 
 test("Reset clears everything", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "Collect a Conversation" }).click();
+  await page.getByRole("button", { name: "Collect a Message" }).click();
   await page.getByRole("button", { name: "Reset" }).click();
   await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Reset" })).toHaveAttribute("aria-disabled", "true");
@@ -149,11 +149,18 @@ test("Reset clears everything", async ({ page }) => {
 
 test.describe("About", () => {
   /**
-   * The narrowest the step row can be with About beside the centered steps: the steps and, on each
-   * side, a column as wide as About plus the 10 px gap. Measured in 16 px Barlow Condensed.
+   * The steps' and About's widths in 16 px Barlow Condensed, measured on macOS, where text is wider
+   * than on CI's Linux, and rounded up. `$step-row-width` in extract-pathways.scss adds them up the
+   * same way.
    */
-  const STEP_ROW_WIDTH = 670 + 2 * (86 + 10);
-  const about = (page: Page) => page.getByRole("button", { name: "About Extract Pathways" });
+  const STEPS_WIDTH = 596;
+  const ABOUT_WIDTH = 86;
+  /**
+   * The narrowest the step row can be with About beside the centered steps: the steps and, on each
+   * side, a column as wide as About plus the 10 px gap.
+   */
+  const STEP_ROW_WIDTH = STEPS_WIDTH + 2 * (ABOUT_WIDTH + 10);
+  const about = (page: Page) => page.getByRole("button", { name: "About Extract the Neural Pathways" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
   const panel = (page: Page) => page.getByRole("region", { name: "The Network → Activated Pathways" });
 
@@ -174,6 +181,19 @@ test.describe("About", () => {
     expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
     expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);
     expect(rowBox.x + rowBox.width / 2).toBeCloseTo(panelBox.x + panelBox.width / 2, 0);
+  });
+
+  // The breakpoint is a constant in the SCSS, so a label that changes the steps' width moves where
+  // About should drop without moving the breakpoint. This catches that. Text is a few px narrower
+  // on Linux than on macOS, so each width only has to fit its constant and come within 8 px of it.
+  test("the step row's breakpoint is measured from the steps and About as drawn", async ({ page }) => {
+    await openAt(page, 1200);
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
+    const aboutBox = await box(about(page));
+    expect(rowBox.width).toBeLessThanOrEqual(STEPS_WIDTH);
+    expect(rowBox.width).toBeGreaterThan(STEPS_WIDTH - 8);
+    expect(aboutBox.width).toBeLessThanOrEqual(ABOUT_WIDTH);
+    expect(aboutBox.width).toBeGreaterThan(ABOUT_WIDTH - 8);
   });
 
   test("stays beside the steps in an Interactive just wide enough", async ({ page }) => {
@@ -212,9 +232,9 @@ test("Animate and the speed survive switching views", async ({ page }) => {
   await expect(speed).toHaveAttribute("aria-valuetext", "Slow");
   await animate.uncheck();
   const nav = page.getByRole("navigation", { name: "Views" });
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
-  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
   await expect(animate).not.toBeChecked();
   await expect(speed).toHaveAttribute("aria-valuetext", "Slow");
   await page.getByRole("button", { name: "Setup" }).click();
@@ -237,42 +257,42 @@ test("in a narrow window, Animate and the speed wrap below the panel's title", a
 
 test("Collect All builds the deck of all 800", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  await page.getByRole("button", { name: "Collect All Messages" }).click();
   await expect(page.getByRole("img", { name: DECK })).toBeVisible();
-  await expect(page.getByText("800 Conversations")).toBeVisible();
+  await expect(page.getByText("800 Messages")).toBeVisible();
 });
 
 test("from five collected, Collect All ends on the deck", async ({ page }) => {
   await open(page);
-  const collect = page.getByRole("button", { name: "Collect a Conversation" });
+  const collect = page.getByRole("button", { name: "Collect a Message" });
   for (let i = 0; i < 5; i++) {
     await collect.click();
   }
-  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  await page.getByRole("button", { name: "Collect All Messages" }).click();
   await expect(page.getByRole("img", { name: DECK })).toBeVisible();
 });
 
 test("the deck survives switching views", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  await page.getByRole("button", { name: "Collect All Messages" }).click();
   const nav = page.getByRole("navigation", { name: "Views" });
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
-  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
   await expect(page.getByRole("img", { name: DECK })).toBeVisible();
 });
 
-test("after the deck, Collect a Conversation starts the collecting over", async ({ page }) => {
+test("after the deck, Collect a Message starts the collecting over", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "Collect All Conversations" }).click();
-  await page.getByRole("button", { name: "Collect a Conversation" }).click();
-  await expect(page.getByRole("img", { name: /and 1 conversation collected\.$/ })).toBeVisible();
-  await expect(page.getByText("Conversation 1")).toBeVisible();
+  await page.getByRole("button", { name: "Collect All Messages" }).click();
+  await page.getByRole("button", { name: "Collect a Message" }).click();
+  await expect(page.getByRole("img", { name: /and 1 message collected\.$/ })).toBeVisible();
+  await expect(page.getByText("Message 1")).toBeVisible();
 });
 
 test("at the narrowest canvas, the finished deck fits its room", async ({ page }) => {
   await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
-  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  await page.getByRole("button", { name: "Collect All Messages" }).click();
   const canvas = (await page.getByRole("img", { name: DECK }).boundingBox())!;
   const deck = (await page.getByTestId("deck").boundingBox())!;
   const lifted = (await page.getByTestId("lifted-copies").boundingBox())!;
@@ -285,7 +305,7 @@ test("Extract Pathways from the start jumps to the deck and draws the three path
   await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
   await expect(page.getByTestId("deck")).toBeVisible();
-  await expect(page.getByText("800 Conversations", { exact: true })).toBeVisible();
+  await expect(page.getByText("800 Messages", { exact: true })).toBeVisible();
   for (const n of [1, 2, 3]) {
     await expect(page.getByText(`Pathway ${n}`)).toBeVisible();
   }
@@ -296,9 +316,9 @@ test("the pathways survive switching views", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   const nav = page.getByRole("navigation", { name: "Views" });
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
-  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
 });
 
@@ -315,7 +335,7 @@ test("Extract Pathways flies its particles on the particle canvas, and removes i
   const animate = page.getByRole("checkbox", { name: "Animate" });
   // Build the deck at once, then animate the extraction.
   await animate.uncheck();
-  await page.getByRole("button", { name: "Collect All Conversations" }).click();
+  await page.getByRole("button", { name: "Collect All Messages" }).click();
   await animate.check();
   await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   await expect(page.getByTestId("particles")).toBeVisible({ timeout: 5_000 });
