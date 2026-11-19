@@ -57,6 +57,13 @@
   [aria-expanded="true"] > & {
     transform: rotate(90deg);
   }
+
+  // Forced colors repaints transparent borders, which would turn the triangle into a square. It
+  // keeps system colors, so painting the two sides Canvas keeps the triangle.
+  @media (forced-colors: active) {
+    border-top-color: Canvas;
+    border-bottom-color: Canvas;
+  }
 }
 
 // 70 px, as in the prototype, keeps about two lines of the notes in view however short the card.

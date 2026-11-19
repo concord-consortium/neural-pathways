@@ -321,6 +321,19 @@ test("the card's unavailable arrow looks unavailable in forced-colors mode", asy
   expect(await fill("Previous message")).not.toBe(await fill("Next message"));
 });
 
+test("the observation notes' caret stays a triangle in forced-colors mode", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  const caret = page.locator(".observation-notes__caret");
+  // The triangle is its left border. Top and bottom painted the same color would make a square.
+  const borders = await caret.evaluate(el => {
+    const style = getComputedStyle(el);
+    return { top: style.borderTopColor, bottom: style.borderBottomColor, left: style.borderLeftColor };
+  });
+  expect(borders.top).not.toBe(borders.left);
+  expect(borders.bottom).not.toBe(borders.left);
+});
+
 test("the card fits the stacked layout without scrolling sideways", async ({ page }) => {
   await page.setViewportSize({ width: 600, height: 900 });
   await page.goto("/");
