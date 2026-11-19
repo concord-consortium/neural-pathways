@@ -40,6 +40,7 @@ $two-columns-width: 447px + 10px + $step-row-width;
 // --diagram-min-height is MIN_HEIGHT from layout.ts, set on this element by the view, so the
 // diagram's smallest layout is written down once.
 .looking-inside__layout {
+  position: relative; // The word flights are drawn over it.
   display: grid;
   flex: 1 1 0;
   min-height: 0;
