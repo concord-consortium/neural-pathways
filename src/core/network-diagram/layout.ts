@@ -49,7 +49,7 @@ const PILL_PAD_RIGHT = 13;
  */
 const PILL_POP_ROOM = 10;
 /** Between the two output pills, as in the prototype. The winning pill pops into it, not across it. */
-export const OUTPUT_PILL_GAP = 10;
+const OUTPUT_PILL_GAP = 10;
 /** The first column sits this far right of the even spread, so it doesn't look clipped. */
 const FIRST_COLUMN_NUDGE = 10;
 

@@ -1,4 +1,4 @@
-import { layoutNetwork, MIN_HEIGHT, MIN_WIDTH, OUTPUT_PILL_GAP } from "./layout";
+import { layoutNetwork, MIN_HEIGHT, MIN_WIDTH } from "./layout";
 import { PILL_GROW, popScale } from "./network-drawing";
 
 const SIZES = [10, 8, 6, 2];
@@ -65,7 +65,8 @@ describe.each([
   it("leaves the gap between the pills wider than the winning pill pops into it", () => {
     const [upper, lower] = layout.pills;
     const gap = lower.y - (upper.y + upper.height);
-    expect(gap).toBeCloseTo(OUTPUT_PILL_GAP);
+    // The prototype's OUT_PILL_GAP.
+    expect(gap).toBeCloseTo(10);
     const popInto = (upper.height / 2 + PILL_GROW + HALF_STROKE) * POP_PEAK - upper.height / 2;
     expect(popInto).toBeLessThan(gap);
   });
