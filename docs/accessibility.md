@@ -131,9 +131,10 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
   and where a network blocks it they fall back to a wider sans-serif. Then, from Looking Inside a
   Neural Network's head, which holds its title, the activation legend and the controls on one line
-  from 981 px with the web fonts, can wrap above that width, since the legend and the Animate
-  controls (207 px instead of 184 px) are wider. The head's items wrap rather than overflow, so
-  nothing runs past the panel at 910 px or at 480 px, but the head is taller than designed. Only the messages' font, Spline Sans Mono, is served with the app so far. Serving the
+  from 981 px with the web fonts, wraps in the fallback font until the view is about 1,115 px
+  wide: the legend and the Animate controls (207 px instead of 184 px) are wider. Wrapped, the head
+  is 114 px tall rather than 62, at 981 px and at 910 px alike. Its items wrap rather than
+  overflow, so nothing runs past the panel at 910 px or at 480 px. Only the messages' font, Spline Sans Mono, is served with the app so far. Serving the
   other two the same way would close this gap.
 
 **Scrollers.** A scroller must work from the keyboard
