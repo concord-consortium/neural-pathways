@@ -7,8 +7,11 @@ const MARGIN_TOP = 8;
 interface ReadoutBoxProps {
   /** What the box shows now; the box is empty when this is undefined. */
   content: React.ReactNode | undefined;
-  /** Every text the box can show for this message. The box holds the height of the tallest. */
-  candidates: readonly React.ReactNode[];
+  /**
+   * Every text the box can show for this message, prompts and readouts. The box holds the height of
+   * the tallest. A readout is measured with room for the Clear button, which only readouts show.
+   */
+  candidates: { prompts: readonly React.ReactNode[]; readouts: readonly React.ReactNode[] };
   /** True when `content` is the prompt, which is italic, rather than a readout. */
   idle: boolean;
   /** Shows the Clear button, which calls this. */
@@ -71,11 +74,15 @@ export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idl
         )}
       </div>
       <div ref={twinRef} data-testid="readout-measure" className="readout-box__measure" aria-hidden="true">
-        {/* Every candidate has room for the Clear button, so the box is as tall with it as without. */}
-        {candidates.map((candidate, i) => (
-          <div key={i} className="readout-box__candidate">
+        {candidates.prompts.map((candidate, i) => (
+          <div key={`prompt-${i}`} className="readout-box__candidate">
             <div className="readout-box__text">{candidate}</div>
-            <span className="readout-box__stand-in" />
+          </div>
+        ))}
+        {candidates.readouts.map((candidate, i) => (
+          <div key={`readout-${i}`} className="readout-box__candidate">
+            <div className="readout-box__text">{candidate}</div>
+            <span className="readout-box__stand-in" data-testid="readout-stand-in" />
           </div>
         ))}
       </div>
