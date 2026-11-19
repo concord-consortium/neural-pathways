@@ -74,7 +74,11 @@ describe("ReadoutBox", () => {
 
     it("holds the tallest candidate as min-height and reports it with the margin", () => {
       const onHeightChange = jest.fn();
-      render(<ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle onHeightChange={onHeightChange} />);
+      render((
+        <ReadoutBox
+          content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle onHeightChange={onHeightChange}
+        />
+      ));
       expect(screen.getByTestId("readout-box").style.minHeight).toBe("60px");
       expect(screen.getByTestId("readout-box").style.height).toBe("");
       expect(onHeightChange).toHaveBeenLastCalledWith(68);
@@ -82,7 +86,11 @@ describe("ReadoutBox", () => {
 
     it("measures again when the observed layout resizes", () => {
       const onHeightChange = jest.fn();
-      render(<ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle onHeightChange={onHeightChange} />);
+      render((
+        <ReadoutBox
+          content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle onHeightChange={onHeightChange}
+        />
+      ));
       heights.tall = 90;
       act(() => resized());
       expect(screen.getByTestId("readout-box").style.minHeight).toBe("90px");
