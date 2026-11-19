@@ -13,8 +13,8 @@ test("Step 4 animates to the network's answer", async ({ page }) => {
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Step 4" }).click();
   // The step takes a few seconds, so the answer isn't named yet.
-  await expect(page.getByRole("img", { name: "Network diagram", exact: true })).toBeVisible();
-  await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
+  await expect(page.getByRole("group", { name: "Network diagram", exact: true })).toBeVisible();
+  await expect(page.getByRole("group", { name: /The network predicts (Approach|Wait)\./ }))
     .toBeVisible({ timeout: 10_000 });
 });
 
@@ -216,7 +216,7 @@ test("with Animate off, Step 4 shows the answer at once", async ({ page }) => {
   await page.getByRole("checkbox", { name: "Animate" }).uncheck();
   await page.getByRole("button", { name: "Step 4" }).click();
   // Animated at Medium, Step 4 takes several seconds to name the answer.
-  await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
+  await expect(page.getByRole("group", { name: /The network predicts (Approach|Wait)\./ }))
     .toBeVisible({ timeout: 1_000 });
 });
 
@@ -475,7 +475,7 @@ const INTERACTIVE_EXTRA = 34;
 async function diagramIn(page: Page, width: number, diagramWidth: number) {
   await page.setViewportSize({ width, height: 900 });
   await page.goto("/?interactive=looking-inside");
-  const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
+  const diagram = page.getByRole("group", { name: "Network diagram", exact: true });
   await expect(diagram).toHaveAttribute("width", String(diagramWidth));
   return page.evaluate(() => {
     const scrollsSideways = (element: Element) => element.scrollWidth > element.clientWidth;
@@ -535,7 +535,7 @@ test("the diagram keeps the focus when its Interactive widens and it stops scrol
 test("the diagram is never drawn bigger than its box, even by a fraction of a pixel", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/?interactive=looking-inside");
-  const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
+  const diagram = page.getByRole("group", { name: "Network diagram", exact: true });
   await expect(diagram).toBeVisible();
   for (const padding of [16.2, 16.4, 16.6, 16.8]) {
     await page.locator(".looking-inside").evaluate((el, px) => { el.style.paddingBottom = `${px}px`; }, padding);

@@ -80,7 +80,7 @@ describe("LookingInside", () => {
     expect(await screen.findByText("1 / 3")).toBeInTheDocument();
     expect(card()).toHaveTextContent(wordsOf(0));
     expect(screen.getByRole("heading", { name: "The Neural Network" })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Network diagram" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Network diagram" })).toBeInTheDocument();
   });
 
   it("stores the shared message once the messages arrive", async () => {
@@ -143,13 +143,13 @@ describe("LookingInside", () => {
     await screen.findByText("1 / 3");
     const stepToAnswer = () => fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
     stepToAnswer();
-    expect(screen.getByRole("img", { name: /predicts Wait/ })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: /predicts Wait/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next message" }));
     stepToAnswer();
-    expect(screen.getByRole("img", { name: /predicts Approach/ })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: /predicts Approach/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Previous message" }));
     stepToAnswer();
-    expect(screen.getByRole("img", { name: /predicts Wait/ })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: /predicts Wait/ })).toBeInTheDocument();
   });
 
   it("names the network's section by its heading", async () => {
@@ -230,7 +230,8 @@ describe("LookingInside", () => {
     showView();
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
-    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Network diagram. The network predicts Wait." }))
+      .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-current", "step");
   });
 
@@ -259,7 +260,8 @@ describe("LookingInside", () => {
     showView(undefined, state);
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
-    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Network diagram. The network predicts Wait." }))
+      .toBeInTheDocument();
     expect(state.marker(ids[0])).toBe(4);
   });
 
@@ -298,7 +300,8 @@ describe("LookingInside", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next message" }));
     fireEvent.click(screen.getByRole("button", { name: "Previous message" }));
     expect(screen.getByRole("button", { name: "Step 4" })).toHaveAttribute("aria-current", "step");
-    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Network diagram. The network predicts Wait." }))
+      .toBeInTheDocument();
   });
 
   it("keeps the steps done for each message in the view's state", async () => {
@@ -432,7 +435,7 @@ describe("LookingInside", () => {
       showView(new SharedState({ query: "n:2" }));
       await screen.findByText("1 / 1");
       fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
-      expect(screen.getByRole("img", { name: /predicts Approach/ })).toBeInTheDocument();
+      expect(screen.getByRole("group", { name: /predicts Approach/ })).toBeInTheDocument();
     });
 
     it("stores a draft before Next moves, when focus leaves the box", async () => {
