@@ -149,10 +149,16 @@ test("Reset clears everything", async ({ page }) => {
 
 test.describe("About", () => {
   /**
-   * The narrowest the step row can be with About beside the centered steps: the steps and, on each
-   * side, a column as wide as About plus the 10 px gap. Measured in 16 px Barlow Condensed.
+   * The steps' and About's widths in 16 px Barlow Condensed, rounded up. `$step-row-width` in
+   * extract-pathways.scss adds them up the same way.
    */
-  const STEP_ROW_WIDTH = 670 + 2 * (86 + 10);
+  const STEPS_WIDTH = 596;
+  const ABOUT_WIDTH = 86;
+  /**
+   * The narrowest the step row can be with About beside the centered steps: the steps and, on each
+   * side, a column as wide as About plus the 10 px gap.
+   */
+  const STEP_ROW_WIDTH = STEPS_WIDTH + 2 * (ABOUT_WIDTH + 10);
   const about = (page: Page) => page.getByRole("button", { name: "About Extract the Neural Pathways" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
   const panel = (page: Page) => page.getByRole("region", { name: "The Network → Activated Pathways" });
@@ -174,6 +180,16 @@ test.describe("About", () => {
     expect(aboutBox.y + aboutBox.height / 2).toBeCloseTo(rowBox.y + rowBox.height / 2, 0);
     expect(aboutBox.x + aboutBox.width).toBeCloseTo(panelBox.x + panelBox.width, 0);
     expect(rowBox.x + rowBox.width / 2).toBeCloseTo(panelBox.x + panelBox.width / 2, 0);
+  });
+
+  // The breakpoint is a constant in the SCSS, so a label that changes the steps' width moves where
+  // About should drop without moving the breakpoint. This catches that.
+  test("the step row's breakpoint is measured from the steps and About as drawn", async ({ page }) => {
+    await openAt(page, 1200);
+    const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
+    const aboutBox = await box(about(page));
+    expect(Math.ceil(rowBox.width)).toBe(STEPS_WIDTH);
+    expect(Math.ceil(aboutBox.width)).toBe(ABOUT_WIDTH);
   });
 
   test("stays beside the steps in an Interactive just wide enough", async ({ page }) => {

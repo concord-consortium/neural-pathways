@@ -50,7 +50,7 @@ test.describe("the About dialog", () => {
   const about = (page: Page) => page.getByRole("button", { name: "About Looking Inside a Neural Network" });
   const dialog = (page: Page) => page.getByRole("dialog", { name: "About Looking Inside a Neural Network" });
 
-  async function openTrace(page: Page, width = 1024, height = 562) {
+  async function openLookingInside(page: Page, width = 1024, height = 562) {
     await page.setViewportSize({ width, height });
     await page.goto("/?interactive=looking-inside");
     await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
@@ -60,7 +60,7 @@ test.describe("the About dialog", () => {
   }
 
   test("opens below its button, right edges aligned, with focus on Close", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     await expect(dialog(page)).toBeVisible();
     const buttonBox = await box(about(page));
@@ -70,10 +70,10 @@ test.describe("the About dialog", () => {
     await expect(page.getByRole("button", { name: "Close" })).toBeFocused();
   });
 
-  // Looking Inside a Neural Network's text is taller than the room below its button at the designed
-  // size.
+  // At the designed size, Looking Inside a Neural Network's text is taller than the room below its
+  // button.
   test("at the designed size, hangs below its button inside the window, and scrolls its text", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     const buttonBox = await box(about(page));
     const dialogBox = await box(dialog(page));
@@ -84,7 +84,7 @@ test.describe("the About dialog", () => {
   });
 
   test("Enter opens the dialog and it stays open", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).focus();
     await page.keyboard.press("Enter");
     await expect(dialog(page)).toBeVisible();
@@ -92,7 +92,7 @@ test.describe("the About dialog", () => {
   });
 
   test("keeps Tab inside it", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     for (let i = 0; i < 4; i++) {
       await page.keyboard.press("Tab");
@@ -101,7 +101,7 @@ test.describe("the About dialog", () => {
   });
 
   test("closes on Escape and puts focus back on About", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     await page.keyboard.press("Escape");
     await expect(dialog(page)).toBeHidden();
@@ -109,7 +109,7 @@ test.describe("the About dialog", () => {
   });
 
   test("closes on a click outside it and puts focus back on About", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     await page.mouse.click(5, 5);
     await expect(dialog(page)).toBeHidden();
@@ -118,7 +118,7 @@ test.describe("the About dialog", () => {
 
   // At the designed size the text scrolls, so pressing on it focuses it, which re-renders the dialog.
   test("keeps a text selection dragged out over the backdrop, and stays open", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     const text = await box(dialog(page).locator("p").first());
     await page.mouse.move(text.x + 2, text.y + 8);
@@ -130,7 +130,7 @@ test.describe("the About dialog", () => {
   });
 
   test("stays inside the window when it narrows", async ({ page }) => {
-    await openTrace(page);
+    await openLookingInside(page);
     await about(page).click();
     await page.setViewportSize({ width: 360, height: 562 });
     await expect.poll(async () => {
@@ -140,7 +140,7 @@ test.describe("the About dialog", () => {
   });
 
   test("fits a 320 × 562 window, and its text scrolls from the keyboard", async ({ page }) => {
-    await openTrace(page, 320, 562);
+    await openLookingInside(page, 320, 562);
     await about(page).click();
     const b = await box(dialog(page));
     expect(b.x).toBeGreaterThanOrEqual(10 - 0.5);

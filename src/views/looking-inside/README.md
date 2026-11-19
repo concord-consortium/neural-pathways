@@ -43,7 +43,8 @@ The view's 16 px bottom padding is the first thing to go as the window gets shor
 counted.
 
 Narrower than its minimum layout width, it still works, but no reviewed design covers it:
-- The columns stack, and the page scrolls down. It is about 1,100 to 1,250 px tall.
+- The columns stack, and the page scrolls down. It is about 1,120 px tall just below that width,
+  and grows as more of it wraps, to about 1,510 px at 320 px.
 - About stays at the right end of the step row, and wraps onto its own line below the steps when
   the row is too narrow for both.
 - Below 414 px, the diagram scrolls sideways inside its panel. That is the diagram's narrowest

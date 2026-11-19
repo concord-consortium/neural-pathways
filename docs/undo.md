@@ -110,8 +110,8 @@ behind, and the student's original message is lost.
 
 ## Places that need changes
 
-1. **Every place the student changes the query.** Each filter bar calls `setQueryAndCorrect` (option
-   1), not `setQuery`. Views that show a message then stop correcting it when their list changes.
+1. **Every place the student changes the query.** Each filter bar calls `setQueryAndCorrect`
+   (option 1), not `setQuery`. Views that show a message then stop correcting it when their list changes.
    They still check it when state arrives from outside, such as saved state, the previous
    interactive, or URL params (item 6). In the target design (draft PR #29), Looking Inside a Neural
    Network, Investigate the Neural Pathways, Neural Pathway View of Model Reasoning and pane 1 of

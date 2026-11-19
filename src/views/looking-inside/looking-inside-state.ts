@@ -12,10 +12,7 @@ const markerType = types.refinement(types.integer, n => n >= 0 && n <= 4, "marke
 @model("npw/LookingInsideState")
 export class LookingInsideState extends ExtendedModel(composeMixins(animatedMixin), {
   version: tProp(types.literal(1), 1),
-  /**
-   * The marker each message rests at, by message id. A message at the start isn't
-   * stored.
-   */
+  /** The marker each message rests at, by message id. A message at the start isn't stored. */
   markerByMessage: tProp(types.record(markerType), () => ({})),
 }) {
   marker(messageId: string): number {

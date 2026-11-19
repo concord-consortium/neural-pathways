@@ -19,7 +19,7 @@ one thing, or one name for two things, settle it and add it here.
 ## Messages
 
 - **message:** one item of the dataset. Not "case". The generator, the data and the lab tools call
-  it a conversation, the word the prototype used before v1.4.
+  it a conversation.
 - **place:** a message's index among all of them, in index order. Passes are kept by place.
 - **position:** a message's index in the list being stepped through, which the filter decides
   (`listPosition` in Looking Inside a Neural Network, `position` on the message card).
