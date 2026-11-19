@@ -290,6 +290,21 @@ describe("NetworkDiagram neuron targets", () => {
     expect(buttons[1]).toHaveFocus();
   });
 
+  it("leaves keys with Alt, Ctrl or Meta held to the browser", () => {
+    const interaction = makeInteraction({ tabStop: { column: 0, unit: 0 } });
+    renderInteractive(interaction);
+    const buttons = screen.getAllByRole("button");
+    buttons[0].focus();
+    for (const modifier of [{ altKey: true }, { ctrlKey: true }, { metaKey: true }]) {
+      // fireEvent returns false when a handler called preventDefault.
+      expect(fireEvent.keyDown(buttons[0], { key: "ArrowLeft", ...modifier })).toBe(true);
+      expect(fireEvent.keyDown(buttons[0], { key: "ArrowDown", ...modifier })).toBe(true);
+      expect(fireEvent.keyDown(buttons[0], { key: "Enter", ...modifier })).toBe(true);
+    }
+    expect(buttons[0]).toHaveFocus();
+    expect(interaction.onToggle).not.toHaveBeenCalled();
+  });
+
   it("lets the output pill stand in for its neuron", () => {
     const interaction = makeInteraction({ reachedColumns: 4 });
     renderInteractive(interaction);
