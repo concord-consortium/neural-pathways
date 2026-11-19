@@ -4,8 +4,8 @@ import { App } from "./app";
 import { VIEWS } from "../views";
 import { AppState } from "../state/app-state";
 
-// Trace a Case, the default view, loads the messages. Leave them loading: these tests are
-// about the app shell, not the view.
+// Looking Inside a Neural Network, the default view, loads the messages. Leave them loading: these
+// tests are about the app shell, not the view.
 jest.mock("../../core/data-loader", () => ({ fetchIndex: jest.fn(() => new Promise(() => undefined)) }));
 
 // replaceState changes the URL without firing hashchange, so each test controls events itself.
@@ -23,8 +23,9 @@ describe("App", () => {
       const nav = screen.getByRole("navigation", { name: "Views" });
       const links = within(nav).getAllByRole("link");
       expect(links.map(link => link.textContent)).toEqual(VIEWS.map(view => view.title));
-      expect(within(nav).getByRole("link", { name: "Trace a Case" })).toHaveAttribute("aria-current", "page");
-      expect(screen.getByRole("heading", { name: "Trace a Case" })).toBeInTheDocument();
+      expect(within(nav).getByRole("link", { name: "Looking Inside a Neural Network" }))
+        .toHaveAttribute("aria-current", "page");
+      expect(screen.getByRole("heading", { name: "Looking Inside a Neural Network" })).toBeInTheDocument();
     });
 
     it("links each nav item to its view hash", () => {
@@ -40,17 +41,18 @@ describe("App", () => {
       expect(screen.getByRole("heading", { name: "Correlations" })).toBeInTheDocument();
       const nav = screen.getByRole("navigation", { name: "Views" });
       expect(within(nav).getByRole("link", { name: "Correlations" })).toHaveAttribute("aria-current", "page");
-      expect(within(nav).getByRole("link", { name: "Trace a Case" })).not.toHaveAttribute("aria-current");
+      expect(within(nav).getByRole("link", { name: "Looking Inside a Neural Network" }))
+        .not.toHaveAttribute("aria-current");
     });
 
     it("follows hash changes, such as back and forward", () => {
       setUrl("/");
       render(<App appState={new AppState()} />);
       act(() => {
-        setUrl("/#view=prediction-chain");
+        setUrl("/#view=model-reasoning");
         window.dispatchEvent(new HashChangeEvent("hashchange"));
       });
-      expect(screen.getByRole("heading", { name: "Prediction Chain" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Neural Pathway View of Model Reasoning" })).toBeInTheDocument();
     });
 
     it("starts a newly selected view at the top and announces it", () => {
@@ -80,7 +82,7 @@ describe("App", () => {
     it("selects the first view when the hash has no view key", () => {
       setUrl("/#correlations");
       render(<App appState={new AppState()} />);
-      expect(screen.getByRole("heading", { name: "Trace a Case" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Looking Inside a Neural Network" })).toBeInTheDocument();
     });
 
     it("keeps the nav and shows an unknown-view message for an unknown hash id", () => {
@@ -106,7 +108,7 @@ describe("App", () => {
     });
 
     it("ignores the standalone hash", () => {
-      setUrl("/?interactive=correlations#view=trace-a-case");
+      setUrl("/?interactive=correlations#view=looking-inside");
       render(<App appState={new AppState()} />);
       expect(screen.getByRole("heading", { name: "Correlations" })).toBeInTheDocument();
       expect(screen.queryByRole("navigation")).not.toBeInTheDocument();

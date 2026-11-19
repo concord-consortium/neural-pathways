@@ -1,7 +1,7 @@
 import { test } from "./lib/base-url";
 import { expect, type Locator, type Page } from "@playwright/test";
 
-test("Trace a Case steps through the 800 messages", async ({ page }) => {
+test("Looking Inside a Neural Network steps through the 800 messages", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Next message" }).click();
@@ -28,7 +28,7 @@ test("each message's steps survive switching views", async ({ page }) => {
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Correlations", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("2 / 800", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-current", "step");
   await page.getByRole("button", { name: "Previous message" }).click();
@@ -44,11 +44,11 @@ test("the message survives switching views", async ({ page }) => {
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Correlations", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("3 / 800", { exact: true })).toBeVisible();
 });
 
-test("the filter narrows the messages Trace a Case steps through", async ({ page }) => {
+test("the filter narrows the messages Looking Inside a Neural Network steps through", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   const filter = page.getByRole("textbox", { name: "Filter" });
@@ -66,7 +66,7 @@ test("a finished query is kept when switching views", async ({ page }) => {
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Correlations", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("1 / 64", { exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Filter" })).toHaveValue("model_correct:0");
 });
@@ -79,7 +79,7 @@ test("a half-typed query is kept when switching views", async ({ page }) => {
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Correlations", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByRole("textbox", { name: "Filter" })).toHaveValue("(model_correct:0");
   await expect(page.getByText("Incomplete query", { exact: true })).toBeVisible();
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
@@ -121,7 +121,7 @@ test("a query is stored when the help closes on a click outside it", async ({ pa
   await page.getByRole("button", { name: "Show what you can filter on" }).click();
   // A click inside moves focus into the help, which must not lose the commit when it closes.
   await page.getByText("The observer's notes", { exact: true }).click();
-  await page.getByRole("heading", { name: "Trace a Case" }).click();
+  await page.getByRole("heading", { name: "Looking Inside a Neural Network" }).click();
   // Escape discards only an unstored draft, so the count stays if the query was stored.
   await filter.focus();
   await page.keyboard.press("Escape");
@@ -158,7 +158,7 @@ test("the Animate checkbox shows keyboard focus around its label", async ({ page
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   const animate = page.getByRole("checkbox", { name: "Animate" });
   // About, at the end of the steps, is the last control before Animate.
-  await page.getByRole("button", { name: "About Trace a Case" }).focus();
+  await page.getByRole("button", { name: "About Looking Inside a Neural Network" }).focus();
   await page.keyboard.press("Tab");
   await expect(animate).toBeFocused();
   const outline = (element: Element) => getComputedStyle(element).outlineStyle;
@@ -194,7 +194,7 @@ test("Animate and the speed survive switching views", async ({ page }) => {
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Correlations", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(animate).not.toBeChecked();
   await expect(speed).toBeDisabled();
   await expect(speed).toHaveAttribute("aria-valuetext", "Fast");
@@ -227,7 +227,7 @@ test("in a narrow window, Animate and the speed wrap below the network's title",
   // Measured once the web font has loaded: the fallback font is wider, so the controls would
   // overrun the head.
   await page.evaluate(() => document.fonts.ready);
-  const head = await page.locator(".trace-a-case__network-head").boundingBox();
+  const head = await page.locator(".looking-inside__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
   const title = await page.getByRole("heading", { name: "The Network" }).boundingBox();
   expect(controls!.x + controls!.width).toBeLessThanOrEqual(head!.x + head!.width);
@@ -237,7 +237,7 @@ test("in a narrow window, Animate and the speed wrap below the network's title",
 test("Animate and the speed sit at the right end of the network's head", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
-  const head = await page.locator(".trace-a-case__network-head").boundingBox();
+  const head = await page.locator(".looking-inside__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
   // Only the head's 14 px side padding is to the right of the control.
   expect(head!.x + head!.width - (controls!.x + controls!.width)).toBeCloseTo(14, 0);
@@ -423,14 +423,14 @@ const INTERACTIVE_EXTRA = 34;
  */
 async function diagramIn(page: Page, width: number, diagramWidth: number) {
   await page.setViewportSize({ width, height: 900 });
-  await page.goto("/?interactive=trace-a-case");
+  await page.goto("/?interactive=looking-inside");
   const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
   await expect(diagram).toHaveAttribute("width", String(diagramWidth));
   return page.evaluate(() => {
     const scrollsSideways = (element: Element) => element.scrollWidth > element.clientWidth;
     return {
       page: scrollsSideways(document.documentElement),
-      panel: scrollsSideways(document.querySelector(".trace-a-case__network")!),
+      panel: scrollsSideways(document.querySelector(".looking-inside__network")!),
       diagram: scrollsSideways(document.querySelector(".network-diagram")!),
     };
   });
@@ -483,11 +483,11 @@ test("the diagram keeps the focus when its Interactive widens and it stops scrol
 // pixel's fractions.
 test("the diagram is never drawn bigger than its box, even by a fraction of a pixel", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/?interactive=trace-a-case");
+  await page.goto("/?interactive=looking-inside");
   const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
   await expect(diagram).toBeVisible();
   for (const padding of [16.2, 16.4, 16.6, 16.8]) {
-    await page.locator(".trace-a-case").evaluate((el, px) => { el.style.paddingBottom = `${px}px`; }, padding);
+    await page.locator(".looking-inside").evaluate((el, px) => { el.style.paddingBottom = `${px}px`; }, padding);
     await expect.poll(async () => {
       const box = (await diagramGroup(page).boundingBox())!;
       const width = Number(await diagram.getAttribute("width"));
@@ -503,12 +503,12 @@ test.describe("About", () => {
   const MIN_LAYOUT_WIDTH = 910;
   /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
   const MIN_LAYOUT_HEIGHT = 524;
-  const about = (page: Page) => page.getByRole("button", { name: "About Trace a Case" });
+  const about = (page: Page) => page.getByRole("button", { name: "About Looking Inside a Neural Network" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
 
   async function openAt(page: Page, width: number, height: number) {
     await page.setViewportSize({ width, height });
-    await page.goto("/?interactive=trace-a-case");
+    await page.goto("/?interactive=looking-inside");
     await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
   }
@@ -517,11 +517,11 @@ test.describe("About", () => {
     await openAt(page, MIN_LAYOUT_WIDTH, MIN_LAYOUT_HEIGHT);
     const aboutBox = await box(about(page));
     const resetBox = await box(page.getByRole("button", { name: "Reset" }));
-    const cellBox = await box(page.locator(".trace-a-case__step-row"));
+    const cellBox = await box(page.locator(".looking-inside__step-row"));
     expect(aboutBox.y).toBeCloseTo(resetBox.y, 0);
     expect(aboutBox.x + aboutBox.width).toBeCloseTo(cellBox.x + cellBox.width, 0);
     // The step row is no taller than the filter row beside it.
-    expect(cellBox.height).toBeCloseTo((await box(page.locator(".trace-a-case__filter-row"))).height, 0);
+    expect(cellBox.height).toBeCloseTo((await box(page.locator(".looking-inside__filter-row"))).height, 0);
     // Still two columns: the card and the network start on the same line.
     const card = await box(page.getByRole("region", { name: "Message", exact: true }));
     const network = await box(page.getByRole("region", { name: "The Network" }));
@@ -545,7 +545,7 @@ test.describe("About", () => {
     await openAt(page, 320, 562);
     const aboutBox = await box(about(page));
     const resetBox = await box(page.getByRole("button", { name: "Reset" }));
-    const cellBox = await box(page.locator(".trace-a-case__step-row"));
+    const cellBox = await box(page.locator(".looking-inside__step-row"));
     expect(aboutBox.y).toBeGreaterThanOrEqual(resetBox.y + resetBox.height);
     expect(aboutBox.x + aboutBox.width).toBeLessThanOrEqual(cellBox.x + cellBox.width + 0.5);
     expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth))

@@ -15,7 +15,7 @@ import { DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
 /**
  * How a collection runs its message through the network:
  * - `replay`: plays the forward pass's phases, phase 1 at its own speed and the fans faster than in
- *   Trace a Case, which it recalls.
+ *   Looking Inside a Neural Network, which it recalls.
  * - `swap`: drains the network a full layer at a time, holds it blank, then refills it with the new
  *   message a full layer at a time, so each new one is seen arriving.
  * - `quick`: clears everything at once and refills quickly with the edges snapped in, once the

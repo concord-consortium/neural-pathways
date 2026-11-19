@@ -13,7 +13,7 @@ $step-row-width: 421px;
 $two-columns-width: 447px + 10px + $step-row-width;
 
 // At least the window's height, so the layout below the title can fill what is left of it.
-.trace-a-case {
+.looking-inside {
   display: flex;
   flex-direction: column;
   gap: 9px;
@@ -36,7 +36,7 @@ $two-columns-width: 447px + 10px + $step-row-width;
 //
 // --diagram-min-height is MIN_HEIGHT from layout.ts, set on this element by the view, so the
 // diagram's smallest layout is written down once.
-.trace-a-case__layout {
+.looking-inside__layout {
   display: grid;
   flex: 1 1 0;
   min-height: 0;
@@ -56,7 +56,7 @@ $two-columns-width: 447px + 10px + $step-row-width;
 // (414 as an Interactive), the diagram's smallest layout (MIN_WIDTH in layout.ts) and the panel's
 // border, the diagram scrolls sideways inside its panel.
 @container (width < #{$two-columns-width}) {
-  .trace-a-case__layout {
+  .looking-inside__layout {
     flex: none;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
@@ -68,14 +68,14 @@ $two-columns-width: 447px + 10px + $step-row-width;
   }
 }
 
-.trace-a-case__filter-row {
+.looking-inside__filter-row {
   grid-area: filter-row;
   min-width: 0;
 }
 
 // The steps, then About at the right end of the row. When the row is too narrow for both, About
 // wraps onto a line of its own, still at the right.
-.trace-a-case__step-row {
+.looking-inside__step-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -84,34 +84,34 @@ $two-columns-width: 447px + 10px + $step-row-width;
   min-width: 0;
 }
 
-.trace-a-case__about {
+.looking-inside__about {
   margin-left: auto;
 }
 
 // The two panels stretch to their row, so they are the same height.
-.trace-a-case__message {
+.looking-inside__message {
   grid-area: message;
   align-self: stretch;
   min-width: 0;
 }
 
-.trace-a-case__network {
+.looking-inside__network {
   @include panel.panel;
   grid-area: network;
   align-self: stretch;
 }
 
-.trace-a-case__network-head {
+.looking-inside__network-head {
   @include panel.panel-head-with-controls;
 }
 
-.trace-a-case__network-title {
+.looking-inside__network-title {
   @include panel.panel-head-title;
 }
 
 // 440 px tall when the panel's height comes from its content (stacked), and otherwise the panel's
 // height less the head. Never smaller than the diagram's smallest layout.
-.trace-a-case__diagram {
+.looking-inside__diagram {
   flex: 1 1 440px;
   width: 100%;
   max-width: 537px;

@@ -1,26 +1,26 @@
-# Trace a Case
+# Looking Inside a Neural Network
 
 The lesson's first view: follow one message through the network, a layer at a time.
 
 ## What's here
 
-- `trace-a-case.tsx`: the view. It loads the alien3 messages, keeps the shared message
+- `looking-inside.tsx`: the view. It loads the alien3 messages, keeps the shared message
   valid, and lays out the filter bar over the message card and the step row over the network.
   The network panel's head holds the shared Animate and speed control. Prev/next step through the
   messages the filter matches. When nothing matches, the card says so, and the steps and the
   network are left out. Under the observation notes, the card shows an attribute indicator for each
   attribute that isn't hidden.
-- `trace-a-case-steps.ts`: Trace a Case on the shared step system in `src/core/steps/`: the Step
-  1–4 buttons; the timeline, where Step *k* plays phase *k* of
-  `src/core/network-diagram/forward-pass-phases.ts`; and the progress, the marker each message
-  rests at in `TraceACaseState`. Reset clears the message shown.
-- `trace-a-case-state.ts`: the view's saved state, `TraceACaseState`: the marker each
+- `looking-inside-steps.ts`: Looking Inside a Neural Network on the shared step system in
+  `src/core/steps/`: the Step 1–4 buttons; the timeline, where Step *k* plays phase *k* of
+  `src/core/network-diagram/forward-pass-phases.ts`; and the progress, the marker each message rests
+  at in `LookingInsideState`. Reset clears the message shown.
+- `looking-inside-state.ts`: the view's saved state, `LookingInsideState`: the marker each
   message rests at, and Animate and the speed, so they survive moving between messages
   and switching views. Only this view uses it, so it lives here rather than in `src/core/state/`.
 
-The network, the diagram, the message card and the data loading live in `src/core/`, where
-Extract Pathways and Investigate Pathways can use them. The network is the one the generator fits to
-the alien3 data; the view reads it from the index (`alien3Network`).
+The network, the diagram, the message card and the data loading live in `src/core/`, where Extract
+the Neural Pathways and Investigate the Neural Pathways can use them. The network is the one the
+generator fits to the alien3 data; the view reads it from the index (`alien3Network`).
 
 ## Size
 

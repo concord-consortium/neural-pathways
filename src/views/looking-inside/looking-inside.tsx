@@ -15,18 +15,18 @@ import { Network } from "../../core/network/network";
 import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
 import { validMessageId } from "../../core/state/message";
-import { TraceACaseState } from "./trace-a-case-state";
+import { LookingInsideState } from "./looking-inside-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { StepPlayer } from "../../core/steps/step-player";
 import { StepButtonGroup } from "../../core/steps/step-button-group";
-import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
+import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./looking-inside-steps";
 import about from "./about.md";
-import "./trace-a-case.scss";
+import "./looking-inside.scss";
 
 /** The view's title, in its heading, its About and the app's list of views. */
-export const TRACE_A_CASE_TITLE = "Trace a Case";
+export const LOOKING_INSIDE_TITLE = "Looking Inside a Neural Network";
 
 /** Gives the stylesheet the diagram's smallest layout, which it sizes the network panel from. */
 const LAYOUT_STYLE = { "--diagram-min-height": `${MIN_HEIGHT}px` } as React.CSSProperties;
@@ -41,7 +41,7 @@ function readNetwork(index: S3Index): { network: Network } | { error: Error } {
 }
 
 /** Follow one message through the network, a layer at a time. */
-export const TraceACase: React.FC = observer(function TraceACase() {
+export const LookingInside: React.FC = observer(function LookingInside() {
   const shared = useSharedState();
   // Correct the shared message when the list arrives, not in a useEffect: see docs/undo.md.
   // The list is the stored query's matches: a query still being typed never moves the stored
@@ -56,8 +56,8 @@ export const TraceACase: React.FC = observer(function TraceACase() {
     () => (indexState.status === "ready" ? readNetwork(indexState.index) : undefined), [indexState]);
 
   return (
-    <div className="trace-a-case">
-      <h1 className="trace-a-case__title">{TRACE_A_CASE_TITLE}</h1>
+    <div className="looking-inside">
+      <h1 className="looking-inside__title">{LOOKING_INSIDE_TITLE}</h1>
       {indexState.status === "loading" && <p>Loading messages…</p>}
       {indexState.status === "error" &&
         <p role="alert">
@@ -66,14 +66,16 @@ export const TraceACase: React.FC = observer(function TraceACase() {
       {fromIndex && "error" in fromIndex &&
         <p role="alert">The messages could not be shown: {fromIndex.error.message}</p>}
       {indexState.status === "ready" && fromIndex && !("error" in fromIndex) &&
-        <TraceACaseBody index={indexState.index} network={fromIndex.network} />}
+        <LookingInsideBody index={indexState.index} network={fromIndex.network} />}
     </div>
   );
 });
 
-const TraceACaseBody = observer(function TraceACaseBody({ index, network }: { index: S3Index; network: Network }) {
+const LookingInsideBody = observer(function LookingInsideBody(
+  { index, network }: { index: S3Index; network: Network },
+) {
   const shared = useSharedState();
-  const state = useViewState(TraceACaseState);
+  const state = useViewState(LookingInsideState);
   const { ids, bar } = useMessageFilter(messageFilterFor(index));
   // A message's place among all of them, which its pass is stored by. Its place in `ids`
   // changes with the query.
@@ -108,11 +110,11 @@ const TraceACaseBody = observer(function TraceACaseBody({ index, network }: { in
   // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
   // card says so, and the steps and the network are left out, but the step row stays to hold About.
   return (
-    <div className="trace-a-case__layout" style={LAYOUT_STYLE}>
-      <div className="trace-a-case__filter-row">
+    <div className="looking-inside__layout" style={LAYOUT_STYLE}>
+      <div className="looking-inside__filter-row">
         <FilterBar {...bar} />
       </div>
-      <div className="trace-a-case__message">
+      <div className="looking-inside__message">
         <MessageCard position={listPosition} total={ids.length}
           onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)}>
           {shown &&
@@ -124,19 +126,19 @@ const TraceACaseBody = observer(function TraceACaseBody({ index, network }: { in
             </>}
         </MessageCard>
       </div>
-      <div className="trace-a-case__step-row">
+      <div className="looking-inside__step-row">
         {player && place !== undefined && <StepButtonGroup player={player} buttons={TRACE_BUTTONS} />}
-        <div className="trace-a-case__about">
-          <AboutButton title={TRACE_A_CASE_TITLE} markdown={about} />
+        <div className="looking-inside__about">
+          <AboutButton title={LOOKING_INSIDE_TITLE} markdown={about} />
         </div>
       </div>
       {player && place !== undefined &&
-        <section className="trace-a-case__network" aria-labelledby={networkHeadId}>
-          <div className="trace-a-case__network-head">
-            <h2 id={networkHeadId} className="trace-a-case__network-title">The Network</h2>
+        <section className="looking-inside__network" aria-labelledby={networkHeadId}>
+          <div className="looking-inside__network-head">
+            <h2 id={networkHeadId} className="looking-inside__network-title">The Network</h2>
             <AnimationControls animated={state} />
           </div>
-          <div className="trace-a-case__diagram">
+          <div className="looking-inside__diagram">
             <Observer>
               {() => (
                 <NetworkDiagram network={network} pass={passes[place]} scales={scales}

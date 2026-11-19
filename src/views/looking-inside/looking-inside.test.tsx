@@ -8,13 +8,13 @@ import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { fixtureMetadata } from "../../core/network/__fixtures__/alien3-network";
 import { speedNamed } from "../../core/state/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
-import { TraceACaseState } from "./trace-a-case-state";
+import { LookingInsideState } from "./looking-inside-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
 import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
 import { AttributeDefinition } from "../../core/types/attributes";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { clearDatasetIndexCache } from "../../core/use-dataset-index";
-import { TraceACase } from "./trace-a-case";
+import { LookingInside } from "./looking-inside";
 
 jest.mock("../../core/data-loader", () => ({ fetchIndex: jest.fn() }));
 const mockedFetchIndex = fetchIndex as jest.MockedFunction<typeof fetchIndex>;
@@ -46,15 +46,15 @@ const items = [0, 6, 1].map(i => fixture.messages[i])
 const ids = items.map(i => i.id);
 const index: S3Index = { metadata: { ...fixtureMetadata, attributes }, items };
 
-function viewWith(shared: SharedState, state = new TraceACaseState({})) {
+function viewWith(shared: SharedState, state = new LookingInsideState({})) {
   return (
-    <ViewStateProvider viewId="trace-a-case" view={state} shared={shared}>
-      <TraceACase />
+    <ViewStateProvider viewId="looking-inside" view={state} shared={shared}>
+      <LookingInside />
     </ViewStateProvider>
   );
 }
 
-function showView(shared = new SharedState({}), state = new TraceACaseState({})) {
+function showView(shared = new SharedState({}), state = new LookingInsideState({})) {
   render(viewWith(shared, state));
   return shared;
 }
@@ -64,7 +64,7 @@ const typeQuery = (text: string) => fireEvent.change(filterBox(), { target: { va
 const wordsOf = (i: number) => items[i].text.split(/\s+/).join(" ");
 const card = () => screen.getByRole("region", { name: "Message" });
 
-describe("TraceACase", () => {
+describe("LookingInside", () => {
   beforeEach(() => {
     clearDatasetIndexCache();
     mockedFetchIndex.mockReset();
@@ -77,7 +77,7 @@ describe("TraceACase", () => {
 
   it("shows loading, then the first message and the network", async () => {
     showView();
-    expect(screen.getByRole("heading", { name: "Trace a Case" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Looking Inside a Neural Network" })).toBeInTheDocument();
     expect(screen.getByText("Loading messages…")).toBeInTheDocument();
     expect(await screen.findByText("1 / 3")).toBeInTheDocument();
     expect(card()).toHaveTextContent(wordsOf(0));
@@ -220,7 +220,7 @@ describe("TraceACase", () => {
   });
 
   it("stores Animate in the view's state", async () => {
-    const state = new TraceACaseState({});
+    const state = new LookingInsideState({});
     showView(undefined, state);
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("checkbox", { name: "Animate" }));
@@ -230,7 +230,7 @@ describe("TraceACase", () => {
 
   it("stores a step's end marker at once with Animate off", async () => {
     setReducedMotion(false);
-    const state = new TraceACaseState({});
+    const state = new LookingInsideState({});
     state.setAnimate(false);
     showView(undefined, state);
     await screen.findByText("1 / 3");
@@ -240,7 +240,7 @@ describe("TraceACase", () => {
   });
 
   it("plays a step's run at the speed in the view's state", async () => {
-    const state = new TraceACaseState({});
+    const state = new LookingInsideState({});
     state.setSpeed(speedNamed("Fast"));
     showView(undefined, state);
     await screen.findByText("1 / 3");
@@ -279,7 +279,7 @@ describe("TraceACase", () => {
 
   it("keeps the steps done for each message in the view's state", async () => {
     setReducedMotion(true);
-    const state = new TraceACaseState({});
+    const state = new LookingInsideState({});
     showView(new SharedState({}), state);
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 3" }));
@@ -289,7 +289,7 @@ describe("TraceACase", () => {
   });
 
   it("drops a run that is playing when the message changes, keeping the marker before", async () => {
-    const state = new TraceACaseState({});
+    const state = new LookingInsideState({});
     showView(new SharedState({}), state);
     await screen.findByText("1 / 3");
     jest.useFakeTimers();
@@ -309,7 +309,7 @@ describe("TraceACase", () => {
 
   it("resets the message shown, and only that one", async () => {
     setReducedMotion(true);
-    const state = new TraceACaseState({ markerByMessage: { [ids[1]]: 2 } });
+    const state = new LookingInsideState({ markerByMessage: { [ids[1]]: 2 } });
     showView(new SharedState({}), state);
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Step 3" }));
@@ -322,7 +322,7 @@ describe("TraceACase", () => {
   });
 
   it("stops a run that is playing when the view unmounts, keeping the marker before", async () => {
-    const state = new TraceACaseState({});
+    const state = new LookingInsideState({});
     const { unmount } = render(viewWith(new SharedState({}), state));
     await screen.findByText("1 / 3");
     jest.useFakeTimers();
@@ -356,7 +356,7 @@ describe("TraceACase", () => {
   });
 
   it("opens a message at the marker stored for it", async () => {
-    showView(new SharedState({}), new TraceACaseState({ markerByMessage: { [ids[0]]: 2 } }));
+    showView(new SharedState({}), new LookingInsideState({ markerByMessage: { [ids[0]]: 2 } }));
     await screen.findByText("1 / 3");
     expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-current", "step");
   });
@@ -478,8 +478,8 @@ describe("TraceACase", () => {
     it("keeps a half-typed query when the view goes away and comes back", async () => {
       const shared = new SharedState({});
       const { unmount } = render(
-        <ViewStateProvider viewId="trace-a-case" view={new TraceACaseState({})} shared={shared}>
-          <TraceACase />
+        <ViewStateProvider viewId="looking-inside" view={new LookingInsideState({})} shared={shared}>
+          <LookingInside />
         </ViewStateProvider>,
       );
       await screen.findByText("1 / 3");
@@ -492,7 +492,7 @@ describe("TraceACase", () => {
     });
 
     it("stops a run playing on a message the draft hides, keeping the marker before", async () => {
-      const state = new TraceACaseState({});
+      const state = new LookingInsideState({});
       showView(new SharedState({}), state);
       await screen.findByText("1 / 3");
       jest.useFakeTimers();

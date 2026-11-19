@@ -144,14 +144,14 @@ interface ExtractDrawingProps {
 }
 
 /**
- * Extract Pathways' canvas: the network in the middle, the lifted column in the right strip, and the
- * deck in the left strip, until Collect All moves it to the middle of the room left of the lifted
- * column. Extract Pathways then slides both left and draws the pathways beside the column
- * (`PathwaysLayer`), with the particles on the particle canvas over the SVG (`ParticleCanvas`). Drawn
- * as `scene` says, at full size and as wide as its container, but never narrower than
- * `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard can reach and scroll
- * it (`useKeyboardScrollable`). It is a group named by the panel heading, since the panel is already
- * a region with that name.
+ * Extract the Neural Pathways' canvas: the network in the middle, the lifted column in the right
+ * strip, and the deck in the left strip, until Collect All moves it to the middle of the room left
+ * of the lifted column. Extract Pathways then slides both left and draws the pathways beside the
+ * column (`PathwaysLayer`), with the particles on the particle canvas over the SVG
+ * (`ParticleCanvas`). Drawn as `scene` says, at full size and as wide as its container, but never
+ * narrower than `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard can
+ * reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since
+ * the panel is already a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
   network, passes, scales, outputLabels, scene, headingId, deckSize, loadings,

@@ -3,8 +3,8 @@ import { ViewPlaceholder } from "../../core/view-placeholder/view-placeholder";
 import about from "./about.md";
 
 /** The view's title, in its heading, its About and the app's list of views. */
-export const PREDICTION_CHAIN_TITLE = "Prediction Chain";
+export const CONTEXTUAL_FACTORS_TITLE = "Identify Contextual Factors";
 
-export const PredictionChain: React.FC = () => (
-  <ViewPlaceholder className="prediction-chain" title={PREDICTION_CHAIN_TITLE} about={about} />
+export const ContextualFactors: React.FC = () => (
+  <ViewPlaceholder className="contextual-factors" title={CONTEXTUAL_FACTORS_TITLE} about={about} />
 );

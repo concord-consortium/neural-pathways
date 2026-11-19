@@ -20,7 +20,7 @@ import about from "./about.md";
 import "./extract-pathways.scss";
 
 /** The view's title, in its heading, its About and the app's list of views. */
-export const EXTRACT_PATHWAYS_TITLE = "Extract Pathways";
+export const EXTRACT_PATHWAYS_TITLE = "Extract the Neural Pathways";
 
 const PANEL_TITLE = "The Network → Activated Pathways";
 

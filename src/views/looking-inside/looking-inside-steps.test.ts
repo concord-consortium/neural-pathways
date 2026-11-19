@@ -2,15 +2,15 @@ import { emptyScene, Scene } from "../../core/network-diagram/scene";
 import { sceneAt } from "../../core/network-diagram/forward-pass-phases";
 import { StepPlayer } from "../../core/steps/step-player";
 import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
-import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./trace-a-case-steps";
-import { TraceACaseState } from "./trace-a-case-state";
+import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./looking-inside-steps";
+import { LookingInsideState } from "./looking-inside-state";
 
 const SIZES = [10, 8, 6, 2];
 const timeline = traceTimeline(SIZES);
 
-/** Players over one TraceACaseState, made for a message as the view makes them. */
+/** Players over one LookingInsideState, made for a message as the view makes them. */
 function makeState() {
-  const state = new TraceACaseState({});
+  const state = new LookingInsideState({});
   const playerFor = (messageId: string) =>
     new StepPlayer(timeline, traceProgress(state, messageId), state);
   /** The markers stored, by message. */
@@ -48,7 +48,7 @@ describe("traceTimeline", () => {
   });
 });
 
-describe("Trace a Case's steps on the step player", () => {
+describe("Looking Inside a Neural Network's steps on the step player", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     setReducedMotion(false);

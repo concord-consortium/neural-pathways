@@ -22,18 +22,18 @@ Player (AP), each interactive will save `{ view, shared }`: its own view tree an
 
 ## How the state arrives
 
-The framework is in place: `SharedState`, `AppState`, and the context views use. Trace a Case and
-Extract Pathways have their state models. Each view's model, and each shared field, arrives with the
-story that first builds the UI using it, so it can be reviewed against that UI. The complete
-target is kept in draft [PR #29](https://github.com/concord-consortium/neural-pathways/pull/29).
-Bring a view's model over from it, and change the model if the UI turns out to need something
-different. The tables below list that target and the story each piece is expected to arrive with.
+The framework is in place: `SharedState`, `AppState`, and the context views use. Looking Inside a
+Neural Network and Extract the Neural Pathways have their state models. Each view's model, and each
+shared field, arrives with the story that first builds the UI using it, so it can be reviewed
+against that UI. The complete target is kept in draft
+[PR #29](https://github.com/concord-consortium/neural-pathways/pull/29). Bring a view's model over
+from it, and change the model if the UI turns out to need something different. The tables below list
+that target and the story each piece is expected to arrive with.
 
 Where the models live follows the rule for `src/core/`: it holds what more than one view uses.
 
 - **`src/core/state/`:** the shared state's model, the setup every model imports, the context and
-  hooks views use, and any model or piece of one that more than one view uses. Correlations and
-  Correlations Part 2 share one model, so theirs goes here.
+  hooks views use, and any model or piece of one that more than one view uses.
 - **The view's own folder:** a model only that view uses, beside the code that reads it, with its
   test and fixture.
 
@@ -62,9 +62,9 @@ It has `version`, `query` and `messageId` so far. Its fields:
 
 | Field | Meaning | Arrives with |
 |---|---|---|
-| `messageId` | The current message, in every view that shows one. Also pane 1 of Investigate Unknown Pathway. A view that shows one calls `ensureValidMessage` when its list arrives or changes. | In place |
+| `messageId` | The current message, in every view that shows one. Also pane 1 of Identify Contextual Factors. A view that shows one calls `ensureValidMessage` when its list arrives or changes. | In place |
 | `query` | The filter query every view uses, stored when the student presses Enter or leaves the filter bar. Unset: no query has been set. `""`: the student cleared it. | In place |
-| `commissioned` | Attribute keys the student commissioned in Investigate Unknown Pathway, in order, at most 2. Correlations Part 2 reads them. | Investigate Unknown Pathway |
+| `commissioned` | Attribute keys the student commissioned in Identify Contextual Factors, in order, at most 2. Correlations reads them. | Identify Contextual Factors |
 
 `SharedState` also has one volatile field, `queryDraft`: the filter bar's text while it differs
 from `query`. Filtering follows the draft as the student types, but only `setQueryAndCorrect`
@@ -75,31 +75,30 @@ an undo step.
 
 ## Each view's state
 
-Trace a Case's and Extract Pathways' are built so far: Trace a Case's with the marker each
-message rests at, and Extract Pathways' with all four of its stages, both with Animate and
-speed. The target, with what is built marked:
+Looking Inside a Neural Network's and Extract the Neural Pathways' are built so far: Looking Inside
+a Neural Network's with the marker each message rests at, and Extract the Neural Pathways' with all
+four of its stages, both with Animate and speed. The target, with what is built marked:
 
 | View | Model | Keeps |
 |---|---|---|
-| Trace a Case | `npw/TraceACaseState` | The marker each message rests at (its steps done, 0 to 4), by id (built); Animate on/off (built); speed (−100 slow, 0 normal, 100 fast) (built) |
-| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`), how many messages are collected (`collected`), whether the deck is done (`deckDone`) and whether the pathways are done (`pathwaysDone`); Animate; speed (all built) |
-| Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
-| Prediction Chain | `npw/PredictionChainState` | The step each message is on (0 to 4), by id; Animate; speed |
+| Looking Inside a Neural Network | `npw/LookingInsideState` | The marker each message rests at (its steps done, 0 to 4), by id (built); Animate on/off (built); speed (−100 slow, 0 normal, 100 fast) (built) |
+| Extract the Neural Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`), how many messages are collected (`collected`), whether the deck is done (`deckDone`) and whether the pathways are done (`pathwaysDone`); Animate; speed (all built) |
+| Investigate the Neural Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
+| Neural Pathway View of Model Reasoning | `npw/ModelReasoningState` | The step each message is on (0 to 4), by id; Animate; speed |
+| Identify Contextual Factors | `npw/ContextualFactorsState` | The chips selected on each pane; pane 2's message |
 | Correlations | `npw/CorrelationsState` | Measures or Graphs; the open detail card, by attribute key and pathway number |
-| Investigate Unknown Pathway | `npw/InvestigateUnknownPathwayState` | The chips selected on each pane; pane 2's message |
-| Correlations Part 2 | `npw/CorrelationsState` | The same as Correlations, in its own tree |
 
 The views with an Animate checkbox get the `animate` and `speed` props and their setters from
 `animatedMixin` in `src/core/state/animation.ts`, a mobx-keystone mixin composed into the view's
 model. That makes the model `Animated`, so one set of controls, `AnimationControls`, drives any of
-them. Prediction Chain will be the third.
+them. Neural Pathway View of Model Reasoning will be the third.
 
 ## Deliberately not kept
 
 Hover and anything shown only on hover, the About modal, scroll positions, and anything in the
-middle of an animation, such as chips in flight or a step still running. Extract Pathways keeps
-the stages it has completed, but not one in progress. A query still being typed is kept only for
-the life of the page, in `SharedState.queryDraft`.
+middle of an animation, such as chips in flight or a step still running. Extract the Neural Pathways
+keeps the stages it has completed, but not one in progress. A query still being typed is kept only
+for the life of the page, in `SharedState.queryDraft`.
 
 ## Rules
 
@@ -108,7 +107,7 @@ the life of the page, in `SharedState.queryDraft`.
   the network, so they are stored as numbers.
 - **Keep the message valid.** When a filtered list stops including the current
   message, the first one in the list is written back, so the next view opens on the same
-  case. Pane 2 of Investigate Unknown Pathway falls back to the first message pane 1 isn't
+  case. Pane 2 of Identify Contextual Factors falls back to the first message pane 1 isn't
   showing, so the panes open on different cases. An empty list leaves the id alone.
   `SharedState.ensureValidMessage` does this for the current message. The draft adds
   `ensureValidPane2Message` for pane 2.
@@ -152,8 +151,8 @@ interactive's shared tree. For each field, highest first:
 4. **The type's default.**
 
 URL param names start with the tree id and use dots for nested fields: `shared.query=…`,
-`shared.messageId=…`, `trace-a-case.speed=-100`, `correlations-part-2.mode=graphs`,
-`investigate-unknown-pathway.pane2.messageId=…`. The params apply only when a tree is first
+`shared.messageId=…`, `looking-inside.speed=-100`, `correlations.mode=graphs`,
+`contextual-factors.pane2.messageId=…`. The params apply only when a tree is first
 created:
 
 - **Standalone app:** at startup, when every tree is created.
@@ -169,7 +168,7 @@ returns the two trees or an error result and never throws. It returns an error w
 - doesn't load with `fromSnapshot(Model, json)`, which throws:
   - a `TypeCheckError` for a wrong-typed value, since type checking is always on;
   - a `SnapshotTypeMismatchError` for the saved state of a different model, such as Correlations
-    state loaded as `TraceACaseState`. Before mobx-keystone 2.3.0 this returned the other model
+    state loaded as `LookingInsideState`. Before mobx-keystone 2.3.0 this returned the other model
     instead ([mobx-keystone #590](https://github.com/xaviergonz/mobx-keystone/issues/590)).
     `shared-state.test.ts` checks it;
 - has an unknown `$modelType`;

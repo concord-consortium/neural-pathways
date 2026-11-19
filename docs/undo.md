@@ -110,15 +110,16 @@ behind, and the student's original message is lost.
 
 ## Places that need changes
 
-1. **Every place the student changes the query.** Each filter bar calls `setQueryAndCorrect`
-   (option 1), not `setQuery`. Views that show a message then stop correcting it when their
-   list changes. They still check it when state arrives from outside, such as saved state, the
-   previous interactive, or URL params (item 6). In the target design (draft PR #29), Trace a
-   Case, Investigate Pathways, Prediction Chain and pane 1 of Investigate Unknown Pathway call
-   `ensureValidMessage` when their list changes. Trace a Case follows option 1: it corrects
-   only when its messages load, and its filter bar corrects as above. With option 2 or 3
-   instead, each must correct in a reaction, never a `useEffect`.
-2. **Pane 2 of Investigate Unknown Pathway.** It would call `ensureValidPane2Message(filteredIds,
+1. **Every place the student changes the query.** Each filter bar calls `setQueryAndCorrect` (option
+   1), not `setQuery`. Views that show a message then stop correcting it when their list changes.
+   They still check it when state arrives from outside, such as saved state, the previous
+   interactive, or URL params (item 6). In the target design (draft PR #29), Looking Inside a Neural
+   Network, Investigate the Neural Pathways, Neural Pathway View of Model Reasoning and pane 1 of
+   Identify Contextual Factors call `ensureValidMessage` when their list changes. Looking Inside a
+   Neural Network follows option 1: it corrects only when its messages load, and its filter bar
+   corrects as above. With option 2 or 3 instead, each must correct in a reaction, never a
+   `useEffect`.
+2. **Pane 2 of Identify Contextual Factors.** It would call `ensureValidPane2Message(filteredIds,
    pane1MessageId)`. It needs the same treatment, and its correction also depends on pane
    1's message, which lives in the shared tree.
 3. **A query changed in a view that shows no message.** Option 1 handles this: Correlations
@@ -154,23 +155,23 @@ behind, and the student's original message is lost.
    Start the undo manager after loading, or call `clearUndo()` once the initial corrections have
    run. Under the one root, loading a saved tree replaces a child of the root, which is itself a
    recorded change, so the order matters.
-7. **Extract Pathways stores its progress through the shared step player,** so each run of Setup,
-   Collect a Message, Collect All and Extract Pathways writes twice, as item 8 describes.
+7. **Extract the Neural Pathways stores its progress through the shared step player,** so each run
+   of Setup, Collect a Message, Collect All and Extract Pathways writes twice, as item 8 describes.
    Decide whether an extraction can be undone at all. If it can, item 8's remedies apply.
 8. **A step press writes twice.** The shared step player (`StepPlayer` in
    `src/core/steps/step-player.ts`) stores the marker a run starts from when a step button is
-   pressed, and the marker it ends at from a `requestAnimationFrame` tick when it finishes. Trace a
-   Case's steps work this way. Unchanged, one press is two undo steps, and the second isn't tied to
-   anything the student did. Group the two writes, make the completion `withoutUndo`, or record
-   only the press. With Animate off a press writes once. Unchecking Animate during a run stores its
-   end from the next frame, a write that follows the checkbox, not a press.
+   pressed, and the marker it ends at from a `requestAnimationFrame` tick when it finishes. Looking
+   Inside a Neural Network's steps work this way. Unchanged, one press is two undo steps, and the
+   second isn't tied to anything the student did. Group the two writes, make the completion
+   `withoutUndo`, or record only the press. With Animate off a press writes once. Unchecking Animate
+   during a run stores its end from the next frame, a write that follows the checkbox, not a press.
 9. **Settings versus work.** Decide which fields are undoable:
    - `animate` and `speed` look like preferences;
    - Correlations' `mode` and `openDetail` look like navigation.
 
    Fields that aren't undoable can use `withoutUndo` safely, because nothing else depends on
    them.
-10. **Commissioning and Reset in Investigate Unknown Pathway.** Reset clears the shared
+10. **Commissioning and Reset in Identify Contextual Factors.** Reset clears the shared
    `commissioned` list. If it also clears the view's selected chips, it is another action that
    changes both trees (item 5).
 11. **Saved undo history.** If the undo store is saved with an interactive's state, its patches

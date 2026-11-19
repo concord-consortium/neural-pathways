@@ -1,4 +1,4 @@
-# Extract Pathways
+# Extract the Neural Pathways
 
 The lesson's second view: lift the 14 hidden neurons out of the network, collect the activations
 of messages run through it into a deck, one column each, then draw the three pathways from

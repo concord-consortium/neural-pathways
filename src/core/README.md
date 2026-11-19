@@ -66,11 +66,11 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 
   Use the word for the side you are on, and "neuron" in anything a student sees.
 - `network-diagram/`: the shared network diagram. A view says what to show as a `Scene`, and
-  `NetworkDiagram` draws it at the size of its container. `NetworkDrawing` is the same drawing as
-  an SVG group, for a view that draws more around the network. `layout.ts` is its geometry;
-  `easing.ts` has the timing curves; `forward-pass-phases.ts` is the four phases of a
-  message's forward pass through the network as a function of time, which Trace a Case plays
-  as its steps and Extract Pathways replays.
+  `NetworkDiagram` draws it at the size of its container. `NetworkDrawing` is the same drawing as an
+  SVG group, for a view that draws more around the network. `layout.ts` is its geometry; `easing.ts`
+  has the timing curves; `forward-pass-phases.ts` is the four phases of a message's forward pass
+  through the network as a function of time, which Looking Inside a Neural Network plays as its
+  steps and Extract the Neural Pathways replays.
 - `steps/`: the step system views share. A view's timeline rests at markers, points where the
   scene is still and progress is stored, and plays segments between them. `StepPlayer` plays the
   segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. It

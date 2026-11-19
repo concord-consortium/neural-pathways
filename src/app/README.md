@@ -8,7 +8,8 @@ line here is reviewed; see `src/core/README.md`.
 
 ## Vocabulary
 
-- **View**: one unit of the lesson (Trace a Case, Extract Pathways, …). The code's name for it.
+- **View**: one unit of the lesson (Looking Inside a Neural Network, Extract the Neural Pathways,
+  …). The code's name for it.
 - **Interactive**: a view embedded in the Activity Player, via `index.html?interactive=<view-id>`.
 - **Interactive mode**: how the app runs as an Interactive: the view alone, filling the frame,
   with no nav. Later it also talks to the AP through the LARA interactive API, for example

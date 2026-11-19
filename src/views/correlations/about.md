@@ -1,39 +1,8 @@
-Placeholder. A matrix of pathways against known attributes, shown either as correlations or as the
-histograms behind them. Students choose pairs and run the correlation.
-
-### Correlations
-
-Each square is the correlation between that pathway and that column, over the messages in the
-filter. Color tracks both direction and strength — orange positive, blue negative, deeper for
-stronger. Hover a cell for the exact value.
-
-### Histograms
-
-Each panel is a pair of histograms: the messages are counted into bins along the pathway’s
-activation axis, and bar height is how many landed in that bin. The pair splits them by the column’s
-value, and the column heading shows what that split looks like on its own. Two histograms with the
-same shape in the same place means the pathway does not tell those groups apart. A bar of a given
-height means the same number of messages anywhere in the matrix — in any cell, and in the
-pathway’s own histogram under its name — so the panels can be read against each other. Clicking one
-opens it enlarged, and a bar there stands for fewer messages than a bar of the same height in
-the matrix.
-
-### What the filter leaves standing
-
-A filter can leave a column holding the same value on every message — model_correct:0, the
-query this opens on, leaves every message wrong. A flat column cannot be correlated with
-anything, so it has nothing to show. It also ties two columns together: with the model wrong on
-every message its prediction is always the opposite of the actual label, so those two columns
-come out exact mirrors of each other. That symmetry is arithmetic, not a finding.
-
-The same thing happens by degrees to the pathways, and in the Histograms view the bar under each
-pathway’s own histogram is what says so: it shows how much of that pathway’s full range the filter
-left standing, and where in that range it sits. “5% of the range” means these messages cover
-about a twentieth of the spread the pathway has over all 800 — so there is barely anything left for
-a correlation to be computed from, and that whole row reads as noise however striking a number in it
-looks. A flat column is this same failure taken to zero. Hover a bar for the exact spans.
+Placeholder. The Correlations matrix again, run after Investigate Pathway 3 has commissioned new
+attribute codings — so the columns include facts about the messages that nobody had recorded
+the first time around.
 
 ### The point
 
-You cannot read a pathway directly. You interpret it indirectly, through things you already know
-how to name.
+A pathway that lines up with nothing may only be telling you that nothing you have measured yet is
+the right thing to measure.

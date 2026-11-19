@@ -18,11 +18,11 @@ one thing, or one name for two things, settle it and add it here.
 
 ## Messages
 
-- **message:** one item of the dataset. Not "case" for a message: that word appears only
-  in the view's name, Trace a Case.
+- **message:** one item of the dataset. Not "case". The generator, the data and the lab tools call
+  it a conversation, the word the prototype used before v1.4.
 - **place:** a message's index among all of them, in index order. Passes are kept by place.
 - **position:** a message's index in the list being stepped through, which the filter decides
-  (`listPosition` in Trace a Case, `position` on the message card).
+  (`listPosition` in Looking Inside a Neural Network, `position` on the message card).
 
 ## The message card
 
@@ -33,10 +33,10 @@ one thing, or one name for two things, settle it and add it here.
 
 ## The step system
 
-- **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup,
-  Collect a Message, Collect All Messages and Extract Pathways. Not a point or a stretch
-  of the timeline. Comments, tests and docs call Collect All Messages "Collect All"; its full
-  name is for the button's label.
+- **step:** a button in the step row: Looking Inside a Neural Network's Step 1 to Step 4, Extract
+  the Neural Pathways' Setup, Collect a Message, Collect All Messages and Extract Pathways. Not a
+  point or a stretch of the timeline. Comments, tests and docs call Collect All Messages "Collect
+  All"; its full name is for the button's label.
 - **marker:** a point on a view's timeline where the scene rests and progress is stored. 0 is the
   start.
 - **segment:** the stretch of timeline between two markers, `{ from, to }`, which a step plays.
@@ -55,22 +55,22 @@ one thing, or one name for two things, settle it and add it here.
 
 ## The network diagram
 
-- **column:** a drawn layer of the network, as in `columnSizes` and `nodeFill[column]`. Say
-  "layer" in prose, since Extract Pathways also has the lifted column and the deck's columns.
+- **column:** a drawn layer of the network, as in `columnSizes` and `nodeFill[column]`. Say "layer"
+  in prose, since Extract the Neural Pathways also has the lifted column and the deck's columns.
 - **unit:** a neuron as an index in a layer or column, as in `nodeFill[column][unit]`.
 - **node:** a unit's drawn circle, with its gauge.
 - **edge:** a drawn connection between two nodes, colored and weighted by its signal.
 - **wire:** the gray line under an edge, drawn whether or not the edge is.
 - **phase:** one of the four parts of a message's forward pass: the input fill, then a fan of
-  edges into each later column. Trace a Case's Step *k* plays phase *k*.
+  edges into each later column. Looking Inside a Neural Network's Step *k* plays phase *k*.
 - **spotlight:** `hiddenLayerSpotlight`, how strongly the hidden layers' nodes are picked out;
   everything else fades to 1 − its strength. Not "dim" for the field. "Dim" and "undim" name the
   spotlight rising and falling, as in the prototype's `dimRest` and `undim`.
 
-## Extract Pathways
+## Extract the Neural Pathways
 
-- **canvas:** Extract Pathways' drawing area, the SVG that `ExtractDrawing` lays out, as in
-  `minCanvasWidth` and "half off the canvas". Not the particle canvas.
+- **canvas:** Extract the Neural Pathways' drawing area, the SVG that `ExtractDrawing` lays out, as
+  in `minCanvasWidth` and "half off the canvas". Not the particle canvas.
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
 - **deck:** the columns of collected messages' hidden activations, one column each.
 - **room:** the stretch of canvas the deck is centered in, from the canvas's left edge to the lifted
@@ -133,6 +133,6 @@ one thing, or one name for two things, settle it and add it here.
 - **scroller:** an element that scrolls what it holds, such as a drawing wider than its panel.
   `useKeyboardScrollable` makes it reachable by keyboard. Not "region" for the area: its role is
   `group` or `region` (see `accessibility.md`), and "region" means the role.
-- **step row:** the row of controls above the network in Trace a Case and above the drawing in
-  Extract Pathways, holding the steps, Reset and About. `StepButtonGroup` draws the steps and Reset
-  in it. Not "toolbar".
+- **step row:** the row of controls above the network in Looking Inside a Neural Network and above
+  the drawing in Extract the Neural Pathways, holding the steps, Reset and About. `StepButtonGroup`
+  draws the steps and Reset in it. Not "toolbar".

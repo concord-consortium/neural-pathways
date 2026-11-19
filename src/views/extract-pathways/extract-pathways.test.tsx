@@ -66,7 +66,7 @@ describe("ExtractPathways", () => {
 
   it("shows loading, then the step row and the blank network", async () => {
     showView();
-    expect(screen.getByRole("heading", { name: "Extract Pathways", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Extract the Neural Pathways", level: 1 })).toBeInTheDocument();
     expect(screen.getByText("Loading messages…")).toBeInTheDocument();
     expect(await screen.findByRole("img", { name: "The network." })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Network → Activated Pathways" })).toBeInTheDocument();

@@ -17,8 +17,8 @@ function firstLine(viewId: string) {
 const placeholders = VIEWS.filter(view => !view.stateModel);
 
 describe("each placeholder view's About", () => {
-  it("covers the five views not built yet", () => {
-    expect(placeholders).toHaveLength(5);
+  it("covers the four views not built yet", () => {
+    expect(placeholders).toHaveLength(4);
   });
 
   it.each(placeholders.map(view => [view.title, view] as const))("shows %s's own text", (title, view) => {

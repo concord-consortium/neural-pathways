@@ -9,7 +9,7 @@ import { NetworkDrawing } from "./network-drawing";
 import { Scene } from "./scene";
 import "./network-diagram.scss";
 
-/** The size drawn until the container reports its own: the content box Trace a Case gives it. */
+/** The size drawn until the container reports its own: the content box Looking Inside a Neural Network gives it. */
 export const DIAGRAM_DEFAULT_SIZE = { width: 537, height: 440 };
 
 function capitalize(word: string): string {

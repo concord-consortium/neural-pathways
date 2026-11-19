@@ -61,7 +61,7 @@ export interface PathwaysScene {
   done: boolean;
 }
 
-/** What Extract Pathways draws at one moment. The timelines build these; ExtractDrawing draws them. */
+/** What Extract the Neural Pathways draws at one moment. The timelines build these; ExtractDrawing draws them. */
 export interface ExtractScene {
   /** The network: its fills, edges, answer and spotlight. */
   network: Scene;

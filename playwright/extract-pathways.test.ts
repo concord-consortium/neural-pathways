@@ -119,9 +119,9 @@ test("the stage survives switching views", async ({ page }) => {
   await page.getByRole("button", { name: "Collect a Message" }).click();
   await page.getByRole("button", { name: "Collect a Message" }).click();
   const nav = page.getByRole("navigation", { name: "Views" });
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
-  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
   await expect(page.getByRole("img", { name: /and 2 messages collected\.$/ })).toBeVisible();
 });
 
@@ -153,7 +153,7 @@ test.describe("About", () => {
    * side, a column as wide as About plus the 10 px gap. Measured in 16 px Barlow Condensed.
    */
   const STEP_ROW_WIDTH = 670 + 2 * (86 + 10);
-  const about = (page: Page) => page.getByRole("button", { name: "About Extract Pathways" });
+  const about = (page: Page) => page.getByRole("button", { name: "About Extract the Neural Pathways" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
   const panel = (page: Page) => page.getByRole("region", { name: "The Network → Activated Pathways" });
 
@@ -212,9 +212,9 @@ test("Animate and the speed survive switching views", async ({ page }) => {
   await expect(speed).toHaveAttribute("aria-valuetext", "Slow");
   await animate.uncheck();
   const nav = page.getByRole("navigation", { name: "Views" });
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
-  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
   await expect(animate).not.toBeChecked();
   await expect(speed).toHaveAttribute("aria-valuetext", "Slow");
   await page.getByRole("button", { name: "Setup" }).click();
@@ -256,9 +256,9 @@ test("the deck survives switching views", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Collect All Messages" }).click();
   const nav = page.getByRole("navigation", { name: "Views" });
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
-  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
   await expect(page.getByRole("img", { name: DECK })).toBeVisible();
 });
 
@@ -296,9 +296,9 @@ test("the pathways survive switching views", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
   const nav = page.getByRole("navigation", { name: "Views" });
-  await nav.getByRole("link", { name: "Trace a Case" }).click();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
   await expect(page.getByText("1 / 800")).toBeVisible();
-  await nav.getByRole("link", { name: "Extract Pathways" }).click();
+  await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
 });
 

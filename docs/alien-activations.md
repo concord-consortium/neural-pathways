@@ -103,10 +103,10 @@ It regenerates both datasets several times over and takes under a minute.
 
 ## The fitted network
 
-Trace a Case and Extract Pathways draw a network the generator fits to the alien3 data on every
-build (`fitNetwork` in `generator/alien/network.ts`), and read it from `metadata.network` in
-alien3's `index.json`. It is words → 10 → 8 → 6 → 2: an embedding of 10, then 8 and 6 units that
-track the 14 neurons above in order, then two logits, Wait and Approach.
+Looking Inside a Neural Network and Extract the Neural Pathways draw a network the generator fits to
+the alien3 data on every build (`fitNetwork` in `generator/alien/network.ts`), and read it from
+`metadata.network` in alien3's `index.json`. It is words → 10 → 8 → 6 → 2: an embedding of 10, then
+8 and 6 units that track the 14 neurons above in order, then two logits, Wait and Approach.
 
 It approximates the activations; it doesn't produce them. Each tracking unit is fitted toward its
 neuron's standardized activation, times 0.75, as closely as the words allow. The units come out at
