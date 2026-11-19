@@ -611,3 +611,83 @@ test.describe("About", () => {
     await expect(about(page)).toBeVisible();
   });
 });
+
+test.describe("Step 1's word flights", () => {
+  const chips = (page: Page) => page.locator(".word-flight-overlay__chip");
+
+  async function openMessage(page: Page) {
+    await page.goto("/");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  }
+
+  async function cardWords(page: Page): Promise<string[]> {
+    return page.locator(".message-words__word").allTextContents();
+  }
+
+  test("fly the message's words into the input layer, then clear them", async ({ page }) => {
+    await openMessage(page);
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    const words = await cardWords(page);
+    expect(words).toContain(await chips(page).first().textContent());
+    await expect(page.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-current", "step");
+    await expect(chips(page)).toHaveCount(0, { timeout: 10_000 });
+  });
+
+  test("fly when the columns are stacked too", async ({ page }) => {
+    await page.setViewportSize({ width: 600, height: 900 });
+    await openMessage(page);
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    await expect(chips(page)).toHaveCount(0, { timeout: 10_000 });
+  });
+
+  test("are skipped with Animate off", async ({ page }) => {
+    await openMessage(page);
+    await page.getByRole("checkbox", { name: "Animate" }).uncheck();
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(page.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-current", "step");
+    // Poll over the time a flight would have taken to start.
+    for (let i = 0; i < 5; i++) {
+      await expect(chips(page)).toHaveCount(0);
+      await page.waitForTimeout(100);
+    }
+  });
+
+  test("vanish at once when the message changes", async ({ page }) => {
+    await openMessage(page);
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    await page.getByRole("button", { name: "Next message" }).click();
+    await expect(page.getByText("2 / 800", { exact: true })).toBeVisible();
+    await expect(chips(page)).toHaveCount(0);
+  });
+
+  test("re-aim at the neurons' new places when the window resizes", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openMessage(page);
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    await page.setViewportSize({ width: 600, height: 900 });
+    // A chip about to land, which has faded a little, sits on its neuron.
+    const near = await page.waitForFunction(() => {
+      const outlines = Array.from(document.querySelectorAll("[data-column='0']"), node => {
+        const rect = node.getBoundingClientRect();
+        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      });
+      for (const chip of document.querySelectorAll<HTMLElement>(".word-flight-overlay__chip")) {
+        if (Number(chip.style.opacity) >= 1) {
+          continue;
+        }
+        const rect = chip.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        if (outlines.some(o => Math.hypot(o.x - x, o.y - y) <= 20)) {
+          return true;
+        }
+      }
+      return false;
+    }, undefined, { timeout: 10_000, polling: "raf" });
+    expect(await near.jsonValue()).toBe(true);
+  });
+});

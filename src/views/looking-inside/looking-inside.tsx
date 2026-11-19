@@ -1,4 +1,4 @@
-import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
+import React, { useCallback, useId, useLayoutEffect, useMemo, useState } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
@@ -23,6 +23,7 @@ import { useDatasetIndex } from "../../core/use-dataset-index";
 import { StepPlayer } from "../../core/steps/step-player";
 import { StepButtonGroup } from "../../core/steps/step-button-group";
 import { LOOKING_INSIDE_BUTTONS, lookingInsideProgress, lookingInsideTimeline } from "./looking-inside-steps";
+import { WordFlightOverlay } from "./word-flight-overlay";
 import about from "./about.md";
 import "./looking-inside.scss";
 
@@ -90,7 +91,10 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // No message is shown when nothing matches: the empty list leaves the stored id in place.
   const shownId = listPosition < 0 ? undefined : currentId;
   const shownText = shownId === undefined ? undefined : index.items[placeById.get(shownId)!].text;
-  const wordCount = shownText === undefined ? 0 : messageWords(shownText).length;
+  const words = useMemo(() => (shownText === undefined ? [] : messageWords(shownText)), [shownText]);
+  const wordCount = words.length;
+  // The layout the word flights are drawn over and measured against.
+  const [layoutElement, setLayoutElement] = useState<HTMLElement | null>(null);
   // The flights depend on how many words the message has, so the timeline does too.
   const timeline = useMemo(
     () => lookingInsideTimeline(network.layers.map(layer => layer.biases.length), wordCount), [network, wordCount]);
@@ -112,7 +116,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
   // card says so, and the steps and the network are left out, but the step row stays to hold About.
   return (
-    <div className="looking-inside__layout" style={LAYOUT_STYLE}>
+    <div className="looking-inside__layout" style={LAYOUT_STYLE} ref={setLayoutElement}>
       <div className="looking-inside__filter-row">
         <FilterBar {...bar} />
       </div>
@@ -150,6 +154,10 @@ const LookingInsideBody = observer(function LookingInsideBody(
             </Observer>
           </div>
         </section>}
+      {player &&
+        <Observer>
+          {() => <WordFlightOverlay time={player.scene.step1Time} words={words} container={layoutElement} />}
+        </Observer>}
     </div>
   );
 });
