@@ -449,14 +449,20 @@ test.describe("the card and network panels", () => {
     expect((await rect(network)).bottom).toBeCloseTo(500 - 16, 0);
   });
 
-  test("stop shrinking at 380 px, and the page scrolls instead", async ({ page }) => {
+  test("stop shrinking at the diagram's smallest with its chrome, and the page scrolls instead", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card, network } = panels(page);
     await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
-    expect((await rect(card)).height).toBeCloseTo(380, 0);
+    // MIN_HEIGHT (249), the network's chrome (80), the box's held height with its margin, and the
+    // 8 px of padding under the box.
+    const readoutHeight = await page.locator(".looking-inside__layout")
+      .evaluate(el => parseFloat(el.style.getPropertyValue("--readout-height")));
+    expect(readoutHeight).toBeGreaterThan(0);
+    const smallest = 249 + 80 + readoutHeight + 8;
+    expect((await rect(card)).height).toBeCloseTo(smallest, 0);
     const networkBox = await rect(network);
-    expect(networkBox.height).toBeCloseTo(380, 0);
+    expect(networkBox.height).toBeCloseTo(smallest, 0);
     // The drawing still fits in the panel at its smallest.
     expect((await rect(network.locator("svg").first())).bottom).toBeLessThanOrEqual(networkBox.bottom);
     const view = page.getByRole("main");
@@ -550,10 +556,12 @@ test("the diagram is never drawn bigger than its box, even by a fraction of a pi
 });
 
 test.describe("About", () => {
-  /** The narrowest Interactive with two columns: see the README's Size section. */
-  const MIN_LAYOUT_WIDTH = 910;
+  /** The narrowest Interactive that holds the network's head on one line: see the README's Size section. */
+  const MIN_LAYOUT_WIDTH = 981;
+  /** The narrowest Interactive with two columns, where the head wraps. */
+  const TWO_COLUMN_WIDTH = 910;
   /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
-  const MIN_LAYOUT_HEIGHT = 442;
+  const MIN_LAYOUT_HEIGHT = 480;
   const about = (page: Page) => page.getByRole("button", { name: "About Looking Inside a Neural Network" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
 
@@ -582,8 +590,26 @@ test.describe("About", () => {
     expect(scrolls).toBe(false);
   });
 
+  test("holds the network's head on one line at the minimum layout size", async ({ page }) => {
+    await openAt(page, MIN_LAYOUT_WIDTH, MIN_LAYOUT_HEIGHT);
+    const title = await box(page.getByRole("heading", { name: "The Neural Network" }));
+    const controls = await box(page.locator(".animation-controls"));
+    const center = (b: { y: number; height: number }) => b.y + b.height / 2;
+    expect(Math.abs(center(title) - center(controls))).toBeLessThanOrEqual(4);
+  });
+
+  test("wraps the network's head, without overflowing, below the minimum layout width", async ({ page }) => {
+    await openAt(page, TWO_COLUMN_WIDTH, 900);
+    const head = await box(page.locator(".looking-inside__network-head"));
+    const title = await box(page.getByRole("heading", { name: "The Neural Network" }));
+    const controls = await box(page.locator(".animation-controls"));
+    expect(controls.y).toBeGreaterThanOrEqual(title.y + title.height);
+    expect(controls.x + controls.width).toBeLessThanOrEqual(head.x + head.width);
+    expect(controls.y + controls.height).toBeLessThanOrEqual(head.y + head.height);
+  });
+
   test("stays beside the steps when a pixel narrower stacks the columns", async ({ page }) => {
-    await openAt(page, MIN_LAYOUT_WIDTH - 1, 900);
+    await openAt(page, TWO_COLUMN_WIDTH - 1, 900);
     const card = await box(page.getByRole("region", { name: "Message", exact: true }));
     const network = await box(page.getByRole("region", { name: "The Neural Network" }));
     expect(network.y).toBeGreaterThan(card.y + card.height);
@@ -780,9 +806,9 @@ test("the network's head holds its title, legend and controls in that order", as
   expect(Math.abs(center(legend) - center(controls))).toBeLessThanOrEqual(4);
 });
 
-// As on a school network that blocks Google Fonts. 1024 is the designed width; 480 is a narrow window.
+// As on a school network that blocks Google Fonts. 981 is the minimum layout width; 480 is a narrow window.
 // Every child must stay inside the head's side padding.
-for (const width of [480, 1024]) {
+for (const width of [480, 981]) {
   test(`with Google Fonts blocked, nothing in the network's head runs past it at ${width} px`, async ({ page }) => {
     await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
     await page.setViewportSize({ width, height: 900 });
