@@ -130,10 +130,11 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   in an Interactive 562 px tall its page scrolls down.
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
   and where a network blocks it they fall back to a wider sans-serif. Then, from Looking Inside a
-  Neural Network's minimum layout width, 910 px, to about 935 px, Animate and the speed wrap below
-  the network panel's title, and the head grows from 62 to 89 px. Only the messages' font, Spline
-  Sans Mono, is served with the app so far. Serving the other two the same way would close this
-  gap.
+  Neural Network's head, which holds its title, the activation legend and the controls on one line
+  from 981 px with the web fonts, can wrap above that width, since the legend and the Animate
+  controls (207 px instead of 184 px) are wider. The head's items wrap rather than overflow, so
+  nothing runs past the panel at 910 px or at 480 px, but the head is taller than designed. Only the messages' font, Spline Sans Mono, is served with the app so far. Serving the
+  other two the same way would close this gap.
 
 **Scrollers.** A scroller must work from the keyboard
 ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). It may scroll
@@ -147,6 +148,9 @@ scroller with nothing focusable in it reachable by Tab; Safari doesn't.
   by the same heading, and About's text is, inside its dialog. Otherwise it is a `region` named by
   its heading, or by the button in its heading, as the observation notes are. A `region` inside a
   landmark with the same name would list the landmark twice.
+- A drawing that holds controls is not an `img`, which hides everything inside it from assistive
+  technology. The network diagram's SVG is a `group` with the same label, holding a button for each
+  reached neuron. Its own text, which the buttons' names make redundant, is `aria-hidden`.
 - A scroller clips what is drawn outside it, so keep the drawing inside its own box, down to a
   fraction of a pixel. The network diagram leaves room for its winning pill to grow as it pops.
 
