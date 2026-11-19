@@ -355,6 +355,9 @@ test.describe("the card and network panels", () => {
     const { top, bottom, height } = el.getBoundingClientRect();
     return { top, bottom, height };
   });
+  /** How far the notes box ends below its text: its 10 px padding, unless something stretched it. */
+  const belowNotesText = (notes: Locator) => notes.evaluate(el =>
+    el.getBoundingClientRect().bottom - el.querySelector("p")!.getBoundingClientRect().bottom);
 
   // On a short window the card's body has to give up height, and its head mustn't.
   for (const height of [1000, 450]) {
@@ -379,6 +382,14 @@ test.describe("the card and network panels", () => {
     expect(networkBox.height).toBeCloseTo(cardBox.height, 0);
     // The view's 16 px bottom padding is all that's left below them.
     expect(cardBox.bottom).toBeCloseTo(800 - 16, 0);
+  });
+
+  test("leave the notes box as tall as its notes when the card has room to spare", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    const { card } = panels(page);
+    await openNotes(page);
+    expect(await belowNotesText(card.getByRole("region", { name: "Observation notes" }))).toBeCloseTo(10, 0);
   });
 
   test("stop growing at 800 px on a tall window", async ({ page }) => {
@@ -436,10 +447,7 @@ test.describe("the card and network panels", () => {
     expect(await notes.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(0);
     // Nothing to scroll, so it isn't a Tab stop.
     await expect(notes).not.toHaveAttribute("tabindex");
-    // The box ends its 10 px padding below the text, so nothing stretched it.
-    const below = await notes.evaluate(el =>
-      el.getBoundingClientRect().bottom - el.querySelector("p")!.getBoundingClientRect().bottom);
-    expect(below).toBeCloseTo(10, 0);
+    expect(await belowNotesText(notes)).toBeCloseTo(10, 0);
     await page.getByRole("main").evaluate(el => el.scrollTo(0, el.scrollHeight));
     expect((await rect(network)).bottom).toBeCloseTo(500 - 16, 0);
   });
