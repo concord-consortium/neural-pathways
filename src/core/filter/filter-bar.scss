@@ -1,4 +1,5 @@
 @use "../colors" as colors;
+@use "../fonts" as fonts;
 
 // From the prototype's filter bar: a white label at the start, a gray box to type in, and a white
 // tail holding the count and the ⓘ button.
@@ -58,7 +59,7 @@
   outline: none;
   background: transparent;
   color: colors.$ink;
-  font-family: colors.$mono;
+  font-family: fonts.$mono;
   font-size: 13px;
 
   // Darker than the prototype's #A6AEBA, which is 2.07:1 on $surface: the example is the only
@@ -86,7 +87,7 @@
   min-width: 0;
   overflow: hidden;
   color: colors.$ink-2;
-  font-family: colors.$mono;
+  font-family: fonts.$mono;
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;

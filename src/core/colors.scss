@@ -32,9 +32,3 @@ $error: #C0503E;
 // The network diagram's neutrals.
 $wire: #909090;
 $node-outline: #6E7580;
-
-$mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-
-// The alien messages' words, and only them. Anything that uses it imports
-// @fontsource/spline-sans-mono/400.css, as MessageWords does.
-$message-font: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;

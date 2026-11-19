@@ -89,7 +89,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   `ObservationNotes` (the observer's notes, under a heading that opens and closes them; the view
   keeps whether they are open). A view that needs a different body adds a part rather than a flag
   on the shell.
-- Fonts: the messages' words are set in Spline Sans Mono, which `colors.$message-font` names. It
+- Fonts: the messages' words are set in Spline Sans Mono, which `fonts.$message-font` names. It
   comes from the `@fontsource/spline-sans-mono` package, so it is served with the app, and anything
   that shows a message's words imports `@fontsource/spline-sans-mono/400.css`, as `MessageWords`
   does. Lato and Barlow Condensed still come from Google Fonts.

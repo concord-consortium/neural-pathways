@@ -1,4 +1,5 @@
 @use "../colors" as colors;
+@use "../fonts" as fonts;
 
 // Not positioned, so the panel hangs from the filter bar and takes its width.
 .filter-help {
@@ -122,7 +123,7 @@
     border: 1px solid colors.$rule-soft;
     border-radius: 3px;
     background: colors.$surface;
-    font-family: colors.$mono;
+    font-family: fonts.$mono;
     font-size: 11.5px;
     white-space: nowrap;
   }

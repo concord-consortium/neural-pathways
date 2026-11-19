@@ -1,0 +1,8 @@
+// The lesson's font stacks, for anything that names one more than once.
+
+// Code-like text and counts: the filter's query and help, and the card's count.
+$mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+// The alien messages' words, and only them. Anything that uses it imports
+// @fontsource/spline-sans-mono/400.css, as MessageWords does.
+$message-font: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
