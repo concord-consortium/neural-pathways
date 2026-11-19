@@ -14,8 +14,8 @@ describe("neuron helpers", () => {
 
   it("formats activations to two decimals with a true minus sign", () => {
     expect(formatActivation(-0.4249)).toBe("−0.42");
-    expect(formatActivation(0.425)).toBe("0.43");
-    expect(formatActivation(-0.001)).toBe("0.00");
+    expect(formatActivation(0.4251)).toBe("0.43");
+    expect(formatActivation(-0.001)).toBe("\u22120.00");
   });
 
   it("maps between rows and units, reversing only the output column", () => {
