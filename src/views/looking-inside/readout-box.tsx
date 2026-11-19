@@ -75,12 +75,13 @@ export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idl
       </div>
       <div ref={twinRef} data-testid="readout-measure" className="readout-box__measure" aria-hidden="true">
         {candidates.prompts.map((candidate, i) => (
-          <div key={`prompt-${i}`} className="readout-box__candidate">
+          <div key={`prompt-${i}`} data-testid="readout-candidate"
+            className="readout-box__candidate readout-box__candidate--idle">
             <div className="readout-box__text">{candidate}</div>
           </div>
         ))}
         {candidates.readouts.map((candidate, i) => (
-          <div key={`readout-${i}`} className="readout-box__candidate">
+          <div key={`readout-${i}`} data-testid="readout-candidate" className="readout-box__candidate">
             <div className="readout-box__text">{candidate}</div>
             <span className="readout-box__stand-in" data-testid="readout-stand-in" />
           </div>
