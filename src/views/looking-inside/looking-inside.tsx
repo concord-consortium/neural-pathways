@@ -15,6 +15,7 @@ import { indexPasses } from "../../core/network/index-passes";
 import { Network } from "../../core/network/network";
 import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
+import { messageWords } from "../../core/message-text";
 import { validMessageId } from "../../core/state/message";
 import { LookingInsideState } from "./looking-inside-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
@@ -81,7 +82,6 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // A message's place among all of them, which its pass is stored by. Its place in `ids`
   // changes with the query.
   const placeById = useMemo(() => new Map(index.items.map((item, i) => [item.id, i])), [index]);
-  const timeline = useMemo(() => lookingInsideTimeline(network.layers.map(layer => layer.biases.length)), [network]);
   const { passes, scales } = indexPasses(network, index);
   const networkHeadId = useId();
   // Shown even before the store's correction lands, and while a query is being typed, so an id
@@ -90,6 +90,11 @@ const LookingInsideBody = observer(function LookingInsideBody(
   const listPosition = currentId === undefined ? -1 : ids.indexOf(currentId);
   // No message is shown when nothing matches: the empty list leaves the stored id in place.
   const shownId = listPosition < 0 ? undefined : currentId;
+  const shownText = shownId === undefined ? undefined : index.items[placeById.get(shownId)!].text;
+  const wordCount = shownText === undefined ? 0 : messageWords(shownText).length;
+  // The flights depend on how many words the message has, so the timeline does too.
+  const timeline = useMemo(
+    () => lookingInsideTimeline(network.layers.map(layer => layer.biases.length), wordCount), [network, wordCount]);
   const player = useMemo(
     () => (shownId === undefined ? undefined : new StepPlayer(timeline, lookingInsideProgress(state, shownId), state)),
     [timeline, state, shownId]);
@@ -140,7 +145,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
             <Observer>
               {() => (
                 <NetworkDiagram network={network} pass={passes[place]} scales={scales}
-                  outputLabels={alien3Dataset.classificationLabels} scene={player.scene}
+                  outputLabels={alien3Dataset.classificationLabels} scene={player.scene.network}
                   headingId={networkHeadId} />
               )}
             </Observer>
