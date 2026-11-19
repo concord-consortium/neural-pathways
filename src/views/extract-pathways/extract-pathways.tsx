@@ -22,7 +22,7 @@ import "./extract-pathways.scss";
 /** The view's title, in its heading, its About and the app's list of views. */
 export const EXTRACT_PATHWAYS_TITLE = "Extract the Neural Pathways";
 
-const PANEL_TITLE = "The Network → Activated Pathways";
+const PANEL_TITLE = "The Neural Network → Activated Pathways";
 
 type FromIndex = { network: Network; loadings: Loadings } | { error: Error };
 

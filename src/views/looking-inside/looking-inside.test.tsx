@@ -89,7 +89,7 @@ describe("LookingInside", () => {
     expect(screen.getByText("Loading messages…")).toBeInTheDocument();
     expect(await screen.findByText("1 / 3")).toBeInTheDocument();
     expect(card()).toHaveTextContent(wordsOf(0));
-    expect(screen.getByRole("heading", { name: "The Network" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The Neural Network" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Network diagram" })).toBeInTheDocument();
   });
 
@@ -167,7 +167,7 @@ describe("LookingInside", () => {
   it("names the network's section by its heading", async () => {
     showView();
     await screen.findByText("1 / 3");
-    expect(screen.getByRole("region", { name: "The Network" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "The Neural Network" })).toBeInTheDocument();
   });
 
   it("opens straight on the saved message when the messages are already loaded", async () => {
@@ -249,9 +249,10 @@ describe("LookingInside", () => {
   it("shows Animate and the speed in the network's head", async () => {
     showView();
     await screen.findByText("1 / 3");
-    const network = screen.getByRole("region", { name: "The Network" });
+    const network = screen.getByRole("region", { name: "The Neural Network" });
     expect(within(network).getByRole("checkbox", { name: "Animate" })).toBeChecked();
-    expect(within(network).getByRole("slider", { name: "Animation speed" })).toHaveAttribute("aria-valuetext", "Med");
+    expect(within(network).getByRole("slider", { name: "Animation speed" }))
+      .toHaveAttribute("aria-valuetext", "Medium");
   });
 
   it("stores Animate in the view's state", async () => {
@@ -470,7 +471,7 @@ describe("LookingInside", () => {
       expect(card()).toHaveTextContent("No messages match that search.");
       expect(within(card()).getByRole("status")).toBe(status);
       expect(screen.queryByRole("button", { name: "Step 1" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("heading", { name: "The Network" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "The Neural Network" })).not.toBeInTheDocument();
       expect(shared.messageId).toBe(ids[0]);
     });
 

@@ -179,17 +179,11 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
       <g className="network-diagram__labels" opacity={opacity(surroundOpacity)}>
         {outputNodes.map((node, row) => {
           const unit = OUTPUT_ORDER[row];
-          const box = layout.pills[row];
           return (
-            <React.Fragment key={unit}>
-              <text x={node.x + radius + PILL_GAP} y={node.y + 4}
-                className={`network-diagram__output-label network-diagram__output-label--${outputLabels[unit]}`}>
-                {outputLabels[unit].toUpperCase()}
-              </text>
-              <text x={box.x} y={box.y - 9} className="network-diagram__output-caption">
-                {unit === 1 ? "Target Class:" : "Other Class:"}
-              </text>
-            </React.Fragment>
+            <text key={unit} x={node.x + radius + PILL_GAP} y={node.y + 4}
+              className={`network-diagram__output-label network-diagram__output-label--${outputLabels[unit]}`}>
+              {outputLabels[unit].toUpperCase()}
+            </text>
           );
         })}
         {scene.weightLabel.map((shown, gap) => shown && (

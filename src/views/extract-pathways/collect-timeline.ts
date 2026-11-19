@@ -7,10 +7,9 @@ import { ExtractScene, hiddenCount, restScene, SPOTLIGHT } from "./extract-scene
 import { flightDuration } from "./flight";
 import { DIM_HOLD, DIM_MS, easeBetween, UNDIM_MS } from "./setup-timeline";
 
-// The timings below are the prototype's, in ms at its "Med" speed, so each can be checked against
-// its source: the "Message n" bounce and the replay from collectOne and runSteps, the swaps
-// from setMessage, and the flight from flyColumn. src/views/README.md says where the
-// prototype is.
+// The timings below are the prototype's, in ms at its "Medium" speed, so each can be checked
+// against its source: the "Message n" bounce and the replay from collectOne and runSteps, the swaps
+// from setMessage, and the flight from flyColumn. src/views/README.md says where the prototype is.
 
 /**
  * How a collection runs its message through the network:

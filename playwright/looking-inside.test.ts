@@ -182,10 +182,10 @@ test("the speed slider shows focus in forced-colors mode", async ({ page }) => {
 test("Animate and the speed survive switching views", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
-  const network = page.getByRole("region", { name: "The Network" });
+  const network = page.getByRole("region", { name: "The Neural Network" });
   const animate = network.getByRole("checkbox", { name: "Animate" });
   const speed = network.getByRole("slider", { name: "Animation speed" });
-  await expect(speed).toHaveAttribute("aria-valuetext", "Med");
+  await expect(speed).toHaveAttribute("aria-valuetext", "Medium");
   await speed.focus();
   await page.keyboard.press("ArrowRight");
   await expect(speed).toHaveAttribute("aria-valuetext", "Fast");
@@ -203,7 +203,7 @@ test("Animate and the speed survive switching views", async ({ page }) => {
 test("clicking a speed's name moves the slider to it", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
-  const network = page.getByRole("region", { name: "The Network" });
+  const network = page.getByRole("region", { name: "The Neural Network" });
   // The slider is stretched over the names, so a click where a name is lands on the slider.
   const name = await network.getByText("Slow", { exact: true }).boundingBox();
   await page.mouse.click(name!.x + name!.width / 2, name!.y + name!.height / 2);
@@ -229,7 +229,7 @@ test("in a narrow window, Animate and the speed wrap below the network's title",
   await page.evaluate(() => document.fonts.ready);
   const head = await page.locator(".looking-inside__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
-  const title = await page.getByRole("heading", { name: "The Network" }).boundingBox();
+  const title = await page.getByRole("heading", { name: "The Neural Network" }).boundingBox();
   expect(controls!.x + controls!.width).toBeLessThanOrEqual(head!.x + head!.width);
   expect(controls!.y).toBeGreaterThanOrEqual(title!.y + title!.height);
 });
@@ -336,7 +336,7 @@ test("the card fits the stacked layout without scrolling sideways", async ({ pag
 test.describe("the card and network panels", () => {
   const panels = (page: Page) => ({
     card: page.getByRole("region", { name: "Message", exact: true }),
-    network: page.getByRole("region", { name: "The Network" }),
+    network: page.getByRole("region", { name: "The Neural Network" }),
   });
   const rect = (locator: Locator) => locator.evaluate(el => {
     const { top, bottom, height } = el.getBoundingClientRect();
@@ -351,7 +351,7 @@ test.describe("the card and network panels", () => {
       const { card, network } = panels(page);
       await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
       const cardHead = await rect(card.getByRole("heading", { name: "Message" }).locator(".."));
-      const networkHead = await rect(network.getByRole("heading", { name: "The Network" }).locator(".."));
+      const networkHead = await rect(network.getByRole("heading", { name: "The Neural Network" }).locator(".."));
       expect(networkHead.height).toBeCloseTo(cardHead.height, 0);
     });
   }
@@ -470,7 +470,7 @@ async function diagramIn(page: Page, width: number, diagramWidth: number) {
 }
 
 /** The diagram's scroller: a group named by its panel's heading. */
-const diagramGroup = (page: Page) => page.getByRole("group", { name: "The Network" });
+const diagramGroup = (page: Page) => page.getByRole("group", { name: "The Neural Network" });
 
 // 380 is the narrowest the diagram is laid out (MIN_WIDTH in layout.ts).
 
@@ -557,7 +557,7 @@ test.describe("About", () => {
     expect(cellBox.height).toBeCloseTo((await box(page.locator(".looking-inside__filter-row"))).height, 0);
     // Still two columns: the card and the network start on the same line.
     const card = await box(page.getByRole("region", { name: "Message", exact: true }));
-    const network = await box(page.getByRole("region", { name: "The Network" }));
+    const network = await box(page.getByRole("region", { name: "The Neural Network" }));
     expect(network.y).toBeCloseTo(card.y, 0);
     const scrolls = await page.evaluate(() => [document.documentElement, document.querySelector("main")!]
       .some(element => element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight));
@@ -567,7 +567,7 @@ test.describe("About", () => {
   test("stays beside the steps when a pixel narrower stacks the columns", async ({ page }) => {
     await openAt(page, MIN_LAYOUT_WIDTH - 1, 900);
     const card = await box(page.getByRole("region", { name: "Message", exact: true }));
-    const network = await box(page.getByRole("region", { name: "The Network" }));
+    const network = await box(page.getByRole("region", { name: "The Neural Network" }));
     expect(network.y).toBeGreaterThan(card.y + card.height);
     const aboutBox = await box(about(page));
     const resetBox = await box(page.getByRole("button", { name: "Reset" }));

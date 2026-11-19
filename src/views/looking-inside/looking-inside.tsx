@@ -132,7 +132,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
       {player && place !== undefined &&
         <section className="looking-inside__network" aria-labelledby={networkHeadId}>
           <div className="looking-inside__network-head">
-            <h2 id={networkHeadId} className="looking-inside__network-title">The Network</h2>
+            <h2 id={networkHeadId} className="looking-inside__network-title">The Neural Network</h2>
             <AnimationControls animated={state} />
           </div>
           <div className="looking-inside__diagram">

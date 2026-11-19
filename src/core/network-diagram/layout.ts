@@ -48,8 +48,8 @@ const PILL_PAD_RIGHT = 13;
  * 10 px further right, and the drawing mustn't spill out of its scroller.
  */
 const PILL_POP_ROOM = 10;
-/** Between the two output pills: room for the caption over the lower one. */
-const OUTPUT_CAPTION_GAP = 30;
+/** Between the two output pills, as in the prototype. The winning pill pops into it, not across it. */
+export const OUTPUT_PILL_GAP = 10;
 /** The first column sits this far right of the even spread, so it doesn't look clipped. */
 const FIRST_COLUMN_NUDGE = 10;
 
@@ -73,7 +73,7 @@ export function layoutNetwork(columnSizes: readonly number[], width: number, hei
   const columnX = columnSizes.map((_, i) =>
     xFirst + ((xLast - xFirst) * i) / last + (i === 0 ? FIRST_COLUMN_NUDGE : 0));
 
-  const outputStep = radius * 2 + 8 + OUTPUT_CAPTION_GAP;
+  const outputStep = radius * 2 + 8 + OUTPUT_PILL_GAP;
   const nodes = columnSizes.map((n, i) =>
     rowYs(n, top, bottom, i === last ? outputStep : STEP_MAX).map(y => ({ x: columnX[i], y })));
 

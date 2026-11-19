@@ -88,6 +88,12 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   stacks into a page over 1,100 px tall.
 - Extract the Neural Pathways' minimum layout height, 680 px, doesn't fit the designed size yet, so
   in an Interactive 562 px tall its page scrolls down.
+- The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
+  and where a network blocks it they fall back to a wider sans-serif. Then, from Looking Inside a
+  Neural Network's minimum layout width, 910 px, to about 935 px, Animate and the speed wrap below
+  the network panel's title, and the head grows from 62 to 89 px. Only the messages' font, Spline
+  Sans Mono, is served with the app so far. Serving the other two the same way would close this
+  gap.
 
 **Scrollers.** A scroller must work from the keyboard
 ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). It may scroll

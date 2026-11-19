@@ -30,11 +30,12 @@ export const AnimationControls = observer(function AnimationControls({ animated 
             step={1} value={stopIndex} disabled={!animate} aria-label="Animation speed"
             aria-valuetext={SPEED_STOPS[stopIndex]?.name} onChange={e => onSpeedChange(e.target.value)} />
         </div>
+        {/* Every stop keeps its span, so the unnamed one still has its tick. */}
         <div className="animation-controls__stops" aria-hidden="true">
           {SPEED_STOPS.map(stop => (
-            <span key={stop.key}
+            <span key={stop.key} data-testid={`speed-stop-${stop.key}`}
               className={`animation-controls__stop${stop.key === speed ? " animation-controls__stop--current" : ""}`}>
-              {stop.name}
+              {stop.shown ? stop.name : ""}
             </span>
           ))}
         </div>

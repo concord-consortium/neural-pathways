@@ -79,7 +79,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   them with Reset. The player's scene changes on every frame of a run, so a view reads
   `player.scene` only inside a small `<Observer>` around its drawing; the rest of the view then
   doesn't re-render while a run plays.
-- `animation-controls/`: the Animate checkbox and the Slow/Med/Fast speed slider, for any view
+- `animation-controls/`: the Animate checkbox and the Slow/Medium/Fast speed slider, for any view
   whose state is `Animated`. The step player reads the same two values from the state the view
   gives it, so a view places the control and passes its state to both.
 - `message-card/`: the message panel the lesson's views share. `MessageCard` is the

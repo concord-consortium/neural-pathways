@@ -8,7 +8,7 @@ import { easeX, SETTLE_MS, SETTLE_PX, settleEase } from "./flight";
 import { easeBetween } from "./setup-timeline";
 import { lerp, Transition, transitionAt } from "./transitions";
 
-// The timings, distances and curves below are the prototype's, in ms at its "Med" speed, so each
+// The timings, distances and curves below are the prototype's, in ms at its "Medium" speed, so each
 // can be checked against its source: collectAll, handOver, hideDiagram, centreCube, buildRest,
 // addColumn, settleXY, nameColumn, showCount, dropName, cbSetTwo, cbHeadPair, cbLayout and
 // cbAddSet. src/views/README.md says where the prototype is.
