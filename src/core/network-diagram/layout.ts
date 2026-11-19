@@ -26,7 +26,13 @@ export interface NetworkLayout {
 }
 
 export const MIN_WIDTH = 380;
-export const MIN_HEIGHT = 300;
+/**
+ * The smallest height the diagram is laid out in. It is what lets the Looking Inside view fit 562 px
+ * tall: 562 less 144 for the view's title, gaps and step row, 80 for the network panel's head,
+ * padding and border, 81 for the readout box's held height and margin at the minimum layout width,
+ * and 8 for the padding under the box, leaves 249.
+ */
+export const MIN_HEIGHT = 249;
 /** The most space between neighboring nodes. */
 const STEP_MAX = 30;
 /** Room above the first node, for the captions. */
