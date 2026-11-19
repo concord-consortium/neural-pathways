@@ -26,6 +26,9 @@ function makeContainer(): HTMLElement {
   return container;
 }
 
+/** Whether the stubbed ResizeObserver reports when it starts observing, as the browser's does. */
+let reportsOnObserve = true;
+
 describe("WordFlightOverlay", () => {
   const original = Element.prototype.getBoundingClientRect;
   beforeAll(() => {
@@ -34,7 +37,7 @@ describe("WordFlightOverlay", () => {
       configurable: true,
       value: class {
         constructor(private readonly callback: () => void) {}
-        observe() { this.callback(); }
+        observe() { if (reportsOnObserve) { this.callback(); } }
         disconnect() { /* nothing */ }
       },
     });
@@ -42,6 +45,9 @@ describe("WordFlightOverlay", () => {
       const [x, y] = ((this as HTMLElement).dataset.rect ?? "0,0").split(",").map(Number);
       return { left: x - 5, top: y - 5, width: 10, height: 10 } as DOMRect;
     };
+  });
+  afterEach(() => {
+    reportsOnObserve = true;
   });
   afterAll(() => {
     Element.prototype.getBoundingClientRect = original;
@@ -65,5 +71,15 @@ describe("WordFlightOverlay", () => {
 
   it("draws nothing once Step 1 is over", () => {
     expect(chips(step1Duration(INPUTS))).toHaveLength(0);
+  });
+
+  it("draws nothing of an earlier run before the new run has measured", () => {
+    const { rerender } = render(<WordFlightOverlay time={0} words={WORDS} container={makeContainer()} />);
+    expect(screen.queryAllByText(/./)).toHaveLength(WORDS.length);
+    rerender(<WordFlightOverlay time={undefined} words={WORDS} container={makeContainer()} />);
+    // The new run's observer hasn't reported yet.
+    reportsOnObserve = false;
+    rerender(<WordFlightOverlay time={0} words={["only"]} container={makeContainer()} />);
+    expect(screen.queryAllByText(/./)).toHaveLength(0);
   });
 });

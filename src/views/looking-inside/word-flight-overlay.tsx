@@ -37,7 +37,7 @@ export const WordFlightOverlay: React.FC<{
   const flying = time !== undefined;
   const [geometry, setGeometry] = useState<Geometry>();
 
-  // A layout effect, so the chips never show at the geometry of an earlier run.
+  // A layout effect, so the first frame of a run is measured before it is drawn.
   useLayoutEffect(() => {
     if (!flying || !container) {
       return undefined;
@@ -45,7 +45,11 @@ export const WordFlightOverlay: React.FC<{
     // Observing reports the container's size at once, which measures for the start of the run.
     const observer = new ResizeObserver(() => setGeometry(measure(container)));
     observer.observe(container);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      // Forget the measurement, so the next run draws nothing until it has measured its own.
+      setGeometry(undefined);
+    };
   }, [flying, container]);
 
   if (time === undefined || !geometry) {
