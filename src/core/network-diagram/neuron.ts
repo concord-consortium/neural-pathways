@@ -43,8 +43,5 @@ export function neuronName(neuron: NeuronRef, lastColumn: number, outputLabels: 
 
 /** An activation to two decimals, with a real minus sign (U+2212) for negatives: "−0.42". */
 export function formatActivation(value: number): string {
-  // The nudge makes a stored 0.425, really 0.42499999999999999, read 0.43 as a person expects.
-  const hundredths = Math.round(Math.abs(value) * 100 + 1e-9);
-  const text = (hundredths / 100).toFixed(2);
-  return value < 0 && hundredths > 0 ? `−${text}` : text;
+  return (value < 0 ? "\u2212" : "") + Math.abs(value).toFixed(2);
 }
