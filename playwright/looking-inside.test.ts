@@ -764,3 +764,40 @@ test.describe("the neurons' readouts", () => {
     expect(await cutOff(page)).toBe(false);
   });
 });
+
+test("the network's head holds its title, legend and controls in that order", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  const title = (await page.getByRole("heading", { name: "The Neural Network" }).boundingBox())!;
+  const legend = (await page.locator(".activation-legend").boundingBox())!;
+  const controls = (await page.locator(".animation-controls").boundingBox())!;
+  expect(title.x + title.width).toBeLessThanOrEqual(legend.x);
+  expect(legend.x + legend.width).toBeLessThanOrEqual(controls.x);
+  const center = (box: { y: number; height: number }) => box.y + box.height / 2;
+  expect(Math.abs(center(title) - center(legend))).toBeLessThanOrEqual(4);
+  expect(Math.abs(center(legend) - center(controls))).toBeLessThanOrEqual(4);
+});
+
+// As on a school network that blocks Google Fonts. 1024 is the designed width; 480 is a narrow window.
+// Every child must stay inside the head's side padding.
+for (const width of [480, 1024]) {
+  test(`with Google Fonts blocked, nothing in the network's head runs past it at ${width} px`, async ({ page }) => {
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    const head = (await page.locator(".looking-inside__network-head").boundingBox())!;
+    const children = await page.locator(".looking-inside__network-head > *").evaluateAll(
+      els => els.map(el => {
+        const box = el.getBoundingClientRect();
+        return { name: el.className || el.tagName, right: box.right };
+      }));
+    expect(children.length).toBeGreaterThanOrEqual(4);
+    for (const child of children) {
+      expect(child.right, child.name).toBeLessThanOrEqual(head.x + head.width - 14 + 0.5);
+    }
+  });
+}

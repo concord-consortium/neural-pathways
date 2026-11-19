@@ -2,6 +2,7 @@ import React, { useCallback, useId, useLayoutEffect, useMemo, useRef, useState }
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
 import { ViewTitle } from "../../core/view-title/view-title";
+import { ActivationLegend } from "../../core/activation-legend/activation-legend";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { MessageCard } from "../../core/message-card/message-card";
 import { MessageWords } from "../../core/message-card/message-words";
@@ -251,6 +252,8 @@ const LookingInsideBody = observer(function LookingInsideBody(
         <section className="looking-inside__network" aria-labelledby={networkHeadId}>
           <div className="looking-inside__network-head">
             <h2 id={networkHeadId} className="looking-inside__network-title">The Neural Network</h2>
+            <div className="looking-inside__network-legend"><ActivationLegend /></div>
+            <span className="looking-inside__network-rule" aria-hidden="true" />
             <AnimationControls animated={state} />
           </div>
           <div className="looking-inside__diagram" ref={diagramRef}>

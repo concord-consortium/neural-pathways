@@ -111,6 +111,21 @@ $two-columns-width: 447px + 10px + $step-row-width;
 
 .looking-inside__network-title {
   @include panel.panel-head-title;
+  margin-right: 0;
+}
+
+// The legend takes the row's slack, which keeps the title at the left and pushes the legend and
+// the controls to the right.
+.looking-inside__network-legend {
+  margin-left: auto;
+}
+
+// A short vertical rule between the legend and the controls.
+.looking-inside__network-rule {
+  flex-shrink: 0;
+  width: 1px;
+  height: 24px;
+  background: colors.$rule;
 }
 
 // 440 px tall when the panel's height comes from its content (stacked), and otherwise the panel's
