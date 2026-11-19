@@ -71,6 +71,21 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   has the timing curves; `forward-pass-phases.ts` is the four phases of a message's forward pass
   through the network as a function of time, which Looking Inside a Neural Network plays as its
   steps and Extract the Neural Pathways replays.
+
+  A view that lets the student pick neurons passes `NetworkDiagram` an `interaction`
+  (`NeuronInteraction`): how many columns are reached, the neuron holding the Tab stop, the rings
+  to draw, and the callbacks for hover, focus, click and clear. The view owns that state, and
+  `NetworkDrawing` stays stateless, taking the rings and the highlight as props. `neuron.ts` is
+  the vocabulary: `NeuronRef`, the names a neuron goes by ("Hidden Layer 1 Neuron 3", "Output
+  Layer: Approach") and `formatActivation`, which writes a value with two decimals and a real minus
+  sign. `neuron-navigation.ts` says where an arrow, Home or End key moves the focus: Up and Down
+  follow the drawn rows, and Left and Right go to the nearest neuron by height in the next reached
+  column. `neuron-targets.tsx` draws an invisible target over each neuron, one row's pitch tall so
+  that moving down a column doesn't flicker. A reached neuron's target is a `role="button"` with
+  `aria-pressed` and an accessible name that carries its layer and activation, and the reached
+  neurons are one Tab stop with a roving `tabindex`. The unreached ones are `aria-hidden`. The
+  diagram's SVG is a `group`, not an `img`, so that the buttons inside it stay reachable by a
+  screen reader, and the drawing's own text is `aria-hidden`.
 - `steps/`: the step system views share. A view's timeline rests at markers, points where the
   scene is still and progress is stored, and plays segments between them. `StepPlayer` plays the
   segments on a `requestAnimationFrame` clock and keeps the marker wherever the view says. It
@@ -79,6 +94,11 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   them with Reset. The player's scene changes on every frame of a run, so a view reads
   `player.scene` only inside a small `<Observer>` around its drawing; the rest of the view then
   doesn't re-render while a run plays.
+- `activation-legend/`: `ActivationLegend`, the key to a neuron's colors: the caption "Neuron
+  Activation" over a miniature blue neuron for "−" and an orange one for "+". The swatches are
+  `aria-hidden` and keep their colors in forced-colors mode, as the diagram does; the caption and
+  signs are the text. A view places it, as Looking Inside a Neural Network does in its network
+  panel's head.
 - `animation-controls/`: the Animate checkbox and the Slow/Medium/Fast speed slider, for any view
   whose state is `Animated`. The step player reads the same two values from the state the view
   gives it, so a view places the control and passes its state to both.
