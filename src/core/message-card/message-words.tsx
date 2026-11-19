@@ -1,5 +1,7 @@
 import React from "react";
 import { messageWords } from "../message-text";
+// The messages' face, served with the app so a network that blocks Google Fonts still gets it.
+import "@fontsource/spline-sans-mono/400.css";
 import "./message-words.scss";
 
 /**

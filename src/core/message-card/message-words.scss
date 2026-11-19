@@ -3,7 +3,7 @@
 .message-words {
   margin: 0;
   color: colors.$ink;
-  font-family: "Lato", sans-serif;
+  font-family: colors.$message-font;
   font-size: 13px;
   line-height: 1.85;
   word-break: break-word;

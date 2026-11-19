@@ -293,6 +293,23 @@ test("the observation notes stay open when switching views, but not after a relo
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
 });
 
+// As on a school network that blocks Google Fonts, where Lato and Barlow fall back.
+test("the message's words are set in Spline Sans Mono even with Google Fonts blocked", async ({ page }) => {
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
+  await page.goto("/");
+  const words = page.locator(".message-words");
+  await expect(words).toBeVisible();
+  expect(await words.evaluate(el => getComputedStyle(el).fontFamily)).toMatch(/^"Spline Sans Mono"/);
+  const statuses = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return Array.from(document.fonts)
+      .filter(face => face.family.replace(/"/g, "") === "Spline Sans Mono")
+      .map(face => face.status);
+  });
+  // A face per character range, and the browser loads only the ranges the page uses.
+  expect(statuses).toContain("loaded");
+});
+
 test("the card's unavailable arrow looks unavailable in forced-colors mode", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });
   await page.goto("/");
