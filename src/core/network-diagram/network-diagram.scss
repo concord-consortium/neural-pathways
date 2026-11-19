@@ -68,6 +68,15 @@
   opacity: 1;
 }
 
+// The hit rectangles are invisible; the ring shows focus, so the <g> buttons get no outline of their own.
+.network-diagram__targets g:focus {
+  outline: none;
+}
+
+.network-diagram__target--reached {
+  cursor: pointer;
+}
+
 .network-diagram__caption,
 .network-diagram__weight-label {
   font-family: fonts.$body-font;
