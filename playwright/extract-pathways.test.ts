@@ -149,8 +149,9 @@ test("Reset clears everything", async ({ page }) => {
 
 test.describe("About", () => {
   /**
-   * The steps' and About's widths in 16 px Barlow Condensed, rounded up. `$step-row-width` in
-   * extract-pathways.scss adds them up the same way.
+   * The steps' and About's widths in 16 px Barlow Condensed, measured on macOS, where text is wider
+   * than on CI's Linux, and rounded up. `$step-row-width` in extract-pathways.scss adds them up the
+   * same way.
    */
   const STEPS_WIDTH = 596;
   const ABOUT_WIDTH = 86;
@@ -183,13 +184,16 @@ test.describe("About", () => {
   });
 
   // The breakpoint is a constant in the SCSS, so a label that changes the steps' width moves where
-  // About should drop without moving the breakpoint. This catches that.
+  // About should drop without moving the breakpoint. This catches that. Text is a few px narrower
+  // on Linux than on macOS, so each width only has to fit its constant and come within 8 px of it.
   test("the step row's breakpoint is measured from the steps and About as drawn", async ({ page }) => {
     await openAt(page, 1200);
     const rowBox = await box(page.locator(".extract-pathways .step-button-group"));
     const aboutBox = await box(about(page));
-    expect(Math.ceil(rowBox.width)).toBe(STEPS_WIDTH);
-    expect(Math.ceil(aboutBox.width)).toBe(ABOUT_WIDTH);
+    expect(rowBox.width).toBeLessThanOrEqual(STEPS_WIDTH);
+    expect(rowBox.width).toBeGreaterThan(STEPS_WIDTH - 8);
+    expect(aboutBox.width).toBeLessThanOrEqual(ABOUT_WIDTH);
+    expect(aboutBox.width).toBeGreaterThan(ABOUT_WIDTH - 8);
   });
 
   test("stays beside the steps in an Interactive just wide enough", async ({ page }) => {
