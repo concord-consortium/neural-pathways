@@ -2,12 +2,15 @@
 @use "../fonts" as fonts;
 
 // The Animate checkbox and the speed slider, from the prototype's .nnm-animtoggle and .nnm-speed.
-// Where it sits in its row is up to the row.
+// Where it sits in its row is up to the row. It wraps, so in a head narrower than it is, as when
+// the fallback font widens its label, the speed drops below the checkbox instead of running past
+// the head.
 .animation-controls {
   display: flex;
-  flex-shrink: 0;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  min-width: 0;
+  gap: 0 10px;
   font-family: fonts.$label-font;
   font-weight: 600;
   text-transform: uppercase;
