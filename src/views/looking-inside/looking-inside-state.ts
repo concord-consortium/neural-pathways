@@ -19,11 +19,7 @@ export class LookingInsideState extends ExtendedModel(composeMixins(animatedMixi
    */
   markerByMessage: tProp(types.record(markerType), () => ({})),
 }) {
-  /**
-   * Whether the observation notes are open. Volatile, as in the prototype: kept while the student
-   * moves between messages and views, but never saved, and never an undo step. See
-   * docs/view-state.md.
-   */
+  /** Whether the observation notes are open. Volatile: see docs/view-state.md. */
   @observable accessor notesOpen = false;
 
   @action
