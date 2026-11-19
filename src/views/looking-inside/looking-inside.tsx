@@ -80,9 +80,6 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // A message's place among all of them, which its pass is stored by. Its place in `ids`
   // changes with the query.
   const placeById = useMemo(() => new Map(index.items.map((item, i) => [item.id, i])), [index]);
-  // The generated attributes a student can see. The derived target, prediction and
-  // model_correct aren't among them, and the hidden ones wait to be commissioned.
-  const indicatorAttributes = useMemo(() => (index.metadata.attributes ?? []).filter(a => !a.hidden), [index]);
   const timeline = useMemo(() => traceTimeline(network.layers.map(layer => layer.biases.length)), [network]);
   const { passes, scales } = indexPasses(network, index);
   const networkHeadId = useId();
@@ -121,8 +118,8 @@ const LookingInsideBody = observer(function LookingInsideBody(
             <>
               <MessageWords text={shown.text} />
               <ActualLabel target={shown.target} labels={alien3Dataset.classificationLabels} />
-              <ObservationNotes observation={shown.observation} attributes={indicatorAttributes}
-                values={shown.attributes} />
+              <ObservationNotes observation={shown.observation} open={state.notesOpen}
+                onOpenChange={open => state.setNotesOpen(open)} />
             </>}
         </MessageCard>
       </div>

@@ -24,13 +24,6 @@ one thing, or one name for two things, settle it and add it here.
 - **position:** a message's index in the list being stepped through, which the filter decides
   (`listPosition` in Looking Inside a Neural Network, `position` on the message card).
 
-## The message card
-
-- **attribute indicator:** how the card shows one of a message's attributes, under the
-  observation notes: the attribute's label, its icon, and its value (a check mark, a blank, a
-  number, or a dash when the value is missing). Not "mark". The value, under the icon, is not a
-  "badge".
-
 ## The step system
 
 - **step:** a button in the step row: Looking Inside a Neural Network's Step 1 to Step 4, Extract

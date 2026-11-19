@@ -1,6 +1,6 @@
 import React from "react";
+import { fromSnapshot, getSnapshot } from "mobx-keystone";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { spokenText } from "../../core/message-card/__fixtures__/spoken-text";
 import * as messageCard from "../../core/message-card/message-card";
 import { fetchIndex } from "../../core/data-loader";
 import { phaseDuration } from "../../core/network-diagram/forward-pass-phases";
@@ -33,7 +33,7 @@ function item(id: string, text: string, classification: number, groupSize: numbe
 }
 
 const YES_NO = { 0: "no", 1: "yes" };
-// One of each kind, and a hidden one, which gets no attribute indicator.
+// One of each kind, and a hidden one.
 const attributes: AttributeDefinition[] = [
   { key: "voices_raised", label: "Voices raised", description: "", type: "binary", valueLabels: YES_NO },
   { key: "group_size", label: "Group size", description: "", type: "integer", min: 1, max: 6 },
@@ -63,6 +63,14 @@ const filterBox = () => screen.getByRole("textbox", { name: "Filter" });
 const typeQuery = (text: string) => fireEvent.change(filterBox(), { target: { value: text } });
 const wordsOf = (i: number) => items[i].text.split(/\s+/).join(" ");
 const card = () => screen.getByRole("region", { name: "Message" });
+const notesToggle = () => screen.getByRole("button", { name: "Observation notes" });
+
+/** A state with the notes open, so a test can read them. */
+function openNotes() {
+  const state = new LookingInsideState({});
+  state.setNotesOpen(true);
+  return state;
+}
 
 describe("LookingInside", () => {
   beforeEach(() => {
@@ -102,16 +110,43 @@ describe("LookingInside", () => {
     expect(shared.messageId).toBe(ids[0]);
   });
 
-  it("shows the message's label, notes and attribute indicators, with none for a hidden attribute", async () => {
-    showView();
+  it("shows the message's label and notes, with no attribute indicators", async () => {
+    showView(new SharedState({}), openNotes());
     await screen.findByText("1 / 3");
     expect(within(card()).getByText("wait")).toHaveClass("actual-label__pill");
-    expect(within(card()).getByText(`Notes on ${ids[0]}.`)).toBeInTheDocument();
-    expect(within(card()).getAllByRole("listitem").map(spokenText)).toEqual(["Voices raised: no", "Group size: 2"]);
+    expect(within(card()).getByText(`Notes on ${ids[0]}.`)).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Next message" }));
     expect(within(card()).getByText("approach")).toHaveClass("actual-label__pill");
-    expect(within(card()).getByText(`Notes on ${ids[1]}.`)).toBeInTheDocument();
-    expect(within(card()).getAllByRole("listitem").map(spokenText)).toEqual(["Voices raised: yes", "Group size: 3"]);
+    expect(within(card()).getByText(`Notes on ${ids[1]}.`)).toBeVisible();
+    expect(within(card()).queryByRole("list")).not.toBeInTheDocument();
+  });
+
+  it("starts with the notes closed", async () => {
+    showView();
+    await screen.findByText("1 / 3");
+    expect(notesToggle()).toHaveAttribute("aria-expanded", "false");
+    expect(within(card()).getByText(`Notes on ${ids[0]}.`)).not.toBeVisible();
+  });
+
+  it("keeps the notes open in the view's state, across messages and remounts", async () => {
+    const shared = new SharedState({});
+    const state = new LookingInsideState({});
+    const { unmount } = render(viewWith(shared, state));
+    await screen.findByText("1 / 3");
+    fireEvent.click(notesToggle());
+    expect(state.notesOpen).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Next message" }));
+    expect(notesToggle()).toHaveAttribute("aria-expanded", "true");
+    unmount();
+    render(viewWith(shared, state));
+    expect(await screen.findByRole("button", { name: "Observation notes" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  // Volatile: see docs/view-state.md.
+  it("doesn't save whether the notes are open", async () => {
+    const state = openNotes();
+    expect(getSnapshot(state)).not.toHaveProperty("notesOpen");
+    expect(fromSnapshot(LookingInsideState, getSnapshot(state)).notesOpen).toBe(false);
   });
 
   it("draws the network for the message shown", async () => {

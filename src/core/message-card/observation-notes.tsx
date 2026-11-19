@@ -1,70 +1,39 @@
 import React, { useId } from "react";
-import { AlienIcon } from "../alien-icons/alien-icon";
-import { AttributeDefinition } from "../types/attributes";
 import { useKeyboardScrollable } from "../use-keyboard-scrollable";
 import "./observation-notes.scss";
 
 interface ObservationNotesProps {
   observation?: string;
-  /** The attributes to show indicators for, in the order to show them. */
-  attributes: AttributeDefinition[];
-  /** The message's values, keyed by attribute key. */
-  values?: Record<string, number | null>;
+  /** Whether the notes are shown. The view keeps it, so it survives moving between messages. */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 /**
- * What the observer wrote about the message, and under it an attribute indicator for each
- * attribute it is given: the sentence is the evidence and the indicator sums it up. The
- * indicators keep the order they are given, so an attribute's indicator is in the same place for
- * every message.
+ * What the observer wrote about the message, under a heading that opens and closes it. A view
+ * starts it closed, as the prototype does: the notes are the evidence behind the message, there
+ * for a student who asks for them.
  */
-export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation, attributes, values }) => {
-  const headId = useId();
+export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation, open, onOpenChange }) => {
+  const toggleId = useId();
+  const boxId = useId();
   const [boxRef, boxProps] = useKeyboardScrollable<HTMLDivElement>();
   return (
     <div className="observation-notes">
-      <h3 id={headId} className="observation-notes__head">Observation notes</h3>
+      {/* The button goes inside the heading, so the heading stays in the outline. */}
+      <h3 className="observation-notes__head">
+        <button type="button" id={toggleId} className="observation-notes__toggle" aria-expanded={open}
+          aria-controls={boxId} onClick={() => onOpenChange(!open)}>
+          <span className="observation-notes__caret" aria-hidden="true" />
+          Observation notes
+        </button>
+      </h3>
       {/* The box scrolls when the card is too short for it, and the keyboard can reach it then. It is
           a region named by the heading whether it scrolls or not. */}
-      <div ref={boxRef} className="observation-notes__box" role="region" aria-labelledby={headId} {...boxProps}>
+      <div ref={boxRef} id={boxId} className="observation-notes__box" role="region" aria-labelledby={toggleId}
+        hidden={!open} {...boxProps}>
         <p className="observation-notes__text">{observation || "(no notes for this message)"}</p>
-        {attributes.length > 0 &&
-          <ul className="observation-notes__indicators">
-            {attributes.map(attribute =>
-              <AttributeIndicator key={attribute.key} attribute={attribute} value={values?.[attribute.key]} />)}
-          </ul>}
       </div>
     </div>
   );
 };
-
-interface AttributeIndicatorProps {
-  attribute: AttributeDefinition;
-  value: number | null | undefined;
-}
-
-/** Label, icon, value: the order a field sheet reads in. A screen reader hears "Label: value". */
-const AttributeIndicator: React.FC<AttributeIndicatorProps> = ({ attribute, value }) => (
-  <li className="observation-notes__indicator">
-    <span className="observation-notes__label">{attribute.label}</span>
-    <span className="observation-notes__spoken">{`: ${spokenValue(attribute, value)}`}</span>
-    <AlienIcon attributeKey={attribute.key} size={34} />
-    <b className="observation-notes__value" aria-hidden="true">{shownValue(attribute, value)}</b>
-  </li>
-);
-
-function spokenValue(attribute: AttributeDefinition, value: number | null | undefined): string {
-  if (value == null) return "not recorded";
-  return attribute.valueLabels?.[value] ?? String(value);
-}
-
-/**
- * A check mark for a binary attribute that is 1 and a blank for 0. A missing value shows a dash,
- * so a blank always means 0. An integer attribute shows its number. The check mark is followed by a
- * variation selector so no platform draws it as an emoji.
- */
-function shownValue(attribute: AttributeDefinition, value: number | null | undefined): string {
-  if (value == null) return "–";
-  if (attribute.type === "binary") return value === 1 ? "✔︎" : "";
-  return String(value);
-}

@@ -1,4 +1,5 @@
 import "../../core/state/setup";
+import { action, observable } from "mobx";
 import { composeMixins, ExtendedModel, model, modelAction, tProp, types } from "mobx-keystone";
 import { animatedMixin } from "../../core/state/animation";
 
@@ -18,6 +19,18 @@ export class LookingInsideState extends ExtendedModel(composeMixins(animatedMixi
    */
   markerByMessage: tProp(types.record(markerType), () => ({})),
 }) {
+  /**
+   * Whether the observation notes are open. Volatile, as in the prototype: kept while the student
+   * moves between messages and views, but never saved, and never an undo step. See
+   * docs/view-state.md.
+   */
+  @observable accessor notesOpen = false;
+
+  @action
+  setNotesOpen(open: boolean) {
+    this.notesOpen = open;
+  }
+
   marker(messageId: string): number {
     return this.markerByMessage[messageId] ?? 0;
   }

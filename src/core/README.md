@@ -86,8 +86,9 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   shell: the count, previous and next, a screen-reader status, and "No messages match that
   search." when the list is empty. A view fills its body from the parts beside it:
   `MessageWords` (the words, one span each), `ActualLabel` (the true answer as a chip) and
-  `ObservationNotes` (the observer's notes with an attribute indicator for each attribute it is
-  given). A view that needs a different body adds a part rather than a flag on the shell.
+  `ObservationNotes` (the observer's notes, under a heading that opens and closes them; the view
+  keeps whether they are open). A view that needs a different body adds a part rather than a flag
+  on the shell.
 - `alien-icons/`: `AlienIcon` and the alien attributes' icons, one `.svg` file per attribute,
   named by its key and drawn in the parent's color. webpack finds the files with `require.context`
   (`alien-icon-files.ts`) and SVGR makes each a React component, so a new icon needs only its file.
