@@ -1,0 +1,83 @@
+@use "../../core/colors" as colors;
+@use "../../core/fonts" as fonts;
+
+// The box's own padding and border, shared with the measuring twin's candidates so that the tallest
+// candidate's offsetHeight is exactly the min-height to hold.
+@mixin readout-frame {
+  display: flex;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  border: 1px solid colors.$rule-soft;
+  border-radius: 6px;
+  background: colors.$surface;
+  font-family: fonts.$body-font;
+  font-size: 13px;
+  line-height: 1.45;
+  color: colors.$ink-2;
+
+  b {
+    color: colors.$ink;
+    font-weight: 700;
+  }
+}
+
+.readout-box__wrap {
+  position: relative;
+  margin-top: 8px;
+}
+
+.readout-box {
+  @include readout-frame;
+
+  &--idle {
+    font-style: italic;
+    color: colors.$ink-3;
+  }
+}
+
+.readout-box__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.readout-box__clear,
+.readout-box__stand-in {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-left: 8px;
+  align-self: center;
+}
+
+.readout-box__clear {
+  box-sizing: border-box;
+  padding: 0;
+  border: 2px solid colors.$rule;
+  border-radius: 5px;
+  background: #fff;
+  color: colors.$ink-2;
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  font-style: normal;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid colors.$wait;
+    outline-offset: 2px;
+  }
+}
+
+// An off-layout copy of every text the box can show, at the box's width and type.
+.readout-box__measure {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.readout-box__candidate {
+  @include readout-frame;
+}
