@@ -29,6 +29,11 @@
 
 .network-diagram__edge {
   fill: none;
+  transition: opacity 0.18s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
 .network-diagram__discs circle {
@@ -39,6 +44,28 @@
   fill: none;
   stroke: colors.$node-outline;
   stroke-width: 1;
+}
+
+// Never a CSS outline: an SVG element's outline is square. Source order makes focus win the color.
+.network-diagram__ring {
+  fill: none;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.network-diagram__ring--hovered {
+  stroke: colors.$ink;
+  opacity: 0.5;
+}
+
+.network-diagram__ring--pinned {
+  stroke: colors.$ink;
+  opacity: 1;
+}
+
+.network-diagram__ring--focused {
+  stroke: colors.$wait;
+  opacity: 1;
 }
 
 .network-diagram__caption,

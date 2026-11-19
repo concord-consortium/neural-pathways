@@ -58,7 +58,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   - **unit:** one element of a layer, in the network's math (`network.ts`, and the `[unit]` and
     `[source unit]` indexes of a `Scene`). This is the textbook term, and the one Keras uses.
   - **node:** that unit's circle in the diagram (`network-diagram/`), with its gauge. A node's
-    drawn row and its unit index can differ: `unitAt` in `network-drawing.tsx` maps one to the
+    drawn row and its unit index can differ: `unitAt` in `network-diagram/neuron.ts` maps one to the
     other.
   - **neuron:** what the lesson, the students and the activation analysis call it. It is the
     usual word in interpretability work, which studies what each one responds to, and the word
