@@ -94,7 +94,7 @@ describe("LookingInside", () => {
     await screen.findByText("1 / 3");
     fireEvent.click(screen.getByRole("button", { name: "Next message" }));
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Message 2 of 3");
+    expect(within(card()).getByRole("status")).toHaveTextContent("Message 2 of 3");
     expect(shared.messageId).toBe(ids[1]);
     fireEvent.click(screen.getByRole("button", { name: "Previous message" }));
     expect(shared.messageId).toBe(ids[0]);
@@ -386,6 +386,199 @@ describe("LookingInside", () => {
     showView(new SharedState({}), new LookingInsideState({ markerByMessage: { [ids[0]]: 2 } }));
     await screen.findByText("1 / 3");
     expect(screen.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-current", "step");
+  });
+
+  describe("the readouts", () => {
+    const readout = () => within(screen.getByTestId("readout-box")).getByRole("status");
+    const neuron = (name: string) => screen.getByRole("button", { name: new RegExp(`^${name},`) });
+    const queryNeuron = (name: string) => screen.queryByRole("button", { name: new RegExp(`^${name},`) });
+    // The click lands on a neuron's invisible target, inside its button.
+    const click = (name: string) => fireEvent.click(within(neuron(name)).getByTestId(/^neuron-target-/));
+    const press = (name: string) => fireEvent.click(screen.getByRole("button", { name }));
+
+    /** A view whose steps finish at once. */
+    async function showInstant(state = new LookingInsideState({})) {
+      state.setAnimate(false);
+      showView(new SharedState({}), state);
+      await screen.findByText("1 / 3");
+      return state;
+    }
+
+    it("prompts for Step 1 before any step", async () => {
+      await showInstant();
+      expect(readout()).toHaveTextContent(/^Click Step 1 to see how the message is represented/);
+      expect(screen.getByTestId("readout-box")).toHaveClass("readout-box--idle");
+      expect(screen.queryByRole("button", { name: "Clear" })).not.toBeInTheDocument();
+    });
+
+    it("changes the prompt with each step", async () => {
+      await showInstant();
+      press("Step 1");
+      expect(readout()).toHaveTextContent(/^The message has been represented as activation values/);
+      press("Step 4");
+      expect(readout()).toHaveTextContent("Click any neuron in any layer to see how data flows.");
+    });
+
+    it("pins a reached neuron's readout on click and unpins it on a second click", async () => {
+      await showInstant();
+      press("Step 2");
+      click("Hidden Layer 1 Neuron 2");
+      expect(readout()).toHaveTextContent(/^Hidden Layer 1 Neuron 2: Activation = .*\. Data from the Input Layer/);
+      expect(screen.getByTestId("readout-box")).not.toHaveClass("readout-box--idle");
+      expect(neuron("Hidden Layer 1 Neuron 2")).toHaveAttribute("aria-pressed", "true");
+      click("Hidden Layer 1 Neuron 2");
+      expect(readout()).toHaveTextContent(/^Click any neuron in the Input Layer or Hidden Layer 1/);
+      expect(neuron("Hidden Layer 1 Neuron 2")).toHaveAttribute("aria-pressed", "false");
+    });
+
+    it("pins another neuron's readout in place of the first", async () => {
+      await showInstant();
+      press("Step 2");
+      click("Input Layer Neuron 1");
+      click("Input Layer Neuron 3");
+      expect(readout()).toHaveTextContent(/^Input Layer Neuron 3:/);
+    });
+
+    it("does nothing when an unreached neuron is clicked, and keeps the pin", async () => {
+      await showInstant();
+      press("Step 1");
+      click("Input Layer Neuron 1");
+      fireEvent.click(screen.getByTestId("neuron-target-1-0"));
+      expect(readout()).toHaveTextContent(/^Input Layer Neuron 1:/);
+    });
+
+    it("clears the pin on a click on the diagram's empty space", async () => {
+      await showInstant();
+      press("Step 1");
+      click("Input Layer Neuron 1");
+      fireEvent.click(screen.getByRole("group", { name: "Network diagram" }));
+      expect(readout()).toHaveTextContent(/^The message has been represented/);
+    });
+
+    it("clears the pin on Escape", async () => {
+      await showInstant();
+      press("Step 1");
+      click("Input Layer Neuron 1");
+      fireEvent.keyDown(neuron("Input Layer Neuron 1"), { key: "Escape" });
+      expect(readout()).toHaveTextContent(/^The message has been represented/);
+    });
+
+    it("pins with Enter on a focused neuron", async () => {
+      await showInstant();
+      press("Step 1");
+      fireEvent.keyDown(neuron("Input Layer Neuron 2"), { key: "Enter" });
+      expect(readout()).toHaveTextContent(/^Input Layer Neuron 2:/);
+    });
+
+    it("clears the pin on a step press, Reset and a message change, but not on Animate", async () => {
+      const state = await showInstant();
+      press("Step 1");
+      const pin = () => click("Input Layer Neuron 1");
+      const pinned = () => /^Input Layer Neuron 1:/;
+      const prompt = /^(Click|The message has been)/;
+
+      pin();
+      fireEvent.click(screen.getByRole("checkbox", { name: "Animate" }));
+      expect(state.animate).toBe(true);
+      expect(readout()).toHaveTextContent(pinned());
+      fireEvent.click(screen.getByRole("checkbox", { name: "Animate" }));
+
+      press("Step 2");
+      expect(readout()).toHaveTextContent(prompt);
+      pin();
+      press("Reset");
+      expect(readout()).toHaveTextContent(/^Click Step 1/);
+
+      press("Step 1");
+      pin();
+      fireEvent.click(screen.getByRole("button", { name: "Next message" }));
+      expect(readout()).toHaveTextContent(/^Click Step 1/);
+      fireEvent.click(screen.getByRole("button", { name: "Previous message" }));
+      expect(readout()).toHaveTextContent(/^The message has been represented/);
+    });
+
+    it("keeps the box empty while a step plays, unless a neuron is pinned", async () => {
+      const state = new LookingInsideState({ markerByMessage: { [ids[0]]: 1 } });
+      showView(new SharedState({}), state);
+      await screen.findByText("1 / 3");
+      jest.useFakeTimers();
+      try {
+        press("Step 2");
+        expect(readout()).toBeEmptyDOMElement();
+        click("Input Layer Neuron 1");
+        expect(readout()).toHaveTextContent(/^Input Layer Neuron 1: Activation = \S+$/);
+        act(() => jest.advanceTimersByTime(60_000));
+        expect(state.marker(ids[0])).toBe(2);
+        expect(readout()).toHaveTextContent(/Activation = \S+\. This value is multiplied by different weights/);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it("shows the prompt for the new marker when a run ends with nothing pinned", async () => {
+      const state = new LookingInsideState({ markerByMessage: { [ids[0]]: 1 } });
+      showView(new SharedState({}), state);
+      await screen.findByText("1 / 3");
+      jest.useFakeTimers();
+      try {
+        press("Step 2");
+        act(() => jest.advanceTimersByTime(60_000));
+        expect(readout()).toHaveTextContent(/^Click any neuron in the Input Layer or Hidden Layer 1/);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it("gives the Tab stop to the first input after Step 1 and none before", async () => {
+      await showInstant();
+      expect(screen.queryAllByRole("button", { name: /activation/ })).toHaveLength(0);
+      press("Step 1");
+      const neurons = screen.getAllByRole("button", { name: /activation/ });
+      expect(neurons).toHaveLength(10);
+      expect(neurons.filter(n => n.getAttribute("tabindex") === "0")).toEqual([neuron("Input Layer Neuron 1")]);
+    });
+
+    it("moves the Tab stop to the neuron that last had focus", async () => {
+      await showInstant();
+      press("Step 1");
+      act(() => neuron("Input Layer Neuron 3").focus());
+      act(() => neuron("Input Layer Neuron 3").blur());
+      expect(neuron("Input Layer Neuron 3")).toHaveAttribute("tabindex", "0");
+      expect(neuron("Input Layer Neuron 1")).toHaveAttribute("tabindex", "-1");
+    });
+
+    it("returns focus to the pinned neuron when its readout is cleared", async () => {
+      await showInstant();
+      press("Step 1");
+      click("Input Layer Neuron 4");
+      fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+      expect(readout()).toHaveTextContent(/^The message has been represented/);
+      expect(neuron("Input Layer Neuron 4")).toHaveFocus();
+      expect(screen.queryByRole("button", { name: "Clear" })).not.toBeInTheDocument();
+    });
+
+    it("moves the Tab stop to the first input when Reset leaves the focused neuron unreached", async () => {
+      await showInstant();
+      press("Step 2");
+      act(() => neuron("Hidden Layer 1 Neuron 1").focus());
+      expect(neuron("Hidden Layer 1 Neuron 1")).toHaveAttribute("tabindex", "0");
+      press("Reset");
+      expect(queryNeuron("Hidden Layer 1 Neuron 1")).not.toBeInTheDocument();
+      press("Step 1");
+      expect(neuron("Input Layer Neuron 1")).toHaveAttribute("tabindex", "0");
+      // Reaching the hidden layer again doesn't give the stop back to the neuron Reset let go of.
+      press("Step 2");
+      expect(neuron("Input Layer Neuron 1")).toHaveAttribute("tabindex", "0");
+      expect(neuron("Hidden Layer 1 Neuron 1")).toHaveAttribute("tabindex", "-1");
+    });
+
+    it("dims the other edges in a hovered neuron's gaps", async () => {
+      await showInstant();
+      press("Step 2");
+      fireEvent.pointerEnter(neuron("Hidden Layer 1 Neuron 2"));
+      expect(screen.getByTestId("edge-near-0-0-0")).toHaveAttribute("opacity", "0.1");
+      expect(screen.getByTestId("edge-near-0-0-1")).not.toHaveAttribute("opacity");
+    });
   });
 
   describe("the filter", () => {

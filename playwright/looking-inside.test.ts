@@ -691,3 +691,76 @@ test.describe("Step 1's word flights", () => {
     expect(await near.jsonValue()).toBe(true);
   });
 });
+
+test.describe("the neurons' readouts", () => {
+  const neuron = (page: Page, name: string) => page.getByRole("button", { name: new RegExp(`^${name},`) });
+  const readout = (page: Page) => page.getByTestId("readout-box").getByRole("status");
+
+  /** Opens the view with Animate off, so a step ends at once, and plays the steps up to `step`. */
+  async function stepTo(page: Page, step: number) {
+    await page.goto("/");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+    await page.getByRole("checkbox", { name: "Animate" }).uncheck();
+    await page.getByRole("button", { name: `Step ${step}` }).click();
+    await expect(page.getByRole("button", { name: `Step ${step}` })).toHaveAttribute("aria-current", "step");
+  }
+
+  test("hovering a reached neuron dims the other connections in its gaps", async ({ page }) => {
+    await stepTo(page, 2);
+    await neuron(page, "Hidden Layer 1 Neuron 1").hover();
+    // From input 1 to Hidden Layer 1 Neuron 2: in the gap, but not touching the neuron.
+    await expect(page.getByTestId("edge-near-0-0-1")).toHaveAttribute("opacity", "0.1");
+    // From input 1 into Neuron 1 itself.
+    await expect(page.getByTestId("edge-near-0-0-0")).not.toHaveAttribute("opacity");
+  });
+
+  test("clicking a neuron pins its readout, and the keyboard can do the same", async ({ page }) => {
+    await stepTo(page, 4);
+    await expect(readout(page)).toHaveText("Click any neuron in any layer to see how data flows.");
+
+    await page.getByRole("checkbox", { name: "Animate" }).focus();
+    // The speed slider is disabled and the diagram doesn't scroll, so the neurons are next.
+    await page.keyboard.press("Tab");
+    await expect(neuron(page, "Input Layer Neuron 1")).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(neuron(page, "Hidden Layer 1 Neuron 1")).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(readout(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
+    await page.keyboard.press("Escape");
+    await expect(readout(page)).toHaveText("Click any neuron in any layer to see how data flows.");
+
+    await neuron(page, "Hidden Layer 2 Neuron 1").click();
+    await expect(readout(page)).toContainText("Hidden Layer 2 Neuron 1: Activation = ");
+    await page.getByRole("button", { name: "Clear" }).click();
+    await expect(neuron(page, "Hidden Layer 2 Neuron 1")).toBeFocused();
+    await expect(readout(page)).toHaveText("Click any neuron in any layer to see how data flows.");
+  });
+
+  const cutOff = (page: Page) => page.getByTestId("readout-box")
+    .evaluate(box => box.scrollHeight > box.clientHeight);
+
+  test.describe("at 200% zoom", () => {
+    // Zoom halves the viewport in CSS pixels and doubles the device pixels: see docs/accessibility.md.
+    test.use({ viewport: { width: 512, height: 281 }, deviceScaleFactor: 2 });
+
+    test("the readout is never cut off", async ({ page }) => {
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await expect(readout(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
+      expect(await cutOff(page)).toBe(false);
+    });
+  });
+
+  // Like Firefox's "Zoom text only": every font twice its size, nothing else.
+  test("the readout is never cut off when only the text is zoomed", async ({ page }) => {
+    await stepTo(page, 2);
+    await neuron(page, "Hidden Layer 1 Neuron 1").click();
+    await expect(readout(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
+    await page.evaluate(() => {
+      const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
+      const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
+      elements.forEach((element, i) => { element.style.fontSize = `${sizes[i] * 2}px`; });
+    });
+    expect(await cutOff(page)).toBe(false);
+  });
+});
