@@ -2,19 +2,19 @@ import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
-import { ConversationCard } from "../../core/conversation-card/conversation-card";
-import { ConversationWords } from "../../core/conversation-card/conversation-words";
-import { ActualLabel } from "../../core/conversation-card/actual-label";
-import { ObservationNotes } from "../../core/conversation-card/observation-notes";
+import { MessageCard } from "../../core/message-card/message-card";
+import { MessageWords } from "../../core/message-card/message-words";
+import { ActualLabel } from "../../core/message-card/actual-label";
+import { ObservationNotes } from "../../core/message-card/observation-notes";
 import { alien3Dataset, alien3Network } from "../../core/datasets/alien3-dataset";
-import { conversationFilterFor, idsFor } from "../../core/filter/conversation-filter";
+import { messageFilterFor, idsFor } from "../../core/filter/message-filter";
 import { FilterBar } from "../../core/filter/filter-bar";
-import { useConversationFilter } from "../../core/filter/use-conversation-filter";
+import { useMessageFilter } from "../../core/filter/use-message-filter";
 import { indexPasses } from "../../core/network/index-passes";
 import { Network } from "../../core/network/network";
 import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
-import { validConversationId } from "../../core/state/conversation";
+import { validMessageId } from "../../core/state/message";
 import { TraceACaseState } from "./trace-a-case-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
 import { S3Index } from "../../core/types/s3-data";
@@ -40,14 +40,14 @@ function readNetwork(index: S3Index): { network: Network } | { error: Error } {
   }
 }
 
-/** Follow one conversation through the network, a layer at a time. */
+/** Follow one message through the network, a layer at a time. */
 export const TraceACase: React.FC = observer(function TraceACase() {
   const shared = useSharedState();
-  // Correct the shared conversation when the list arrives, not in a useEffect: see docs/undo.md.
+  // Correct the shared message when the list arrives, not in a useEffect: see docs/undo.md.
   // The list is the stored query's matches: a query still being typed never moves the stored
-  // conversation.
+  // message.
   const onLoaded = useCallback((index: S3Index) => {
-    shared.ensureValidConversation(idsFor(conversationFilterFor(index), shared.query ?? ""));
+    shared.ensureValidMessage(idsFor(messageFilterFor(index), shared.query ?? ""));
   }, [shared]);
   const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
   // Checked when the index is ready, on every mount, so data without a network shows the alert rather
@@ -58,13 +58,13 @@ export const TraceACase: React.FC = observer(function TraceACase() {
   return (
     <div className="trace-a-case">
       <h1 className="trace-a-case__title">{TRACE_A_CASE_TITLE}</h1>
-      {indexState.status === "loading" && <p>Loading conversations…</p>}
+      {indexState.status === "loading" && <p>Loading messages…</p>}
       {indexState.status === "error" &&
         <p role="alert">
-          The conversations could not be {indexState.failed === "load" ? "loaded" : "shown"}: {indexState.error.message}
+          The messages could not be {indexState.failed === "load" ? "loaded" : "shown"}: {indexState.error.message}
         </p>}
       {fromIndex && "error" in fromIndex &&
-        <p role="alert">The conversations could not be shown: {fromIndex.error.message}</p>}
+        <p role="alert">The messages could not be shown: {fromIndex.error.message}</p>}
       {indexState.status === "ready" && fromIndex && !("error" in fromIndex) &&
         <TraceACaseBody index={indexState.index} network={fromIndex.network} />}
     </div>
@@ -74,8 +74,8 @@ export const TraceACase: React.FC = observer(function TraceACase() {
 const TraceACaseBody = observer(function TraceACaseBody({ index, network }: { index: S3Index; network: Network }) {
   const shared = useSharedState();
   const state = useViewState(TraceACaseState);
-  const { ids, bar } = useConversationFilter(conversationFilterFor(index));
-  // A conversation's place among all of them, which its pass is stored by. Its place in `ids`
+  const { ids, bar } = useMessageFilter(messageFilterFor(index));
+  // A message's place among all of them, which its pass is stored by. Its place in `ids`
   // changes with the query.
   const placeById = useMemo(() => new Map(index.items.map((item, i) => [item.id, i])), [index]);
   // The generated attributes a student can see. The derived target, prediction and
@@ -86,21 +86,21 @@ const TraceACaseBody = observer(function TraceACaseBody({ index, network }: { in
   const networkHeadId = useId();
   // Shown even before the store's correction lands, and while a query is being typed, so an id
   // the list doesn't include never reaches the screen.
-  const currentId = validConversationId(shared.conversationId, ids);
+  const currentId = validMessageId(shared.messageId, ids);
   const listPosition = currentId === undefined ? -1 : ids.indexOf(currentId);
-  // No conversation is shown when nothing matches: the empty list leaves the stored id in place.
+  // No message is shown when nothing matches: the empty list leaves the stored id in place.
   const shownId = listPosition < 0 ? undefined : currentId;
   const player = useMemo(
     () => (shownId === undefined ? undefined : new StepPlayer(timeline, traceProgress(state, shownId), state)),
     [timeline, state, shownId]);
-  // Stop the old player when the conversation changes or the view unmounts. A layout effect, so its
+  // Stop the old player when the message changes or the view unmounts. A layout effect, so its
   // run can't finish and store its marker after the change is committed.
   useLayoutEffect(() => () => player?.stop(), [player]);
 
   if (index.items.length === 0) {
-    return <p>No conversations.</p>;
+    return <p>No messages.</p>;
   }
-  const goTo = (to: number) => shared.setConversationId(ids[to]);
+  const goTo = (to: number) => shared.setMessageId(ids[to]);
   const place = shownId === undefined ? undefined : placeById.get(shownId);
   const shown = place === undefined ? undefined : index.items[place];
 
@@ -112,17 +112,17 @@ const TraceACaseBody = observer(function TraceACaseBody({ index, network }: { in
       <div className="trace-a-case__filter-row">
         <FilterBar {...bar} />
       </div>
-      <div className="trace-a-case__conversation">
-        <ConversationCard position={listPosition} total={ids.length}
+      <div className="trace-a-case__message">
+        <MessageCard position={listPosition} total={ids.length}
           onPrev={() => goTo(listPosition - 1)} onNext={() => goTo(listPosition + 1)}>
           {shown &&
             <>
-              <ConversationWords text={shown.text} />
+              <MessageWords text={shown.text} />
               <ActualLabel target={shown.target} labels={alien3Dataset.classificationLabels} />
               <ObservationNotes observation={shown.observation} attributes={indicatorAttributes}
                 values={shown.attributes} />
             </>}
-        </ConversationCard>
+        </MessageCard>
       </div>
       <div className="trace-a-case__step-row">
         {player && place !== undefined && <StepButtonGroup player={player} buttons={TRACE_BUTTONS} />}

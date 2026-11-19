@@ -5,7 +5,7 @@ import { NORMAL_SPEED } from "../../core/state/animation";
 import fixture from "./__fixtures__/trace-a-case-state.v1.json";
 
 const empty = {
-  version: 1, markerByConversation: {}, animate: true, speed: NORMAL_SPEED, $modelType: "npw/TraceACaseState",
+  version: 1, markerByMessage: {}, animate: true, speed: NORMAL_SPEED, $modelType: "npw/TraceACaseState",
 };
 
 describe("TraceACaseState", () => {
@@ -18,7 +18,7 @@ describe("TraceACaseState", () => {
   });
 
   it("loads a saved form without $modelType", () => {
-    expect(savedJson(fromSnapshot(TraceACaseState, { version: 1, markerByConversation: {} } as any)))
+    expect(savedJson(fromSnapshot(TraceACaseState, { version: 1, markerByMessage: {} } as any)))
       .toEqual(empty);
   });
 
@@ -27,33 +27,33 @@ describe("TraceACaseState", () => {
   });
 
   it.each([5, -1, 1.5, "3"])("rejects a saved marker of %p", marker => {
-    const saved = { ...fixture, markerByConversation: { "361e65b1002a": marker } };
+    const saved = { ...fixture, markerByMessage: { "361e65b1002a": marker } };
     expect(() => fromSnapshot(TraceACaseState, saved as any)).toThrow();
   });
 
-  it("reads each conversation's marker, and the start for a conversation not stepped yet", () => {
+  it("reads each message's marker, and the start for a message not stepped yet", () => {
     const state = fromSnapshot(TraceACaseState, fixture as any);
     expect(state.marker("361e65b1002a")).toBe(3);
     expect(state.marker("7b117e548ba4")).toBe(1);
     expect(state.marker("7ca6475a5371")).toBe(0);
   });
 
-  it("stores one conversation's marker without touching the others", () => {
+  it("stores one message's marker without touching the others", () => {
     const state = fromSnapshot(TraceACaseState, fixture as any);
     state.setMarker("7b117e548ba4", 4);
     expect(savedJson(state)).toEqual({
-      ...fixture, markerByConversation: { "361e65b1002a": 3, "7b117e548ba4": 4 },
+      ...fixture, markerByMessage: { "361e65b1002a": 3, "7b117e548ba4": 4 },
     });
   });
 
-  it("forgets a conversation back at the start, so the saved form stays small", () => {
+  it("forgets a message back at the start, so the saved form stays small", () => {
     const state = fromSnapshot(TraceACaseState, fixture as any);
     state.setMarker("361e65b1002a", 0);
-    expect(savedJson(state)).toEqual({ ...fixture, markerByConversation: { "7b117e548ba4": 1 } });
+    expect(savedJson(state)).toEqual({ ...fixture, markerByMessage: { "7b117e548ba4": 1 } });
   });
 
   it("loads a saved form from before Animate and speed, with Animate on at normal speed", () => {
-    const older = { version: 1, markerByConversation: fixture.markerByConversation };
+    const older = { version: 1, markerByMessage: fixture.markerByMessage };
     const state = fromSnapshot(TraceACaseState, older as any);
     expect(state.animate).toBe(true);
     expect(state.speed).toBe(NORMAL_SPEED);

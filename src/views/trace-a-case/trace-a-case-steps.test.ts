@@ -8,13 +8,13 @@ import { TraceACaseState } from "./trace-a-case-state";
 const SIZES = [10, 8, 6, 2];
 const timeline = traceTimeline(SIZES);
 
-/** Players over one TraceACaseState, made for a conversation as the view makes them. */
+/** Players over one TraceACaseState, made for a message as the view makes them. */
 function makeState() {
   const state = new TraceACaseState({});
-  const playerFor = (conversationId: string) =>
-    new StepPlayer(timeline, traceProgress(state, conversationId), state);
-  /** The markers stored, by conversation. */
-  const stored = () => ({ ...state.markerByConversation });
+  const playerFor = (messageId: string) =>
+    new StepPlayer(timeline, traceProgress(state, messageId), state);
+  /** The markers stored, by message. */
+  const stored = () => ({ ...state.markerByMessage });
   return { playerFor, stored };
 }
 
@@ -82,7 +82,7 @@ describe("Trace a Case's steps on the step player", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("stores each conversation's marker by its id, so another starts with nothing done", () => {
+  it("stores each message's marker by its id, so another starts with nothing done", () => {
     setReducedMotion(true);
     const { playerFor, stored } = makeState();
     press(playerFor("a"), 4);
@@ -92,7 +92,7 @@ describe("Trace a Case's steps on the step player", () => {
     expect(other.scene).toEqual(emptyScene(SIZES));
   });
 
-  it("a new player for a conversation shows the marker stored for it", () => {
+  it("a new player for a message shows the marker stored for it", () => {
     setReducedMotion(true);
     const { playerFor } = makeState();
     press(playerFor("a"), 4);

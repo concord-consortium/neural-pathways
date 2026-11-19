@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { forward } from "../../core/network/forward";
 import { fixtureLoadings, fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
 import { NEGATIVE_COLOR, POSITIVE_COLOR, RULE_COLOR, signColor } from "../../core/colors";
-import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { finishedPathways, PathwaysScene } from "./extract-scene";
 import { extractGeometry } from "./extract-geometry";
 import { kickScale, mixColor, ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
@@ -14,7 +14,7 @@ import { COPY_END_SCALE } from "./pathways-timeline";
 const SIZES = [10, 8, 6, 2];
 const geometry = extractGeometry(SIZES, 0);
 const layout = pathwaysLayout(geometry, 20, fixtureLoadings);
-const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+const passes = fixture.messages.map(c => forward(fixtureNetwork, c.text));
 
 const drawLayer = (pathways: PathwaysScene) =>
   render(<svg><PathwaysLayer pathways={pathways} layout={layout} /></svg>);

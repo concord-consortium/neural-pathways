@@ -1,4 +1,4 @@
-import { conversationFilterFor, createConversationFilter, FIXED_FIELDS, idsFor } from "./conversation-filter";
+import { messageFilterFor, createMessageFilter, FIXED_FIELDS, idsFor } from "./message-filter";
 import { alien3Dataset } from "../datasets/alien3-dataset";
 import { RESERVED_FIELD_NAMES } from "../datasets/dataset-definition";
 import { filterTestIndex } from "./__fixtures__/filter-test-index";
@@ -6,8 +6,8 @@ import { EXAMPLES, FIELD_DESCRIPTIONS } from "./filter-help";
 
 const ALL = ["aaa111", "bbb222", "ccc333", "ddd444"];
 
-describe("conversationFilterFor", () => {
-  const filter = conversationFilterFor(filterTestIndex());
+describe("messageFilterFor", () => {
+  const filter = messageFilterFor(filterTestIndex());
 
   it("lists the fields in order: the fixed ones, the filterable attributes, then the pathways", () => {
     expect(filter.fields).toEqual([
@@ -25,33 +25,33 @@ describe("conversationFilterFor", () => {
     expect(filter.attributes.map(a => a.key)).not.toContain("resource_stressed");
   });
 
-  it("lists every conversation's id in dataset order", () => {
+  it("lists every message's id in dataset order", () => {
     expect(filter.allIds).toEqual(ALL);
   });
 
   it("returns the same filter for the same index, and a new one for another", () => {
     const datasetIndex = filterTestIndex();
-    expect(conversationFilterFor(datasetIndex)).toBe(conversationFilterFor(datasetIndex));
-    expect(conversationFilterFor(filterTestIndex())).not.toBe(conversationFilterFor(datasetIndex));
+    expect(messageFilterFor(datasetIndex)).toBe(messageFilterFor(datasetIndex));
+    expect(messageFilterFor(filterTestIndex())).not.toBe(messageFilterFor(datasetIndex));
   });
 
   it("has no pathway fields for an index with no fit", () => {
     const datasetIndex = filterTestIndex();
     datasetIndex.metadata.fa_fits = {};
-    expect(conversationFilterFor(datasetIndex).fields).not.toContain("pathway_1");
+    expect(messageFilterFor(datasetIndex).fields).not.toContain("pathway_1");
   });
 });
 
 describe("run", () => {
-  const filter = conversationFilterFor(filterTestIndex());
+  const filter = messageFilterFor(filterTestIndex());
   const matches = (query: string) => filter.run(query);
 
-  it("matches every conversation for an empty or blank query", () => {
+  it("matches every message for an empty or blank query", () => {
     expect(matches("")).toEqual({ ids: ALL });
     expect(matches("   ")).toEqual({ ids: ALL });
   });
 
-  it("numbers conversations from 1 by their place among all of them", () => {
+  it("numbers messages from 1 by their place among all of them", () => {
     expect(matches("n:2")).toEqual({ ids: ["bbb222"] });
   });
 
@@ -76,9 +76,9 @@ describe("run", () => {
 
   it("matches a number exactly, not as digits inside a longer number", () => {
     const datasetIndex = filterTestIndex();
-    // Twelve conversations, so n runs past 9: n:1 must not match 10, 11 or 12.
+    // Twelve messages, so n runs past 9: n:1 must not match 10, 11 or 12.
     datasetIndex.items = Array.from({ length: 12 }, (_, i) => ({ ...datasetIndex.items[i % 4], id: `id${i + 1}` }));
-    expect(conversationFilterFor(datasetIndex).run("n:1")).toEqual({ ids: ["id1"] });
+    expect(messageFilterFor(datasetIndex).run("n:1")).toEqual({ ids: ["id1"] });
     expect(matches("pathway_1:2")).toEqual({ ids: [] });
     expect(matches("pathway_1:2.4")).toEqual({ ids: ["bbb222"] });
   });
@@ -90,7 +90,7 @@ describe("run", () => {
   it("keeps a text field's digits as typed, leading zeros included", () => {
     const datasetIndex = filterTestIndex();
     datasetIndex.items = ["a007", "b070", "c700"].map((id, i) => ({ ...datasetIndex.items[i], id }));
-    const filter007 = conversationFilterFor(datasetIndex);
+    const filter007 = messageFilterFor(datasetIndex);
     // liqe reads 007 as 7, which every one of these ids contains.
     expect(filter007.run("id:007")).toEqual({ ids: ["a007"] });
     expect(filter007.run("id:007 OR id:070")).toEqual({ ids: ["a007", "b070"] });
@@ -210,18 +210,18 @@ describe("run", () => {
   });
 });
 
-describe("createConversationFilter", () => {
+describe("createMessageFilter", () => {
   it("leaves a missing value out of the record, so it never matches", () => {
     const datasetIndex = filterTestIndex();
     datasetIndex.items[0].target_label = null;
-    const filter = createConversationFilter(datasetIndex, alien3Dataset, []);
+    const filter = createMessageFilter(datasetIndex, alien3Dataset, []);
     expect(filter.run("target_label:wait")).toEqual({ ids: ["ddd444"] });
   });
 
-  it("leaves out pathway scores the conversation doesn't have", () => {
+  it("leaves out pathway scores the message doesn't have", () => {
     const datasetIndex = filterTestIndex();
     datasetIndex.items[0].pathway_scores = {};
-    const filter = conversationFilterFor(datasetIndex);
+    const filter = messageFilterFor(datasetIndex);
     expect(filter.run("pathway_1:>-10")).toEqual({ ids: ["bbb222", "ccc333", "ddd444"] });
     expect(filter.run("NOT pathway_1:>-10")).toEqual({ ids: ["aaa111"] });
   });
@@ -230,7 +230,7 @@ describe("createConversationFilter", () => {
     const datasetIndex = filterTestIndex();
     const fits = datasetIndex.metadata.fa_fits;
     fits["another-fit"] = fits["alien-fa-3"];
-    expect(() => createConversationFilter(datasetIndex, alien3Dataset, []))
+    expect(() => createMessageFilter(datasetIndex, alien3Dataset, []))
       .toThrow("Expected at most one fit, found alien-fa-3, another-fit");
   });
 });
@@ -240,7 +240,7 @@ describe("the help's examples", () => {
     const datasetIndex = filterTestIndex();
     const nearWater = { key: "near_water", label: "Near water", description: "", type: "binary" } as const;
     datasetIndex.metadata.attributes = [...(datasetIndex.metadata.attributes ?? []), nearWater];
-    const filter = conversationFilterFor(datasetIndex);
+    const filter = messageFilterFor(datasetIndex);
     // [query, result] pairs, so a failure names the example.
     const results = EXAMPLES.map(([query]) => {
       const result = filter.run(query);
@@ -257,13 +257,13 @@ describe("the help's field descriptions", () => {
 });
 
 describe("idsFor", () => {
-  const filter = conversationFilterFor(filterTestIndex());
+  const filter = messageFilterFor(filterTestIndex());
 
   it("gives the query's matches", () => {
     expect(idsFor(filter, "n:2")).toEqual(["bbb222"]);
   });
 
-  it("gives every conversation for a query it can't read", () => {
+  it("gives every message for a query it can't read", () => {
     expect(idsFor(filter, "bogus:1")).toEqual(ALL);
   });
 });

@@ -10,9 +10,9 @@ interface FilterHelpProps {
 
 /** What the help says about each of the engine's FIXED_FIELDS. */
 export const FIELD_DESCRIPTIONS: Record<string, string> = {
-  n: "Position among all the conversations, from 1",
-  id: "The conversation's id",
-  text: "The conversation's alien words. A bare word searches these and the observation.",
+  n: "Position among all the messages, from 1",
+  id: "The message's id",
+  text: "The message's alien words. A bare word searches these and the observation.",
   observation: "The observer's notes",
   target_label: "approach or wait",
 };
@@ -31,11 +31,11 @@ const OPERATORS: [string, string][] = [
 export const EXAMPLES: [string, string][] = [
   ["model_correct:0", "the ones the model got wrong"],
   ["pathway_1:>2", "a high score on Pathway 1"],
-  ["yandor", "conversations containing that word, or with it in their notes"],
+  ["yandor", "messages containing that word, or with it in their notes"],
   ["observation:\"stores nearby\"", "a phrase in the observer's notes"],
   ["voices_raised:1 AND pathway_1:<0", ""],
   ["NOT near_water:1", ""],
-  ["n:127", "conversation 127"],
+  ["n:127", "message 127"],
 ];
 
 function describeField(field: string, attributes: readonly AttributeDefinition[]): string {

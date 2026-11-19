@@ -1,9 +1,9 @@
 /**
- * The conversation a view should show from its list: `currentId` when the list has it, otherwise
+ * The message a view should show from its list: `currentId` when the list has it, otherwise
  * the first id. An empty list leaves `currentId` unchanged: there is nothing valid to switch to,
- * and when the student loosens the query their conversation comes back.
+ * and when the student loosens the query their message comes back.
  */
-export function validConversationId(
+export function validMessageId(
   currentId: string | undefined,
   ids: readonly string[]
 ): string | undefined {

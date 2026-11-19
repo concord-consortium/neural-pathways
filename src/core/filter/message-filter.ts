@@ -9,13 +9,13 @@ import { S3Index, S3Item } from "../types/s3-data";
 
 export type FilterResult = { ids: readonly string[] } | { error: string };
 
-/** A filter over one dataset index's conversations. */
-export interface ConversationFilter {
+/** A filter over one dataset index's messages. */
+export interface MessageFilter {
   /** The field names a query can use, in the order the help lists them. */
   fields: readonly string[];
   /** The attributes behind the attribute fields, for the help's labels and ranges. */
   attributes: readonly AttributeDefinition[];
-  /** Every conversation's id, in dataset order. */
+  /** Every message's id, in dataset order. */
   allIds: readonly string[];
   run(query: string): FilterResult;
 }
@@ -88,10 +88,10 @@ interface QueryFields {
   numbers: ReadonlySet<string>;
 }
 
-/** The fields every conversation has, before the attributes and pathways. All are in RESERVED_FIELD_NAMES. */
+/** The fields every message has, before the attributes and pathways. All are in RESERVED_FIELD_NAMES. */
 export const FIXED_FIELDS = ["n", "id", "text", "observation", "target_label"];
 
-/** The fields a bare word searches: the conversation's alien words and the observer's notes. */
+/** The fields a bare word searches: the message's alien words and the observer's notes. */
 const BARE_WORD_FIELDS = ["text", "observation"];
 
 /**
@@ -213,11 +213,11 @@ function errorMessage(error: unknown): string {
   return "Can't read the query";
 }
 
-export function createConversationFilter(
+export function createMessageFilter(
   datasetIndex: S3Index,
   dataset: DatasetDefinition,
   attributes: readonly AttributeDefinition[],
-): ConversationFilter {
+): MessageFilter {
   const fit = onlyFit(datasetIndex);
   const fields = [...FIXED_FIELDS, ...attributes.map(a => a.key), ...pathwayFields(fit)];
   const queryFields: QueryFields = {
@@ -248,22 +248,22 @@ export function createConversationFilter(
   };
 }
 
-/** The query's matches, or every conversation when the query can't be read. */
-export function idsFor(filter: ConversationFilter, query: string): readonly string[] {
+/** The query's matches, or every message when the query can't be read. */
+export function idsFor(filter: MessageFilter, query: string): readonly string[] {
   const result = filter.run(query);
   return "ids" in result ? result.ids : filter.allIds;
 }
 
 // One per index. useDatasetIndex shares one index object per page, so a view's load correction and
 // its body use the same records.
-const filters = new WeakMap<S3Index, ConversationFilter>();
+const filters = new WeakMap<S3Index, MessageFilter>();
 
 /** The lesson's filter for a loaded alien3 index: every attribute not hidden is filterable. */
-export function conversationFilterFor(datasetIndex: S3Index): ConversationFilter {
+export function messageFilterFor(datasetIndex: S3Index): MessageFilter {
   let filter = filters.get(datasetIndex);
   if (!filter) {
     const attributes = alien3Dataset.resolveAttributes(datasetIndex).filter(a => !a.hidden);
-    filter = createConversationFilter(datasetIndex, alien3Dataset, attributes);
+    filter = createMessageFilter(datasetIndex, alien3Dataset, attributes);
     filters.set(datasetIndex, filter);
   }
   return filter;

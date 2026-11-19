@@ -16,17 +16,17 @@ one thing, or one name for two things, settle it and add it here.
 - **draft:** the query being typed, not yet stored. It is volatile: never saved, and not for undo
   to record.
 
-## Conversations
+## Messages
 
-- **conversation:** one item of the dataset. Not "case" for a conversation: that word appears only
+- **message:** one item of the dataset. Not "case" for a message: that word appears only
   in the view's name, Trace a Case.
-- **place:** a conversation's index among all of them, in index order. Passes are kept by place.
-- **position:** a conversation's index in the list being stepped through, which the filter decides
-  (`listPosition` in Trace a Case, `position` on the conversation card).
+- **place:** a message's index among all of them, in index order. Passes are kept by place.
+- **position:** a message's index in the list being stepped through, which the filter decides
+  (`listPosition` in Trace a Case, `position` on the message card).
 
-## The conversation card
+## The message card
 
-- **attribute indicator:** how the card shows one of a conversation's attributes, under the
+- **attribute indicator:** how the card shows one of a message's attributes, under the
   observation notes: the attribute's label, its icon, and its value (a check mark, a blank, a
   number, or a dash when the value is missing). Not "mark". The value, under the icon, is not a
   "badge".
@@ -34,8 +34,8 @@ one thing, or one name for two things, settle it and add it here.
 ## The step system
 
 - **step:** a button in the step row: Trace a Case's Step 1 to Step 4, Extract Pathways' Setup,
-  Collect a Conversation, Collect All Conversations and Extract Pathways. Not a point or a stretch
-  of the timeline. Comments, tests and docs call Collect All Conversations "Collect All"; its full
+  Collect a Message, Collect All Messages and Extract Pathways. Not a point or a stretch
+  of the timeline. Comments, tests and docs call Collect All Messages "Collect All"; its full
   name is for the button's label.
 - **marker:** a point on a view's timeline where the scene rests and progress is stored. 0 is the
   start.
@@ -61,7 +61,7 @@ one thing, or one name for two things, settle it and add it here.
 - **node:** a unit's drawn circle, with its gauge.
 - **edge:** a drawn connection between two nodes, colored and weighted by its signal.
 - **wire:** the gray line under an edge, drawn whether or not the edge is.
-- **phase:** one of the four parts of a conversation's forward pass: the input fill, then a fan of
+- **phase:** one of the four parts of a message's forward pass: the input fill, then a fan of
   edges into each later column. Trace a Case's Step *k* plays phase *k*.
 - **spotlight:** `hiddenLayerSpotlight`, how strongly the hidden layers' nodes are picked out;
   everything else fades to 1 − its strength. Not "dim" for the field. "Dim" and "undim" name the
@@ -72,10 +72,10 @@ one thing, or one name for two things, settle it and add it here.
 - **canvas:** Extract Pathways' drawing area, the SVG that `ExtractDrawing` lays out, as in
   `minCanvasWidth` and "half off the canvas". Not the particle canvas.
 - **lifted column:** the copies of the 14 hidden neurons that Setup lifts out of the network.
-- **deck:** the columns of collected conversations' hidden activations, one column each.
+- **deck:** the columns of collected messages' hidden activations, one column each.
 - **room:** the stretch of canvas the deck is centered in, from the canvas's left edge to the lifted
   column's left edge (`deckMid`).
-- **set:** 20 columns of the deck that move as one; the last set holds fewer when the conversations
+- **set:** 20 columns of the deck that move as one; the last set holds fewer when the messages
   don't fill it. Collect All fills the first one a column at a time and adds the rest behind it,
   up to 40. Sets are numbered from 0, so set 0 is the one in front.
 - **face:** one of the deck's visible surfaces: the right face is set 0's columns, and the front
@@ -84,7 +84,7 @@ one thing, or one name for two things, settle it and add it here.
   gauge, which only the particles leave from.
 - **copy:** one flown circle in the lifted column or the deck.
 - **bar copy:** a flown copy of a loading bar, on its way to its pathway box. Not "copy" alone.
-- **collection:** one conversation collected by hand, by Collect a Conversation or at the start of
+- **collection:** one message collected by hand, by Collect a Message or at the start of
   Collect All, from the network running it to its column landing in the deck.
   `collected` counts them, and holds the deck's size once the deck is done; a scene's
   `collections` are the ones in flight or landed.
@@ -106,7 +106,7 @@ one thing, or one name for two things, settle it and add it here.
   factor analysis on them gives back the authored pathways.
 - **fitted network:** the network the generator fits to approximate the authored activations and
   reproduce `classification` (`fitNetwork`, `metadata.network`, `alien3Network`). It is fitted,
-  not trained: it reproduces these 800 conversations, with nothing held out.
+  not trained: it reproduces these 800 messages, with nothing held out.
 - **fit:** two kinds, so say which where both could be meant: a **factor-analysis fit**, one entry
   of `fa_fits`, whose loadings and pathway scores the views show; and the fitted network.
 - **tracking unit:** a hidden unit after the embedding, fitted toward one authored neuron. Hidden
@@ -114,13 +114,13 @@ one thing, or one name for two things, settle it and add it here.
 - **noise ceiling:** about the most a word-fed unit can correlate with its authored neuron: √(1 − its
   noise variance), which is the square root of its communality (see
   [alien-activations.md](alien-activations.md#the-fitted-network)).
-- **margin:** how far a conversation's logit for its classification beats the other's.
+- **margin:** how far a message's logit for its classification beats the other's.
 
 ## Layout
 
 - **designed size:** the size the views are designed to be used at, 1024 × 562 px as an Interactive
   (see `accessibility.md`).
-- **filter row:** the row of controls above the conversation card, holding the filter bar.
+- **filter row:** the row of controls above the message card, holding the filter bar.
 - **Interactive:** a view embedded on its own in an iframe, as the Activity Player embeds it, via
   `?interactive=<view-id>` (see `src/app/README.md`). The sizes in `accessibility.md` and the
   views' READMEs are an Interactive's, the app's gutters included. Not "frame", which means a run at

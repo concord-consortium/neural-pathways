@@ -10,7 +10,7 @@ const SIZES = [10, 8, 6, 2];
 const timeline = extractTimeline(SIZES, 20, fixtureLoadings);
 
 describe("extractTimeline", () => {
-  it("times the segment to 1 as Setup, and the segment to n + 1 as collecting conversation n", () => {
+  it("times the segment to 1 as Setup, and the segment to n + 1 as collecting message n", () => {
     expect(timeline.duration({ from: 0, to: 1 })).toBe(setupDuration(SIZES));
     expect(timeline.duration({ from: 1, to: 2 })).toBe(collectDuration(SIZES, 1));
     expect(timeline.duration({ from: 4, to: 5 })).toBe(collectDuration(SIZES, 4));

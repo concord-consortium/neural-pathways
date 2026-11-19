@@ -36,7 +36,7 @@ test.describe("a placeholder view's About", () => {
 
 // The placeholder views' text is checked in src/app/views-about.test.tsx, which can't load data.
 for (const [id, title, text] of [
-  ["trace-a-case", "Trace a Case", "Students follow a single alien conversation through the model"],
+  ["trace-a-case", "Trace a Case", "Students follow a single alien message through the model"],
   ["extract-pathways", "Extract Pathways", "Students stack many cases’ activations"],
 ]) {
   test(`${title}'s About opens its own text`, async ({ page }) => {

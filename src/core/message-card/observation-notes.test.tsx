@@ -44,7 +44,7 @@ describe("ObservationNotes", () => {
 
   it.each([undefined, ""])("says there are no notes when the observation is %p", observation => {
     render(<ObservationNotes observation={observation} attributes={[]} />);
-    expect(screen.getByText("(no notes for this conversation)")).toBeInTheDocument();
+    expect(screen.getByText("(no notes for this message)")).toBeInTheDocument();
   });
 
   it("shows the attribute indicators in the order given, not the order of the values", () => {

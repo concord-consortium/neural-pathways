@@ -1,10 +1,10 @@
-Placeholder. Students follow a single alien conversation through the model: text to embedding,
+Placeholder. Students follow a single alien message through the model: text to embedding,
 through two hidden layers, out to a prediction.
 
 ### Reading a neuron
 
 Click any neuron and it will tell you what it is connected to, what it is reacting to most strongly,
-and how the conversations it fires hardest on divide between Approach and Wait. Click a few: some
+and how the messages it fires hardest on divide between Approach and Wait. Click a few: some
 neurons come out almost entirely on one side, others split down the middle.
 
 ### The point

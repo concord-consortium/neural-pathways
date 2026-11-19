@@ -5,7 +5,7 @@ import {
 import { SharedState } from "./shared-state";
 import { savedJson } from "./test-helpers";
 import fixture from "./__fixtures__/shared-state.v1.json";
-import noConversationFixture from "./__fixtures__/shared-state.v1-no-conversation.json";
+import noMessageFixture from "./__fixtures__/shared-state.v1-no-message.json";
 
 // Test-only: another registered model whose saved form must not load as SharedState.
 @model("test/NotSharedState")
@@ -16,7 +16,7 @@ describe("SharedState", () => {
     expect(getGlobalConfig().modelAutoTypeChecking).toBe(ModelAutoTypeCheckingMode.AlwaysOn);
   });
 
-  it("starts at version 1 with no conversation", () => {
+  it("starts at version 1 with no message", () => {
     expect(savedJson(new SharedState({}))).toEqual({ version: 1, $modelType: "npw/SharedState" });
   });
 
@@ -24,19 +24,19 @@ describe("SharedState", () => {
     expect(savedJson(fromSnapshot(SharedState, fixture as any))).toEqual(fixture);
   });
 
-  it("loads a version 1 form saved before conversationId and query existed", () => {
-    const state = fromSnapshot(SharedState, noConversationFixture as any);
-    expect(state.conversationId).toBeUndefined();
+  it("loads a version 1 form saved before messageId and query existed", () => {
+    const state = fromSnapshot(SharedState, noMessageFixture as any);
+    expect(state.messageId).toBeUndefined();
     expect(state.query).toBeUndefined();
-    expect(savedJson(state)).toEqual(noConversationFixture);
+    expect(savedJson(state)).toEqual(noMessageFixture);
   });
 
   it("loads a saved form without $modelType", () => {
-    expect(savedJson(fromSnapshot(SharedState, { version: 1 } as any))).toEqual(noConversationFixture);
+    expect(savedJson(fromSnapshot(SharedState, { version: 1 } as any))).toEqual(noMessageFixture);
   });
 
-  it("rejects a saved form with a wrong-typed conversationId", () => {
-    expect(() => fromSnapshot(SharedState, { ...fixture, conversationId: 42 } as any)).toThrow();
+  it("rejects a saved form with a wrong-typed messageId", () => {
+    expect(() => fromSnapshot(SharedState, { ...fixture, messageId: 42 } as any)).toThrow();
   });
 
   it("rejects a saved form with a wrong-typed query", () => {
@@ -53,47 +53,47 @@ describe("SharedState", () => {
     expect(() => fromSnapshot(SharedState, other as any)).toThrow(SnapshotTypeMismatchError);
   });
 
-  it("sets the conversation", () => {
+  it("sets the message", () => {
     const state = new SharedState({});
-    state.setConversationId("7b117e548ba4");
-    expect(state.conversationId).toBe("7b117e548ba4");
+    state.setMessageId("7b117e548ba4");
+    expect(state.messageId).toBe("7b117e548ba4");
   });
 
-  describe("ensureValidConversation", () => {
+  describe("ensureValidMessage", () => {
     const ids = ["361e65b1002a", "7b117e548ba4"];
 
-    it("picks the first conversation when none is set", () => {
+    it("picks the first message when none is set", () => {
       const state = new SharedState({});
-      state.ensureValidConversation(ids);
-      expect(state.conversationId).toBe("361e65b1002a");
+      state.ensureValidMessage(ids);
+      expect(state.messageId).toBe("361e65b1002a");
     });
 
-    it("replaces a conversation the list no longer includes", () => {
-      const state = new SharedState({ conversationId: "7ca6475a5371" });
-      state.ensureValidConversation(ids);
-      expect(state.conversationId).toBe("361e65b1002a");
+    it("replaces a message the list no longer includes", () => {
+      const state = new SharedState({ messageId: "7ca6475a5371" });
+      state.ensureValidMessage(ids);
+      expect(state.messageId).toBe("361e65b1002a");
     });
 
-    it("keeps a conversation the list includes", () => {
-      const state = new SharedState({ conversationId: "7b117e548ba4" });
-      state.ensureValidConversation(ids);
-      expect(state.conversationId).toBe("7b117e548ba4");
+    it("keeps a message the list includes", () => {
+      const state = new SharedState({ messageId: "7b117e548ba4" });
+      state.ensureValidMessage(ids);
+      expect(state.messageId).toBe("7b117e548ba4");
     });
 
-    it("records a change only when the conversation needs correcting, so a valid one leaves nothing to undo", () => {
-      const state = new SharedState({ conversationId: "7b117e548ba4" });
+    it("records a change only when the message needs correcting, so a valid one leaves nothing to undo", () => {
+      const state = new SharedState({ messageId: "7b117e548ba4" });
       const patches: Patch[] = [];
       onPatches(state, recorded => patches.push(...recorded));
-      state.ensureValidConversation(ids);
+      state.ensureValidMessage(ids);
       expect(patches).toEqual([]);
-      state.ensureValidConversation(["361e65b1002a"]);
-      expect(patches).toEqual([{ op: "replace", path: ["conversationId"], value: "361e65b1002a" }]);
+      state.ensureValidMessage(["361e65b1002a"]);
+      expect(patches).toEqual([{ op: "replace", path: ["messageId"], value: "361e65b1002a" }]);
     });
 
-    it("keeps the conversation when the list is empty", () => {
-      const state = new SharedState({ conversationId: "7ca6475a5371" });
-      state.ensureValidConversation([]);
-      expect(state.conversationId).toBe("7ca6475a5371");
+    it("keeps the message when the list is empty", () => {
+      const state = new SharedState({ messageId: "7ca6475a5371" });
+      state.ensureValidMessage([]);
+      expect(state.messageId).toBe("7ca6475a5371");
     });
   });
 
@@ -134,19 +134,19 @@ describe("SharedState", () => {
       expect(state.queryDraft).toBeUndefined();
     });
 
-    it("stores a query, drops the draft and corrects the conversation", () => {
-      const state = new SharedState({ conversationId: "7ca6475a5371" });
+    it("stores a query, drops the draft and corrects the message", () => {
+      const state = new SharedState({ messageId: "7ca6475a5371" });
       state.setQueryDraft("n:>0");
       state.setQueryAndCorrect("n:>0", ids);
       expect(state.query).toBe("n:>0");
       expect(state.queryDraft).toBeUndefined();
-      expect(state.conversationId).toBe("361e65b1002a");
+      expect(state.messageId).toBe("361e65b1002a");
     });
 
-    it("keeps a conversation the query's matches include", () => {
-      const state = new SharedState({ conversationId: "7b117e548ba4" });
+    it("keeps a message the query's matches include", () => {
+      const state = new SharedState({ messageId: "7b117e548ba4" });
       state.setQueryAndCorrect("n:>0", ids);
-      expect(state.conversationId).toBe("7b117e548ba4");
+      expect(state.messageId).toBe("7b117e548ba4");
     });
 
     it("never saves the draft", () => {
@@ -158,7 +158,7 @@ describe("SharedState", () => {
     // Undo isn't built. These pin the keystone behavior docs/undo.md relies on: the draft is never
     // an undo step, and a committed query with its correction is one.
     it("records no undo step for the draft, and one for a committed query with its correction", () => {
-      const state = new SharedState({ conversationId: "7ca6475a5371" });
+      const state = new SharedState({ messageId: "7ca6475a5371" });
       const undo = undoMiddleware(state);
       state.setQueryDraft("n:>0");
       expect(undo.undoLevels).toBe(0);
@@ -166,7 +166,7 @@ describe("SharedState", () => {
       expect(undo.undoLevels).toBe(1);
       undo.undo();
       expect(state.query).toBeUndefined();
-      expect(state.conversationId).toBe("7ca6475a5371");
+      expect(state.messageId).toBe("7ca6475a5371");
       undo.dispose();
     });
   });

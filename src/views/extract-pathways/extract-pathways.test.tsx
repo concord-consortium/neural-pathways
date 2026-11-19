@@ -1,7 +1,7 @@
 import React from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
-import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { fixtureMetadata } from "../../core/network/__fixtures__/alien3-network";
 import { speedNamed } from "../../core/state/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
@@ -33,7 +33,7 @@ function item(id: string, text: string, classification: number): S3Item {
   };
 }
 
-const items = fixture.conversations.map(c => item(c.id, c.text, c.classification));
+const items = fixture.messages.map(c => item(c.id, c.text, c.classification));
 const index: S3Index = { metadata: fixtureMetadata, items };
 
 function showView(state = new ExtractPathwaysState({})) {
@@ -48,10 +48,10 @@ function showView(state = new ExtractPathwaysState({})) {
 const button = (name: string) => screen.getByRole("button", { name });
 const drawing = (name: string) => screen.getByRole("img", { name });
 const LIFTED = "The network, with its 14 hidden neurons lifted out.";
-const DECK = "The network's 14 hidden neurons lifted out, and all 20 conversations collected.";
-const PATHWAYS = "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 conversations.";
+const DECK = "The network's 14 hidden neurons lifted out, and all 20 messages collected.";
+const PATHWAYS = "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 messages.";
 const collectedLabel = (n: number) =>
-  `The network, with its 14 hidden neurons lifted out and ${n} conversation${n === 1 ? "" : "s"} collected.`;
+  `The network, with its 14 hidden neurons lifted out and ${n} message${n === 1 ? "" : "s"} collected.`;
 
 describe("ExtractPathways", () => {
   beforeEach(() => {
@@ -67,18 +67,18 @@ describe("ExtractPathways", () => {
   it("shows loading, then the step row and the blank network", async () => {
     showView();
     expect(screen.getByRole("heading", { name: "Extract Pathways", level: 1 })).toBeInTheDocument();
-    expect(screen.getByText("Loading conversations…")).toBeInTheDocument();
+    expect(screen.getByText("Loading messages…")).toBeInTheDocument();
     expect(await screen.findByRole("img", { name: "The network." })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Network → Activated Pathways" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "The Network → Activated Pathways" })).toBeInTheDocument();
     expect(button("Setup")).toHaveAttribute("aria-disabled", "false");
-    expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "false");
-    expect(button("Collect All Conversations")).toHaveAttribute("aria-disabled", "false");
+    expect(button("Collect a Message")).toHaveAttribute("aria-disabled", "false");
+    expect(button("Collect All Messages")).toHaveAttribute("aria-disabled", "false");
     expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "false");
     expect(button("Reset")).toHaveAttribute("aria-disabled", "true");
   });
 
-  it("shows an error when the conversations can't load", async () => {
+  it("shows an error when the messages can't load", async () => {
     mockedFetchIndex.mockReset();
     mockedFetchIndex.mockRejectedValue(new Error("offline"));
     showView();
@@ -90,7 +90,7 @@ describe("ExtractPathways", () => {
     mockedFetchIndex.mockResolvedValue({ ...index, metadata });
     showView();
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      `The conversations could not be shown: ` +
+      `The messages could not be shown: ` +
       "The alien3 data has no network. Run npm run generate:alien to generate it.");
   });
 
@@ -100,14 +100,14 @@ describe("ExtractPathways", () => {
     mockedFetchIndex.mockResolvedValue({ ...index, metadata });
     showView();
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The conversations could not be shown: The alien3 data has no loadings. "
+      "The messages could not be shown: The alien3 data has no loadings. "
       + "Run npm run generate:alien to generate it.");
   });
 
   it("says to generate the data again when the view is opened a second time on the same index", async () => {
     const { network: _network, ...metadata } = fixtureMetadata;
     mockedFetchIndex.mockResolvedValue({ ...index, metadata });
-    const alert = "The conversations could not be shown: " +
+    const alert = "The messages could not be shown: " +
       "The alien3 data has no network. Run npm run generate:alien to generate it.";
     const { unmount } = showView();
     expect(await screen.findByRole("alert")).toHaveTextContent(alert);
@@ -124,13 +124,13 @@ describe("ExtractPathways", () => {
     mockedFetchIndex.mockResolvedValue({ ...index, metadata });
     showView();
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The conversations could not be shown: Expected loadings for 14 neurons on 3 pathways, got 13 rows of 3");
+      "The messages could not be shown: Expected loadings for 14 neurons on 3 pathways, got 13 rows of 3");
   });
 
-  it("says so when there are no conversations", async () => {
+  it("says so when there are no messages", async () => {
     mockedFetchIndex.mockResolvedValue({ ...index, items: [] });
     showView();
-    expect(await screen.findByText("No conversations.")).toBeInTheDocument();
+    expect(await screen.findByText("No messages.")).toBeInTheDocument();
   });
 
   it("lifts the hidden neurons out with Setup, and stores it in the view's state", async () => {
@@ -143,13 +143,13 @@ describe("ExtractPathways", () => {
     expect(button("Reset")).toHaveAttribute("aria-disabled", "false");
   });
 
-  it("stores Setup as done when Collect a Conversation comes first", async () => {
+  it("stores Setup as done when Collect a Message comes first", async () => {
     setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
-    fireEvent.click(button("Collect a Conversation"));
+    fireEvent.click(button("Collect a Message"));
     expect(drawing(collectedLabel(1))).toBeInTheDocument();
-    expect(screen.getByText("Conversation 1")).toBeInTheDocument();
+    expect(screen.getByText("Message 1")).toBeInTheDocument();
     expect(state.setupDone).toBe(true);
     expect(state.collected).toBe(1);
   });
@@ -159,35 +159,35 @@ describe("ExtractPathways", () => {
     showView();
     await screen.findByRole("img", { name: "The network." });
     for (let i = 0; i < 10; i++) {
-      fireEvent.click(button("Collect a Conversation"));
+      fireEvent.click(button("Collect a Message"));
     }
     expect(drawing(collectedLabel(10))).toBeInTheDocument();
-    expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "true");
+    expect(button("Collect a Message")).toHaveAttribute("aria-disabled", "true");
   });
 
-  it("collects no more conversations than were loaded", async () => {
+  it("collects no more messages than were loaded", async () => {
     setReducedMotion(true);
     mockedFetchIndex.mockResolvedValue({ ...index, items: items.slice(0, 3) });
     showView();
     await screen.findByRole("img", { name: "The network." });
     for (let i = 0; i < 3; i++) {
-      fireEvent.click(button("Collect a Conversation"));
+      fireEvent.click(button("Collect a Message"));
     }
-    expect(button("Collect a Conversation")).toHaveAttribute("aria-disabled", "true");
+    expect(button("Collect a Message")).toHaveAttribute("aria-disabled", "true");
   });
 
-  it("opens at the stage stored, clamped to the conversations loaded", async () => {
+  it("opens at the stage stored, clamped to the messages loaded", async () => {
     mockedFetchIndex.mockResolvedValue({ ...index, items: items.slice(0, 3) });
     showView(new ExtractPathwaysState({ setupDone: true, collected: 10 }));
     expect(await screen.findByRole("img", { name: collectedLabel(3) })).toBeInTheDocument();
-    expect(screen.getByText("Conversation 3")).toBeInTheDocument();
+    expect(screen.getByText("Message 3")).toBeInTheDocument();
   });
 
   it("resets to the blank network", async () => {
     setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
-    fireEvent.click(button("Collect a Conversation"));
+    fireEvent.click(button("Collect a Message"));
     fireEvent.click(button("Reset"));
     expect(drawing("The network.")).toBeInTheDocument();
     expect(state.setupDone).toBe(false);
@@ -203,13 +203,13 @@ describe("ExtractPathways", () => {
     expect(within(panel).getByRole("slider", { name: "Animation speed" })).toBeDisabled();
   });
 
-  it("builds the deck of every conversation with Collect All, and stores it", async () => {
+  it("builds the deck of every message with Collect All, and stores it", async () => {
     setReducedMotion(true);
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
-    fireEvent.click(button("Collect All Conversations"));
+    fireEvent.click(button("Collect All Messages"));
     expect(drawing(DECK)).toBeInTheDocument();
-    expect(screen.getByText("20 Conversations")).toBeInTheDocument();
+    expect(screen.getByText("20 Messages")).toBeInTheDocument();
     expect(state).toMatchObject({ setupDone: true, collected: 20, deckDone: true, pathwaysDone: false });
     expect(button("Extract Pathways")).toHaveAttribute("aria-disabled", "false");
   });
@@ -224,17 +224,17 @@ describe("ExtractPathways", () => {
     expect(state).toMatchObject({ setupDone: true, collected: 20, deckDone: true, pathwaysDone: true });
   });
 
-  it("opens on a stored deck at the size of the conversations loaded", async () => {
+  it("opens on a stored deck at the size of the messages loaded", async () => {
     showView(new ExtractPathwaysState({ setupDone: true, collected: 800, deckDone: true }));
     expect(await screen.findByRole("img", { name: DECK })).toBeInTheDocument();
-    expect(screen.getByText("20 Conversations")).toBeInTheDocument();
+    expect(screen.getByText("20 Messages")).toBeInTheDocument();
   });
 
   it("starts collecting by hand over again after the deck", async () => {
     setReducedMotion(true);
     const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true }));
     await screen.findByRole("img", { name: DECK });
-    fireEvent.click(button("Collect a Conversation"));
+    fireEvent.click(button("Collect a Message"));
     expect(drawing(collectedLabel(1))).toBeInTheDocument();
     expect(state).toMatchObject({ collected: 1, deckDone: false });
   });
@@ -276,10 +276,10 @@ describe("ExtractPathways", () => {
       expect(state.setupDone).toBe(true);
       expect(drawing(LIFTED)).toBeInTheDocument();
 
-      fireEvent.click(button("Collect a Conversation"));
+      fireEvent.click(button("Collect a Message"));
       act(() => jest.advanceTimersByTime(1000));
       expect(state.collected).toBe(0);
-      expect(screen.getByText("Conversation 1")).toBeInTheDocument();
+      expect(screen.getByText("Message 1")).toBeInTheDocument();
       act(() => jest.advanceTimersByTime(collectDuration(SIZES, 1)));
       expect(state.collected).toBe(1);
       expect(drawing(collectedLabel(1))).toBeInTheDocument();
@@ -341,7 +341,7 @@ describe("ExtractPathways", () => {
       const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 2 }));
       await screen.findByRole("img", { name: collectedLabel(2) });
       jest.useFakeTimers();
-      fireEvent.click(button("Collect a Conversation"));
+      fireEvent.click(button("Collect a Message"));
       act(() => jest.advanceTimersByTime(5000));
       fireEvent.click(button("Setup"));
       expect(state.setupDone).toBe(false);
@@ -357,7 +357,7 @@ describe("ExtractPathways", () => {
       const { unmount } = showView(state);
       await screen.findByRole("img", { name: collectedLabel(1) });
       jest.useFakeTimers();
-      fireEvent.click(button("Collect a Conversation"));
+      fireEvent.click(button("Collect a Message"));
       act(() => jest.advanceTimersByTime(4000));
       unmount();
       act(() => jest.advanceTimersByTime(10_000));
@@ -372,8 +372,8 @@ describe("ExtractPathways", () => {
       const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 3 }));
       await screen.findByRole("img", { name: collectedLabel(3) });
       jest.useFakeTimers();
-      fireEvent.click(button("Collect All Conversations"));
-      expect(button("Collect All Conversations")).toHaveAttribute("aria-current", "step");
+      fireEvent.click(button("Collect All Messages"));
+      expect(button("Collect All Messages")).toHaveAttribute("aria-current", "step");
       act(() => jest.advanceTimersByTime(5000));
       expect(state.deckDone).toBe(false);
       expect(drawing(collectedLabel(3))).toBeInTheDocument();
@@ -386,7 +386,7 @@ describe("ExtractPathways", () => {
       const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 3 }));
       await screen.findByRole("img", { name: collectedLabel(3) });
       jest.useFakeTimers();
-      fireEvent.click(button("Collect All Conversations"));
+      fireEvent.click(button("Collect All Messages"));
       act(() => jest.advanceTimersByTime(5000));
       fireEvent.click(button("Setup"));
       expect(state).toMatchObject({ setupDone: false, collected: 0, deckDone: false });
@@ -400,7 +400,7 @@ describe("ExtractPathways", () => {
       const { unmount } = showView(state);
       await screen.findByRole("img", { name: collectedLabel(3) });
       jest.useFakeTimers();
-      fireEvent.click(button("Collect All Conversations"));
+      fireEvent.click(button("Collect All Messages"));
       act(() => jest.advanceTimersByTime(5000));
       unmount();
       act(() => jest.advanceTimersByTime(60_000));
@@ -411,7 +411,7 @@ describe("ExtractPathways", () => {
       const { state } = showView(new ExtractPathwaysState({ setupDone: true, collected: 3 }));
       await screen.findByRole("img", { name: collectedLabel(3) });
       jest.useFakeTimers();
-      fireEvent.click(button("Collect All Conversations"));
+      fireEvent.click(button("Collect All Messages"));
       act(() => jest.advanceTimersByTime(5000));
       fireEvent.click(screen.getByRole("checkbox", { name: "Animate" }));
       act(() => jest.advanceTimersByTime(20));

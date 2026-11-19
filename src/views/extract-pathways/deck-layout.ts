@@ -10,7 +10,7 @@ import type { ExtractGeometry } from "./extract-geometry";
 export const SET_SIZE = 20;
 /** The most sets a deck has. */
 export const MAX_SETS = 40;
-/** The most conversations the deck holds. */
+/** The most messages the deck holds. */
 export const MAX_DECK = SET_SIZE * MAX_SETS;
 
 const COLUMN_SLOW = 900;
@@ -20,9 +20,9 @@ const ENTER_MIN = 8;
 /** The sets over which the entry distance falls from ENTER_FIRST to ENTER_MIN. */
 const ENTER_STEPS = 7;
 
-/** How many conversations the deck holds when `conversations` are loaded: all of them, up to 800. */
-export function deckSize(conversations: number): number {
-  return Math.min(conversations, MAX_DECK);
+/** How many messages the deck holds when `messages` are loaded: all of them, up to 800. */
+export function deckSize(messages: number): number {
+  return Math.min(messages, MAX_DECK);
 }
 
 /** How many sets a deck of `size` columns has. The last may be partial. */
@@ -35,12 +35,12 @@ export function columnsInSet(set: number, size: number): number {
   return Math.min(SET_SIZE, size - set * SET_SIZE);
 }
 
-/** A conversation's hidden activations: Hidden Layer 1's, then Hidden Layer 2's. */
+/** A message's hidden activations: Hidden Layer 1's, then Hidden Layer 2's. */
 export function hiddenValues(pass: ForwardPass): number[] {
   return pass.layers.slice(1, -1).flat();
 }
 
-/** The hidden activations column `column` of set `set` shows: those of conversation `set * SET_SIZE + column`. */
+/** The hidden activations column `column` of set `set` shows: those of message `set * SET_SIZE + column`. */
 export function columnValues(passes: readonly ForwardPass[], set: number, column: number): number[] {
   return hiddenValues(passes[set * SET_SIZE + column]);
 }

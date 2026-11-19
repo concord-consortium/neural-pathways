@@ -3,15 +3,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { observer } from "mobx-react-lite";
 import { SharedState } from "../state/shared-state";
 import { ViewStateProvider } from "../state/view-state-context";
-import { conversationFilterFor } from "./conversation-filter";
+import { messageFilterFor } from "./message-filter";
 import { FilterBar } from "./filter-bar";
-import { useConversationFilter } from "./use-conversation-filter";
+import { useMessageFilter } from "./use-message-filter";
 import { filterTestIndex } from "./__fixtures__/filter-test-index";
 
-const filter = conversationFilterFor(filterTestIndex());
+const filter = messageFilterFor(filterTestIndex());
 
 const Probe = observer(function Probe() {
-  const { ids, bar } = useConversationFilter(filter);
+  const { ids, bar } = useMessageFilter(filter);
   return (
     <>
       <FilterBar {...bar} />
@@ -32,8 +32,8 @@ const input = () => screen.getByRole("textbox", { name: "Filter" });
 const shownIds = () => screen.getByTestId("ids").textContent;
 const type = (text: string) => fireEvent.change(input(), { target: { value: text } });
 
-describe("useConversationFilter", () => {
-  it("shows every conversation when no query is set", () => {
+describe("useMessageFilter", () => {
+  it("shows every message when no query is set", () => {
     showProbe(new SharedState({}));
     expect(shownIds()).toBe("aaa111,bbb222,ccc333,ddd444");
     expect(input()).toHaveAccessibleDescription("4");
@@ -47,15 +47,15 @@ describe("useConversationFilter", () => {
     expect(input()).toHaveValue("model_correct:0");
   });
 
-  it("follows the text as it is typed, without storing it or moving the conversation", () => {
-    const shared = new SharedState({ conversationId: "ccc333" });
+  it("follows the text as it is typed, without storing it or moving the message", () => {
+    const shared = new SharedState({ messageId: "ccc333" });
     showProbe(shared);
     type("yandor");
     expect(shownIds()).toBe("aaa111,bbb222,ddd444");
     expect(input()).toHaveAccessibleDescription("3 of 4");
     expect(shared.query).toBeUndefined();
     expect(shared.queryDraft).toBe("yandor");
-    expect(shared.conversationId).toBe("ccc333");
+    expect(shared.messageId).toBe("ccc333");
   });
 
   it("shows an unreadable draft's error over the stored query's matches", () => {
@@ -65,7 +65,7 @@ describe("useConversationFilter", () => {
     expect(shownIds()).toBe("bbb222,ddd444");
   });
 
-  it("shows a stored query's error, with every conversation, when it can't be read", () => {
+  it("shows a stored query's error, with every message, when it can't be read", () => {
     showProbe(new SharedState({ query: "bogus:1" }));
     expect(input()).toHaveAccessibleDescription("Unknown field: bogus");
     expect(shownIds()).toBe("aaa111,bbb222,ccc333,ddd444");
@@ -78,14 +78,14 @@ describe("useConversationFilter", () => {
     expect(shownIds()).toBe("bbb222");
   });
 
-  it("stores the draft and corrects the conversation on Enter", () => {
-    const shared = new SharedState({ conversationId: "ccc333" });
+  it("stores the draft and corrects the message on Enter", () => {
+    const shared = new SharedState({ messageId: "ccc333" });
     showProbe(shared);
     type("yandor");
     fireEvent.keyDown(input(), { key: "Enter" });
     expect(shared.query).toBe("yandor");
     expect(shared.queryDraft).toBeUndefined();
-    expect(shared.conversationId).toBe("aaa111");
+    expect(shared.messageId).toBe("aaa111");
   });
 
   it("stores the draft on blur", () => {
@@ -104,7 +104,7 @@ describe("useConversationFilter", () => {
     expect(shared.query).toBeUndefined();
   });
 
-  it("stores a cleared box as an empty query, showing every conversation", () => {
+  it("stores a cleared box as an empty query, showing every message", () => {
     const shared = new SharedState({ query: "n:2" });
     showProbe(shared);
     type("");

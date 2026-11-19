@@ -54,7 +54,7 @@ describe("collectAllPlan", () => {
 });
 
 describe("collectAllSceneAt", () => {
-  it("plays the missing collections first, exactly as Collect a Conversation does", () => {
+  it("plays the missing collections first, exactly as Collect a Message does", () => {
     expect(collectAllSceneAt(SIZES, 1, 800, 500)).toEqual(collectSceneAt(SIZES, 2, 500));
     expect(collectAllSceneAt(SIZES, 1, 800, collectDuration(SIZES, 2) + 700)).toEqual(collectSceneAt(SIZES, 3, 700));
   });
@@ -153,7 +153,7 @@ describe("collectAllSceneAt", () => {
     expect(closed.sets[2].shift).toBe(0);
   });
 
-  it("describes the deck by the conversations collected by hand until it is done", () => {
+  it("describes the deck by the messages collected by hand until it is done", () => {
     const plan = collectAllPlan(SIZES, 3, 800);
     expect(collectAllSceneAt(SIZES, 3, 800, plan.end - 1).deck).toMatchObject({ collected: 3, done: false });
   });

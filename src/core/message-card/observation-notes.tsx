@@ -8,15 +8,15 @@ interface ObservationNotesProps {
   observation?: string;
   /** The attributes to show indicators for, in the order to show them. */
   attributes: AttributeDefinition[];
-  /** The conversation's values, keyed by attribute key. */
+  /** The message's values, keyed by attribute key. */
   values?: Record<string, number | null>;
 }
 
 /**
- * What the observer wrote about the conversation, and under it an attribute indicator for each
+ * What the observer wrote about the message, and under it an attribute indicator for each
  * attribute it is given: the sentence is the evidence and the indicator sums it up. The
  * indicators keep the order they are given, so an attribute's indicator is in the same place for
- * every conversation.
+ * every message.
  */
 export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation, attributes, values }) => {
   const headId = useId();
@@ -27,7 +27,7 @@ export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation,
       {/* The box scrolls when the card is too short for it, and the keyboard can reach it then. It is
           a region named by the heading whether it scrolls or not. */}
       <div ref={boxRef} className="observation-notes__box" role="region" aria-labelledby={headId} {...boxProps}>
-        <p className="observation-notes__text">{observation || "(no notes for this conversation)"}</p>
+        <p className="observation-notes__text">{observation || "(no notes for this message)"}</p>
         {attributes.length > 0 &&
           <ul className="observation-notes__indicators">
             {attributes.map(attribute =>

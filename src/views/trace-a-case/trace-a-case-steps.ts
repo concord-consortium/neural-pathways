@@ -32,12 +32,12 @@ export function traceTimeline(columnSizes: readonly number[]): StepTimeline<Scen
   };
 }
 
-/** One conversation's marker, kept in the view's state. */
-export function traceProgress(state: TraceACaseState, conversationId: string): StepProgress {
+/** One message's marker, kept in the view's state. */
+export function traceProgress(state: TraceACaseState, messageId: string): StepProgress {
   return {
     get marker() {
-      return state.marker(conversationId);
+      return state.marker(messageId);
     },
-    setMarker: (marker: Marker) => state.setMarker(conversationId, marker),
+    setMarker: (marker: Marker) => state.setMarker(messageId, marker),
   };
 }

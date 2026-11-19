@@ -1,6 +1,6 @@
 import { forward } from "../../core/network/forward";
 import { fixtureNetwork } from "../../core/network/__fixtures__/alien3-network";
-import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import {
   centerShift, columnGap, columnsInSet, columnsWithSets, columnValues, deckMid, deckSize, deckWidth, setCount,
   setEnter, setGap, setHold, setMove, setOffset,
@@ -10,7 +10,7 @@ import { extractGeometry } from "./extract-geometry";
 const SIZES = [10, 8, 6, 2];
 
 describe("the deck's size", () => {
-  it("holds every conversation loaded, up to 800, in sets of 20", () => {
+  it("holds every message loaded, up to 800, in sets of 20", () => {
     expect(deckSize(800)).toBe(800);
     expect(deckSize(1200)).toBe(800);
     expect(deckSize(20)).toBe(20);
@@ -47,8 +47,8 @@ describe("the deck's size", () => {
 });
 
 describe("columnValues", () => {
-  it("reads a column's hidden activations from its own conversation", () => {
-    const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+  it("reads a column's hidden activations from its own message", () => {
+    const passes = fixture.messages.map(c => forward(fixtureNetwork, c.text));
     expect(columnValues(passes, 0, 3)).toEqual([...passes[3].layers[1], ...passes[3].layers[2]]);
   });
 });

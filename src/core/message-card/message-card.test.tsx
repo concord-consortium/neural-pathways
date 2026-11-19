@@ -1,14 +1,14 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { ConversationCard } from "./conversation-card";
+import { MessageCard } from "./message-card";
 
 const noop = () => undefined;
 
 function card(position: number, total = 3, handlers = { onPrev: noop, onNext: noop }) {
   return (
-    <ConversationCard position={position} total={total} onPrev={handlers.onPrev} onNext={handlers.onNext}>
+    <MessageCard position={position} total={total} onPrev={handlers.onPrev} onNext={handlers.onNext}>
       <p>The body</p>
-    </ConversationCard>
+    </MessageCard>
   );
 }
 
@@ -19,13 +19,13 @@ function renderCard(position: number, total = 3) {
   return { ...view, onPrev, onNext };
 }
 
-describe("ConversationCard", () => {
-  it("shows which conversation of how many, and says it to screen readers", () => {
+describe("MessageCard", () => {
+  it("shows which message of how many, and says it to screen readers", () => {
     renderCard(0);
-    expect(screen.getByRole("heading", { name: "Conversation" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Message" })).toBeInTheDocument();
     // The visual count is hidden from screen readers; the status says it in words instead.
     expect(screen.getByText("1 / 3")).toHaveAttribute("aria-hidden", "true");
-    expect(screen.getByRole("status")).toHaveTextContent("Conversation 1 of 3");
+    expect(screen.getByRole("status")).toHaveTextContent("Message 1 of 3");
   });
 
   it("shows its body", () => {
@@ -33,49 +33,49 @@ describe("ConversationCard", () => {
     expect(screen.getByText("The body")).toBeInTheDocument();
   });
 
-  it("updates the same status when the conversation changes, so it is announced", () => {
+  it("updates the same status when the message changes, so it is announced", () => {
     const { rerender } = renderCard(0);
     const status = screen.getByRole("status");
     rerender(card(1));
     expect(screen.getByRole("status")).toBe(status);
-    expect(status).toHaveTextContent("Conversation 2 of 3");
+    expect(status).toHaveTextContent("Message 2 of 3");
   });
 
   it("keeps focus on Next while stepping", () => {
     const { rerender } = renderCard(0);
-    const next = screen.getByRole("button", { name: "Next conversation" });
+    const next = screen.getByRole("button", { name: "Next message" });
     next.focus();
     rerender(card(1));
-    expect(screen.getByRole("button", { name: "Next conversation" })).toBe(next);
+    expect(screen.getByRole("button", { name: "Next message" })).toBe(next);
     expect(next).toHaveFocus();
   });
 
-  it("can't go back from the first conversation", () => {
+  it("can't go back from the first message", () => {
     const { onPrev, onNext } = renderCard(0);
-    const prev = screen.getByRole("button", { name: "Previous conversation" });
+    const prev = screen.getByRole("button", { name: "Previous message" });
     expect(prev).toHaveAttribute("aria-disabled", "true");
     // Not disabled, so it stays in the tab order.
     expect(prev).toBeEnabled();
     fireEvent.click(prev);
     expect(onPrev).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Next conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next message" }));
     expect(onNext).toHaveBeenCalledTimes(1);
   });
 
-  it("can't go forward from the last conversation", () => {
+  it("can't go forward from the last message", () => {
     const { onPrev, onNext } = renderCard(2);
-    const next = screen.getByRole("button", { name: "Next conversation" });
+    const next = screen.getByRole("button", { name: "Next message" });
     expect(next).toHaveAttribute("aria-disabled", "true");
     fireEvent.click(next);
     expect(onNext).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Previous conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous message" }));
     expect(onPrev).toHaveBeenCalledTimes(1);
   });
 
-  it("can go both ways from a conversation in the middle", () => {
+  it("can go both ways from a message in the middle", () => {
     const { onPrev, onNext } = renderCard(1);
-    const prev = screen.getByRole("button", { name: "Previous conversation" });
-    const next = screen.getByRole("button", { name: "Next conversation" });
+    const prev = screen.getByRole("button", { name: "Previous message" });
+    const next = screen.getByRole("button", { name: "Next message" });
     expect(prev).toHaveAttribute("aria-disabled", "false");
     expect(next).toHaveAttribute("aria-disabled", "false");
     fireEvent.click(prev);
@@ -84,10 +84,10 @@ describe("ConversationCard", () => {
     expect(onNext).toHaveBeenCalledTimes(1);
   });
 
-  it("can't go either way when there is only one conversation", () => {
+  it("can't go either way when there is only one message", () => {
     const { onPrev, onNext } = renderCard(0, 1);
-    const prev = screen.getByRole("button", { name: "Previous conversation" });
-    const next = screen.getByRole("button", { name: "Next conversation" });
+    const prev = screen.getByRole("button", { name: "Previous message" });
+    const next = screen.getByRole("button", { name: "Next message" });
     expect(prev).toHaveAttribute("aria-disabled", "true");
     expect(next).toHaveAttribute("aria-disabled", "true");
     fireEvent.click(prev);
@@ -96,11 +96,11 @@ describe("ConversationCard", () => {
     expect(onNext).not.toHaveBeenCalled();
   });
 
-  describe("with no conversations", () => {
+  describe("with no messages", () => {
     it("says nothing matches, in place of the header and body", () => {
       renderCard(-1, 0);
-      expect(screen.getByRole("region", { name: "Conversation" }))
-        .toHaveTextContent("No conversations match that search.");
+      expect(screen.getByRole("region", { name: "Message" }))
+        .toHaveTextContent("No messages match that search.");
       expect(screen.queryByRole("heading")).not.toBeInTheDocument();
       expect(screen.queryByRole("button")).not.toBeInTheDocument();
       expect(screen.queryByText("The body")).not.toBeInTheDocument();
@@ -113,7 +113,7 @@ describe("ConversationCard", () => {
       expect(screen.getByRole("status")).toBe(status);
       expect(status.textContent).toBe("");
       rerender(card(0));
-      expect(status).toHaveTextContent("Conversation 1 of 3");
+      expect(status).toHaveTextContent("Message 1 of 3");
     });
   });
 });

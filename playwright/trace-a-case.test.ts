@@ -1,10 +1,10 @@
 import { test } from "./lib/base-url";
 import { expect, type Locator, type Page } from "@playwright/test";
 
-test("Trace a Case steps through the 800 conversations", async ({ page }) => {
+test("Trace a Case steps through the 800 messages", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Next conversation" }).click();
+  await page.getByRole("button", { name: "Next message" }).click();
   await expect(page.getByText("2 / 800", { exact: true })).toBeVisible();
 });
 
@@ -18,12 +18,12 @@ test("Step 4 animates to the network's answer", async ({ page }) => {
     .toBeVisible({ timeout: 10_000 });
 });
 
-test("each conversation's steps survive switching views", async ({ page }) => {
+test("each message's steps survive switching views", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Step 3" }).click();
-  await page.getByRole("button", { name: "Next conversation" }).click();
+  await page.getByRole("button", { name: "Next message" }).click();
   await page.getByRole("button", { name: "Step 1" }).click();
   const nav = page.getByRole("navigation", { name: "Views" });
   await nav.getByRole("link", { name: "Correlations", exact: true }).click();
@@ -31,13 +31,13 @@ test("each conversation's steps survive switching views", async ({ page }) => {
   await nav.getByRole("link", { name: "Trace a Case" }).click();
   await expect(page.getByText("2 / 800", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-current", "step");
-  await page.getByRole("button", { name: "Previous conversation" }).click();
+  await page.getByRole("button", { name: "Previous message" }).click();
   await expect(page.getByRole("button", { name: "Step 3" })).toHaveAttribute("aria-current", "step");
 });
 
-test("the conversation survives switching views", async ({ page }) => {
+test("the message survives switching views", async ({ page }) => {
   await page.goto("/");
-  const next = page.getByRole("button", { name: "Next conversation" });
+  const next = page.getByRole("button", { name: "Next message" });
   await next.click();
   await next.click();
   await expect(page.getByText("3 / 800", { exact: true })).toBeVisible();
@@ -48,14 +48,14 @@ test("the conversation survives switching views", async ({ page }) => {
   await expect(page.getByText("3 / 800", { exact: true })).toBeVisible();
 });
 
-test("the filter narrows the conversations Trace a Case steps through", async ({ page }) => {
+test("the filter narrows the messages Trace a Case steps through", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   const filter = page.getByRole("textbox", { name: "Filter" });
   await filter.fill("model_correct:0");
   await expect(page.getByText("64 of 800", { exact: true })).toBeVisible();
   await expect(page.getByText("1 / 64", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Next conversation" }).click();
+  await page.getByRole("button", { name: "Next message" }).click();
   await expect(page.getByText("2 / 64", { exact: true })).toBeVisible();
 });
 
@@ -135,7 +135,7 @@ test("clicking the Filter label doesn't store a half-typed query", async ({ page
   await filter.fill("water");
   await page.getByText("Filter", { exact: true }).click();
   await expect(filter).toBeFocused();
-  // Escape discards an unstored draft, so the count returns to every conversation.
+  // Escape discards an unstored draft, so the count returns to every message.
   await page.keyboard.press("Escape");
   await expect(page.getByText("800", { exact: true })).toBeVisible();
 });
@@ -243,10 +243,10 @@ test("Animate and the speed sit at the right end of the network's head", async (
   expect(head!.x + head!.width - (controls!.x + controls!.width)).toBeCloseTo(14, 0);
 });
 
-test("the card shows the conversation's label, notes and attribute indicators", async ({ page }) => {
+test("the card shows the message's label, notes and attribute indicators", async ({ page }) => {
   await page.goto("/");
-  const card = page.getByRole("region", { name: "Conversation", exact: true });
-  await expect(card.getByRole("status")).toHaveText("Conversation 1 of 800");
+  const card = page.getByRole("region", { name: "Message", exact: true });
+  await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
   await expect(card.getByText("wait", { exact: true })).toBeVisible();
   await expect(card.getByText(/^At least one juvenile was present\./)).toBeVisible();
   const indicators = card.getByRole("listitem");
@@ -271,8 +271,8 @@ test("the card shows the conversation's label, notes and attribute indicators", 
   // A hidden attribute gets no attribute indicator until it is commissioned.
   await expect(card.getByText("Resource stressed")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Next conversation" }).click();
-  await expect(card.getByRole("status")).toHaveText("Conversation 2 of 800");
+  await page.getByRole("button", { name: "Next message" }).click();
+  await expect(card.getByRole("status")).toHaveText("Message 2 of 800");
   await expect(card.getByText("approach", { exact: true })).toBeVisible();
   expect(await spoken()).toEqual([
     "Voices raised: yes", "Engaged in a task: no", "Group size: 3", "Near water: yes", "Food present: yes",
@@ -286,14 +286,14 @@ test("the card's unavailable arrow looks unavailable in forced-colors mode", asy
   // The arrow is the button's only face, so compare what it is filled with.
   const fill = (name: string) =>
     page.getByRole("button", { name }).locator("path").evaluate(element => getComputedStyle(element).fill);
-  // On the first conversation Previous is unavailable and Next isn't.
-  expect(await fill("Previous conversation")).not.toBe(await fill("Next conversation"));
+  // On the first message Previous is unavailable and Next isn't.
+  expect(await fill("Previous message")).not.toBe(await fill("Next message"));
 });
 
 test("the card fits the stacked layout without scrolling sideways", async ({ page }) => {
   await page.setViewportSize({ width: 600, height: 900 });
   await page.goto("/");
-  const card = page.getByRole("region", { name: "Conversation", exact: true });
+  const card = page.getByRole("region", { name: "Message", exact: true });
   await expect(card.getByRole("listitem")).toHaveCount(5);
   // The notes box scrolls on its own, so what overflows inside it doesn't widen the card.
   const notes = card.getByRole("region", { name: "Observation notes" });
@@ -304,7 +304,7 @@ test("the card fits the stacked layout without scrolling sideways", async ({ pag
 
 test.describe("the card and network panels", () => {
   const panels = (page: Page) => ({
-    card: page.getByRole("region", { name: "Conversation", exact: true }),
+    card: page.getByRole("region", { name: "Message", exact: true }),
     network: page.getByRole("region", { name: "The Network" }),
   });
   const rect = (locator: Locator) => locator.evaluate(el => {
@@ -319,7 +319,7 @@ test.describe("the card and network panels", () => {
       await page.goto("/");
       const { card, network } = panels(page);
       await expect(card.getByRole("listitem")).toHaveCount(5);
-      const cardHead = await rect(card.getByRole("heading", { name: "Conversation" }).locator(".."));
+      const cardHead = await rect(card.getByRole("heading", { name: "Message" }).locator(".."));
       const networkHead = await rect(network.getByRole("heading", { name: "The Network" }).locator(".."));
       expect(networkHead.height).toBeCloseTo(cardHead.height, 0);
     });
@@ -350,7 +350,7 @@ test.describe("the card and network panels", () => {
     await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card } = panels(page);
-    // A long conversation, so its attribute indicators sit well below the bottom of the card.
+    // A long message, so its attribute indicators sit well below the bottom of the card.
     await page.getByRole("textbox", { name: "Filter" }).fill("n:500");
     await expect(page.getByText("1 / 1", { exact: true })).toBeVisible();
     const notes = card.getByRole("region", { name: "Observation notes" });
@@ -523,7 +523,7 @@ test.describe("About", () => {
     // The step row is no taller than the filter row beside it.
     expect(cellBox.height).toBeCloseTo((await box(page.locator(".trace-a-case__filter-row"))).height, 0);
     // Still two columns: the card and the network start on the same line.
-    const card = await box(page.getByRole("region", { name: "Conversation", exact: true }));
+    const card = await box(page.getByRole("region", { name: "Message", exact: true }));
     const network = await box(page.getByRole("region", { name: "The Network" }));
     expect(network.y).toBeCloseTo(card.y, 0);
     const scrolls = await page.evaluate(() => [document.documentElement, document.querySelector("main")!]
@@ -533,7 +533,7 @@ test.describe("About", () => {
 
   test("stays beside the steps when a pixel narrower stacks the columns", async ({ page }) => {
     await openAt(page, MIN_LAYOUT_WIDTH - 1, 900);
-    const card = await box(page.getByRole("region", { name: "Conversation", exact: true }));
+    const card = await box(page.getByRole("region", { name: "Message", exact: true }));
     const network = await box(page.getByRole("region", { name: "The Network" }));
     expect(network.y).toBeGreaterThan(card.y + card.height);
     const aboutBox = await box(about(page));
@@ -555,7 +555,7 @@ test.describe("About", () => {
   test("stays when the filter matches nothing", async ({ page }) => {
     await openAt(page, 1024, 562);
     await page.getByRole("textbox", { name: "Filter" }).fill("zzzzqqqq");
-    await expect(page.getByText("No conversations match that search.")).toBeVisible();
+    await expect(page.getByText("No messages match that search.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Reset" })).toHaveCount(0);
     await expect(about(page)).toBeVisible();
   });

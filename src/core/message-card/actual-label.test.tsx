@@ -23,7 +23,7 @@ describe("ActualLabel", () => {
     expect(screen.getByText("2")).toHaveClass("actual-label__pill");
   });
 
-  it("shows nothing when the conversation has no label", () => {
+  it("shows nothing when the message has no label", () => {
     const { container } = render(<ActualLabel target={null} labels={labels} />);
     expect(container).toBeEmptyDOMElement();
   });

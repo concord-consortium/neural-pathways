@@ -58,17 +58,17 @@ throws.
 
 ## Shared state (`npw/SharedState`)
 
-It has `version`, `query` and `conversationId` so far. Its fields:
+It has `version`, `query` and `messageId` so far. Its fields:
 
 | Field | Meaning | Arrives with |
 |---|---|---|
-| `conversationId` | The current conversation, in every view that shows one. Also pane 1 of Investigate Unknown Pathway. A view that shows one calls `ensureValidConversation` when its list arrives or changes. | In place |
+| `messageId` | The current message, in every view that shows one. Also pane 1 of Investigate Unknown Pathway. A view that shows one calls `ensureValidMessage` when its list arrives or changes. | In place |
 | `query` | The filter query every view uses, stored when the student presses Enter or leaves the filter bar. Unset: no query has been set. `""`: the student cleared it. | In place |
 | `commissioned` | Attribute keys the student commissioned in Investigate Unknown Pathway, in order, at most 2. Correlations Part 2 reads them. | Investigate Unknown Pathway |
 
 `SharedState` also has one volatile field, `queryDraft`: the filter bar's text while it differs
 from `query`. Filtering follows the draft as the student types, but only `setQueryAndCorrect`
-stores a query and corrects the conversation. The draft lives in the shared state so that every
+stores a query and corrects the message. The draft lives in the shared state so that every
 view's filter bar shows the same text, and so a half-typed query survives switching views. It is
 volatile (`@observable accessor`, not a `tProp`): it is never saved, never in a snapshot, and never
 an undo step.
@@ -76,17 +76,17 @@ an undo step.
 ## Each view's state
 
 Trace a Case's and Extract Pathways' are built so far: Trace a Case's with the marker each
-conversation rests at, and Extract Pathways' with all four of its stages, both with Animate and
+message rests at, and Extract Pathways' with all four of its stages, both with Animate and
 speed. The target, with what is built marked:
 
 | View | Model | Keeps |
 |---|---|---|
-| Trace a Case | `npw/TraceACaseState` | The marker each conversation rests at (its steps done, 0 to 4), by id (built); Animate on/off (built); speed (−100 slow, 0 normal, 100 fast) (built) |
-| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`), how many conversations are collected (`collected`), whether the deck is done (`deckDone`) and whether the pathways are done (`pathwaysDone`); Animate; speed (all built) |
+| Trace a Case | `npw/TraceACaseState` | The marker each message rests at (its steps done, 0 to 4), by id (built); Animate on/off (built); speed (−100 slow, 0 normal, 100 fast) (built) |
+| Extract Pathways | `npw/ExtractPathwaysState` | Whether Setup is done (`setupDone`), how many messages are collected (`collected`), whether the deck is done (`deckDone`) and whether the pathways are done (`pathwaysDone`); Animate; speed (all built) |
 | Investigate Pathways | `npw/InvestigatePathwaysState` | The selected pathway or neuron whose loadings are shown |
-| Prediction Chain | `npw/PredictionChainState` | The step each conversation is on (0 to 4), by id; Animate; speed |
+| Prediction Chain | `npw/PredictionChainState` | The step each message is on (0 to 4), by id; Animate; speed |
 | Correlations | `npw/CorrelationsState` | Measures or Graphs; the open detail card, by attribute key and pathway number |
-| Investigate Unknown Pathway | `npw/InvestigateUnknownPathwayState` | The chips selected on each pane; pane 2's conversation |
+| Investigate Unknown Pathway | `npw/InvestigateUnknownPathwayState` | The chips selected on each pane; pane 2's message |
 | Correlations Part 2 | `npw/CorrelationsState` | The same as Correlations, in its own tree |
 
 The views with an Animate checkbox get the `animate` and `speed` props and their setters from
@@ -103,21 +103,21 @@ the life of the page, in `SharedState.queryDraft`.
 
 ## Rules
 
-- **Store ids, not positions.** Conversations are stored by id and attributes by key. A position
+- **Store ids, not positions.** Messages are stored by id and attributes by key. A position
   in a filtered list changes whenever the query changes. Pathway and neuron numbers are fixed by
   the network, so they are stored as numbers.
-- **Keep the conversation valid.** When a filtered list stops including the current
-  conversation, the first one in the list is written back, so the next view opens on the same
-  case. Pane 2 of Investigate Unknown Pathway falls back to the first conversation pane 1 isn't
+- **Keep the message valid.** When a filtered list stops including the current
+  message, the first one in the list is written back, so the next view opens on the same
+  case. Pane 2 of Investigate Unknown Pathway falls back to the first message pane 1 isn't
   showing, so the panes open on different cases. An empty list leaves the id alone.
-  `SharedState.ensureValidConversation` does this for the current conversation. The draft adds
-  `ensureValidPane2Conversation` for pane 2.
+  `SharedState.ensureValidMessage` does this for the current message. The draft adds
+  `ensureValidPane2Message` for pane 2.
 - **`$modelType` names are permanent.** They are stored in saved student data, like view ids.
   Renaming one needs a migration.
 - **Filter field names are part of the saved form.** A stored `query` names fields such as
   `model_correct` and `pathway_1`, so renaming a field or renumbering the pathways changes what a
   saved query means. A query naming a field the filter no longer has shows its error and lists
-  every conversation. `n` is a position among all the conversations, not in a filtered list, so it
+  every message. `n` is a position among all the messages, not in a filtered list, so it
   holds only while the dataset index keeps its order.
 - **Every tree has a `version`, starting at 1.** There are no migrations yet.
   - Adding a field with a default doesn't change the version. Older saved state loads, and the
@@ -138,7 +138,7 @@ the life of the page, in `SharedState.queryDraft`.
   Keystone's default, `DevModeOnly`, would turn these checks off in production builds, which is
   where saved student state is loaded. With the checks off, bad data loads silently:
   `commissioned: [5]`,
-  `markerByConversation: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`, so
+  `markerByMessage: { "…": "3" }`, or `pane2: {}` (which loads without `selectedAttributes`, so
   the first change to it crashes).
 
 ## Where initial state comes from
@@ -152,8 +152,8 @@ interactive's shared tree. For each field, highest first:
 4. **The type's default.**
 
 URL param names start with the tree id and use dots for nested fields: `shared.query=…`,
-`shared.conversationId=…`, `trace-a-case.speed=-100`, `correlations-part-2.mode=graphs`,
-`investigate-unknown-pathway.pane2.conversationId=…`. The params apply only when a tree is first
+`shared.messageId=…`, `trace-a-case.speed=-100`, `correlations-part-2.mode=graphs`,
+`investigate-unknown-pathway.pane2.messageId=…`. The params apply only when a tree is first
 created:
 
 - **Standalone app:** at startup, when every tree is created.

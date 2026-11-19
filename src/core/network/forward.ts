@@ -1,4 +1,4 @@
-import { conversationWords } from "../conversation-text";
+import { messageWords } from "../message-text";
 import { Network } from "./network";
 
 export interface ForwardPass {
@@ -11,7 +11,7 @@ export interface ForwardPass {
 /** How many times each vocabulary word appears in `text`, in vocabulary order. Other words are ignored. */
 export function wordCounts(vocabulary: readonly string[], text: string): number[] {
   const counts = new Map<string, number>();
-  for (const word of conversationWords(text)) {
+  for (const word of messageWords(text)) {
     counts.set(word, (counts.get(word) ?? 0) + 1);
   }
   return vocabulary.map(word => counts.get(word) ?? 0);

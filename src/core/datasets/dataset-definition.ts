@@ -35,7 +35,7 @@ export interface DatasetDefinition {
 export const RESERVED_FIELD_NAMES = [
   "text",
   "target_label",
-  // The core filter's other fixed fields (FIXED_FIELDS in src/core/filter/conversation-filter.ts).
+  // The core filter's other fixed fields (FIXED_FIELDS in src/core/filter/message-filter.ts).
   "n",
   "id",
   "observation",

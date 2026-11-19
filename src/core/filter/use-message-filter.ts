@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { useSharedState } from "../state/view-state-context";
-import { ConversationFilter } from "./conversation-filter";
+import { MessageFilter } from "./message-filter";
 import { FilterBarProps } from "./filter-bar";
 
-export interface ConversationFilterView {
-  /** The conversations the view steps through, in dataset order. */
+export interface MessageFilterView {
+  /** The messages the view steps through, in dataset order. */
   ids: readonly string[];
   /** The props for the view's FilterBar. */
   bar: FilterBarProps;
@@ -13,9 +13,9 @@ export interface ConversationFilterView {
 /**
  * The view's side of the filter. The list follows the draft while the student types, if it can be
  * read; otherwise the stored query. Only a commit, on Enter or blur, stores a query and corrects
- * the shared conversation. Call it from an observer component.
+ * the shared message. Call it from an observer component.
  */
-export function useConversationFilter(filter: ConversationFilter): ConversationFilterView {
+export function useMessageFilter(filter: MessageFilter): MessageFilterView {
   const shared = useSharedState();
   const query = shared.query ?? "";
   const draft = shared.queryDraft;

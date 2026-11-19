@@ -5,7 +5,7 @@ import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
-import fixture from "../../core/network/__fixtures__/alien3-conversations.json";
+import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { collectAllPlan, collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
 import { ExtractDrawing } from "./extract-drawing";
@@ -18,7 +18,7 @@ import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
 const LABELS = { 0: "wait", 1: "approach" };
-const passes = fixture.conversations.map(c => forward(fixtureNetwork, c.text));
+const passes = fixture.messages.map(c => forward(fixtureNetwork, c.text));
 const scales = networkScales(fixtureNetwork, passes);
 // jsdom has no ResizeObserver, so the drawing lays out at its narrowest.
 const geometry = extractGeometry(SIZES, 0);
@@ -131,16 +131,16 @@ describe("ExtractDrawing", () => {
     expect(placeOf(first)).toEqual(geometry.hidden[0]);
   });
 
-  it("draws a deck column for each collected conversation, under the last one's label", () => {
+  it("draws a deck column for each collected message, under the last one's label", () => {
     renderDrawing(restScene(SIZES, 4));
     expect(screen.getByRole(
-      "img", { name: "The network, with its 14 hidden neurons lifted out and 3 conversations collected." },
+      "img", { name: "The network, with its 14 hidden neurons lifted out and 3 messages collected." },
     )).toBeInTheDocument();
-    expect(screen.getByText("Conversation 3")).toBeInTheDocument();
+    expect(screen.getByText("Message 3")).toBeInTheDocument();
     expect(screen.getAllByTestId(/^deck-column-/)).toHaveLength(3);
   });
 
-  it("draws each deck column from its own conversation, its gauges up or down and colored by sign", () => {
+  it("draws each deck column from its own message, its gauges up or down and colored by sign", () => {
     renderDrawing(restScene(SIZES, 3));
     [0, 1].forEach(column => {
       const values = [...passes[column].layers[1], ...passes[column].layers[2]];
@@ -165,18 +165,18 @@ describe("ExtractDrawing", () => {
     renderDrawing(collectSceneAt(SIZES, 2, collectDuration(SIZES, 2) - 1000));
     expect(screen.getAllByTestId(/^deck-column-/)).toHaveLength(2);
     expect(screen.getByRole(
-      "img", { name: "The network, with its 14 hidden neurons lifted out and 1 conversation collected." },
+      "img", { name: "The network, with its 14 hidden neurons lifted out and 1 message collected." },
     )).toBeInTheDocument();
   });
 
-  it("names one conversation collected in the singular", () => {
+  it("names one message collected in the singular", () => {
     renderDrawing(restScene(SIZES, 2));
     expect(screen.getByRole(
-      "img", { name: "The network, with its 14 hidden neurons lifted out and 1 conversation collected." },
+      "img", { name: "The network, with its 14 hidden neurons lifted out and 1 message collected." },
     )).toBeInTheDocument();
   });
 
-  it("shows the conversation the scene names on the network", () => {
+  it("shows the message the scene names on the network", () => {
     renderDrawing(restScene(SIZES, 3));
     const values = passes[1].layers[1];
     const k = strongest(values);
@@ -193,36 +193,36 @@ describe("ExtractDrawing", () => {
     expect(screen.getByText("Hidden Layer Neurons")).toHaveAttribute("opacity", "1");
   });
 
-  it("bounces the conversation label in, and leaves it still once it lands", () => {
+  it("bounces the message label in, and leaves it still once it lands", () => {
     const scene = restScene(SIZES, 2);
     scene.label = { n: 1, bounce: 0.2 };
     const { unmount } = renderDrawing(scene);
-    expect(screen.getByText("Conversation 1").getAttribute("style")).toMatch(/scale/);
+    expect(screen.getByText("Message 1").getAttribute("style")).toMatch(/scale/);
     unmount();
     renderDrawing(restScene(SIZES, 2));
-    expect(screen.getByText("Conversation 1")).not.toHaveAttribute("style");
+    expect(screen.getByText("Message 1")).not.toHaveAttribute("style");
   });
 
   it("draws the finished deck in place of the network once Collect All is done", () => {
     renderDrawing(deckRestScene(SIZES, 20));
     expect(screen.getByRole(
-      "img", { name: "The network's 14 hidden neurons lifted out, and all 20 conversations collected." },
+      "img", { name: "The network's 14 hidden neurons lifted out, and all 20 messages collected." },
     )).toBeInTheDocument();
     expect(screen.queryByTestId("node-1-0")).not.toBeInTheDocument();
-    expect(screen.getByText("20 Conversations")).toBeInTheDocument();
+    expect(screen.getByText("20 Messages")).toBeInTheDocument();
     expect(screen.getAllByTestId(/^deck-0-/)).toHaveLength(20);
     expect(screen.queryAllByTestId(/^deck-column-/)).toHaveLength(0);
   });
 
-  it("describes the deck still filling by the conversations collected by hand", () => {
+  it("describes the deck still filling by the messages collected by hand", () => {
     renderDrawing(collectAllSceneAt(SIZES, 3, 20, HANDOVER_MS + 100));
     expect(screen.getByRole(
-      "img", { name: "The network, with its 14 hidden neurons lifted out and 3 conversations collected." },
+      "img", { name: "The network, with its 14 hidden neurons lifted out and 3 messages collected." },
     )).toBeInTheDocument();
   });
 
   it("draws each set of a deck of 800 where it is and as faded as it is, mid-close", () => {
-    // A deck of 800 repeats the fixture's 20 conversations.
+    // A deck of 800 repeats the fixture's 20 messages.
     const deckPasses = Array.from({ length: 800 }, (_, i) => passes[i % passes.length]);
     // Halfway through a close of 22 sets, with sets still short of their places and the newest fading in.
     const close = collectAllPlan(SIZES, 3, 800).closes[20];
@@ -244,14 +244,14 @@ describe("ExtractDrawing", () => {
     expect(opacity).toBeGreaterThan(0);
     expect(opacity).toBeLessThan(1);
     // eslint-disable-next-line testing-library/no-node-access -- the label's fade is on its parent group
-    const labelOpacity = Number(screen.getByText("Conversation 3").parentElement!.getAttribute("opacity"));
+    const labelOpacity = Number(screen.getByText("Message 3").parentElement!.getAttribute("opacity"));
     expect(labelOpacity).toBe(opacity);
   });
 
   it("draws the pathways beside the slid deck, and describes them, once Extract Pathways is done", () => {
     renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings));
     expect(screen.getByRole("img", {
-      name: "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 conversations.",
+      name: "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 messages.",
     })).toBeInTheDocument();
     expect(screen.getAllByTestId("pathway-line")).toHaveLength(42);
     const dx = pathwaysLayout(geometry, 20, fixtureLoadings).liftedDx;
@@ -263,7 +263,7 @@ describe("ExtractDrawing", () => {
     try {
       renderDrawing(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, 3000));
       expect(screen.getByRole(
-        "img", { name: "The network's 14 hidden neurons lifted out, and all 20 conversations collected." },
+        "img", { name: "The network's 14 hidden neurons lifted out, and all 20 messages collected." },
       )).toBeInTheDocument();
     } finally {
       jest.restoreAllMocks();

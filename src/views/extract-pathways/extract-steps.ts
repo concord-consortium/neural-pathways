@@ -2,7 +2,7 @@ import { StepButton } from "../../core/steps/step-button";
 import { Marker, StepProgress } from "../../core/steps/step-player";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 
-/** The most conversations Collect a Conversation gathers one at a time, as in the prototype. */
+/** The most messages Collect a Message gathers one at a time, as in the prototype. */
 export const MAX_COLLECTED = 10;
 /** Where the timeline rests once Collect All has built the deck. */
 export const DECK_MARKER = MAX_COLLECTED + 2;
@@ -11,7 +11,7 @@ export const PATHWAYS_MARKER = DECK_MARKER + 1;
 
 /**
  * The marker, from the stages stored in the state: 0 at the start, 1 once Setup is done, one more
- * for each conversation collected by hand, then DECK_MARKER and PATHWAYS_MARKER. A stage stored
+ * for each message collected by hand, then DECK_MARKER and PATHWAYS_MARKER. A stage stored
  * without the ones before it reads as the latest it can, but nothing reads past Setup undone.
  * `limit` is how many can be collected by hand; a stored count above it reads as the limit.
  * `deckSize` is the count stored once the deck is done.
@@ -40,10 +40,10 @@ export function extractProgress(state: ExtractPathwaysState, limit: number, deck
 }
 
 /**
- * Setup always starts over. Collect a Conversation collects the next one, jumping Setup to its end
+ * Setup always starts over. Collect a Message collects the next one, jumping Setup to its end
  * first if it isn't done, until `limit` are in; from the deck or the pathways it starts the
  * collecting over. Collect All builds the deck from wherever the collecting stopped; from the deck
- * or the pathways, it starts the collecting over, as Collect a Conversation does. Extract Pathways
+ * or the pathways, it starts the collecting over, as Collect a Message does. Extract Pathways
  * draws the pathways from the deck, jumping to the finished deck first if Collect All hasn't built
  * it.
  */
@@ -52,7 +52,7 @@ export function extractButtons(limit: number): readonly StepButton[] {
     { key: "setup", label: "Setup", segmentToPlayWhenAt: () => ({ from: 0, to: 1 }) },
     {
       key: "collect",
-      label: "Collect a Conversation",
+      label: "Collect a Message",
       segmentToPlayWhenAt: marker => {
         if (marker >= DECK_MARKER) {
           return { from: 1, to: 2 };
@@ -63,7 +63,7 @@ export function extractButtons(limit: number): readonly StepButton[] {
     },
     {
       key: "collect-all",
-      label: "Collect All Conversations",
+      label: "Collect All Messages",
       segmentToPlayWhenAt: marker => ({ from: marker >= DECK_MARKER ? 1 : Math.max(marker, 1), to: DECK_MARKER }),
     },
     {

@@ -22,9 +22,9 @@ export class ExtractPathwaysState extends ExtendedModel(composeMixins(animatedMi
   version: tProp(types.literal(1), 1),
   /** Whether Setup is done: the hidden neurons are lifted out of the network. */
   setupDone: tProp(types.boolean, false),
-  /** How many conversations have been collected into the deck. */
+  /** How many messages have been collected into the deck. */
   collected: tProp(countType, 0),
-  /** Whether Collect All is done: the deck holds every conversation. */
+  /** Whether Collect All is done: the deck holds every message. */
   deckDone: tProp(types.boolean, false),
   /** Whether Extract Pathways is done: the three pathways are drawn from the deck. */
   pathwaysDone: tProp(types.boolean, false),

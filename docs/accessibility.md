@@ -105,13 +105,13 @@ scroller with nothing focusable in it reachable by Tab; Safari doesn't.
 
 ## Keep unavailable buttons in the tab order
 
-A button that can't act right now, such as Previous on the first conversation or Reset with
+A button that can't act right now, such as Previous on the first message or Reset with
 nothing to reset, is *unavailable*: mark it `aria-disabled="true"`, not with the `disabled`
 attribute.
 
 **Why.** A `disabled` button leaves the tab order, and if it has the focus when it becomes
 disabled, the browser drops the focus to the page body. A keyboard user stepping with Next would
-lose their place at the last conversation, which works against
+lose their place at the last message, which works against
 [2.4.3 Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) (A). An
 `aria-disabled` button keeps the focus, and a screen reader still finds it and says it is
 unavailable ("dimmed"), so the controls read the same at the ends as in the middle.

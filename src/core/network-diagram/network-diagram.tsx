@@ -28,7 +28,7 @@ interface NetworkDiagramProps {
 }
 
 /**
- * One conversation's pass through the network, drawn as far as `scene` says, sized to its
+ * One message's pass through the network, drawn as far as `scene` says, sized to its
  * container. The only state it keeps is its measured size: views decide what is drawn, and animate
  * by passing new scenes.
  *

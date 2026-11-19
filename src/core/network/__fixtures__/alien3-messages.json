@@ -1,6 +1,6 @@
 {
-  "note": "Real alien3 conversations and the model's classification, taken from dist/alien-data-3/index.json: the first six of each class in index order, then eight close calls picked by hand, four of each class, which the model gives a probability of approach between 0.34 and 0.54.",
-  "conversations": [
+  "note": "Real alien3 messages and the model's classification, taken from dist/alien-data-3/index.json: the first six of each class in index order, then eight close calls picked by hand, four of each class, which the model gives a probability of approach between 0.34 and 0.54.",
+  "messages": [
     {
       "id": "361e65b1002a",
       "text": "yandor quissa\nblikka murrash\naloven sooma nimbar\nchullo ormesh\nyandor sooma quissa",

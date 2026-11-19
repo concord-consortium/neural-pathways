@@ -27,12 +27,12 @@ describe("restScene", () => {
     });
   });
 
-  it("shows the last conversation collected in full, labeled, with the deck, spotlit as its flight left it", () => {
+  it("shows the last message collected in full, labeled, with the deck, spotlit as its flight left it", () => {
     expect(restScene(SIZES, 4)).toEqual({
       network: { ...fullScene(SIZES), hiddenLayerSpotlight: 0.5 }, networkOpacity: 1,
       shown: 3, label: { n: 3, bounce: 1 },
       lifted: { flight: LANDED, opacity: 0.5, labelOpacity: 1 },
-      collections: [1, 2, 3].map(conversation => ({ conversation, flight: LANDED })),
+      collections: [1, 2, 3].map(message => ({ message, flight: LANDED })),
       deck: undefined,
     });
   });

@@ -5,23 +5,23 @@
 
 // Fills a parent with a set height, so the notes scroll instead of the card growing. In a parent
 // without one, 100% is ignored and the card is as tall as its content.
-.conversation-card {
+.message-card {
   @include panel.panel;
   position: relative;
   box-sizing: border-box;
   height: 100%;
 }
 
-.conversation-card__head {
+.message-card__head {
   @include panel.panel-head;
 }
 
-.conversation-card__title {
+.message-card__title {
   margin: 0;
   font: inherit;
 }
 
-.conversation-card__count {
+.message-card__count {
   margin-left: auto;
   font-family: colors.$mono;
   font-size: 11.5px;
@@ -30,12 +30,12 @@
   text-transform: none;
 }
 
-.conversation-card__nav {
+.message-card__nav {
   display: flex;
   gap: 6px;
 }
 
-.conversation-card__nav-button {
+.message-card__nav-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,13 +70,13 @@
   }
 }
 
-.conversation-card__status {
+.message-card__status {
   @include visually-hidden.visually-hidden;
 }
 
 // The parts a view puts in the card, top to bottom. It scrolls only when the notes box is at its
 // smallest and the rest still doesn't fit, as when the text alone is zoomed.
-.conversation-card__body {
+.message-card__body {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -87,7 +87,7 @@
 }
 
 // In place of the header and body when nothing matches, as in the prototype's .nnm-empty.
-.conversation-card__empty {
+.message-card__empty {
   margin: 0;
   padding: 24px 14px;
   color: colors.$ink-3;
