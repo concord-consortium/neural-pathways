@@ -123,3 +123,14 @@ $two-columns-width: 447px + 10px + $step-row-width;
   margin: 0 auto;
   padding: $diagram-padding 0;
 }
+
+// The prompt or readout under the diagram, as wide as the diagram. --readout-height, set by the
+// view, is the box's held height plus its margin.
+.looking-inside__readout {
+  flex: none;
+  width: 100%;
+  max-width: 537px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 0 $diagram-padding $diagram-padding;
+}
