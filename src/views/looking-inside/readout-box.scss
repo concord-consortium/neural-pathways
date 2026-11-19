@@ -26,12 +26,18 @@
   margin-top: 8px;
 }
 
+// The prompt's type. The box's idle modifier and the twin's prompt candidates share it, since italic
+// text can wrap differently from upright text.
+@mixin readout-idle {
+  font-style: italic;
+  color: colors.$ink-3;
+}
+
 .readout-box {
   @include readout-frame;
 
   &--idle {
-    font-style: italic;
-    color: colors.$ink-3;
+    @include readout-idle;
   }
 }
 
@@ -74,10 +80,19 @@
   left: 0;
   right: 0;
   top: 0;
+  // No height of its own, so its tall stack of candidates adds nothing to the page's scrollable
+  // area. The candidates inside are still laid out, and still measurable.
+  height: 0;
+  overflow: hidden;
   visibility: hidden;
   pointer-events: none;
 }
 
 .readout-box__candidate {
   @include readout-frame;
+
+  // A prompt is measured in the italic it is shown in; a readout is upright.
+  &--idle {
+    @include readout-idle;
+  }
 }

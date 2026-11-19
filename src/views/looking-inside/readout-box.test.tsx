@@ -40,6 +40,15 @@ describe("ReadoutBox", () => {
     expect(twin).toHaveTextContent("onetwothree");
   });
 
+  it("measures prompts in the idle style they are shown in, and readouts upright", () => {
+    render(<ReadoutBox content="a" candidates={{ prompts: ["p"], readouts: ["r"] }} idle />);
+    const [prompt, readout] = screen.getAllByTestId("readout-candidate");
+    expect(prompt).toHaveTextContent("p");
+    expect(prompt).toHaveClass("readout-box__candidate--idle");
+    expect(readout).toHaveTextContent("r");
+    expect(readout).not.toHaveClass("readout-box__candidate--idle");
+  });
+
   it("leaves room for the Clear button only in readout candidates", () => {
     const { rerender } = render(<ReadoutBox content="a" candidates={{ prompts: ["p", "q"], readouts: [] }} idle />);
     expect(screen.queryAllByTestId("readout-stand-in")).toHaveLength(0);
