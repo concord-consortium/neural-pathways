@@ -580,6 +580,20 @@ describe("LookingInside", () => {
       expect(screen.getByTestId("edge-near-0-0-1")).not.toHaveAttribute("opacity");
     });
 
+    it("hears the pointer leave a hovered neuron a step press left unreached", async () => {
+      await showInstant();
+      press("Step 2");
+      fireEvent.pointerEnter(neuron("Hidden Layer 1 Neuron 2"));
+      expect(screen.getByTestId("ring-1-1")).toBeInTheDocument();
+      // Pressed from the keyboard, with the pointer resting on the neuron: Step 1 leaves Hidden Layer 1
+      // unreached. Then the pointer moves away.
+      press("Step 1");
+      fireEvent.pointerLeave(screen.getByTestId("neuron-target-1-1"));
+      press("Step 2");
+      expect(screen.queryByTestId("ring-1-1")).not.toBeInTheDocument();
+      expect(screen.getByTestId("edge-near-0-0-0")).not.toHaveAttribute("opacity");
+    });
+
     describe("focus", () => {
       // jsdom matches :focus-visible on any focus, so each test says whether its focus is the keyboard's.
       const realMatches = Element.prototype.matches;

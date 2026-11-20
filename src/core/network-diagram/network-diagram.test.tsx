@@ -249,6 +249,17 @@ describe("NetworkDiagram neuron targets", () => {
     expect(interaction.onHover).not.toHaveBeenCalled();
   });
 
+  it("hears the pointer leave an unreached neuron or pill, which a step press may have left unreached", () => {
+    const interaction = makeInteraction({ reachedColumns: 1 });
+    renderInteractive(interaction);
+    fireEvent.pointerLeave(screen.getByTestId("neuron-target-1-0"));
+    expect(interaction.onHover).toHaveBeenCalledTimes(1);
+    expect(interaction.onHover).toHaveBeenLastCalledWith(undefined);
+    fireEvent.pointerLeave(screen.getByTestId("pill-target-1"));
+    expect(interaction.onHover).toHaveBeenCalledTimes(2);
+    expect(interaction.onHover).toHaveBeenLastCalledWith(undefined);
+  });
+
   it("toggles on click, Enter and Space, and clears on Escape and on empty space", () => {
     const interaction = makeInteraction({ tabStop: { column: 0, unit: 0 } });
     renderInteractive(interaction);

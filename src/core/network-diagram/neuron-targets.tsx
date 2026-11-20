@@ -120,7 +120,9 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
           {rect}
         </g>
       ) : (
-        <g key={`${c}-${unit}`} aria-hidden="true">{rect}</g>
+        // It still hears the pointer leave: a step press from the keyboard can leave the neuron under
+        // the pointer unreached, and its hover would otherwise come back when it is reached again.
+        <g key={`${c}-${unit}`} aria-hidden="true" onPointerLeave={() => onHover(undefined)}>{rect}</g>
       ));
     });
   });
@@ -138,7 +140,7 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
             x={box.x} y={box.y} width={box.width} height={box.height}
             fill="transparent" pointerEvents="all"
             onPointerEnter={reached ? () => onHover(neuron) : undefined}
-            onPointerLeave={reached ? () => onHover(undefined) : undefined}
+            onPointerLeave={() => onHover(undefined)}
             onClick={event => {
               event.stopPropagation();
               if (reached) {
