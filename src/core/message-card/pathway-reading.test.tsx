@@ -233,6 +233,31 @@ describe("PathwayReading", () => {
     expect(tooltip()).toHaveTextContent("oradda: a Pathway 2 word");
   });
 
+  it("shows no tooltip once the arrow keys move from a clicked word to one that is zero everywhere", () => {
+    render(<Harness />);
+    const [tarrak, blikka, oradda] = options();
+    fireEvent.pointerEnter(tarrak);
+    act(() => tarrak.focus());
+    fireEvent.click(tarrak);
+    fireEvent.keyDown(tarrak, { key: "ArrowRight" });
+    expect(blikka).toHaveFocus();
+    expect(tooltip()).toBeNull();
+    fireEvent.keyDown(blikka, { key: "ArrowRight" });
+    expect(oradda).toHaveFocus();
+    expect(tooltip()).toHaveTextContent("oradda: a Pathway 2 word");
+  });
+
+  it("shows no tooltip while the pointer is over a word that is zero everywhere, even with another focused", () => {
+    render(<Harness />);
+    const [tarrak, blikka] = options();
+    act(() => tarrak.focus());
+    expect(tooltip()).toHaveTextContent("tarrak: +0.0624");
+    fireEvent.pointerEnter(blikka);
+    expect(tooltip()).toBeNull();
+    fireEvent.pointerLeave(blikka, { relatedTarget: document.body });
+    expect(tooltip()).toHaveTextContent("tarrak: +0.0624");
+  });
+
   it("shares the current word between two readings", () => {
     render(<Harness pathways={[0, 1]} />);
     act(() => options(1)[2].focus());

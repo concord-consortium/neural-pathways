@@ -90,7 +90,7 @@ export const PathwayReading: React.FC<PathwayReadingProps> = ({
           const note = wordScoreNote(word, scores[i], pathway);
           const value = scores[i][pathway];
           const fill = value ? wordFill(value, max) : undefined;
-          const target = (element: HTMLElement) => note && { element, note };
+          const target = (element: HTMLElement) => ({ element, note });
           return (
             // A word can repeat, so its place is its key.
             <React.Fragment key={i}>

@@ -287,8 +287,9 @@ minus, the value monospaced; or, for a word that is zero here, "tarrak: a Pathwa
 the pathway it scores on (6430–6432). A word that is zero on every pathway has no tooltip.
 
 **When it shows.** There is one tooltip per card. It follows whichever moved last, the pointer or the
-keyboard focus, over the word the pointer entered or the word the focus moved to. When the pointer
-leaves its word, it shows over the focused word. It moves with the word when the readings scroll,
+keyboard focus, over the word the pointer entered or the word the focus moved to. A word that is zero
+on every pathway shows none, but still counts as where the pointer or the focus moved. When the
+pointer leaves its word, it shows over the focused word. It moves with the word when the readings scroll,
 and hides while that word is scrolled out of the scroller's view.
 
 **1.4.13** ([Content on Hover or Focus](https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus.html)):
@@ -296,7 +297,7 @@ and hides while that word is scrolled out of the scroller's view.
   pointer or the keyboard moves to.
 - *Hoverable:* the pointer can move from the word onto the tooltip without it going away.
 - *Persistent:* it stays until the pointer leaves both the word and the tooltip, the focus leaves the
-  word, or Escape.
+  word, the pointer or the focus moves to another word, or Escape.
 
 **Where and how it's drawn.** It is centered over the word, with a small pointer under it, and kept
 inside the card from side to side. It is `$ink` with white Lato 12.5 px text, as in the mockup. It
