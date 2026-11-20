@@ -174,8 +174,8 @@ cursor is a pointer only on targets of reached neurons (2364–2373). Each targe
 the neuron's name before it is reached, and "Activation: −0.42" after (`actLine`, 12981, and
 13004–13007).
 
-**Highlight** (12647–12729, CSS 2327–2354). While a reached neuron is hovered or focused, or
-pinned:
+**Highlight** (12647–12729, CSS 2327–2354). While a reached neuron is hovered, focused from the
+keyboard, or pinned:
 
 - the edges touching it stay at full strength and are drawn above the others;
 - the other edges in the two gaps it sits between (the one into its layer and the one out of it)
@@ -188,8 +188,10 @@ a neuron is pinned, hovering another doesn't change the highlight; it stays on t
 
 **Rings** (2384–2412, 12581–12589). Each neuron has a ring 3.5 px outside its circle, never a CSS
 outline (SVG outlines are square). Hover shows it at half strength in ink; pinned at full strength
-in ink; keyboard focus in the focus blue. The drawing passes these as props; `NetworkDrawing` stays
-stateless.
+in ink; keyboard focus in the focus blue. Pinned wins the color where a neuron is both. Only
+`:focus-visible` focus counts: a click also focuses the neuron, but must not leave a blue ring or a
+highlight behind once it is unpinned (12178–12205). The drawing passes these as props;
+`NetworkDrawing` stays stateless.
 
 **During a run.** The neurons reached by the marker the run started from stay live while it plays,
 as in the prototype, whose `live()` checks only whether a neuron is reached (12529). So a student
@@ -216,7 +218,7 @@ stop. Before Step 1 there is no neuron stop.
 | Enter / Space | Pin or unpin it. |
 | Escape | Clear the pin. |
 
-Focusing a neuron applies the same highlight as hovering it. Moving focus scrolls the diagram to
+Focusing a neuron from the keyboard applies the same highlight as hovering it. Moving focus scrolls the diagram to
 show it, as `focus()` does. If the stop's neuron stops being reached (Reset, a message change), the
 stop moves to the first reached input neuron, or goes away.
 
