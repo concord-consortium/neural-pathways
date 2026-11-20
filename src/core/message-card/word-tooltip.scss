@@ -47,6 +47,12 @@
   }
 }
 
+// Opened by the focus, it lets the pointer through to the words it covers. The hover bridge inherits
+// this, so it lets the pointer through as well.
+.word-tooltip--focused {
+  pointer-events: none;
+}
+
 .word-tooltip__value {
   font-family: fonts.$mono;
 }

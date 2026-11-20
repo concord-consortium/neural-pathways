@@ -87,8 +87,9 @@ interface WordTooltipAreaProps {
  * scroller, so the scroller doesn't clip it. Key the area by the message, so a new message starts
  * with no tooltip.
  *
- * It meets WCAG 1.4.13: Escape hides it without moving the focus, the pointer can move onto it,
- * and it stays until the pointer leaves both the word and the tooltip or the focus leaves the word.
+ * It meets WCAG 1.4.13: Escape hides it without moving the focus, the pointer can move onto one the
+ * pointer opened, and it stays until the pointer leaves both the word and the tooltip or the focus
+ * leaves the word.
  * It is hidden from screen readers, since the word's name says the same thing.
  */
 export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, scrollerRef, children }) => {
@@ -130,12 +131,22 @@ export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, scr
     return () => observer.disconnect();
   }, [shown, place]);
 
-  // Escape is left to reach anything else that wants it, and the focus stays where it is.
-  const onKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Escape" && shown) {
-      dispatch({ type: "dismiss" });
+  // Escape hides the tooltip wherever the focus is, since a tooltip the pointer opened shows while the
+  // focus is outside the area. The key is left to reach anything else that wants it, and the focus
+  // stays where it is.
+  const showing = !!shown;
+  useEffect(() => {
+    if (!showing) {
+      return;
     }
-  };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        dispatch({ type: "dismiss" });
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [showing]);
 
   // Leaving the tooltip for anywhere but its word ends the hover.
   const onTooltipPointerLeave = (event: React.PointerEvent) => {
@@ -149,10 +160,13 @@ export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, scr
   return (
     <WordTooltipContext.Provider value={events}>
       <div ref={areaRef} className={`word-tooltip-area${className ? ` ${className}` : ""}`}
-        onKeyDown={onKeyDown} onScrollCapture={place}>
+        onScrollCapture={place}>
         {children}
         {shown &&
-          <div ref={tooltipRef} className="word-tooltip" aria-hidden="true" onPointerLeave={onTooltipPointerLeave}>
+          // One the focus opened lets the pointer through to the words it covers. Only one the pointer
+          // opened must take the pointer, so the pointer can move onto it.
+          <div ref={tooltipRef} className={`word-tooltip${state.hovered ? "" : " word-tooltip--focused"}`}
+            aria-hidden="true" onPointerLeave={onTooltipPointerLeave}>
             {shown.note.word}:{" "}
             {shown.note.kind === "score"
               ? <span className="word-tooltip__value">{signedScore(shown.note.value)}</span>
