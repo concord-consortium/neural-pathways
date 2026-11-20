@@ -81,7 +81,8 @@
   right: 0;
   top: 0;
   // No height of its own, so its tall stack of candidates adds nothing to the page's scrollable
-  // area. The candidates inside are still laid out, and still measurable.
+  // area. The stack inside is still laid out at its own height, and the box observes it, since it
+  // grows with the font.
   height: 0;
   overflow: hidden;
   visibility: hidden;

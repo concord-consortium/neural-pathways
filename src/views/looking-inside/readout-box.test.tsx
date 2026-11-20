@@ -58,14 +58,16 @@ describe("ReadoutBox", () => {
 
   describe("measuring", () => {
     let resized: () => void;
+    let observed: Element[];
     let heights: Record<string, number>;
     const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
 
     beforeEach(() => {
       heights = { short: 40, tall: 60 };
+      observed = [];
       (globalThis as any).ResizeObserver = class {
         constructor(callback: () => void) { resized = callback; }
-        observe = jest.fn();
+        observe = (element: Element) => observed.push(element);
         disconnect = jest.fn();
       };
       Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
@@ -104,6 +106,16 @@ describe("ReadoutBox", () => {
       act(() => resized());
       expect(screen.getByTestId("readout-box").style.minHeight).toBe("90px");
       expect(onHeightChange).toHaveBeenLastCalledWith(98);
+    });
+
+    it("observes the box, whose width zoom changes, and the candidates' stack, which text zoom grows", () => {
+      render(<ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle />);
+      const stack = screen.getByTestId("readout-measure-stack");
+      expect(within(stack).getAllByTestId("readout-candidate")).toHaveLength(2);
+      expect(observed).toEqual(expect.arrayContaining([screen.getByTestId("readout-box"), stack]));
+      // Not the twin, whose height is held at 0 so that the stack adds nothing to the page: it never
+      // resizes.
+      expect(observed).not.toContain(screen.getByTestId("readout-measure"));
     });
   });
 });

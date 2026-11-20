@@ -29,7 +29,7 @@ interface ReadoutBoxProps {
  */
 export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idle, onClear, onHeightChange }) => {
   const boxRef = useRef<HTMLDivElement>(null);
-  const twinRef = useRef<HTMLDivElement>(null);
+  const stackRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
   const heightChange = useRef(onHeightChange);
   useLayoutEffect(() => {
@@ -37,7 +37,7 @@ export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idl
   });
 
   const measure = () => {
-    const tallest = Array.from(twinRef.current?.children ?? [])
+    const tallest = Array.from(stackRef.current?.children ?? [])
       .reduce((max, child) => Math.max(max, (child as HTMLElement).offsetHeight), 0);
     setHeight(tallest);
   };
@@ -46,11 +46,14 @@ export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idl
   // eslint-disable-next-line react-hooks/set-state-in-effect -- measuring the laid-out twin needs the DOM
   useLayoutEffect(measure);
 
+  // The box's width changes with browser zoom. The candidates' stack, as tall as the candidates, grows
+  // with the font size under text-only zoom, which may leave the width alone; the twin around it has no
+  // height, so observing the twin would never fire.
   useLayoutEffect(() => {
     if (typeof ResizeObserver === "undefined") return;
     const resizes = new ResizeObserver(measure);
     if (boxRef.current) resizes.observe(boxRef.current);
-    if (twinRef.current) resizes.observe(twinRef.current);
+    if (stackRef.current) resizes.observe(stackRef.current);
     return () => resizes.disconnect();
   }, []);
 
@@ -73,19 +76,21 @@ export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idl
           </button>
         )}
       </div>
-      <div ref={twinRef} data-testid="readout-measure" className="readout-box__measure" aria-hidden="true">
-        {candidates.prompts.map((candidate, i) => (
-          <div key={`prompt-${i}`} data-testid="readout-candidate"
-            className="readout-box__candidate readout-box__candidate--idle">
-            <div className="readout-box__text">{candidate}</div>
-          </div>
-        ))}
-        {candidates.readouts.map((candidate, i) => (
-          <div key={`readout-${i}`} data-testid="readout-candidate" className="readout-box__candidate">
-            <div className="readout-box__text">{candidate}</div>
-            <span className="readout-box__stand-in" data-testid="readout-stand-in" />
-          </div>
-        ))}
+      <div data-testid="readout-measure" className="readout-box__measure" aria-hidden="true">
+        <div ref={stackRef} data-testid="readout-measure-stack">
+          {candidates.prompts.map((candidate, i) => (
+            <div key={`prompt-${i}`} data-testid="readout-candidate"
+              className="readout-box__candidate readout-box__candidate--idle">
+              <div className="readout-box__text">{candidate}</div>
+            </div>
+          ))}
+          {candidates.readouts.map((candidate, i) => (
+            <div key={`readout-${i}`} data-testid="readout-candidate" className="readout-box__candidate">
+              <div className="readout-box__text">{candidate}</div>
+              <span className="readout-box__stand-in" data-testid="readout-stand-in" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
