@@ -25,23 +25,23 @@ generator fits to the alien3 data; the view reads it from the index (`alien3Netw
 
 ## Size
 
-The minimum layout size (see `docs/accessibility.md`) is 910 × 524 px as an Interactive, inside the
+The minimum layout size (see `docs/accessibility.md`) is 910 × 442 px as an Interactive, inside the
 designed size of 1024 × 562.
 
 The minimum layout width, 910 px, holds two columns: the card's 447 px, a 10 px gap, and the step
 row, 421 px. The step row holds Step 1 to Step 4, Reset and About on one line, and is wider than the
 network panel's narrowest, 382 px. Together that is 878 px, inside the app's 16 px gutters.
 
-The minimum layout height, 524 px, adds up from the top:
-- the title and its margins, 82 px: a 32 px heading's line and its 0.67em margins make 81.9 px;
-- a 9 px gap;
+The minimum layout height, 442 px, adds up from the top:
+- the view's 9 px top padding, which takes the title's place in an Interactive;
 - the filter bar and the step row, 44 px;
 - a 9 px gap;
 - the card and network panels at their smallest, 380 px. That is the diagram's smallest layout,
   300 px (`MIN_HEIGHT` in `layout.ts`), and 80 px for the network panel's head, padding and border.
 
 The view's 16 px bottom padding is the first thing to go as the window gets shorter, so it isn't
-counted.
+counted. The standalone app has no top padding, and shows the view's title above the filter bar
+instead: 82 px for a 32 px heading's line and its 0.67em margins, then a 9 px gap.
 
 Narrower than its minimum layout width, it still works, but no reviewed design covers it:
 - The columns stack, and the page scrolls down. It is about 1,120 px tall just below that width,
