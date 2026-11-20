@@ -1,9 +1,12 @@
-// The lesson's colors, from the demo prototype's tokens. Keep $positive, $negative and $rule in
-// step with colors.ts; colors.test.ts checks them.
+// The lesson's colors, from the demo prototype's tokens. Keep $positive, $negative, $rule, $ink and
+// $ramp-stops in step with colors.ts; colors.test.ts checks them.
 
 // Signed values.
 $positive: #A84A2C;
 $negative: #1F4E8F;
+
+// The signed legend gradient, from the negative end through white to the positive end.
+$ramp-stops: #1F4E8F, #C8D6E9, #FFFFFF, #EFD3C4, #A84A2C;
 
 // The two classes. The text shades are darker so they pass contrast on white and on the soft fill.
 $approach: #D9722E;
@@ -22,6 +25,9 @@ $ink-3: #6A727C;
 $rule: #CCD3DD;
 $rule-soft: #E4E9F0;
 $surface: #F4F6FA;
+
+// The rule under a reading's Pathway row.
+$reading-rule: #B9CBE4;
 
 // The rule down the left of the observation notes.
 $notes-rule: #C6D2E2;

@@ -1,0 +1,40 @@
+@use "../colors" as colors;
+@use "../fonts" as fonts;
+
+// The 18px margin and the card body's 10px gap make 28px down to the first reading.
+.word-contribution-legend {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 5px;
+  min-height: 30px;
+  margin-bottom: 18px;
+}
+
+.word-contribution-legend__caption {
+  color: colors.$ink-3;
+  font-family: fonts.$label-font;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.word-contribution-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: colors.$ink-3;
+  font-family: fonts.$mono;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.word-contribution-legend__bar {
+  flex: 1;
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(to right, colors.$ramp-stops);
+  box-shadow: inset 0 0 0 1px rgba(30, 36, 44, 0.18);
+}
