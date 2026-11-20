@@ -200,11 +200,11 @@ test("the tooltip of a word at either side is kept inside the readings, its poin
       // Kept within the readings from side to side. It may rise above them, over the legend.
       expect(tooltipBox.x).toBeGreaterThanOrEqual(areaBox.x - 0.5);
       expect(tooltipBox.x + tooltipBox.width).toBeLessThanOrEqual(areaBox.x + areaBox.width + 0.5);
-      // The pointer is centered at its left, over the tooltip's padding box.
+      // The pointer, which is centered at its left, over the tooltip's padding box, is centered on the
+      // word.
       const pointerCenter = await tooltip(page).evaluate(el =>
         el.getBoundingClientRect().left + el.clientLeft + parseFloat(getComputedStyle(el, "::after").left));
-      expect(pointerCenter).toBeGreaterThanOrEqual(wordBox.x);
-      expect(pointerCenter).toBeLessThanOrEqual(wordBox.x + wordBox.width);
+      expect(pointerCenter).toBeCloseTo(wordCenter, 0);
       expect(await tooltipOnTop(page)).toBe(true);
     }
   });

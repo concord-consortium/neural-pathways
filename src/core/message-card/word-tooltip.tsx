@@ -89,7 +89,8 @@ function placeTooltip(tooltip: HTMLElement, word: HTMLElement, area: HTMLElement
   const outOfView = !!scrollerBox && (wordBox.bottom <= scrollerBox.top || wordBox.top >= scrollerBox.bottom);
   tooltip.style.left = `${left}px`;
   tooltip.style.top = `${top}px`;
-  tooltip.style.setProperty("--word-tooltip-pointer", `${wordCenter - left}px`);
+  // The pointer's left is measured from inside the tooltip's border.
+  tooltip.style.setProperty("--word-tooltip-pointer", `${wordCenter - left - tooltip.clientLeft}px`);
   tooltip.style.visibility = outOfView ? "hidden" : "";
 }
 
