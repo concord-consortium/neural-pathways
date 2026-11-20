@@ -20,7 +20,11 @@ line here is reviewed; see `src/core/README.md`.
 ## Modes
 
 `App` (`components/app.tsx`) decides the mode from `?interactive=`. If it is present, the page is
-in interactive mode: that view is shown alone and the hash is ignored. Otherwise
+in interactive mode: that view is shown alone and the hash is ignored. The view also leaves out its
+title: the Activity Player's bar above the iframe names it, and a title inside, even one hidden
+from sight, would make a screen reader read the name twice. Views learn the mode from
+`InteractiveModeContext`, and their `ViewTitle` (both in `src/core/view-title/`) renders the `h1`
+only in the standalone app. A 9 px top padding takes the title's place. Otherwise
 `StandaloneLayout` shows the view nav and follows `#view=`. An id that is not in the registry
 shows "Unknown view" with the list of valid ids, in either mode.
 

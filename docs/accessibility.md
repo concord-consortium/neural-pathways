@@ -65,6 +65,51 @@ are an Interactive's: the whole iframe a view is embedded in, the app's 16 px gu
   section on its fixed 1100 px page, where the iframe is 1044 px wide. So the views are designed
   for 1024 px or less, which fits both.
 
+### In the Activity Player
+
+The Activity Player sizes an Interactive's iframe from the settings an author picks in LARA. Our
+app doesn't use the interactive API, so it never tells the Activity Player a size or an aspect
+ratio. [`src/ap-preview/ap-sizing.ts`](../src/ap-preview/ap-sizing.ts) has the formulas, with
+the Activity Player code each one copies.
+
+**Width.** The section's layout and the page's "Activity Page Fixed Width" set it.
+- On a fixed page, "Standard (1100px)" or "iPad Friendly (960px)", a "full-width (single column)"
+  section's iframe is the page less 56 px of padding and margin: 1044 or 904 px. The window's width
+  doesn't change it; a narrower window scrolls sideways.
+- The two-column layouts (60-40, 40-60, 70-30, 30-70) split that width into grid columns. The widest
+  column, 30-70's primary on the 1100 px page, is 767 px, narrower than the minimum layout width of
+  every view built so far.
+- Any section whose layout starts with "responsive" makes the page as wide as the window, and the
+  fixed width no longer applies. A "responsive-full-width (single column)" iframe is the window
+  less 140 px. The responsive two-column layouts split the window's width between their columns.
+
+**Height.** The interactive's "Aspect Ratio" sets it.
+- "Default aspect ratio, or set by interactive" makes it 3/4 of the width, but no taller than 98% of
+  the window's height less 15 px. When that cap applies, the width shrinks to keep 4:3.
+- "Manually set the native width & height" makes it the width times height ÷ width, with no cap.
+- "Use all available space for the interactive" stretches it to 98% of the window's height, less
+  the header bar, the buttons below the iframe and the border. It does that only in a full-width
+  section. Everywhere else, including a responsive-full-width section and any column of a
+  two-column layout when the setting comes from the library interactive, the iframe stays at its
+  300 px default.
+
+**The settings that give the designed size.** Set the library interactive to "Manually set the
+native width & height" at 1044 × 562, and put it in a "full-width (single column)" section on a
+"Standard (1100px)" page. The iframe is then 1044 × 562 on every window. Each embed inherits the
+setting, so authors don't set it themselves. The responsive layouts and the default aspect ratio
+don't give the designed size. Reporting a height through the interactive API would let the app ask
+for its own height; that isn't built.
+
+These sizes assume:
+- **The author gives the interactive a name.** The Activity Player shows it in the bar above the
+  iframe, and in an Interactive the view leaves out its own title. Without a name there is no bar,
+  and nothing names the view.
+- **A Multiple Pages activity.** The Single Page and Notebook layouts size Interactives differently.
+
+**Check it.** `ap-preview.html` shows any view in an iframe at the size the Activity Player would
+give it, for the settings you pick under LARA's labels, in your window. For a quick check without
+it, open `index.html?interactive=<view-id>` in DevTools' device toolbar at an exact size.
+
 **Each view has a minimum layout size:** the narrowest and shortest it can be while keeping its
 layout as designed, before anything stacks, wraps or scrolls in a way the design doesn't show. It
 is set by what the view has to hold, so size it from that, not from one window's measurement. A
