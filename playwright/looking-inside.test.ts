@@ -762,6 +762,75 @@ test.describe("the neurons' readouts", () => {
     await expect(readout(page)).toHaveText("Click any neuron in any layer to see how data flows.");
   });
 
+  test.describe("the rings", () => {
+    const ring = (page: Page, column: number, unit: number) => page.getByTestId(`ring-${column}-${unit}`);
+    const dimmedEdges = (page: Page) => page.locator("[data-testid^='edge-'][opacity='0.1']");
+    /** colors.$ink, the pinned ring, and colors.$wait, the keyboard focus ring. */
+    const INK = "rgb(30, 36, 44)";
+    const FOCUS_BLUE = "rgb(58, 114, 190)";
+    const strokeOf = (page: Page, column: number, unit: number) => ring(page, column, unit)
+      .evaluate(circle => {
+        const style = getComputedStyle(circle);
+        return { stroke: style.stroke, opacity: style.opacity };
+      });
+
+    test("a click rings the pinned neuron in ink, not the focus blue", async ({ page }) => {
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await expect(neuron(page, "Hidden Layer 1 Neuron 1")).toHaveAttribute("aria-pressed", "true");
+      expect(await strokeOf(page, 1, 0)).toEqual({ stroke: INK, opacity: "1" });
+    });
+
+    test("a click that unpins leaves no ring and no highlight once the mouse moves away", async ({ page }) => {
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await expect(neuron(page, "Hidden Layer 1 Neuron 1")).toHaveAttribute("aria-pressed", "false");
+      await page.mouse.move(0, 0);
+      await expect(ring(page, 1, 0)).toHaveCount(0);
+      await expect(dimmedEdges(page)).toHaveCount(0);
+      await expect(readout(page)).toHaveText(/^Click any neuron in the Input Layer or Hidden Layer 1/);
+    });
+
+    test("clearing with the mouse leaves no ring and no highlight on the neuron it focuses", async ({ page }) => {
+      await stepTo(page, 4);
+      await page.getByTestId("pill-target-1").click();
+      await expect(readout(page)).toContainText("Approach");
+      await page.getByRole("button", { name: "Clear" }).click();
+      await expect(neuron(page, "Output Layer: Approach")).toBeFocused();
+      await expect(ring(page, 3, 1)).toHaveCount(0);
+      await expect(dimmedEdges(page)).toHaveCount(0);
+    });
+
+    test("keyboard focus rings a neuron in blue, and a pin from the keyboard turns it ink", async ({ page }) => {
+      await stepTo(page, 4);
+      await page.getByRole("checkbox", { name: "Animate" }).focus();
+      await page.keyboard.press("Tab");
+      await expect(neuron(page, "Input Layer Neuron 1")).toBeFocused();
+      expect(await strokeOf(page, 0, 0)).toEqual({ stroke: FOCUS_BLUE, opacity: "1" });
+      await expect(dimmedEdges(page).first()).toBeAttached();
+      await page.keyboard.press("Enter");
+      await expect(neuron(page, "Input Layer Neuron 1")).toHaveAttribute("aria-pressed", "true");
+      expect(await strokeOf(page, 0, 0)).toEqual({ stroke: INK, opacity: "1" });
+
+      // Clearing from the keyboard sends focus back to the neuron, where the keyboard can see it.
+      await page.getByRole("button", { name: "Clear" }).focus();
+      await page.keyboard.press("Enter");
+      await expect(neuron(page, "Input Layer Neuron 1")).toBeFocused();
+      expect(await strokeOf(page, 0, 0)).toEqual({ stroke: FOCUS_BLUE, opacity: "1" });
+    });
+
+    test("a key pressed on a clicked neuron shows its focus", async ({ page }) => {
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await page.mouse.move(0, 0);
+      // Unpinning from the keyboard leaves the neuron focused, so the ring shows where focus is.
+      await page.keyboard.press("Enter");
+      await expect(neuron(page, "Hidden Layer 1 Neuron 1")).toHaveAttribute("aria-pressed", "false");
+      expect(await strokeOf(page, 1, 0)).toEqual({ stroke: FOCUS_BLUE, opacity: "1" });
+    });
+  });
+
   const cutOff = (page: Page) => page.getByTestId("readout-box")
     .evaluate(box => box.scrollHeight > box.clientHeight);
 

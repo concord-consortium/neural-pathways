@@ -579,6 +579,36 @@ describe("LookingInside", () => {
       expect(screen.getByTestId("edge-near-0-0-0")).toHaveAttribute("opacity", "0.1");
       expect(screen.getByTestId("edge-near-0-0-1")).not.toHaveAttribute("opacity");
     });
+
+    describe("focus", () => {
+      // jsdom matches :focus-visible on any focus, so each test says whether its focus is the keyboard's.
+      const realMatches = Element.prototype.matches;
+      function focusVisibleIs(answer: boolean) {
+        jest.spyOn(Element.prototype, "matches").mockImplementation(function (this: Element, selector: string) {
+          return selector === ":focus-visible" ? answer : realMatches.call(this, selector);
+        });
+      }
+      afterEach(() => jest.restoreAllMocks());
+
+      it("rings and highlights a neuron with keyboard focus", async () => {
+        await showInstant();
+        press("Step 2");
+        focusVisibleIs(true);
+        act(() => neuron("Hidden Layer 1 Neuron 2").focus());
+        expect(screen.getByTestId("ring-1-1")).toHaveClass("network-diagram__ring--focused");
+        expect(screen.getByTestId("edge-near-0-0-0")).toHaveAttribute("opacity", "0.1");
+      });
+
+      it("gives a neuron a click focused the Tab stop, but no ring and no highlight", async () => {
+        await showInstant();
+        press("Step 2");
+        focusVisibleIs(false);
+        act(() => neuron("Hidden Layer 1 Neuron 2").focus());
+        expect(neuron("Hidden Layer 1 Neuron 2")).toHaveAttribute("tabindex", "0");
+        expect(screen.queryByTestId("ring-1-1")).not.toBeInTheDocument();
+        expect(screen.getByTestId("edge-near-0-0-0")).not.toHaveAttribute("opacity");
+      });
+    });
   });
 
   describe("the filter", () => {

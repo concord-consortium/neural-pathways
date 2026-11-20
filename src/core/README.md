@@ -74,7 +74,8 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
 
   A view that lets the student pick neurons passes `NetworkDiagram` an `interaction`
   (`NeuronInteraction`): how many columns are reached, the neuron holding the Tab stop, the rings
-  to draw, and the callbacks for hover, focus, click and clear. The view owns that state, and
+  to draw, and the callbacks for hover, focus (saying whether it is keyboard focus, `:focus-visible`,
+  which alone gets a focus ring), click and clear. The view owns that state, and
   `NetworkDrawing` stays stateless, taking the rings and the highlight as props. `neuron.ts` is
   the vocabulary: `NeuronRef`, the names a neuron goes by ("Hidden Layer 1 Neuron 3", "Output
   Layer: Approach") and `formatActivation`, which writes a value with two decimals and a real minus

@@ -46,7 +46,9 @@
   stroke-width: 1;
 }
 
-// Never a CSS outline: an SVG element's outline is square. Source order makes focus win the color.
+// Never a CSS outline: an SVG element's outline is square. Where one neuron has several rings, source
+// order picks the look: focus wins over hover, and the pin wins over both, since it is the stronger
+// state and the one that lasts.
 .network-diagram__ring {
   fill: none;
   stroke-width: 2;
@@ -58,13 +60,13 @@
   opacity: 0.5;
 }
 
-.network-diagram__ring--pinned {
-  stroke: colors.$ink;
+.network-diagram__ring--focused {
+  stroke: colors.$wait;
   opacity: 1;
 }
 
-.network-diagram__ring--focused {
-  stroke: colors.$wait;
+.network-diagram__ring--pinned {
+  stroke: colors.$ink;
   opacity: 1;
 }
 

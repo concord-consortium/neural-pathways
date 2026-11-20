@@ -277,9 +277,60 @@ describe("NetworkDiagram neuron targets", () => {
     fireEvent.pointerLeave(button);
     expect(interaction.onHover).toHaveBeenLastCalledWith(undefined);
     button.focus();
-    expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 });
+    expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, true);
     button.blur();
-    expect(interaction.onFocusChange).toHaveBeenLastCalledWith(undefined);
+    expect(interaction.onFocusChange).toHaveBeenLastCalledWith(undefined, false);
+  });
+
+  describe("telling keyboard focus from a click's", () => {
+    // jsdom matches :focus-visible on any focus, so each test says which focus it means.
+    const realMatches = Element.prototype.matches;
+    function focusVisibleIs(answer: boolean | "unsupported") {
+      jest.spyOn(Element.prototype, "matches").mockImplementation(function (this: Element, selector: string) {
+        if (selector !== ":focus-visible") {
+          return realMatches.call(this, selector);
+        }
+        if (answer === "unsupported") {
+          throw new SyntaxError(`'${selector}' is not a valid selector`);
+        }
+        return answer;
+      });
+    }
+    afterEach(() => jest.restoreAllMocks());
+
+    it("reports a click's focus as not visible", () => {
+      const interaction = makeInteraction();
+      renderInteractive(interaction);
+      focusVisibleIs(false);
+      screen.getAllByRole("button")[0].focus();
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, false);
+    });
+
+    it("reports keyboard focus as visible", () => {
+      const interaction = makeInteraction();
+      renderInteractive(interaction);
+      focusVisibleIs(true);
+      screen.getAllByRole("button")[0].focus();
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, true);
+    });
+
+    it("counts any focus as visible where :focus-visible isn't supported", () => {
+      const interaction = makeInteraction();
+      renderInteractive(interaction);
+      focusVisibleIs("unsupported");
+      screen.getAllByRole("button")[0].focus();
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, true);
+    });
+
+    it("makes a clicked neuron's focus visible when a key is pressed on it", () => {
+      const interaction = makeInteraction({ tabStop: { column: 0, unit: 0 } });
+      renderInteractive(interaction);
+      focusVisibleIs(false);
+      const button = screen.getAllByRole("button")[0];
+      button.focus();
+      fireEvent.keyDown(button, { key: "Enter" });
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, true);
+    });
   });
 
   it("moves focus with the arrow keys", () => {
