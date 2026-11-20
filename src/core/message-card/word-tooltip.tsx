@@ -3,13 +3,20 @@ import React, { createContext, useCallback, useContext, useEffect, useLayoutEffe
 import { pathwayName, signedScore, WordScoreNote } from "./word-score-text";
 import "./word-tooltip.scss";
 
-/** A word that can show the tooltip: its element, to place the tooltip over, and what to say. */
+/**
+ * A word the pointer or the focus moved to: its element, to place the tooltip over, and what to say.
+ * A word that scores on no pathway has no note and shows no tooltip, but still counts as where the
+ * pointer or the focus moved last.
+ */
 export interface WordTarget {
   element: HTMLElement;
-  note: WordScoreNote;
+  note?: WordScoreNote;
 }
 
-/** How a word reports the pointer and the focus to the tooltip. A word with no note sends `undefined`. */
+/** A word with a tooltip to show. */
+type NotedTarget = Required<WordTarget>;
+
+/** How a word reports the pointer and the focus to the tooltip. */
 export interface WordTooltipEvents {
   /** The pointer entered a word, or, with `undefined`, left one for `to`. */
   hover(target: WordTarget | undefined, to?: EventTarget | null): void;
@@ -63,10 +70,12 @@ function reduceTooltip(state: TooltipState, action: TooltipAction): TooltipState
   return next;
 }
 
+const hasNote = (target: WordTarget): target is NotedTarget => target.note !== undefined;
+
 /** The word to show the tooltip over, if any. */
-const visibleTarget = (state: TooltipState) => {
+const visibleTarget = (state: TooltipState): NotedTarget | undefined => {
   const target = shownTarget(state);
-  return target && !state.dismissed.includes(target.element) ? target : undefined;
+  return target && hasNote(target) && !state.dismissed.includes(target.element) ? target : undefined;
 };
 
 // The gap between the word and the tooltip, which the tooltip's pointer fills.
@@ -109,7 +118,8 @@ interface WordTooltipAreaProps {
  *
  * It meets WCAG 1.4.13: Escape hides it without moving the focus, until the pointer or the focus next
  * moves to a word; the pointer can move onto one the pointer opened; and it stays until the pointer
- * leaves both the word and the tooltip or the focus leaves the word.
+ * leaves both the word and the tooltip, the focus leaves the word, or the pointer or the focus moves
+ * to another word.
  * It is hidden from screen readers, since the word's name says the same thing.
  */
 export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, scrollerRef, children }) => {
