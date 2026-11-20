@@ -1,14 +1,26 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { step1Duration } from "./word-flights";
+import { landingTime, step1Duration } from "./word-flights";
 import { WordFlightOverlay } from "./word-flight-overlay";
 
 const WORDS = ["wait", "for", "me"];
 const INPUTS = 10;
 
-/** A container holding the card's words and the input layer's outlines, each with a rect from its position. */
+/**
+ * A container holding the card's words and the input layer's outlines, each with a rect from its
+ * position. Also the input neurons' buttons, which carry the same data attributes as the outlines,
+ * far to the right. They come first, so an overlay that took them for outlines would aim at them.
+ */
 function makeContainer(): HTMLElement {
   const container = document.createElement("div");
+  for (let unit = 0; unit < INPUTS; unit++) {
+    const button = document.createElement("div");
+    button.setAttribute("role", "button");
+    button.dataset.column = "0";
+    button.dataset.unit = String(unit);
+    button.dataset.rect = `900,${20 + unit * 20}`;
+    container.appendChild(button);
+  }
   WORDS.forEach((word, i) => {
     const span = document.createElement("span");
     span.className = "message-words__word";
@@ -18,6 +30,7 @@ function makeContainer(): HTMLElement {
   });
   for (let unit = 0; unit < INPUTS; unit++) {
     const circle = document.createElement("div");
+    circle.className = "network-diagram__node";
     circle.dataset.column = "0";
     circle.dataset.unit = String(unit);
     circle.dataset.rect = `300,${20 + unit * 20}`;
@@ -67,6 +80,13 @@ describe("WordFlightOverlay", () => {
     const drawn = chips(0);
     expect(drawn.map(chip => chip.textContent).sort()).toEqual([...WORDS].sort());
     expect(screen.getByTestId("word-flight-overlay")).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("aims at the input neurons' outlines, not at other elements with their data attributes", () => {
+    // Just before the first copy lands on the first input, it is all but there.
+    const drawn = chips(landingTime(0, 0, WORDS.length) - 1);
+    const x = parseFloat(drawn[0].style.left);
+    expect(Math.abs(x - 305)).toBeLessThan(20);
   });
 
   it("draws nothing once Step 1 is over", () => {

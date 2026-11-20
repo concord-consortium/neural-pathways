@@ -17,7 +17,8 @@ function centerIn(element: Element, origin: DOMRect): Point {
 function measure(container: HTMLElement): Geometry {
   const origin = container.getBoundingClientRect();
   const words = Array.from(container.querySelectorAll(".message-words__word"), word => centerIn(word, origin));
-  const inputs = Array.from(container.querySelectorAll("[data-column='0']"))
+  // The outlines, not the neurons' buttons, which carry the same data attributes.
+  const inputs = Array.from(container.querySelectorAll(".network-diagram__node[data-column='0']"))
     .sort((a, b) => Number(a.getAttribute("data-unit")) - Number(b.getAttribute("data-unit")))
     .map(node => centerIn(node, origin));
   return { words, inputs };

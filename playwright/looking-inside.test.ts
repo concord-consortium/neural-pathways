@@ -702,7 +702,7 @@ test.describe("Step 1's word flights", () => {
     await page.setViewportSize({ width: 600, height: 900 });
     // A chip about to land, which has faded a little, sits on its neuron.
     const near = await page.waitForFunction(() => {
-      const outlines = Array.from(document.querySelectorAll("[data-column='0']"), node => {
+      const outlines = Array.from(document.querySelectorAll(".network-diagram__node[data-column='0']"), node => {
         const rect = node.getBoundingClientRect();
         return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
       });
