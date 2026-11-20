@@ -1,6 +1,6 @@
-import React, { useId } from "react";
+import React, { useId, useState } from "react";
 import {
-  ApSettings, AspectRatioMethod, Column, FixedWidthLayout, SECTION_LAYOUTS, SectionLayout, isResponsive, isTwoColumn,
+  AspectRatioMethod, Column, FixedWidthLayout, SECTION_LAYOUTS, SectionLayout, isResponsive, isTwoColumn,
 } from "../ap-sizing";
 import { PRESETS, PreviewState, matchingPreset } from "../preview-state";
 
@@ -26,6 +26,39 @@ const ASPECT_LABELS: Record<AspectRatioMethod, string> = {
   MAX: "Use all available space for the interactive",
 };
 
+interface NativeSizeInputProps {
+  label: string;
+  value: number;
+  onCommit: (value: number) => void;
+}
+
+/**
+ * A native width or height. What is typed is kept as a draft and applied on blur or Enter, so the
+ * field can be cleared and retyped, and the iframe doesn't pass through the sizes typed on the way
+ * (typing 800 passes 8, which would make it thousands of pixels tall). A draft that isn't a positive
+ * whole number is dropped for the last valid size.
+ */
+const NativeSizeInput: React.FC<NativeSizeInputProps> = ({ label, value, onCommit }) => {
+  const id = useId();
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = () => {
+    if (draft === null) return;
+    if (/^[1-9]\d*$/.test(draft)) onCommit(Number(draft));
+    setDraft(null);
+  };
+  return (
+    <div className="ap-preview__field">
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id} type="number" min="1" step="1" value={draft ?? value}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === "Enter") commit(); }}
+      />
+    </div>
+  );
+};
+
 interface PreviewControlsProps {
   state: PreviewState;
   views: readonly { id: string; title: string }[];
@@ -41,10 +74,6 @@ export const PreviewControls: React.FC<PreviewControlsProps> = ({ state, views, 
   const choosePreset = (presetId: string) => {
     const chosen = PRESETS.find(p => p.id === presetId);
     if (chosen) set(chosen.settings);
-  };
-  const setNative = (key: keyof Pick<ApSettings, "nativeWidth" | "nativeHeight">, value: string) => {
-    const n = Number(value);
-    if (Number.isInteger(n) && n > 0) set({ [key]: n });
   };
 
   return (
@@ -112,16 +141,9 @@ export const PreviewControls: React.FC<PreviewControlsProps> = ({ state, views, 
           </div>
           {state.aspectRatioMethod === "MANUAL" &&
             <>
-              <div className="ap-preview__field">
-                <label htmlFor={`${id}-width`}>Width</label>
-                <input id={`${id}-width`} type="number" min="1" step="1" value={state.nativeWidth}
-                  onChange={e => setNative("nativeWidth", e.target.value)} />
-              </div>
-              <div className="ap-preview__field">
-                <label htmlFor={`${id}-height`}>Height</label>
-                <input id={`${id}-height`} type="number" min="1" step="1" value={state.nativeHeight}
-                  onChange={e => setNative("nativeHeight", e.target.value)} />
-              </div>
+              <NativeSizeInput label="Width" value={state.nativeWidth} onCommit={nativeWidth => set({ nativeWidth })} />
+              <NativeSizeInput label="Height" value={state.nativeHeight}
+                onCommit={nativeHeight => set({ nativeHeight })} />
             </>}
         </fieldset>
       </div>

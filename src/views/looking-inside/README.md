@@ -44,8 +44,8 @@ counted. The standalone app has no top padding, and shows the view's title above
 instead: 82 px for a 32 px heading's line and its 0.67em margins, then a 9 px gap.
 
 Narrower than its minimum layout width, it still works, but no reviewed design covers it:
-- The columns stack, and the page scrolls down. It is about 1,120 px tall just below that width,
-  and grows as more of it wraps, to about 1,510 px at 320 px.
+- The columns stack, and the page scrolls down. As an Interactive it is about 850 px tall just below
+  that width, and grows as more of it wraps, to about 1,030 px at 320 px.
 - About stays at the right end of the step row, and wraps onto its own line below the steps when
   the row is too narrow for both.
 - Below 414 px, the diagram scrolls sideways inside its panel. That is the diagram's narrowest

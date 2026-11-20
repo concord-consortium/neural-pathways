@@ -142,7 +142,19 @@ describe("apSize", () => {
   it("explains each number", () => {
     const size = apSize(base, { width: 1400, height: 600 });
     expect(size.explanation).toHaveLength(2);
-    expect(size.explanation[0]).toMatch(/1044/);
     expect(size.explanation[1]).toMatch(/600/);
+  });
+
+  it("calls the first number the column's width, since the iframe can be narrower", () => {
+    // DEFAULT narrows the iframe to 784 here, inside a 1044 px column.
+    expect(apSize(base, { width: 1400, height: 600 }).explanation[0]).toMatch(/^Column width 1044: /);
+  });
+
+  it("halves the window less 120 for responsive-50-50, and says so in that order", () => {
+    const window = { width: 1366, height: 2000 };
+    expect(apSize({ ...base, layout: "responsive-50-50", column: "secondary" }, window).explanation[0])
+      .toBe("Column width 623: the 1366 px window less 120, halved.");
+    expect(apSize({ ...base, layout: "responsive-50-50" }, window).explanation[0])
+      .toBe("Column width 593: the 1366 px window less 120, halved, less 30.");
   });
 });

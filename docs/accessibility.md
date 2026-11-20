@@ -75,7 +75,10 @@ the Activity Player code each one copies.
 **Width.** The section's layout and the page's "Activity Page Fixed Width" set it.
 - On a fixed page, "Standard (1100px)" or "iPad Friendly (960px)", a "full-width (single column)"
   section's iframe is the page less 56 px of padding and margin: 1044 or 904 px. The window's width
-  doesn't change it; a narrower window scrolls sideways.
+  doesn't change it. In a window narrower than the page and its 80 px of outer padding, the
+  Activity Player keeps the page centered: it cuts off as much of the left side as the right, and
+  only the right side can be scrolled to. `ap-preview.html` scrolls sideways instead, so the whole
+  view can be seen.
 - The two-column layouts (60-40, 40-60, 70-30, 30-70) split that width into grid columns. The widest
   column, 30-70's primary on the 1100 px page, is 767 px, narrower than the minimum layout width of
   every view built so far.
@@ -85,7 +88,8 @@ the Activity Player code each one copies.
 
 **Height.** The interactive's "Aspect Ratio" sets it.
 - "Default aspect ratio, or set by interactive" makes it 3/4 of the width, but no taller than 98% of
-  the window's height less 15 px. When that cap applies, the width shrinks to keep 4:3.
+  the window's height less 15 px. When that cap applies, the width may also narrow, to 98% of the
+  window's height × 4/3.
 - "Manually set the native width & height" makes it the width times height ÷ width, with no cap.
 - "Use all available space for the interactive" stretches it to 98% of the window's height, less
   the header bar, the buttons below the iframe and the border. It does that only in a full-width
@@ -133,7 +137,7 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   views are built to meet 1.4.10 and 2.1.1 there, and checked in Chromium, but may be too cumbersome
   to be useful to students. At 320 px Extract the Neural Pathways' steps wrap into three rows, with
   About on a fourth, above a canvas that scrolls sideways, and Looking Inside a Neural Network
-  stacks into a page about 1,510 px tall ([its README](../src/views/looking-inside/README.md) has
+  stacks into a page about 1,030 px tall ([its README](../src/views/looking-inside/README.md) has
   the heights).
 - An Activity Player page that has a responsive section is as wide as the window, with no minimum
   width for the page or its iframes, so an Interactive there is only as wide as the window allows.

@@ -83,6 +83,8 @@ body {
 // The page and its padding (activity-page-content.scss:7). On a responsive page it is as wide as
 // the window.
 .ap-page__activity {
+  // The 1100 or 960 px includes the padding, as the Activity Player's .page-content does.
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 20px;
   background: #fff;
@@ -105,7 +107,7 @@ body {
   min-height: 200px;
   padding: 8px;
   border: 1px dashed #979797;
-  color: #828282;
+  color: #6b6b6b;
 }
 
 // A managed interactive's 1 px border, content-box, so it overflows the column
