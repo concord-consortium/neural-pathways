@@ -13,8 +13,8 @@ $step-row-width: 421px;
 $two-columns-width: 447px + 10px + $step-row-width;
 // The narrowest view width at which the network panel's head holds its title, the activation legend
 // and the Animate controls on one line, measured with the web fonts loaded: 981 px. Between
-// $two-columns-width (910 px) and this the head wraps, the controls dropping below the title, and
-// the view still works. This is the view's minimum layout width.
+// $two-columns-width (910 px) and this the head wraps, the legend and the controls dropping below the
+// title together, and the view still works. This is the view's minimum layout width.
 $one-line-head-width: 981px;
 
 // At least the window's height, so the layout below the title can fill what is left of it.
@@ -120,9 +120,16 @@ $one-line-head-width: 981px;
   margin-right: 0;
 }
 
-// The legend takes the row's slack, which keeps the title at the left and pushes the legend and
-// the controls to the right.
-.looking-inside__network-legend {
+// The legend, the rule and the controls, which move as one: the group takes the row's slack, which
+// keeps the title at the left and the group at the right, and when the head is too narrow for one
+// line the whole group drops below the title. It wraps inside too, in a head narrower than the
+// group itself.
+.looking-inside__network-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
   margin-left: auto;
 }
 
