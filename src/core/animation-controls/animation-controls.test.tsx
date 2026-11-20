@@ -62,7 +62,6 @@ describe("AnimationControls", () => {
     expect(screen.getByText("Slow")).not.toHaveClass("animation-controls__stop--current");
   });
 
-  // As in the prototype: the middle stop keeps its tick, drawn by its span, but prints no name.
   it("prints no name under the middle stop, but keeps its place and marks it when current", () => {
     render(<AnimationControls animated={new TestSettings()} />);
     const stops = screen.getAllByTestId(/^speed-stop-/);

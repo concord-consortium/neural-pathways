@@ -75,7 +75,7 @@ export interface NetworkDrawingProps {
  * scenes.
  *
  * It expects this lesson's network: four drawn columns (`COLUMN_CAPTIONS`) and two outputs,
- * Approach above Wait (`OUTPUT_ORDER`, the class captions, and CSS classes named after the labels).
+ * Approach above Wait (`OUTPUT_ORDER` and CSS classes named after the labels).
  * A network of another shape needs those generalized first.
  *
  * It has no role or name of its own: the SVG that places it gives the text alternative, as

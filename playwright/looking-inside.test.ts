@@ -290,7 +290,7 @@ test("the observation notes stay open when switching views", async ({ page }) =>
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
 });
 
-// As on a school network that blocks Google Fonts, where Lato and Barlow fall back.
+// As on a school network that blocks Google Fonts, where Lato and Barlow Condensed fall back.
 test("the message's words are set in Spline Sans Mono even with Google Fonts blocked", async ({ page }) => {
   await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
   await page.goto("/");

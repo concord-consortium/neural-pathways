@@ -40,7 +40,7 @@ one thing, or one name for two things, settle it and add it here.
   real milliseconds at normal speed, the prototype's Medium. The step player stretches them at Slow
   and squeezes them at Fast. Not "virtual time".
 - **normal speed:** `NORMAL_SPEED`, key 0, the slider's middle stop, which a screen reader calls
-  Medium and which has no name printed under it. Slow and Fast are relative to it.
+  Medium. Slow and Fast are relative to it.
 - **current:** the step marked with `aria-current="step"`: the one whose run plays, or, while
   nothing plays, the one its view marks. Not "pressed", since a step isn't a toggle.
 - **unavailable:** a button marked `aria-disabled="true"`, which stays in the tab order and does
