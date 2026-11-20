@@ -96,7 +96,7 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   a fixed page sits outside the page's 1100 px, the page's 40 px, and a 20 px right margin that only
   a responsive section adds. So on a 1024 px landscape iPad the iframe is 884 px wide, narrower than
   every view's minimum layout width.
-- Extract the Neural Pathways' minimum layout height, 680 px, doesn't fit the designed size yet, so
+- Extract the Neural Pathways' minimum layout height, 598 px, doesn't fit the designed size yet, so
   in an Interactive 562 px tall its page scrolls down.
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
   and where a network blocks it they fall back to a wider sans-serif. Then, from Looking Inside a
