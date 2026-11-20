@@ -85,7 +85,8 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   views are built to meet 1.4.10 and 2.1.1 there, and checked in Chromium, but may be too cumbersome
   to be useful to students. At 320 px Extract the Neural Pathways' steps wrap into three rows, with
   About on a fourth, above a canvas that scrolls sideways, and Looking Inside a Neural Network
-  stacks into a page over 1,100 px tall.
+  stacks into a page about 1,510 px tall ([its README](../src/views/looking-inside/README.md) has
+  the heights).
 - Extract the Neural Pathways' minimum layout height, 680 px, doesn't fit the designed size yet, so
   in an Interactive 562 px tall its page scrolls down.
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,

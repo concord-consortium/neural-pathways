@@ -2,17 +2,17 @@ import { emptyScene, Scene } from "../../core/network-diagram/scene";
 import { sceneAt } from "../../core/network-diagram/forward-pass-phases";
 import { StepPlayer } from "../../core/steps/step-player";
 import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
-import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./looking-inside-steps";
+import { LOOKING_INSIDE_BUTTONS, lookingInsideProgress, lookingInsideTimeline } from "./looking-inside-steps";
 import { LookingInsideState } from "./looking-inside-state";
 
 const SIZES = [10, 8, 6, 2];
-const timeline = traceTimeline(SIZES);
+const timeline = lookingInsideTimeline(SIZES);
 
 /** Players over one LookingInsideState, made for a message as the view makes them. */
 function makeState() {
   const state = new LookingInsideState({});
   const playerFor = (messageId: string) =>
-    new StepPlayer(timeline, traceProgress(state, messageId), state);
+    new StepPlayer(timeline, lookingInsideProgress(state, messageId), state);
   /** The markers stored, by message. */
   const stored = () => ({ ...state.markerByMessage });
   return { playerFor, stored };
@@ -20,27 +20,27 @@ function makeState() {
 
 /** Presses Step `step` as the step buttons do. */
 function press(player: StepPlayer<Scene>, step: number) {
-  const button = TRACE_BUTTONS[step - 1];
+  const button = LOOKING_INSIDE_BUTTONS[step - 1];
   player.play(button.key, button.segmentToPlayWhenAt(player.marker)!);
 }
 
-describe("TRACE_BUTTONS", () => {
+describe("LOOKING_INSIDE_BUTTONS", () => {
   it("are Step 1 to Step 4, each playing from the marker before it", () => {
-    expect(TRACE_BUTTONS.map(b => b.label)).toEqual(["Step 1", "Step 2", "Step 3", "Step 4"]);
+    expect(LOOKING_INSIDE_BUTTONS.map(b => b.label)).toEqual(["Step 1", "Step 2", "Step 3", "Step 4"]);
     for (const marker of [0, 2, 4]) {
-      expect(TRACE_BUTTONS.map(b => b.segmentToPlayWhenAt(marker))).toEqual([
+      expect(LOOKING_INSIDE_BUTTONS.map(b => b.segmentToPlayWhenAt(marker))).toEqual([
         { from: 0, to: 1 }, { from: 1, to: 2 }, { from: 2, to: 3 }, { from: 3, to: 4 },
       ]);
     }
   });
 
   it("mark the step for the marker the timeline rests at as current", () => {
-    expect(TRACE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(3))).toEqual([false, false, true, false]);
-    expect(TRACE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(0))).toEqual([false, false, false, false]);
+    expect(LOOKING_INSIDE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(3))).toEqual([false, false, true, false]);
+    expect(LOOKING_INSIDE_BUTTONS.map(b => b.showAsCurrentWhenAt?.(0))).toEqual([false, false, false, false]);
   });
 });
 
-describe("traceTimeline", () => {
+describe("lookingInsideTimeline", () => {
   it("times a segment of one phase, and refuses any other, since it draws only the phase it ends on", () => {
     expect(timeline.duration({ from: 1, to: 2 })).toBeGreaterThan(0);
     expect(() => timeline.duration({ from: 0, to: 2 })).toThrow(RangeError);

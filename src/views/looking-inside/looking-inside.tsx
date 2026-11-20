@@ -21,7 +21,7 @@ import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { StepPlayer } from "../../core/steps/step-player";
 import { StepButtonGroup } from "../../core/steps/step-button-group";
-import { TRACE_BUTTONS, traceProgress, traceTimeline } from "./looking-inside-steps";
+import { LOOKING_INSIDE_BUTTONS, lookingInsideProgress, lookingInsideTimeline } from "./looking-inside-steps";
 import about from "./about.md";
 import "./looking-inside.scss";
 
@@ -80,7 +80,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // A message's place among all of them, which its pass is stored by. Its place in `ids`
   // changes with the query.
   const placeById = useMemo(() => new Map(index.items.map((item, i) => [item.id, i])), [index]);
-  const timeline = useMemo(() => traceTimeline(network.layers.map(layer => layer.biases.length)), [network]);
+  const timeline = useMemo(() => lookingInsideTimeline(network.layers.map(layer => layer.biases.length)), [network]);
   const { passes, scales } = indexPasses(network, index);
   const networkHeadId = useId();
   // Shown even before the store's correction lands, and while a query is being typed, so an id
@@ -90,7 +90,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // No message is shown when nothing matches: the empty list leaves the stored id in place.
   const shownId = listPosition < 0 ? undefined : currentId;
   const player = useMemo(
-    () => (shownId === undefined ? undefined : new StepPlayer(timeline, traceProgress(state, shownId), state)),
+    () => (shownId === undefined ? undefined : new StepPlayer(timeline, lookingInsideProgress(state, shownId), state)),
     [timeline, state, shownId]);
   // Stop the old player when the message changes or the view unmounts. A layout effect, so its
   // run can't finish and store its marker after the change is committed.
@@ -124,7 +124,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
         </MessageCard>
       </div>
       <div className="looking-inside__step-row">
-        {player && place !== undefined && <StepButtonGroup player={player} buttons={TRACE_BUTTONS} />}
+        {player && place !== undefined && <StepButtonGroup player={player} buttons={LOOKING_INSIDE_BUTTONS} />}
         <div className="looking-inside__about">
           <AboutButton title={LOOKING_INSIDE_TITLE} markdown={about} />
         </div>

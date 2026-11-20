@@ -45,7 +45,7 @@ and the left strip holds the deck's columns collected by hand. Once Extract Path
 pathway labels end inside the canvas too. Narrower, the canvas scrolls sideways inside its panel
 and the step row wraps, down to 320 px.
 
-About sits at the right end of the step row, with the steps centered on the panel. Below 894 px it
+About sits at the right end of the step row, with the steps centered on the panel. Below 820 px it
 goes on its own line below the steps.
 
 The minimum layout height, 680 px, adds up from the top:

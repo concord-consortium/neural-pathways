@@ -26,9 +26,10 @@ The framework is in place: `SharedState`, `AppState`, and the context views use.
 Neural Network and Extract the Neural Pathways have their state models. Each view's model, and each
 shared field, arrives with the story that first builds the UI using it, so it can be reviewed
 against that UI. The complete target is kept in draft
-[PR #29](https://github.com/concord-consortium/neural-pathways/pull/29). Bring a view's model over
-from it, and change the model if the UI turns out to need something different. The tables below list
-that target and the story each piece is expected to arrive with.
+[PR #29](https://github.com/concord-consortium/neural-pathways/pull/29). The draft predates v1.4 of
+the prototype: it says conversation for message and uses the old view names. Bring a view's model
+over from it, and change the model if the UI turns out to need something different. The tables
+below list that target and the story each piece is expected to arrive with.
 
 Where the models live follows the rule for `src/core/`: it holds what more than one view uses.
 
@@ -71,9 +72,9 @@ from `query`. Its comment says how it is used and why it is kept here.
 
 ## Each view's state
 
-Looking Inside a Neural Network's and Extract the Neural Pathways' are built so far: Looking Inside
-a Neural Network's with the marker each message rests at, and Extract the Neural Pathways' with all
-four of its stages, both with Animate and speed. The target, with what is built marked:
+Two views' models are built so far: Looking Inside a Neural Network's, with the marker each message
+rests at, and Extract the Neural Pathways', with all four of its stages. Both have Animate and
+speed. The target, with what is built marked:
 
 | View | Model | Keeps |
 |---|---|---|
@@ -107,8 +108,8 @@ views but are never saved or an undo step:
   the network, so they are stored as numbers.
 - **Keep the message valid.** When a filtered list stops including the current
   message, the first one in the list is written back, so the next view opens on the same
-  case. Pane 2 of Identify Contextual Factors falls back to the first message pane 1 isn't
-  showing, so the panes open on different cases. An empty list leaves the id alone.
+  message. Pane 2 of Identify Contextual Factors falls back to the first message pane 1 isn't
+  showing, so the panes open on different messages. An empty list leaves the id alone.
   `SharedState.ensureValidMessage` does this for the current message. The draft adds
   `ensureValidPane2Message` for pane 2.
 - **`$modelType` names are permanent.** They are stored in saved student data, like view ids.
