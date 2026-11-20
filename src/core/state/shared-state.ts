@@ -18,7 +18,13 @@ export class SharedState extends Model({
   /** The current message, in every view that shows one. Unset until a view first loads its messages. */
   messageId: tProp(types.maybe(types.string)),
 }) {
-  /** The filter bar's text while it differs from `query`; unset otherwise. Volatile: see docs/view-state.md. */
+  /**
+   * The filter bar's text while it differs from `query`; unset otherwise. Filtering follows it as
+   * the student types, but only `setQueryAndCorrect` stores a query and corrects the message. It is
+   * kept here, not in the filter bar, so every view's filter bar shows the same text and a
+   * half-typed query survives switching views. It is volatile (`@observable accessor`, not a
+   * `tProp`): never saved, never in a snapshot and never an undo step.
+   */
   @observable accessor queryDraft: string | undefined = undefined;
 
   @action

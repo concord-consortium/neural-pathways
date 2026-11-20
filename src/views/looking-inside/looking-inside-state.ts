@@ -19,7 +19,12 @@ export class LookingInsideState extends ExtendedModel(composeMixins(animatedMixi
    */
   markerByMessage: tProp(types.record(markerType), () => ({})),
 }) {
-  /** Whether the observation notes are open. Volatile: see docs/view-state.md. */
+  /**
+   * Whether the observation notes are open. It is volatile (`@observable accessor`, not a `tProp`):
+   * it lasts for the life of the page, so the notes stay open across messages and views, but it is
+   * never saved, never in a snapshot and never an undo step. A reload closes the notes, as in the
+   * prototype.
+   */
   @observable accessor notesOpen = false;
 
   @action

@@ -16,9 +16,8 @@ The lesson's first view: follow one message through the network, a layer at a ti
   at in `LookingInsideState`. Reset clears the message shown.
 - `looking-inside-state.ts`: the view's saved state, `LookingInsideState`: the marker each
   message rests at, and Animate and the speed, so they survive moving between messages
-  and switching views. It also keeps whether the observation notes are open, but only for the life
-  of the page: that isn't saved. Only this view uses it, so it lives here rather than in
-  `src/core/state/`.
+  and switching views. It also keeps whether the observation notes are open, which isn't saved
+  (see `notesOpen`). Only this view uses it, so it lives here rather than in `src/core/state/`.
 
 The network, the diagram, the message card and the data loading live in `src/core/`, where Extract
 the Neural Pathways and Investigate the Neural Pathways can use them. The network is the one the

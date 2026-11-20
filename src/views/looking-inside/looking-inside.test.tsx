@@ -131,7 +131,6 @@ describe("LookingInside", () => {
     expect(await screen.findByRole("button", { name: "Observation notes" })).toHaveAttribute("aria-expanded", "true");
   });
 
-  // Volatile: see docs/view-state.md.
   it("doesn't save whether the notes are open", async () => {
     const state = openNotes();
     expect(getSnapshot(state)).not.toHaveProperty("notesOpen");
