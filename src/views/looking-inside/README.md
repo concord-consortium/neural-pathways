@@ -44,6 +44,14 @@ live while a later step plays. A step press, Reset, a message change, Escape on 
 on the diagram's empty space and the readout's Clear button clear the pin; Animate and the speed
 don't. The view hears a step press through `StepButtonGroup`'s `onPress`.
 
+Hovering a reached neuron rings it at half strength in ink, pinning it rings it in full ink, and
+keyboard focus rings it in blue; where a neuron has more than one, the pin wins. Hover, keyboard
+focus and the pin each highlight the neuron's edges. Keyboard focus is the browser's
+`:focus-visible`: a click focuses a neuron too, and takes the Tab stop, but rings and highlights
+nothing of its own, so a click that unpins a neuron, or a click on the readout's Clear button, which
+sends focus back to the neuron, leaves it unmarked. A key pressed on that neuron makes its focus
+keyboard focus.
+
 The network, the diagram, the message card and the data loading live in `src/core/`, where Extract
 the Neural Pathways and Investigate the Neural Pathways can use them. The network is the one the
 generator fits to the alien3 data; the view reads it from the index (`alien3Network`).

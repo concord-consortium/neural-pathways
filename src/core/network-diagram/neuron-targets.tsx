@@ -14,13 +14,29 @@ export interface NeuronInteraction {
   tabStop?: NeuronRef;
   rings: NeuronRings;
   onHover(neuron: NeuronRef | undefined): void;
-  onFocusChange(neuron: NeuronRef | undefined): void;
+  /**
+   * A neuron took focus, or none has it. `visible` is true for keyboard focus, which the ring and the
+   * highlight show; a click focuses a neuron too, but only moves the Tab stop.
+   */
+  onFocusChange(neuron: NeuronRef | undefined, visible: boolean): void;
   onToggle(neuron: NeuronRef): void;
   onClear(): void;
 }
 
 /** Each target is this much wider than its circle, so neighbors in a row don't leave a gap. */
 const TARGET_EXTRA_WIDTH = 10;
+
+/**
+ * Whether an element's focus is keyboard focus: the browser's `:focus-visible`, which a click doesn't
+ * set and Tab does. An engine without it counts any focus.
+ */
+function hasVisibleFocus(element: Element): boolean {
+  try {
+    return element.matches(":focus-visible");
+  } catch {
+    return element === document.activeElement;
+  }
+}
 
 interface NeuronTargetsProps {
   layout: NetworkLayout;
@@ -51,6 +67,9 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
     if (event.altKey || event.ctrlKey || event.metaKey) {
       return;
     }
+    // A key pressed on a neuron a click focused makes its focus keyboard focus, as browsers do for
+    // :focus-visible, so the ring shows where the keys act.
+    onFocusChange(neuron, true);
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onToggle(neuron);
@@ -95,7 +114,8 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
           aria-label={`${neuronName(neuron, lastColumn, outputLabels)}, activation ${formatActivation(value)}`}
           tabIndex={sameNeuron(tabStop, neuron) ? 0 : -1} data-column={c} data-unit={unit}
           onPointerEnter={() => onHover(neuron)} onPointerLeave={() => onHover(undefined)}
-          onFocus={() => onFocusChange(neuron)} onBlur={() => onFocusChange(undefined)}
+          onFocus={event => onFocusChange(neuron, hasVisibleFocus(event.currentTarget))}
+          onBlur={() => onFocusChange(undefined, false)}
           onKeyDown={event => onKeyDown(event, neuron)}>
           {rect}
         </g>

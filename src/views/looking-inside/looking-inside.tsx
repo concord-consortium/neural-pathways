@@ -46,8 +46,9 @@ interface NeuronAttention {
   messageId: string | undefined;
   pinned?: NeuronRef;
   hovered?: NeuronRef;
+  /** The neuron with keyboard focus (`:focus-visible`), not one a click focused. */
   focused?: NeuronRef;
-  /** The neuron that last had focus, which holds the Tab stop. */
+  /** The neuron that last had focus, from the keyboard or a click, which holds the Tab stop. */
   lastFocused?: NeuronRef;
 }
 
@@ -187,8 +188,11 @@ const LookingInsideBody = observer(function LookingInsideBody(
         focused: ifReached(attention.focused),
       },
       onHover: hovered => updateAttention({ hovered }),
-      // A blur reports no neuron, and an arrow key moves focus with a blur and then a focus.
-      onFocusChange: focused => updateAttention(focused ? { focused, lastFocused: focused } : { focused }),
+      // A blur reports no neuron, and an arrow key moves focus with a blur and then a focus. Any focus
+      // takes the Tab stop; only keyboard focus rings and highlights the neuron, so a click that unpins
+      // leaves nothing marked.
+      onFocusChange: (neuron, visible) => updateAttention(
+        neuron ? { focused: visible ? neuron : undefined, lastFocused: neuron } : { focused: undefined }),
       onToggle: neuron => updateAttention(
         { pinned: sameNeuron(ifReached(attention.pinned), neuron) ? undefined : neuron }),
       onClear: () => updateAttention({ pinned: undefined }),
