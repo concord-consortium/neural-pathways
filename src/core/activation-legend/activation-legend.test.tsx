@@ -10,7 +10,8 @@ describe("ActivationLegend", () => {
 
   it("hides its two swatches from assistive technology, since the signs say the same", () => {
     const { container } = render(<ActivationLegend />);
-    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access -- the swatches are hidden, so they have no role or text
+    // The swatches are hidden, so they have no role or text.
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
     const swatches = container.querySelectorAll(".activation-legend__swatch");
     expect(swatches).toHaveLength(2);
     swatches.forEach(swatch => expect(swatch).toHaveAttribute("aria-hidden", "true"));

@@ -2,7 +2,9 @@ import { emptyScene } from "../../core/network-diagram/scene";
 import { phaseDuration, sceneAt } from "../../core/network-diagram/forward-pass-phases";
 import { StepPlayer } from "../../core/steps/step-player";
 import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
-import { LookingInsideScene, LOOKING_INSIDE_BUTTONS, lookingInsideProgress, lookingInsideTimeline } from "./looking-inside-steps";
+import {
+  LookingInsideScene, LOOKING_INSIDE_BUTTONS, lookingInsideProgress, lookingInsideTimeline,
+} from "./looking-inside-steps";
 import { LookingInsideState } from "./looking-inside-state";
 import { inputFillAt, step1Duration } from "./word-flights";
 
