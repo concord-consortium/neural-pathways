@@ -104,7 +104,7 @@ function columnWidths(settings: ApSettings, windowWidth: number): Columns {
     const half = section / 2;
     return {
       pageWidth: null, primary: half - 30, secondary: half,
-      why: `half of the ${W} px window less 120` + (settings.column === "primary" ? ", less 30" : ""),
+      why: `the ${W} px window less 120, halved` + (settings.column === "primary" ? ", less 30" : ""),
     };
   }
 
@@ -204,7 +204,7 @@ export function apSize(settings: ApSettings, window: ApWindow): ApSize {
     columnWidth: D,
     iframeWidth: Math.max(0, iframeWidth),
     iframeHeight: Math.max(0, iframeHeight),
-    explanation: [`Width ${round1(D)}: ${cols.why}.`, heightWhy],
+    explanation: [`Column width ${round1(D)}: ${cols.why}.`, heightWhy],
     warning,
   };
 }

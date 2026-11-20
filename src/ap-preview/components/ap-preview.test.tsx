@@ -62,9 +62,44 @@ describe("ApPreview", () => {
   it("changing a setting by hand clears the preset", () => {
     setHash("");
     render(<ApPreview />);
-    fireEvent.change(screen.getByRole("spinbutton", { name: "Height" }), { target: { value: "600" } });
+    const height = screen.getByRole("spinbutton", { name: "Height" });
+    fireEvent.change(height, { target: { value: "600" } });
+    fireEvent.blur(height);
     expect(screen.getByRole("combobox", { name: "Preset" })).toHaveValue("");
     expect(window.location.hash).toContain("native_height=600");
+  });
+
+  it("lets a native size be cleared and retyped, applying it when the field is left", () => {
+    setHash("");
+    render(<ApPreview />);
+    const width = screen.getByRole("spinbutton", { name: "Width" });
+    fireEvent.change(width, { target: { value: "" } });
+    expect(width).toHaveValue(null);
+    // Typing 800 passes through 8 and 80, which would make the iframe thousands of pixels tall.
+    fireEvent.change(width, { target: { value: "8" } });
+    expect(window.location.hash).toContain("native_width=1044");
+    fireEvent.change(width, { target: { value: "800" } });
+    expect(width).toHaveValue(800);
+    fireEvent.blur(width);
+    expect(window.location.hash).toContain("native_width=800");
+  });
+
+  it("applies a native size on Enter", () => {
+    setHash("");
+    render(<ApPreview />);
+    const width = screen.getByRole("spinbutton", { name: "Width" });
+    fireEvent.change(width, { target: { value: "900" } });
+    fireEvent.keyDown(width, { key: "Enter" });
+    expect(window.location.hash).toContain("native_width=900");
+  });
+
+  it("puts the last valid native size back when the field is left empty", () => {
+    setHash("");
+    render(<ApPreview />);
+    const height = screen.getByRole("spinbutton", { name: "Height" });
+    fireEvent.change(height, { target: { value: "" } });
+    fireEvent.blur(height);
+    expect(height).toHaveValue(562);
   });
 
   it("shows Width and Height only for the manual aspect ratio", () => {
@@ -87,6 +122,15 @@ describe("ApPreview", () => {
     render(<ApPreview />);
     expect(screen.getByText(/doesn't apply "Use all available space" in a responsive-full-width section/))
       .toBeInTheDocument();
+  });
+
+  it("announces the iframe's size and any warning, but not the window's size as it is dragged", () => {
+    setHash("#layout=responsive-full-width&aspect_ratio_method=MAX");
+    render(<ApPreview />);
+    const live = screen.getByRole("status");
+    expect(live).toHaveTextContent(/Iframe \d+ × 300 px/);
+    expect(live).toHaveTextContent(/doesn't apply "Use all available space"/);
+    expect(live).not.toHaveTextContent(/window/);
   });
 
   it("says what it assumes and the designed size", () => {

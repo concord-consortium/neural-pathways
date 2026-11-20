@@ -31,6 +31,33 @@ test("a responsive layout follows the window's width", async ({ page }) => {
   }
 });
 
+test("draws the page at the Activity Player's width, with its padding inside", async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 });
+  for (const [layout, width] of [["1100px", 1100], ["ipad_friendly", 960]] as const) {
+    await page.goto(`/ap-preview.html#fixed_width_layout=${layout}&layout=full-width&aspect_ratio_method=DEFAULT`);
+    expect((await page.locator(".ap-page__activity").boundingBox())!.width).toBe(width);
+  }
+});
+
+test("labels the other column in text with at least 4.5:1 contrast", async ({ page }) => {
+  await page.goto("/ap-preview.html#layout=60-40&aspect_ratio_method=DEFAULT");
+  const ratio = await page.getByText("Secondary column", { exact: true }).evaluate(element => {
+    const rgb = (color: string) => color.match(/\d+/g)!.slice(0, 3).map(Number);
+    const luminance = ([r, g, b]: number[]) => {
+      const [R, G, B] = [r, g, b].map(c => {
+        const s = c / 255;
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+    };
+    // The column has no background of its own; the page behind it is white.
+    const text = luminance(rgb(getComputedStyle(element).color));
+    const back = luminance(rgb(getComputedStyle(element.closest(".ap-page__activity")!).backgroundColor));
+    return (Math.max(text, back) + 0.05) / (Math.min(text, back) + 0.05);
+  });
+  expect(ratio).toBeGreaterThanOrEqual(4.5);
+});
+
 test("a fixed page scrolls sideways rather than shrinking", async ({ page }) => {
   await page.setViewportSize({ width: 900, height: 900 });
   await page.goto("/ap-preview.html");
