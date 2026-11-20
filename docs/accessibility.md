@@ -132,9 +132,9 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   and where a network blocks it they fall back to a wider sans-serif. Then Looking Inside a Neural
   Network's head, which holds its title, the activation legend and the controls on one line from
   981 px with the web fonts, wraps until the view is about 1,115 px wide: the legend and the Animate
-  controls (207 px instead of 184 px) are wider. Wrapped, the head is 114 px tall rather than 62, at
-  981 px and at 910 px alike. Its items wrap rather than overflow, so nothing runs past the panel at
-  910 px or at 480 px. Only the messages' font, Spline Sans Mono, is served with the app so far.
+  controls (207 px instead of 184 px) are wider. Wrapped, the legend and the controls drop below the
+  title together, and the head is 89 px tall rather than 62, at 981 px and at 910 px alike. Its items
+  wrap rather than overflow, so nothing runs past the panel at 910 px or at 480 px. Only the messages' font, Spline Sans Mono, is served with the app so far.
   Serving the other two the same way would close this gap.
 
 **Scrollers.** A scroller must work from the keyboard

@@ -602,8 +602,13 @@ test.describe("About", () => {
     await openAt(page, TWO_COLUMN_WIDTH, 900);
     const head = await box(page.locator(".looking-inside__network-head"));
     const title = await box(page.getByRole("heading", { name: "The Neural Network" }));
+    const legend = await box(page.locator(".activation-legend"));
+    const rule = await box(page.locator(".looking-inside__network-rule"));
     const controls = await box(page.locator(".animation-controls"));
+    // The legend, the rule and the controls drop below the title together, the controls still last.
+    expect(legend.y).toBeGreaterThanOrEqual(title.y + title.height);
     expect(controls.y).toBeGreaterThanOrEqual(title.y + title.height);
+    expect(rule.x + rule.width).toBeLessThanOrEqual(controls.x);
     expect(controls.x + controls.width).toBeLessThanOrEqual(head.x + head.width);
     expect(controls.y + controls.height).toBeLessThanOrEqual(head.y + head.height);
   });
@@ -875,24 +880,31 @@ test("the network's head holds its title, legend and controls in that order", as
   expect(Math.abs(center(legend) - center(controls))).toBeLessThanOrEqual(4);
 });
 
-// As on a school network that blocks Google Fonts. 981 is the minimum layout width; 480 is a narrow window.
-// Every child must stay inside the head's side padding.
-for (const width of [480, 981]) {
+// As on a school network that blocks Google Fonts, in an Interactive. 981 is the minimum layout width;
+// 1024 the designed width, where the wider fallback font still wraps the head; 480 is a narrow window.
+// Every item must stay inside the head's side padding, and when the head wraps the legend drops below
+// the title with the controls rather than staying on the title's line.
+for (const width of [480, 981, 1024]) {
   test(`with Google Fonts blocked, nothing in the network's head runs past it at ${width} px`, async ({ page }) => {
     await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
+    await page.goto("/?interactive=looking-inside");
     await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
-    const head = (await page.locator(".looking-inside__network-head").boundingBox())!;
-    const children = await page.locator(".looking-inside__network-head > *").evaluateAll(
-      els => els.map(el => {
-        const box = el.getBoundingClientRect();
-        return { name: el.className || el.tagName, right: box.right };
-      }));
-    expect(children.length).toBeGreaterThanOrEqual(4);
-    for (const child of children) {
-      expect(child.right, child.name).toBeLessThanOrEqual(head.x + head.width - 14 + 0.5);
+    const box = async (locator: Locator) => (await locator.boundingBox())!;
+    const head = await box(page.locator(".looking-inside__network-head"));
+    const title = await box(page.getByRole("heading", { name: "The Neural Network" }));
+    const legend = await box(page.locator(".activation-legend"));
+    const rule = await box(page.locator(".looking-inside__network-rule"));
+    const controls = await box(page.locator(".animation-controls"));
+    for (const [name, item] of Object.entries({ title, legend, rule, controls })) {
+      expect(item.x + item.width, name).toBeLessThanOrEqual(head.x + head.width - 14 + 0.5);
+    }
+    if (width === 480) {
+      expect(legend.y).toBeGreaterThanOrEqual(title.y + title.height);
+    }
+    if (controls.y >= title.y + title.height) {
+      expect(legend.y).toBeGreaterThanOrEqual(title.y + title.height);
     }
   });
 }

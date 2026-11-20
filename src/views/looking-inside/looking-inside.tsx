@@ -256,9 +256,11 @@ const LookingInsideBody = observer(function LookingInsideBody(
         <section className="looking-inside__network" aria-labelledby={networkHeadId}>
           <div className="looking-inside__network-head">
             <h2 id={networkHeadId} className="looking-inside__network-title">The Neural Network</h2>
-            <div className="looking-inside__network-legend"><ActivationLegend /></div>
-            <span className="looking-inside__network-rule" aria-hidden="true" />
-            <AnimationControls animated={state} />
+            <div className="looking-inside__network-tools">
+              <ActivationLegend />
+              <span className="looking-inside__network-rule" aria-hidden="true" />
+              <AnimationControls animated={state} />
+            </div>
           </div>
           <div className="looking-inside__diagram" ref={diagramRef}>
             <Observer>

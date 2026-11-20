@@ -66,8 +66,8 @@ title, the activation legend and the Animate controls on one line, measured with
 loaded (`$one-line-head-width` in `looking-inside.scss`). The two columns still stack below 910 px:
 the card's 447 px, a 10 px gap, and the step row, 421 px (`$two-columns-width`). The step row holds
 Step 1 to Step 4, Reset and About on one line, and is wider than the network panel's narrowest,
-382 px. Between 910 and 981 px the two columns hold and the head wraps, the controls dropping below
-the title; the view works there, but no reviewed design covers it.
+382 px. Between 910 and 981 px the two columns hold and the head wraps, the legend and the controls
+dropping below the title together; the view works there, but no reviewed design covers it.
 
 The minimum layout height, 480 px, adds up from the top:
 - the view's 9 px top padding, which takes the title's place in an Interactive;
