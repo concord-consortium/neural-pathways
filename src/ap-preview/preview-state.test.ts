@@ -35,7 +35,8 @@ describe("the preview's hash", () => {
     for (const legacy of ["responsive", "responsive-2-column"]) {
       expect(parsePreviewHash(`#layout=${legacy}`, ids).layout).toBe("full-width");
     }
-    expect(parsePreviewHash("#aspect_ratio_method=max", ids).aspectRatioMethod).toBe(DEFAULT_SETTINGS.aspectRatioMethod);
+    expect(parsePreviewHash("#aspect_ratio_method=max", ids).aspectRatioMethod)
+      .toBe(DEFAULT_SETTINGS.aspectRatioMethod);
     expect(parsePreviewHash("#fixed_width_layout=960px", ids).fixedWidthLayout).toBe("1100px");
     expect(parsePreviewHash("#column=middle", ids).column).toBe("primary");
     for (const bad of ["0", "-5", "abc", "12.5", ""]) {

@@ -30,7 +30,7 @@ describe("apSize", () => {
   });
 
   it("sizes the columns of each two-column layout on the 1100 page", () => {
-    const expected: Array<[ApSettings["layout"], number, number]> = [
+    const expected: [ApSettings["layout"], number, number][] = [
       ["60-40", 622.4, 411.6], ["70-30", 727.8, 306.2], ["40-60", 656, 378], ["30-70", 767, 267],
     ];
     for (const [layout, primary, secondary] of expected) {
@@ -41,7 +41,7 @@ describe("apSize", () => {
   });
 
   it("sizes the columns of each two-column layout on the iPad Friendly page", () => {
-    const expected: Array<[ApSettings["layout"], number, number]> = [
+    const expected: [ApSettings["layout"], number, number][] = [
       ["60-40", 538.4, 355.6], ["70-30", 629.8, 264.2], ["40-60", 562.7, 331.3], ["30-70", 658.1, 235.9],
     ];
     for (const [layout, primary, secondary] of expected) {

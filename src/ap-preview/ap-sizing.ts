@@ -104,7 +104,7 @@ function columnWidths(settings: ApSettings, windowWidth: number): Columns {
     const half = section / 2;
     return {
       pageWidth: null, primary: half - 30, secondary: half,
-      why: settings.column === "primary" ? `half of the ${W} px window less 120, less 30` : `half of the ${W} px window less 120`,
+      why: `half of the ${W} px window less 120` + (settings.column === "primary" ? ", less 30" : ""),
     };
   }
 
@@ -119,8 +119,10 @@ function columnWidths(settings: ApSettings, windowWidth: number): Columns {
   if (layout === "60-40" || layout === "70-30") {
     // 10 equal columns with 10 px gaps (section.scss:4-7); the primary spans 6 or 7.
     const span = (n: number) => n * (C - 90) / 10 + 10 * (n - 1);
-    const p = layout === "60-40" ? 6 : 7;
-    return { pageWidth, primary: span(p), secondary: span(10 - p), why: `the ${layout} grid on ${page}` };
+    const primarySpan = layout === "60-40" ? 6 : 7;
+    return {
+      pageWidth, primary: span(primarySpan), secondary: span(10 - primarySpan), why: `the ${layout} grid on ${page}`,
+    };
   }
   // 40-60 and 30-70: minmax(45px, auto) then 9 × 1fr, with 10 px gaps (section.scss:63,102). The
   // secondary's span includes the 45 px track.
@@ -133,10 +135,13 @@ function columnWidths(settings: ApSettings, windowWidth: number): Columns {
   };
 }
 
+const STAYS_300 = "so the iframe stays at its 300 px default.";
 const MAX_WARNINGS = {
-  secondary: `The Activity Player doesn't apply "Use all available space" in a secondary column, so the iframe stays at its 300 px default.`,
-  responsiveFullWidth: `The Activity Player doesn't apply "Use all available space" in a responsive-full-width section, so the iframe stays at its 300 px default.`,
-  primary: `The Activity Player applies "Use all available space" in a primary column only when the embed sets it with Customize, not when it comes from the library interactive, so the iframe stays at its 300 px default.`,
+  secondary: `The Activity Player doesn't apply "Use all available space" in a secondary column, ${STAYS_300}`,
+  responsiveFullWidth: `The Activity Player doesn't apply "Use all available space" in a responsive-full-width ` +
+    `section, ${STAYS_300}`,
+  primary: `The Activity Player applies "Use all available space" in a primary column only when the embed sets it ` +
+    `with Customize, not when it comes from the library interactive, ${STAYS_300}`,
 };
 
 export function apSize(settings: ApSettings, window: ApWindow): ApSize {
