@@ -108,6 +108,10 @@ describe("ModelReasoning", () => {
     await screen.findByText("1 / 3");
     expect(screen.queryByRole("listbox")).toBeNull();
     expect(card()).toHaveTextContent(wordsOf(0));
+    expect(within(card()).getByRole("img", { name: /^Word contribution/ })).toBeInTheDocument();
+    for (const pathway of [1, 2, 3]) {
+      expect(within(card()).getByText(`Pathway ${pathway}`)).toBeInTheDocument();
+    }
   });
 
   it("says when the word scores can't be loaded, and still steps", async () => {
@@ -116,6 +120,7 @@ describe("ModelReasoning", () => {
     await screen.findByText("1 / 3");
     expect(await within(card()).findByRole("alert"))
       .toHaveTextContent(/^The word scores could not be loaded: offline$/);
+    expect(within(card()).getByRole("img", { name: /^Word contribution/ })).toBeInTheDocument();
     nextMessage();
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
     expect(await within(card()).findByRole("alert")).toHaveTextContent("The word scores could not be loaded:");
