@@ -39,7 +39,8 @@ export function lookingInsideTimeline(columnSizes: readonly number[], wordCount:
     },
     sceneAt: (marker, frame) => {
       if (frame?.to === 1) {
-        // The phase's own scene has the inputs filled; the flights fill them as the words land.
+        // Not the shared phase's scene, which fills the inputs on its own clock: the empty scene at
+        // marker 0, whose inputs the flights fill as the words land.
         const network = sceneAt(columnSizes, 0);
         network.nodeFill[0] = inputFillAt(frame.t, columnSizes[0], wordCount);
         return { network, step1Time: frame.t };
