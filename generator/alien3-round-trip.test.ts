@@ -8,7 +8,7 @@ import { threePathwayConfig } from "./alien-config";
 import { generate } from "./alien/pipeline";
 import { writeDataset } from "./alien/emit";
 import { fetchActivations, fetchIndex, fetchShap } from "../src/core/data-loader";
-import { alien3Dataset } from "../src/core/datasets/alien3-dataset";
+import { alien3Dataset, alien3WordScoreMax } from "../src/core/datasets/alien3-dataset";
 import { ActivationBucket, S3Index, S3ShapBucket } from "../src/core/types/s3-data";
 
 // The generator and core's loader each describe the data format on their own. This writes the
@@ -110,5 +110,20 @@ describe("alien3 generator output read by core's loader", () => {
       if (!ok) wrong.push(item.id);
     }
     expect(wrong).toEqual([]);
+  });
+
+  it("gives the largest |word score| in the SHAP buckets as the scale maximum", async () => {
+    const withShap = index.items.filter(item => item.has_shap?.includes(fitName));
+    expect(withShap.length).toBeGreaterThan(0);
+    const cache = new Map<string, S3ShapBucket>();
+    let largest = 0;
+    for (const item of withShap) {
+      const shap = await fetchShap(alien3Dataset, item.id, fitName, cache);
+      for (const { scores } of shap.words) {
+        for (const score of scores) largest = Math.max(largest, Math.abs(score));
+      }
+    }
+    expect(largest).toBeGreaterThan(0);
+    expect(alien3WordScoreMax(index)).toBe(largest);
   });
 });
