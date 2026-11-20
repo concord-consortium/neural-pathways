@@ -863,6 +863,30 @@ test.describe("the neurons' readouts", () => {
     });
     expect(await cutOff(page)).toBe(false);
   });
+
+  test("the box measures again when only its text is zoomed, while it shows nothing", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+    const heights = () => page.evaluate(() => ({
+      held: parseFloat(document.querySelector<HTMLElement>(".looking-inside__layout")!.style
+        .getPropertyValue("--readout-height")),
+      tallest: Math.max(...Array.from(document.querySelectorAll<HTMLElement>(".readout-box__candidate"),
+        candidate => candidate.offsetHeight)),
+    }));
+    const before = await heights();
+    expect(before.held).toBe(before.tallest + 8);
+    // The box is empty while Step 1 plays, about 5 s, so zooming its text doesn't resize it.
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(readout(page)).toBeEmpty();
+    // Only the box's text, so nothing else that is observed changes size.
+    await page.addStyleTag({ content: ".readout-box, .readout-box__candidate { font-size: 26px !important; }" });
+    await expect.poll(async () => {
+      const after = await heights();
+      return after.held === after.tallest + 8 && after.tallest > before.tallest;
+    }, { timeout: 1_000 }).toBe(true);
+    // Measured while Step 1 still plays, not by the render its end brings.
+    await expect(readout(page)).toBeEmpty();
+  });
 });
 
 test("the network's head holds its title, legend and controls in that order", async ({ page }) => {
