@@ -1,0 +1,52 @@
+@use "../colors" as colors;
+@use "../fonts" as fonts;
+
+.word-tooltip-area {
+  position: relative;
+}
+
+// Placed by WordTooltipArea, 6px above the word, which its pointer fills.
+.word-tooltip {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  padding: 4px 8px;
+  // Transparent, so it shows only in forced-colors mode, which paints it.
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: colors.$ink;
+  color: #fff;
+  font-family: fonts.$body-font;
+  font-size: 12.5px;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: auto;
+
+  // Fills the gap down to the word, so the pointer can move from the word straight onto any part of
+  // the tooltip without leaving both.
+  &::before {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    height: 7px;
+    content: "";
+  }
+
+  // The pointer: a 6px triangle under the tooltip, centered on the word.
+  &::after {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: var(--word-tooltip-pointer, 50%);
+    border: 6px solid transparent;
+    border-top-color: colors.$ink;
+    border-bottom-width: 0;
+    content: "";
+    transform: translateX(-50%);
+  }
+}
+
+.word-tooltip__value {
+  font-family: fonts.$mono;
+}
