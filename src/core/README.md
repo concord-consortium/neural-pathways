@@ -89,16 +89,13 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   `ObservationNotes` (the observer's notes, under a heading that opens and closes them; the view
   keeps whether they are open). A view that needs a different body adds a part rather than a flag
   on the shell.
-- Fonts: `fonts.scss` names the font stacks, so a stylesheet uses `fonts.$body-font` (Lato) or
-  `fonts.$label-font` (Barlow Condensed) rather than spelling one out. The messages' words are set
-  in Spline Sans Mono, which `fonts.$message-font` names. It comes from the
-  `@fontsource/spline-sans-mono` package, so it is served with the app, and anything that shows a
-  message's words imports `@fontsource/spline-sans-mono/400.css`, as `MessageWords` does. Lato and
-  Barlow Condensed still come from Google Fonts.
+- `fonts.scss`: the font stacks, and where each font comes from. A stylesheet uses its variables
+  rather than spelling a stack out.
 - `alien-icons/`: `AlienIcon` and the alien attributes' icons, one `.svg` file per attribute,
   named by its key and drawn in the parent's color. webpack finds the files with `require.context`
   (`alien-icon-files.ts`) and SVGR makes each a React component, so a new icon needs only its file.
   Under Jest, `src/test/alien-icon-files.ts` stands in, and `jest/svg-transform.js` runs SVGR.
+  Nothing uses them yet: they are kept for a later view.
 - `visually-hidden.scss`: the `visually-hidden` mixin, for text only screen readers read.
 - `message-text.ts`: what a message's text means to the lesson, such as its list of
   words (`messageWords`). Items are plain data, so this is a function that takes the text, not
