@@ -118,7 +118,7 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   views are built to meet 1.4.10 and 2.1.1 there, and checked in Chromium, but may be too cumbersome
   to be useful to students. At 320 px Extract the Neural Pathways' steps wrap into three rows, with
   About on a fourth, above a canvas that scrolls sideways, and Looking Inside a Neural Network
-  stacks into a page about 1,030 px tall ([its README](../src/views/looking-inside/README.md) has
+  stacks into a page about 1,210 px tall ([its README](../src/views/looking-inside/README.md) has
   the heights).
 - An Activity Player page that has a responsive section is as wide as the window, with no minimum
   width for the page or its iframes, so an Interactive there is only as wide as the window allows.

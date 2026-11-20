@@ -87,8 +87,8 @@ instead: 82 px for a 32 px heading's line and its 0.67em margins, then a 9 px ga
 
 Narrower than its minimum layout width, it still works, but no reviewed design covers it:
 - Between 910 and 981 px the head wraps. Below 910 px the columns stack, and the page scrolls down.
-  As an Interactive it is about 1,050 px tall just below that width, and grows as more of it wraps,
-  to about 1,440 px at 320 px.
+  As an Interactive it is about 920 px tall just below that width, with the observation notes
+  closed, and grows as more of it wraps, to about 1,210 px at 320 px.
 - The head's Animate controls wrap too, the speed dropping below Animate, so the head stays inside
   its panel even in the fallback font, which is wider than the web font.
 - About stays at the right end of the step row, and wraps onto its own line below the steps when
