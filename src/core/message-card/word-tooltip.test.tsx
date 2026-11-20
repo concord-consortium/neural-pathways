@@ -100,6 +100,25 @@ describe("WordTooltipArea", () => {
     expect(tooltip()).toHaveTextContent("vosh: +0.1234");
   });
 
+  it("hides on Escape when the pointer opened it and the focus is outside the area", () => {
+    const { tooltip } = renderArea(tarrak);
+    fireEvent.pointerEnter(screen.getByText("tarrak"));
+    expect(document.body).toHaveFocus();
+    expect(tooltip()).not.toBeNull();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(tooltip()).toBeNull();
+    expect(document.body).toHaveFocus();
+  });
+
+  it("lets the pointer through when the focus opened it, but not when the pointer did", () => {
+    const { tooltip } = renderArea(tarrak);
+    const word = screen.getByText("tarrak");
+    act(() => word.focus());
+    expect(tooltip()).toHaveClass("word-tooltip--focused");
+    fireEvent.pointerEnter(word);
+    expect(tooltip()).not.toHaveClass("word-tooltip--focused");
+  });
+
   it("hides when the focus leaves the word", () => {
     const { tooltip } = renderArea(tarrak);
     const word = screen.getByText("tarrak");
