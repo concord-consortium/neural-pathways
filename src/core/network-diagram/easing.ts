@@ -63,3 +63,11 @@ export function cubicBezier(x1: number, y1: number, x2: number, y2: number): (t:
 
 /** CSS's `ease`, which the prototype's gauge transitions used. */
 export const ease = cubicBezier(0.25, 0.1, 0.25, 1);
+
+/** The word flights' horizontal curve: slow to leave, then fast. The prototype's EASE_X. */
+export const flightEaseX = cubicBezier(0.7, 0, 0.75, 0.75);
+/**
+ * The word flights' vertical curve: quick to leave, then settling. The prototype's EASE_Y. It differs
+ * from the horizontal curve, so the path curves.
+ */
+export const flightEaseY = cubicBezier(0.45, 0.05, 0.3, 1);

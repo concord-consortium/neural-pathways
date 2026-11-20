@@ -7,6 +7,11 @@ import "./step-button-group.scss";
 interface StepButtonGroupProps {
   player: StepPlayer<unknown>;
   buttons: readonly StepButton[];
+  /**
+   * Called with the pressed button's key, or "reset" for Reset, before the press plays or resets.
+   * Not called for an unavailable button.
+   */
+  onPress?: (key: string) => void;
 }
 
 /**
@@ -20,7 +25,7 @@ interface StepButtonGroupProps {
  * order, so one that becomes unavailable while it has focus, such as a step reaching its limit,
  * keeps the focus instead of dropping it to the page.
  */
-export const StepButtonGroup = observer(function StepButtonGroup({ player, buttons }: StepButtonGroupProps) {
+export const StepButtonGroup = observer(function StepButtonGroup({ player, buttons, onPress }: StepButtonGroupProps) {
   const { marker, currentRun } = player;
   const nothingShown = marker === 0 && !currentRun;
   return (
@@ -33,13 +38,19 @@ export const StepButtonGroup = observer(function StepButtonGroup({ player, butto
           <button key={button.key} type="button" className="step-button-group__step"
             aria-current={current ? "step" : undefined}
             aria-disabled={!segment}
-            onClick={segment && (() => player.play(button.key, segment))}>
+            onClick={segment && (() => {
+              onPress?.(button.key);
+              player.play(button.key, segment);
+            })}>
             {button.label}
           </button>
         );
       })}
       <button type="button" className="step-button-group__reset" aria-disabled={nothingShown}
-        onClick={nothingShown ? undefined : () => player.reset()}>
+        onClick={nothingShown ? undefined : () => {
+          onPress?.("reset");
+          player.reset();
+        }}>
         Reset
       </button>
     </div>

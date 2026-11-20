@@ -56,6 +56,12 @@ one thing, or one name for two things, settle it and add it here.
 - **wire:** the gray line under an edge, drawn whether or not the edge is.
 - **phase:** one of the four parts of a message's forward pass: the input fill, then a fan of
   edges into each later column. Looking Inside a Neural Network's Step *k* plays phase *k*.
+- **reached:** a neuron whose step has ended: column *c* once the marker is at least *c* + 1. Only
+  reached neurons answer hover, click and the keyboard.
+- **pin:** the neuron clicked, whose readout shows. Not "selected".
+- **readout:** the text about the pinned neuron.
+- **prompt:** the text in the same box when nothing is pinned.
+- **chip:** a copy of a word in flight at Step 1. Not "fly" or "flier".
 - **spotlight:** `hiddenLayerSpotlight`, how strongly the hidden layers' nodes are picked out;
   everything else fades to 1 − its strength. Not "dim" for the field. "Dim" and "undim" name the
   spotlight rising and falling, as in the prototype's `dimRest` and `undim`.
