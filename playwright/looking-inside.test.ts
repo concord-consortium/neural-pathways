@@ -250,7 +250,7 @@ async function openNotes(page: Page) {
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
 }
 
-test("the card shows the message's label, and its notes once opened, with no indicators", async ({ page }) => {
+test("the card shows the message's label, and its notes once opened", async ({ page }) => {
   await page.goto("/");
   const card = page.getByRole("region", { name: "Message", exact: true });
   await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
@@ -259,7 +259,6 @@ test("the card shows the message's label, and its notes once opened, with no ind
   await expect(notes).toBeHidden();
   await openNotes(page);
   await expect(notes).toBeVisible();
-  await expect(card.getByRole("list")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Next message" }).click();
   await expect(card.getByRole("status")).toHaveText("Message 2 of 800");

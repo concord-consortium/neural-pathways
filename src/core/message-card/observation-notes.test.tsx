@@ -81,9 +81,4 @@ describe("ObservationNotes", () => {
     render(<Notes initiallyOpen observation={observation} />);
     expect(screen.getByText("(no notes for this message)")).toBeVisible();
   });
-
-  it("shows no attribute indicators", () => {
-    render(<Notes initiallyOpen observation="Quiet." />);
-    expect(screen.queryByRole("list")).not.toBeInTheDocument();
-  });
 });

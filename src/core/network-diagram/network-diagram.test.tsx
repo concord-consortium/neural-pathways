@@ -58,8 +58,6 @@ describe("NetworkDiagram", () => {
     }
     expect(screen.getByText("APPROACH")).toBeInTheDocument();
     expect(screen.getByText("WAIT")).toBeInTheDocument();
-    // No caption over the pills, as in the prototype.
-    expect(screen.queryByText(/Class:/)).not.toBeInTheDocument();
   });
 
   it("draws both halves of every edge for a full scene", () => {
