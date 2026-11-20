@@ -246,7 +246,8 @@ const LookingInsideBody = observer(function LookingInsideBody(
         </MessageCard>
       </div>
       <div className="looking-inside__step-row">
-        {player && place !== undefined && <StepButtonGroup player={player} buttons={LOOKING_INSIDE_BUTTONS} onPress={onPress} />}
+        {player && place !== undefined &&
+          <StepButtonGroup player={player} buttons={LOOKING_INSIDE_BUTTONS} onPress={onPress} />}
         <div className="looking-inside__about">
           <AboutButton title={LOOKING_INSIDE_TITLE} markdown={about} />
         </div>

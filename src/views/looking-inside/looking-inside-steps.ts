@@ -28,7 +28,9 @@ export interface LookingInsideScene {
  * marker k is k steps done, and the segment to it plays phase k. Step 1 is the message's words
  * flying to the input neurons, so it lasts as long as those flights, which depend on the word count.
  */
-export function lookingInsideTimeline(columnSizes: readonly number[], wordCount: number): StepTimeline<LookingInsideScene> {
+export function lookingInsideTimeline(
+  columnSizes: readonly number[], wordCount: number,
+): StepTimeline<LookingInsideScene> {
   return {
     duration: ({ from, to }) => {
       // sceneAt draws only the phase a run ends on, so a run must be that one phase.
