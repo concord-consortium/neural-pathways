@@ -25,7 +25,34 @@ The color ramp (`wordFill` in `colors.ts`), the legend (`WordContributionLegend`
 
 ## Size
 
-The minimum layout size (see `docs/accessibility.md`) isn't measured yet.
+The minimum layout size (see `docs/accessibility.md`) is 479 × 483 px as an Interactive, inside the
+designed size of 1024 × 562.
+
+The minimum layout width, 479 px, is the card's 447 px inside the app's 16 px gutters.
+
+The minimum layout height, 483 px, adds up from the top:
+- the title and its margins, 121 px: at 479 px the 32 px heading takes two 39 px lines, and its
+  0.67em margins add 42.9 px. From 629 px wide the title fits on one line, the title and its margins
+  take 82 px, and the view needs only 444 px;
+- a 9 px gap;
+- the filter row, 44 px;
+- a 9 px gap;
+- the card at its smallest, 300 px: its 62 px head, its body's padding, the legend and the 28 px
+  below it, and the readings' scroller, 154 px, which holds about two readings of a short message.
+
+The view's 16 px bottom padding is the first thing to go as the window gets shorter, so it isn't
+counted.
+
+At the designed size, with the title shown, the readings' scroller is about 255 px tall, so the
+readings scroll for most messages. They will have about 90 px more once the view titles leave the
+Interactives.
+
+Narrower than its minimum layout width, it still works, but no reviewed design covers it:
+- The view stays one column, the card takes the full width between the gutters, and the words wrap
+  onto more lines.
+- The title wraps onto more lines, three at 320 px. At 320 × 562 the card is still 324 px tall and
+  the page doesn't scroll down.
+- Nothing scrolls sideways, even at 320 px.
 
 ## Still to come
 
