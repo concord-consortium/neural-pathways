@@ -28,6 +28,12 @@ describe("App", () => {
       expect(screen.getByRole("heading", { name: "Looking Inside a Neural Network" })).toBeInTheDocument();
     });
 
+    it("shows the view's title as its h1", () => {
+      setUrl("/");
+      render(<App appState={new AppState()} />);
+      expect(screen.getByRole("heading", { level: 1, name: "Looking Inside a Neural Network" })).toBeInTheDocument();
+    });
+
     it("links each nav item to its view hash", () => {
       setUrl("/");
       render(<App appState={new AppState()} />);
@@ -97,8 +103,17 @@ describe("App", () => {
     it("shows only that view, with no nav", () => {
       setUrl("/?interactive=correlations");
       render(<App appState={new AppState()} />);
-      expect(screen.getByRole("heading", { name: "Correlations" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "About Correlations" })).toBeInTheDocument();
       expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    });
+
+    it("leaves the view's title out, since the Activity Player's bar names it", () => {
+      for (const view of VIEWS) {
+        setUrl(`/?interactive=${view.id}`);
+        const { unmount } = render(<App appState={new AppState()} />);
+        expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+        unmount();
+      }
     });
 
     it("titles the page after the view", () => {
@@ -110,7 +125,7 @@ describe("App", () => {
     it("ignores the standalone hash", () => {
       setUrl("/?interactive=correlations#view=looking-inside");
       render(<App appState={new AppState()} />);
-      expect(screen.getByRole("heading", { name: "Correlations" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "About Correlations" })).toBeInTheDocument();
       expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
     });
 

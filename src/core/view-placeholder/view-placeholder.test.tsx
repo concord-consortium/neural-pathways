@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import { InteractiveModeContext } from "../view-title/view-title";
 import { ViewPlaceholder } from "./view-placeholder";
 
 describe("ViewPlaceholder", () => {
@@ -8,5 +9,15 @@ describe("ViewPlaceholder", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Correlations" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "About Correlations" })).toBeInTheDocument();
     expect(screen.getByText("Coming soon.")).toBeInTheDocument();
+  });
+
+  it("leaves the title out in an Interactive, keeping About", () => {
+    render(
+      <InteractiveModeContext.Provider value={true}>
+        <ViewPlaceholder className="correlations" title="Correlations" about="What it's for." />
+      </InteractiveModeContext.Provider>
+    );
+    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "About Correlations" })).toBeInTheDocument();
   });
 });

@@ -1,3 +1,8 @@
+// In an Interactive there is no title, and the shell's top padding takes its place (see app.scss).
+.view-placeholder {
+  padding-top: var(--view-top-padding, 0);
+}
+
 .view-placeholder__head {
   display: flex;
   justify-content: flex-end;
