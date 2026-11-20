@@ -112,6 +112,14 @@ describe("PathwayReading", () => {
       ["false", "false", "true", "false"]);
   });
 
+  it("makes the first word the Tab stop when the current word is past the end", () => {
+    render(
+      <PathwayReading pathway={0} words={words} scores={scores} max={max} current={7}
+        onCurrentChange={jest.fn()} />
+    );
+    expect(options().map(option => option.tabIndex)).toEqual([0, -1, -1, -1]);
+  });
+
   it("makes the first word current when the reading is tabbed into", () => {
     const onCurrentChange = jest.fn();
     render(<Harness onCurrentChange={onCurrentChange} />);
@@ -143,11 +151,23 @@ describe("PathwayReading", () => {
     press("Home", 0);
   });
 
-  it("leaves other keys alone", () => {
+  it("leaves other keys alone, and the browser's shortcuts with a modifier", () => {
     render(<Harness />);
-    act(() => options()[0].focus());
-    expect(fireEvent.keyDown(options()[0], { key: "a" })).toBe(true);
-    expect(options()[0]).toHaveFocus();
+    // From the second word, so a key handled as ← or Home would move the focus.
+    const blikka = options()[1];
+    act(() => blikka.focus());
+    const events = [
+      { key: "a" },
+      { key: "Tab" },
+      { key: "Escape" },
+      { key: "ArrowLeft", altKey: true },
+      { key: "ArrowLeft", metaKey: true },
+      { key: "Home", ctrlKey: true },
+    ];
+    for (const event of events) {
+      expect(fireEvent.keyDown(blikka, event)).toBe(true);
+      expect(blikka).toHaveFocus();
+    }
   });
 
   it("makes a clicked word current and focuses it", () => {

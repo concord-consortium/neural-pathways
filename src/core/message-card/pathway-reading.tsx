@@ -49,9 +49,15 @@ export const PathwayReading: React.FC<PathwayReadingProps> = ({
   const events = useWordTooltipEvents();
   // The options by position, since a word can repeat.
   const optionRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const tabStop = current ?? 0;
+  // The current word, or the first when there is none or it is past the end, so the reading always
+  // has a Tab stop.
+  const tabStop = current !== undefined && current < words.length ? current : 0;
 
   const onKeyDown = (event: React.KeyboardEvent, index: number) => {
+    // With a modifier, these keys are the browser's (Alt+← and Cmd+← go back), so leave them be.
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
     const target = keyTarget(event.key, index, words.length);
     if (target === undefined) {
       return;
