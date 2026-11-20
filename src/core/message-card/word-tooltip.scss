@@ -44,6 +44,13 @@
     border-bottom-width: 0;
     content: "";
     transform: translateX(-50%);
+
+    // Forced colors repaints the transparent sides too, which would draw a bar. Left alone, the
+    // triangle keeps its transparent sides, and its top takes the color of the tooltip's border.
+    @media (forced-colors: active) {
+      forced-color-adjust: none;
+      border-top-color: CanvasText;
+    }
   }
 }
 
