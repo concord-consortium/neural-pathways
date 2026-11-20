@@ -286,8 +286,9 @@ this is a drawn one, so it can show on keyboard focus and meet 1.4.13.
 minus, the value monospaced; or, for a word that is zero here, "tarrak: a Pathway 1 word", naming
 the pathway it scores on (6430–6432). A word that is zero on every pathway has no tooltip.
 
-**When it shows.** There is one tooltip per card. It shows over the word under the pointer, or, with
-no word under the pointer, over the focused word. It moves with the word when the readings scroll,
+**When it shows.** There is one tooltip per card. It follows whichever moved last, the pointer or the
+keyboard focus, over the word the pointer entered or the word the focus moved to. When the pointer
+leaves its word, it shows over the focused word. It moves with the word when the readings scroll,
 and hides while that word is scrolled out of the scroller's view.
 
 **1.4.13** ([Content on Hover or Focus](https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus.html)):
@@ -359,7 +360,8 @@ Jest:
   for a scoring word, a zero word and a word that is zero everywhere, the roving tabindex, each key
   in the table, clicks.
 - The tooltip's text for each of those words, with the U+2212 minus; it shows on hover and on
-  focus, hover wins, and Escape hides it until the next word.
+  focus, follows whichever of the pointer and the focus moved last, and Escape hides it until the
+  next word.
 - The view: the filter and About above the card, the count, three readings, the shared current
   word, cleared on message change, and the error and loading states.
 
