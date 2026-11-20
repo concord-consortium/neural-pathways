@@ -64,6 +64,20 @@ describe("buildDataset", () => {
     }
   });
 
+  it("sets the word score maximum to the largest |score| in the SHAP buckets", () => {
+    const fit = dataset.index.metadata.fa_fits[config.fitName];
+    let largest = 0;
+    for (const bucket of dataset.shapBuckets.values()) {
+      for (const review of bucket.reviews) {
+        for (const { scores } of review.words) {
+          for (const score of scores) largest = Math.max(largest, Math.abs(score));
+        }
+      }
+    }
+    expect(largest).toBeGreaterThan(0);
+    expect(fit.word_score_max).toBe(largest);
+  });
+
   it("reports explained variance from the loadings, summing to the configured total", () => {
     const fit = dataset.index.metadata.fa_fits[config.fitName];
     const shares = fit.explained_variance_per_pathway;

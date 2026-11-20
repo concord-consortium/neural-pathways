@@ -101,6 +101,8 @@ export const alien3Dataset = createAlienDataset({
   baseUrl: "alien-data-3/",
 });
 
+const regenerate = "Run npm run generate:alien to generate it.";
+
 /** The network the generator fitted to the alien3 data. Throws when the index has none. */
 export function alien3Network(index: S3Index): Network {
   const { network } = index.metadata;
@@ -110,12 +112,8 @@ export function alien3Network(index: S3Index): Network {
   return network;
 }
 
-/**
- * The alien3 factor-analysis fit's loadings, [neuron][pathway]. Throws unless the index has exactly one
- * factor-analysis fit, with a full matrix of loadings.
- */
-export function alien3Loadings(index: S3Index): number[][] {
-  const regenerate = "Run npm run generate:alien to generate it.";
+/** The name of the alien3 factor-analysis fit. Throws unless the index has exactly one. */
+export function alien3FitName(index: S3Index): string {
   const names = Object.keys(index.metadata.fa_fits);
   if (names.length === 0) {
     throw new Error(`The alien3 data has no factor-analysis fit. ${regenerate}`);
@@ -123,7 +121,27 @@ export function alien3Loadings(index: S3Index): number[][] {
   if (names.length > 1) {
     throw new Error(`The alien3 data has more than one factor-analysis fit (${names.join(", ")}). ${regenerate}`);
   }
-  const loadings = index.metadata.fa_fits[names[0]].loadings;
+  return names[0];
+}
+
+/**
+ * The largest |word score| in the alien3 fit's SHAP buckets, the ends of the Word Contribution legend.
+ * Throws unless the fit has one, a finite number above 0.
+ */
+export function alien3WordScoreMax(index: S3Index): number {
+  const max = index.metadata.fa_fits[alien3FitName(index)].word_score_max;
+  if (max === undefined || !Number.isFinite(max) || max <= 0) {
+    throw new Error(`The alien3 data has no word score maximum. ${regenerate}`);
+  }
+  return max;
+}
+
+/**
+ * The alien3 factor-analysis fit's loadings, [neuron][pathway]. Throws unless the index has exactly one
+ * factor-analysis fit, with a full matrix of loadings.
+ */
+export function alien3Loadings(index: S3Index): number[][] {
+  const loadings = index.metadata.fa_fits[alien3FitName(index)].loadings;
   if (!loadings) {
     throw new Error(`The alien3 data has no loadings. ${regenerate}`);
   }

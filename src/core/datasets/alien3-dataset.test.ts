@@ -1,5 +1,5 @@
 import { S3Index, S3Item } from "../types/s3-data";
-import { alien3Dataset, alien3Loadings, alien3Network } from "./alien3-dataset";
+import { alien3Dataset, alien3FitName, alien3Loadings, alien3Network, alien3WordScoreMax } from "./alien3-dataset";
 import { fixtureMetadata, fixtureNetwork } from "../network/__fixtures__/alien3-network";
 
 const generatedDefinition = {
@@ -164,6 +164,45 @@ describe("alien3Loadings", () => {
     const metadata = { ...fixtureMetadata, fa_fits: { [name]: { ...fit, loadings } } };
     expect(() => alien3Loadings({ metadata, items: [] })).toThrow(
       "The alien3 data's pathways have loadings for different numbers of neurons (14, 13, 14). "
+      + "Run npm run generate:alien to generate it.");
+  });
+});
+
+describe("alien3FitName", () => {
+  it("names the one fit", () => {
+    expect(alien3FitName({ metadata: fixtureMetadata, items: [] })).toBe("alien-fa-3");
+  });
+});
+
+describe("alien3WordScoreMax", () => {
+  const withMax = (value: number | undefined): S3Index => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    return {
+      metadata: { ...fixtureMetadata, fa_fits: { [name]: { ...fit, word_score_max: value } } },
+      items: [],
+    };
+  };
+  const missing = "The alien3 data has no word score maximum. Run npm run generate:alien to generate it.";
+
+  it("reads the maximum from the fit", () => {
+    expect(alien3WordScoreMax(withMax(0.25))).toBe(0.25);
+  });
+
+  it.each([undefined, 0, -0.1, NaN])("says so when the maximum is %s", value => {
+    expect(() => alien3WordScoreMax(withMax(value))).toThrow(missing);
+  });
+
+  it("says so when the index has no factor-analysis fit", () => {
+    const metadata = { ...fixtureMetadata, fa_fits: {} };
+    expect(() => alien3WordScoreMax({ metadata, items: [] }))
+      .toThrow("The alien3 data has no factor-analysis fit. Run npm run generate:alien to generate it.");
+  });
+
+  it("names the fits when the index has more than one", () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: fit, other: fit } };
+    expect(() => alien3WordScoreMax({ metadata, items: [] })).toThrow(
+      `The alien3 data has more than one factor-analysis fit (${name}, other). `
       + "Run npm run generate:alien to generate it.");
   });
 });
