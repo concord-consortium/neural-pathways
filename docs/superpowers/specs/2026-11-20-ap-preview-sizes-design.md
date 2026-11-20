@@ -158,7 +158,10 @@ subtraction is its 15 px bottom margin. M = 0.98 × H.
 - **Manual:** the height is D × native_height / native_width, with no cap.
 - **Use all available space:** the iframe's height attribute stays at the AP's 300 px default
   (`iframe-runtime.tsx:43,603`) unless CSS stretches it. That happens only in a full-width section
-  and in a primary column of a two-column layout (`section.scss:15-33,189-209`). There the iframe is
+  and in a primary column of a two-column layout (`section.scss:15-33,189-209`). (Correction found
+  while building: the primary-column rule reads only `custom_aspect_ratio_method`
+  (`section.tsx:133-139`), so an embed that inherits MAX from its library interactive, which is what
+  the preview models, stays at 300 px in a primary column too.) There the iframe is
   M − 30 (the buttons below it) − 36 (the header bar) − 2 (the managed interactive's border).
   Elsewhere — a secondary column,
   or a responsive-full-width section, whose section class is `responsive` so the full-width rule
