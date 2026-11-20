@@ -23,6 +23,14 @@ one thing, or one name for two things, settle it and add it here.
 - **place:** a message's index among all of them, in index order. Passes are kept by place.
 - **position:** a message's index in the list being stepped through, which the filter decides
   (`listPosition` in Looking Inside a Neural Network, `position` on the message card).
+- **pathway reading:** the message shown for one pathway, its words colored by their scores for
+  that pathway. Not to be confused with a reading in Extract the Neural Pathways, which is a value.
+- **word score:** how much a word pushes a pathway up or down, from the SHAP data. The legend calls
+  it Word Contribution, which is the name students see.
+- **scale maximum:** the largest |word score| in the dataset (`word_score_max`), the legend's ends.
+- **current word:** the word clicked or arrowed to, the same position in all three readings, which
+  holds each reading's Tab stop. Not "selected" in prose, though it is `aria-selected` in the
+  markup.
 
 ## The step system
 

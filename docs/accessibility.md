@@ -102,6 +102,10 @@ sideways, down or both: the observation notes only scroll down. Chromium and Fir
 scroller with nothing focusable in it reachable by Tab; Safari doesn't.
 - Use `useKeyboardScrollable` (`src/core/use-keyboard-scrollable.ts`). Its comment says when it
   makes the element a Tab stop, and what it isn't for.
+- A scroller that holds only listboxes doesn't use it, since Tab and the arrow keys reach every
+  option and a focused option scrolls into view. Making it a Tab stop as well would only add a stop.
+  Neural Pathway View of Model Reasoning's readings are one: everything in their scroller but the
+  Pathway rows is in the three listboxes.
 - Give the element its role and name all the time, so they don't come and go with the window's size.
   It is a `group` when an enclosing landmark or dialog already has its name, as Extract the Neural
   Pathways' drawing and Looking Inside a Neural Network's network diagram are, inside panels named
