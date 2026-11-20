@@ -59,8 +59,11 @@ are an Interactive's: the whole iframe a view is embedded in, the app's 16 px gu
   gets there on a 1366 × 768 Chromebook, below the browser's tabs and address bar, the ChromeOS
   shelf and the Activity Player's header. The prototype lays every view out at this height
   (`AP_CONTENT_H` in its device preview).
-- **1024 px wide.** This is the widest the prototype's standalone layout gets (`standaloneMax`), and
-  the width its views look designed for. It hasn't been confirmed with the designer.
+- **1024 px wide.** This is the width a view gets on its own, outside the Activity Player, on a
+  landscape iPad (9th generation and older), and the widest the prototype's standalone layout gets
+  (`standaloneMax`). The most common use is an Interactive in the Activity Player's full-width
+  section on its fixed 1100 px page, where the iframe is 1044 px wide. So the views are designed
+  for 1024 px or less, which fits both.
 
 **Each view has a minimum layout size:** the narrowest and shortest it can be while keeping its
 layout as designed, before anything stacks, wraps or scrolls in a way the design doesn't show. It
@@ -87,6 +90,11 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   About on a fourth, above a canvas that scrolls sideways, and Looking Inside a Neural Network
   stacks into a page about 1,510 px tall ([its README](../src/views/looking-inside/README.md) has
   the heights).
+- An Activity Player page that has a responsive section is as wide as the window, with no minimum
+  width for the page or its iframes, so an Interactive there is only as wide as the window allows.
+  The Activity Player's padding and margins take 156 px of it, 20 px more than on a fixed page,
+  where the outer 80 px of padding sits outside the page's 1100 px. So on a 1024 px landscape iPad
+  the iframe is 868 px wide, narrower than every view's minimum layout width, and the views stack.
 - Extract the Neural Pathways' minimum layout height, 680 px, doesn't fit the designed size yet, so
   in an Interactive 562 px tall its page scrolls down.
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
