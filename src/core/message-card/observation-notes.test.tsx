@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { ObservationNotes } from "./observation-notes";
 
 /** The notes with their open state kept, as a view keeps it. */
@@ -55,6 +55,26 @@ describe("ObservationNotes", () => {
     const region = screen.getByRole("region", { name: "Observation notes" });
     expect(region).not.toHaveAttribute("tabindex");
     expect(region).toHaveTextContent("Quiet.");
+  });
+
+  // jsdom, like Safari, doesn't focus a button when it is clicked. The box is given a tabindex here,
+  // as it has while it scrolls.
+  it("moves the focus from the box to the toggle when a click closes the notes", () => {
+    render(<Notes initiallyOpen observation="Quiet." />);
+    const region = screen.getByRole("region", { name: "Observation notes" });
+    region.tabIndex = 0;
+    act(() => region.focus());
+    expect(region).toHaveFocus();
+    fireEvent.click(toggle());
+    expect(toggle()).toHaveAttribute("aria-expanded", "false");
+    expect(toggle()).toHaveFocus();
+  });
+
+  it("leaves the focus alone when a click closes the notes and the box doesn't have it", () => {
+    render(<Notes initiallyOpen observation="Quiet." />);
+    fireEvent.click(toggle());
+    expect(toggle()).toHaveAttribute("aria-expanded", "false");
+    expect(document.body).toHaveFocus();
   });
 
   it.each([undefined, ""])("says there are no notes when the observation is %p", observation => {

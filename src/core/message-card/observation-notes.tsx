@@ -18,12 +18,20 @@ export const ObservationNotes: React.FC<ObservationNotesProps> = ({ observation,
   const toggleId = useId();
   const boxId = useId();
   const [boxRef, boxProps] = useKeyboardScrollable<HTMLDivElement>();
+  const toggle = (event: React.MouseEvent<HTMLButtonElement>) => {
+    // Safari doesn't focus a button when it is clicked, so focus in the box would fall to the page
+    // once the box is hidden. Moving it to the toggle keeps the keyboard user's place.
+    if (open && document.getElementById(boxId)?.contains(document.activeElement)) {
+      event.currentTarget.focus();
+    }
+    onOpenChange(!open);
+  };
   return (
     <div className="observation-notes">
       {/* The button goes inside the heading, so the heading stays in the outline. */}
       <h3 className="observation-notes__head">
         <button type="button" id={toggleId} className="observation-notes__toggle" aria-expanded={open}
-          aria-controls={boxId} onClick={() => onOpenChange(!open)}>
+          aria-controls={boxId} onClick={toggle}>
           <span className="observation-notes__caret" aria-hidden="true" />
           Observation notes
         </button>
