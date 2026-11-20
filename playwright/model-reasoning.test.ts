@@ -144,28 +144,21 @@ test("the tooltip follows its word when the readings scroll", async ({ page }) =
   await expect(tooltip(page)).toBeHidden();
 });
 
-test("the tooltip of a word on the first line or at an edge stays inside the card", async ({ page }) => {
+test("the tooltip of a word on the first line stays inside the card", async ({ page }) => {
   await openView(page);
   const cardBox = await box(card(page));
-  // The first colored word, on the first line, and the one furthest right.
-  expect((await box(coloredOptions(page, 1).first())).y).toBeCloseTo((await box(options(page, 1).first())).y, 0);
-  const furthestRight = await coloredOptions(page, 1).evaluateAll(elements => {
-    const rights = elements.map(element => element.getBoundingClientRect().right);
-    return rights.indexOf(Math.max(...rights));
-  });
-  for (const word of [coloredOptions(page, 1).first(), coloredOptions(page, 1).nth(furthestRight)]) {
-    await word.hover();
-    await expect(tooltip(page)).toBeVisible();
-    expect(within(await box(tooltip(page)), cardBox)).toBe(true);
-    // Neither the scroller nor the card's body clips it.
-    expect(await tooltipOnTop(page)).toBe(true);
-  }
+  const first = coloredOptions(page, 1).first();
+  expect((await box(first)).y).toBeCloseTo((await box(options(page, 1).first())).y, 0);
+  await first.hover();
+  await expect(tooltip(page)).toBeVisible();
+  expect(within(await box(tooltip(page)), cardBox)).toBe(true);
+  // Neither the scroller nor the card's body clips it.
+  expect(await tooltipOnTop(page)).toBe(true);
 
   // With the readings scrolled so the first line's word is just inside the scroller's top, its
   // tooltip reaches up over the legend, and paints above it.
   await page.mouse.move(0, 0);
   await expect(tooltip(page)).toBeHidden();
-  const first = coloredOptions(page, 1).first();
   await scroller(page).evaluate((el, hovered) => {
     el.scrollTop += hovered.getBoundingClientRect().top - el.getBoundingClientRect().top - 4;
   }, await first.elementHandle());
@@ -178,6 +171,43 @@ test("the tooltip of a word on the first line or at an edge stays inside the car
   expect(within(await box(tooltip(page)), cardBox)).toBe(true);
   expect(await tooltipOnTop(page)).toBe(true);
 });
+
+// The long message has many lines, so some colored word starts a line and some ends one, close
+// enough to the readings' sides that a tooltip centered on it would run past them.
+test("the tooltip of a word at either side is kept inside the readings, its pointer over the word",
+  async ({ page }) => {
+    await openView(page);
+    await showLongMessage(page);
+    const [leftmost, rightmost] = await coloredOptions(page, 1).evaluateAll(elements => {
+      const lefts = elements.map(element => element.getBoundingClientRect().left);
+      const rights = elements.map(element => element.getBoundingClientRect().right);
+      return [lefts.indexOf(Math.min(...lefts)), rights.indexOf(Math.max(...rights))];
+    });
+    for (const [side, index] of [["left", leftmost], ["right", rightmost]] as const) {
+      const word = coloredOptions(page, 1).nth(index);
+      await word.hover();
+      await expect(tooltip(page)).toBeVisible();
+      const wordBox = await box(word);
+      const tooltipBox = await box(tooltip(page));
+      const areaBox = await box(page.locator(".word-tooltip-area"));
+      // Centered on the word, it would run past this side, so it has to be moved in.
+      const wordCenter = wordBox.x + wordBox.width / 2;
+      if (side === "left") {
+        expect(wordCenter - tooltipBox.width / 2).toBeLessThan(areaBox.x);
+      } else {
+        expect(wordCenter + tooltipBox.width / 2).toBeGreaterThan(areaBox.x + areaBox.width);
+      }
+      // Kept within the readings from side to side. It may rise above them, over the legend.
+      expect(tooltipBox.x).toBeGreaterThanOrEqual(areaBox.x - 0.5);
+      expect(tooltipBox.x + tooltipBox.width).toBeLessThanOrEqual(areaBox.x + areaBox.width + 0.5);
+      // The pointer is centered at its left, over the tooltip's padding box.
+      const pointerCenter = await tooltip(page).evaluate(el =>
+        el.getBoundingClientRect().left + el.clientLeft + parseFloat(getComputedStyle(el, "::after").left));
+      expect(pointerCenter).toBeGreaterThanOrEqual(wordBox.x);
+      expect(pointerCenter).toBeLessThanOrEqual(wordBox.x + wordBox.width);
+      expect(await tooltipOnTop(page)).toBe(true);
+    }
+  });
 
 test("Tab goes from the card's arrows to one stop per reading, landing on the same word", async ({ page }) => {
   await openView(page);
