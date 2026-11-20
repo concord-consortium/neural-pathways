@@ -215,7 +215,7 @@ test("with Animate off, Step 4 shows the answer at once", async ({ page }) => {
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   await page.getByRole("checkbox", { name: "Animate" }).uncheck();
   await page.getByRole("button", { name: "Step 4" }).click();
-  // Animated at Med, Step 4 takes several seconds to name the answer.
+  // Animated at Medium, Step 4 takes several seconds to name the answer.
   await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
     .toBeVisible({ timeout: 1_000 });
 });

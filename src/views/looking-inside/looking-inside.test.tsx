@@ -272,7 +272,7 @@ describe("LookingInside", () => {
     jest.useFakeTimers();
     try {
       fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
-      // Fast takes 0.6 of the Med duration, so the run is done well before Med's would be.
+      // Fast takes 0.6 of the Medium duration, so the run is done well before Medium's would be.
       act(() => jest.advanceTimersByTime(phaseDuration(4, [10, 8, 6, 2]) * 0.7));
       expect(state.marker(ids[0])).toBe(4);
     } finally {

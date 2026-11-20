@@ -302,7 +302,7 @@ describe("ExtractPathways", () => {
       await screen.findByRole("img", { name: "The network." });
       jest.useFakeTimers();
       fireEvent.click(button("Setup"));
-      // Fast takes 0.6 of the Med duration, so the run is done well before Med's would be.
+      // Fast takes 0.6 of the Medium duration, so the run is done well before Medium's would be.
       act(() => jest.advanceTimersByTime(setupDuration(SIZES) * 0.7));
       expect(state.setupDone).toBe(true);
     });
