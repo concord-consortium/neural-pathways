@@ -217,6 +217,22 @@ describe("PathwayReading", () => {
     expect(tooltip()).toHaveTextContent("tarrak: +0.0624");
   });
 
+  it("moves the tooltip with the arrow keys from a clicked word under the pointer, and after Escape", () => {
+    render(<Harness />);
+    const [, , oradda, sooma] = options();
+    fireEvent.pointerEnter(oradda);
+    act(() => oradda.focus());
+    fireEvent.click(oradda);
+    fireEvent.keyDown(oradda, { key: "ArrowRight" });
+    expect(sooma).toHaveFocus();
+    expect(tooltip()).toHaveTextContent("sooma: −0.2000");
+    fireEvent.keyDown(sooma, { key: "Escape" });
+    expect(tooltip()).toBeNull();
+    fireEvent.keyDown(sooma, { key: "ArrowLeft" });
+    expect(oradda).toHaveFocus();
+    expect(tooltip()).toHaveTextContent("oradda: a Pathway 2 word");
+  });
+
   it("shares the current word between two readings", () => {
     render(<Harness pathways={[0, 1]} />);
     act(() => options(1)[2].focus());

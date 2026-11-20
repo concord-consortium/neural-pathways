@@ -25,10 +25,15 @@ const WordTooltipContext = createContext<WordTooltipEvents>(noEvents);
 export const useWordTooltipEvents = (): WordTooltipEvents => useContext(WordTooltipContext);
 
 interface TooltipState {
+  /** The word the pointer moved to, unless the focus has moved to another word since. */
   hovered?: WordTarget;
   focused?: WordTarget;
-  /** Escape hid the tooltip. It stays hidden until it would show over another word. */
-  dismissed: boolean;
+  /**
+   * The words Escape hid the tooltip for: the hovered and the focused word at the time. Each stays
+   * hidden until the pointer or the focus moves to it again, so leaving another word doesn't bring
+   * one back.
+   */
+  dismissed: readonly HTMLElement[];
 }
 
 type TooltipAction =
@@ -36,19 +41,33 @@ type TooltipAction =
   | { type: "focus"; target: WordTarget | undefined }
   | { type: "dismiss" };
 
-/** The word under the pointer, or else the focused one. */
+/** The word the pointer or the focus moved to last, or else the focused one. */
 const shownTarget = (state: TooltipState) => state.hovered ?? state.focused;
 
 function reduceTooltip(state: TooltipState, action: TooltipAction): TooltipState {
   if (action.type === "dismiss") {
-    return state.dismissed ? state : { ...state, dismissed: true };
+    const dismissed = [state.hovered?.element, state.focused?.element]
+      .filter((element): element is HTMLElement => !!element);
+    return { ...state, dismissed };
   }
-  const next = action.type === "hover" ? { ...state, hovered: action.target } : { ...state, focused: action.target };
-  if (shownTarget(next)?.element !== shownTarget(state)?.element) {
-    next.dismissed = false;
+  const { target } = action;
+  const next = action.type === "hover" ? { ...state, hovered: target } : { ...state, focused: target };
+  // The most recent move wins: the focus moving to another word takes the tooltip from the word under
+  // the pointer, which a click or an arrow key leaves there. Entering a word takes it back.
+  if (action.type === "focus" && target && target.element !== state.hovered?.element) {
+    next.hovered = undefined;
+  }
+  if (target && state.dismissed.includes(target.element)) {
+    next.dismissed = state.dismissed.filter(element => element !== target.element);
   }
   return next;
 }
+
+/** The word to show the tooltip over, if any. */
+const visibleTarget = (state: TooltipState) => {
+  const target = shownTarget(state);
+  return target && !state.dismissed.includes(target.element) ? target : undefined;
+};
 
 // The gap between the word and the tooltip, which the tooltip's pointer fills.
 const POINTER_SIZE = 6;
@@ -82,21 +101,21 @@ interface WordTooltipAreaProps {
 }
 
 /**
- * A box around a card's readings that shows one tooltip for them all: the score of the word under
- * the pointer, or else of the focused word. The tooltip is drawn in this box, outside the readings'
- * scroller, so the scroller doesn't clip it. Key the area by the message, so a new message starts
- * with no tooltip.
+ * A box around a card's readings that shows one tooltip for them all: the score of the word the
+ * pointer or the focus moved to last, or, once the pointer leaves it, of the focused word. The tooltip
+ * is drawn in this box, outside the readings' scroller, so the scroller doesn't clip it. Key the area
+ * by the message, so a new message starts with no tooltip.
  *
- * It meets WCAG 1.4.13: Escape hides it without moving the focus, the pointer can move onto one the
- * pointer opened, and it stays until the pointer leaves both the word and the tooltip or the focus
- * leaves the word.
+ * It meets WCAG 1.4.13: Escape hides it without moving the focus, until the pointer or the focus next
+ * moves to a word; the pointer can move onto one the pointer opened; and it stays until the pointer
+ * leaves both the word and the tooltip or the focus leaves the word.
  * It is hidden from screen readers, since the word's name says the same thing.
  */
 export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, scrollerRef, children }) => {
-  const [state, dispatch] = useReducer(reduceTooltip, { dismissed: false });
+  const [state, dispatch] = useReducer(reduceTooltip, { dismissed: [] });
   const areaRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const shown = state.dismissed ? undefined : shownTarget(state);
+  const shown = visibleTarget(state);
 
   const events = useMemo<WordTooltipEvents>(() => ({
     hover(target, to) {

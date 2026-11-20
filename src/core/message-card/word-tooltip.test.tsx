@@ -21,6 +21,7 @@ const Word: React.FC<{ note: WordScoreNote }> = ({ note }) => {
 
 const tarrak: WordScoreNote = { kind: "score", word: "tarrak", value: -0.0624 };
 const vosh: WordScoreNote = { kind: "score", word: "vosh", value: 0.1234 };
+const sooma: WordScoreNote = { kind: "score", word: "sooma", value: 0.2 };
 const elsewhere: WordScoreNote = { kind: "elsewhere", word: "tarrak", pathway: 0 };
 
 const renderArea = (...notes: WordScoreNote[]) => {
@@ -56,7 +57,7 @@ describe("WordTooltipArea", () => {
     expect(tooltip()).toHaveTextContent("tarrak: a Pathway 1 word");
   });
 
-  it("shows the focused word when nothing is hovered, and the hovered word over the focused one", () => {
+  it("shows the focused word when nothing is hovered, and a word the pointer then moves to over it", () => {
     const { tooltip } = renderArea(tarrak, vosh);
     act(() => screen.getByText("tarrak").focus());
     expect(tooltip()).toHaveTextContent("tarrak: −0.0624");
@@ -64,6 +65,16 @@ describe("WordTooltipArea", () => {
     expect(tooltip()).toHaveTextContent("vosh: +0.1234");
     fireEvent.pointerLeave(screen.getByText("vosh"), { relatedTarget: document.body });
     expect(tooltip()).toHaveTextContent("tarrak: −0.0624");
+  });
+
+  it("follows the focus when it moves on while the pointer is still over the word it left", () => {
+    const { tooltip } = renderArea(tarrak, vosh);
+    const a = screen.getByText("tarrak");
+    fireEvent.pointerEnter(a);
+    act(() => a.focus());
+    act(() => screen.getByText("vosh").focus());
+    expect(tooltip()).toHaveTextContent("vosh: +0.1234");
+    expect(tooltip()).toHaveClass("word-tooltip--focused");
   });
 
   it("stays while the pointer moves from the word onto it, and goes when the pointer leaves it", () => {
@@ -98,6 +109,61 @@ describe("WordTooltipArea", () => {
     expect(a).toHaveFocus();
     act(() => screen.getByText("vosh").focus());
     expect(tooltip()).toHaveTextContent("vosh: +0.1234");
+  });
+
+  it("after Escape, shows the next word the focus moves to while the pointer is still over the first", () => {
+    const { tooltip } = renderArea(tarrak, vosh);
+    const a = screen.getByText("tarrak");
+    fireEvent.pointerEnter(a);
+    act(() => a.focus());
+    fireEvent.keyDown(a, { key: "Escape" });
+    expect(tooltip()).toBeNull();
+    act(() => screen.getByText("vosh").focus());
+    expect(tooltip()).toHaveTextContent("vosh: +0.1234");
+  });
+
+  it("after Escape, shows the next word the pointer moves to", () => {
+    const { tooltip } = renderArea(tarrak, vosh);
+    const a = screen.getByText("tarrak");
+    act(() => a.focus());
+    fireEvent.keyDown(a, { key: "Escape" });
+    fireEvent.pointerEnter(screen.getByText("vosh"));
+    expect(tooltip()).toHaveTextContent("vosh: +0.1234");
+  });
+
+  it("after Escape, doesn't bring back the focused word when the pointer leaves another, until it is " +
+    "moved to again", () => {
+    const { tooltip } = renderArea(tarrak, vosh);
+    const a = screen.getByText("tarrak");
+    const b = screen.getByText("vosh");
+    act(() => a.focus());
+    fireEvent.keyDown(a, { key: "Escape" });
+    fireEvent.pointerEnter(b);
+    fireEvent.pointerLeave(b, { relatedTarget: document.body });
+    expect(tooltip()).toBeNull();
+    fireEvent.pointerEnter(a);
+    expect(tooltip()).toHaveTextContent("tarrak: −0.0624");
+  });
+
+  it("after Escape, brings back the focused word when the pointer leaves another, if the focus moved " +
+    "after the Escape", () => {
+    const { tooltip } = renderArea(tarrak, vosh, sooma);
+    const a = screen.getByText("tarrak");
+    const c = screen.getByText("sooma");
+    act(() => a.focus());
+    fireEvent.keyDown(a, { key: "Escape" });
+    act(() => screen.getByText("vosh").focus());
+    fireEvent.pointerEnter(c);
+    fireEvent.pointerLeave(c, { relatedTarget: document.body });
+    expect(tooltip()).toHaveTextContent("vosh: +0.1234");
+  });
+
+  it("isn't hidden by a key other than Escape", () => {
+    const { tooltip } = renderArea(tarrak);
+    const word = screen.getByText("tarrak");
+    act(() => word.focus());
+    fireEvent.keyDown(word, { key: "a" });
+    expect(tooltip()).toHaveTextContent("tarrak: −0.0624");
   });
 
   it("hides on Escape when the pointer opened it and the focus is outside the area", () => {
