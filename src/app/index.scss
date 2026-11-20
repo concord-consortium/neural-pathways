@@ -1,8 +1,10 @@
+@use "../core/fonts" as fonts;
+
 html, body {
   margin: 0;
   padding: 0;
 }
 
 body {
-  font-family: 'Lato', sans-serif;
+  font-family: fonts.$body-font;
 }

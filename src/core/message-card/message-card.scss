@@ -1,5 +1,6 @@
 @use "../button";
 @use "../colors" as colors;
+@use "../fonts" as fonts;
 @use "../panel";
 @use "../visually-hidden";
 
@@ -23,7 +24,7 @@
 
 .message-card__count {
   margin-left: auto;
-  font-family: colors.$mono;
+  font-family: fonts.$mono;
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
   letter-spacing: normal;

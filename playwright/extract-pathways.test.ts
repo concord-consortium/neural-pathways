@@ -49,7 +49,7 @@ async function canvasIn(page: Page, width: number, canvasWidth: number) {
 }
 
 /** The drawing's scroller: a group named by its panel's heading. */
-const drawingGroup = (page: Page) => page.getByRole("group", { name: "The Network → Activated Pathways" });
+const drawingGroup = (page: Page) => page.getByRole("group", { name: "The Neural Network → Activated Pathways" });
 
 test("an Interactive just wide enough holds the canvas at full size without scrolling", async ({ page }) => {
   const scrolls = await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
@@ -162,7 +162,7 @@ test.describe("About", () => {
   const STEP_ROW_WIDTH = STEPS_WIDTH + 2 * (ABOUT_WIDTH + 10);
   const about = (page: Page) => page.getByRole("button", { name: "About Extract the Neural Pathways" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
-  const panel = (page: Page) => page.getByRole("region", { name: "The Network → Activated Pathways" });
+  const panel = (page: Page) => page.getByRole("region", { name: "The Neural Network → Activated Pathways" });
 
   async function openAt(page: Page, width: number) {
     await page.setViewportSize({ width, height: 900 });
@@ -224,7 +224,7 @@ test.describe("About", () => {
 
 test("Animate and the speed survive switching views", async ({ page }) => {
   await open(page, "no-preference");
-  const panel = page.getByRole("region", { name: "The Network → Activated Pathways" });
+  const panel = page.getByRole("region", { name: "The Neural Network → Activated Pathways" });
   const animate = panel.getByRole("checkbox", { name: "Animate" });
   const speed = panel.getByRole("slider", { name: "Animation speed" });
   await speed.focus();
@@ -250,7 +250,7 @@ test("in a narrow window, Animate and the speed wrap below the panel's title", a
   await page.evaluate(() => document.fonts.ready);
   const head = await page.locator(".extract-pathways__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
-  const title = await page.getByRole("heading", { name: "The Network → Activated Pathways" }).boundingBox();
+  const title = await page.getByRole("heading", { name: "The Neural Network → Activated Pathways" }).boundingBox();
   expect(controls!.x + controls!.width).toBeLessThanOrEqual(head!.x + head!.width);
   expect(controls!.y).toBeGreaterThanOrEqual(title!.y + title!.height);
 });

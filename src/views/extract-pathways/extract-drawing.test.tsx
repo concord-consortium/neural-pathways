@@ -75,13 +75,13 @@ describe("ExtractDrawing", () => {
   it("is a group named by its panel's heading, and not a Tab stop while it doesn't scroll", () => {
     render(
       <>
-        <h2 id="panel-head">The Network → Activated Pathways</h2>
+        <h2 id="panel-head">The Neural Network → Activated Pathways</h2>
         <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS}
           scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length}
           loadings={fixtureLoadings} />
       </>,
     );
-    const group = screen.getByRole("group", { name: "The Network → Activated Pathways" });
+    const group = screen.getByRole("group", { name: "The Neural Network → Activated Pathways" });
     expect(group).toContainElement(screen.getByRole("img"));
     expect(group).not.toHaveAttribute("tabindex");
   });

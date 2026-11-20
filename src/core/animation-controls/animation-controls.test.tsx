@@ -8,11 +8,11 @@ const checkbox = () => screen.getByRole("checkbox", { name: "Animate" });
 const slider = () => screen.getByRole("slider", { name: "Animation speed" }) as HTMLInputElement;
 
 describe("AnimationControls", () => {
-  it("shows Animate checked and the speed at Med by default", () => {
+  it("shows Animate checked and the speed at Medium by default", () => {
     render(<AnimationControls animated={new TestSettings()} />);
     expect(checkbox()).toBeChecked();
     expect(slider().value).toBe("1");
-    expect(slider()).toHaveAttribute("aria-valuetext", "Med");
+    expect(slider()).toHaveAttribute("aria-valuetext", "Medium");
     expect(slider()).toBeEnabled();
   });
 
@@ -53,13 +53,28 @@ describe("AnimationControls", () => {
     expect(slider()).toHaveAttribute("aria-valuetext", name);
   });
 
-  it("names each stop under the slider, marking the current one, hidden from assistive tech", () => {
+  it("names the outer stops under the slider, marking the current one, hidden from assistive tech", () => {
     render(<AnimationControls animated={new TestSettings({ speed: speedNamed("Fast") })} />);
-    for (const name of ["Slow", "Med", "Fast"]) {
+    for (const name of ["Slow", "Fast"]) {
       expect(isInaccessible(screen.getByText(name))).toBe(true);
     }
     expect(screen.getByText("Fast")).toHaveClass("animation-controls__stop--current");
     expect(screen.getByText("Slow")).not.toHaveClass("animation-controls__stop--current");
-    expect(screen.getByText("Med")).not.toHaveClass("animation-controls__stop--current");
+  });
+
+  it("prints no name under the middle stop, but keeps its place and marks it when current", () => {
+    render(<AnimationControls animated={new TestSettings()} />);
+    const stops = screen.getAllByTestId(/^speed-stop-/);
+    expect(stops.map(stop => stop.textContent)).toEqual(["Slow", "", "Fast"]);
+    expect(stops[1]).toHaveClass("animation-controls__stop--current");
+    expect(screen.queryByText("Medium")).not.toBeInTheDocument();
+  });
+
+  it("says Medium for the middle stop when the slider moves back to it", () => {
+    const settings = new TestSettings({ speed: speedNamed("Fast") });
+    render(<AnimationControls animated={settings} />);
+    fireEvent.change(slider(), { target: { value: "1" } });
+    expect(settings.speed).toBe(speedNamed("Medium"));
+    expect(slider()).toHaveAttribute("aria-valuetext", "Medium");
   });
 });

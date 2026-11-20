@@ -23,7 +23,7 @@ const R = layout.radius;
 function renderDiagram(scene: Scene, pass: ForwardPass = waitPass) {
   return render(
     <>
-      <h2 id="network-head">The Network</h2>
+      <h2 id="network-head">The Neural Network</h2>
       <NetworkDiagram network={fixtureNetwork} pass={pass} scales={scales} outputLabels={LABELS} scene={scene}
         headingId="network-head" />
     </>,
@@ -38,7 +38,7 @@ describe("NetworkDiagram", () => {
   // jsdom never overflows, so this is the diagram when it doesn't scroll: still a group, but not a Tab stop.
   it("is a group named by its panel's heading, and not a Tab stop while it doesn't scroll", () => {
     renderDiagram(emptyScene(SIZES));
-    const group = screen.getByRole("group", { name: "The Network" });
+    const group = screen.getByRole("group", { name: "The Neural Network" });
     expect(group).toContainElement(screen.getByRole("img"));
     expect(group).not.toHaveAttribute("tabindex");
   });
@@ -58,8 +58,6 @@ describe("NetworkDiagram", () => {
     }
     expect(screen.getByText("APPROACH")).toBeInTheDocument();
     expect(screen.getByText("WAIT")).toBeInTheDocument();
-    expect(screen.getByText("Target Class:")).toBeInTheDocument();
-    expect(screen.getByText("Other Class:")).toBeInTheDocument();
   });
 
   it("draws both halves of every edge for a full scene", () => {

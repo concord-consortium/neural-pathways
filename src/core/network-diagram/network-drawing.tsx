@@ -75,7 +75,7 @@ export interface NetworkDrawingProps {
  * scenes.
  *
  * It expects this lesson's network: four drawn columns (`COLUMN_CAPTIONS`) and two outputs,
- * Approach above Wait (`OUTPUT_ORDER`, the class captions, and CSS classes named after the labels).
+ * Approach above Wait (`OUTPUT_ORDER` and CSS classes named after the labels).
  * A network of another shape needs those generalized first.
  *
  * It has no role or name of its own: the SVG that places it gives the text alternative, as
@@ -179,17 +179,11 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
       <g className="network-diagram__labels" opacity={opacity(surroundOpacity)}>
         {outputNodes.map((node, row) => {
           const unit = OUTPUT_ORDER[row];
-          const box = layout.pills[row];
           return (
-            <React.Fragment key={unit}>
-              <text x={node.x + radius + PILL_GAP} y={node.y + 4}
-                className={`network-diagram__output-label network-diagram__output-label--${outputLabels[unit]}`}>
-                {outputLabels[unit].toUpperCase()}
-              </text>
-              <text x={box.x} y={box.y - 9} className="network-diagram__output-caption">
-                {unit === 1 ? "Target Class:" : "Other Class:"}
-              </text>
-            </React.Fragment>
+            <text key={unit} x={node.x + radius + PILL_GAP} y={node.y + 4}
+              className={`network-diagram__output-label network-diagram__output-label--${outputLabels[unit]}`}>
+              {outputLabels[unit].toUpperCase()}
+            </text>
           );
         })}
         {scene.weightLabel.map((shown, gap) => shown && (

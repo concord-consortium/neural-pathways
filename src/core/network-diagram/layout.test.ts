@@ -59,7 +59,16 @@ describe.each([
       expect(pill.x + pill.width).toBeLessThanOrEqual(layout.width);
       expect(pill.y - 12).toBeGreaterThan(layout.captionY);
     });
-    expect(layout.pills[1].y).toBeGreaterThanOrEqual(layout.pills[0].y + layout.pills[0].height + 12);
+  });
+
+  // The winning pill grows and pops about its center, into the gap but not across it.
+  it("leaves the gap between the pills wider than the winning pill pops into it", () => {
+    const [upper, lower] = layout.pills;
+    const gap = lower.y - (upper.y + upper.height);
+    // The prototype's OUT_PILL_GAP.
+    expect(gap).toBeCloseTo(10);
+    const popInto = (upper.height / 2 + PILL_GROW + HALF_STROKE) * POP_PEAK - upper.height / 2;
+    expect(popInto).toBeLessThan(gap);
   });
 
   // See PILL_POP_ROOM in layout.ts.

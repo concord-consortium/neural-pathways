@@ -79,19 +79,23 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   them with Reset. The player's scene changes on every frame of a run, so a view reads
   `player.scene` only inside a small `<Observer>` around its drawing; the rest of the view then
   doesn't re-render while a run plays.
-- `animation-controls/`: the Animate checkbox and the Slow/Med/Fast speed slider, for any view
+- `animation-controls/`: the Animate checkbox and the Slow/Medium/Fast speed slider, for any view
   whose state is `Animated`. The step player reads the same two values from the state the view
   gives it, so a view places the control and passes its state to both.
 - `message-card/`: the message panel the lesson's views share. `MessageCard` is the
   shell: the count, previous and next, a screen-reader status, and "No messages match that
   search." when the list is empty. A view fills its body from the parts beside it:
   `MessageWords` (the words, one span each), `ActualLabel` (the true answer as a chip) and
-  `ObservationNotes` (the observer's notes with an attribute indicator for each attribute it is
-  given). A view that needs a different body adds a part rather than a flag on the shell.
+  `ObservationNotes` (the observer's notes, under a heading that opens and closes them; the view
+  keeps whether they are open). A view that needs a different body adds a part rather than a flag
+  on the shell.
+- `fonts.scss`: the font stacks, and where each font comes from. A stylesheet uses its variables
+  rather than spelling a stack out.
 - `alien-icons/`: `AlienIcon` and the alien attributes' icons, one `.svg` file per attribute,
   named by its key and drawn in the parent's color. webpack finds the files with `require.context`
   (`alien-icon-files.ts`) and SVGR makes each a React component, so a new icon needs only its file.
   Under Jest, `src/test/alien-icon-files.ts` stands in, and `jest/svg-transform.js` runs SVGR.
+  Nothing uses them yet: they are kept for a later view.
 - `visually-hidden.scss`: the `visually-hidden` mixin, for text only screen readers read.
 - `message-text.ts`: what a message's text means to the lesson, such as its list of
   words (`messageWords`). Items are plain data, so this is a function that takes the text, not

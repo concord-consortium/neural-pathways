@@ -1,4 +1,5 @@
 import "../../core/state/setup";
+import { action, observable } from "mobx";
 import { composeMixins, ExtendedModel, model, modelAction, tProp, types } from "mobx-keystone";
 import { animatedMixin } from "../../core/state/animation";
 
@@ -15,6 +16,19 @@ export class LookingInsideState extends ExtendedModel(composeMixins(animatedMixi
   /** The marker each message rests at, by message id. A message at the start isn't stored. */
   markerByMessage: tProp(types.record(markerType), () => ({})),
 }) {
+  /**
+   * Whether the observation notes are open. It is volatile (`@observable accessor`, not a `tProp`):
+   * it lasts for the life of the page, so the notes stay open across messages and views, but it is
+   * never saved, never in a snapshot and never an undo step. A reload closes the notes, as in the
+   * prototype.
+   */
+  @observable accessor notesOpen = false;
+
+  @action
+  setNotesOpen(open: boolean) {
+    this.notesOpen = open;
+  }
+
   marker(messageId: string): number {
     return this.markerByMessage[messageId] ?? 0;
   }

@@ -1,4 +1,5 @@
 @use "./colors" as colors;
+@use "./fonts" as fonts;
 
 // A lesson panel: a white card with a gray header strip, from the demo prototype's .nnm-panel.
 @mixin panel {
@@ -31,7 +32,7 @@ $head-height: $head-control-height + $head-padding-top + $head-padding-bottom + 
   border-radius: 7px 7px 0 0;
   background: colors.$surface;
   color: colors.$ink-2;
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: fonts.$label-font;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.06em;

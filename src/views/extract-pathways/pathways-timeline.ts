@@ -6,9 +6,10 @@ import { barLengths, Loadings, PATHWAYS } from "./pathways-layout";
 import { easeBetween } from "./setup-timeline";
 import { transitionAt } from "./transitions";
 
-// The timings below are the prototype's, in ms at its "Med" speed, so each can be checked against
-// its source: particleStage, ptWire, pathwayStep and buildLines, and for MUTE_MS and KICK_MS its
-// CSS, the .d1a-loadbar transition and d1a-boxkick. src/views/README.md says where the prototype is.
+// The timings below are the prototype's, in ms at its "Medium" speed, so each can be checked
+// against its source: particleStage, ptWire, pathwayStep and buildLines, and for MUTE_MS and
+// KICK_MS its CSS, the .d1a-loadbar transition and d1a-boxkick. src/views/README.md says where the
+// prototype is.
 
 const DECK_SLIDE_MS = 1400;
 /** The lifted column answers the deck's move rather than sharing it. */

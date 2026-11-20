@@ -1,6 +1,6 @@
 import React from "react";
+import { fromSnapshot, getSnapshot } from "mobx-keystone";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { spokenText } from "../../core/message-card/__fixtures__/spoken-text";
 import * as messageCard from "../../core/message-card/message-card";
 import { fetchIndex } from "../../core/data-loader";
 import { phaseDuration } from "../../core/network-diagram/forward-pass-phases";
@@ -11,7 +11,6 @@ import { SharedState } from "../../core/state/shared-state";
 import { LookingInsideState } from "./looking-inside-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
 import { clearReducedMotion, setReducedMotion } from "../../core/steps/test-helpers";
-import { AttributeDefinition } from "../../core/types/attributes";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { clearDatasetIndexCache } from "../../core/use-dataset-index";
 import { LookingInside } from "./looking-inside";
@@ -19,32 +18,23 @@ import { LookingInside } from "./looking-inside";
 jest.mock("../../core/data-loader", () => ({ fetchIndex: jest.fn() }));
 const mockedFetchIndex = fetchIndex as jest.MockedFunction<typeof fetchIndex>;
 
-function item(id: string, text: string, classification: number, groupSize: number): S3Item {
+function item(id: string, text: string, classification: number): S3Item {
   return {
     id, text, classification,
     sources: { alien3: [0] },
     target: classification,
     target_label: null,
     observation: `Notes on ${id}.`,
-    attributes: { voices_raised: classification, group_size: groupSize, resource_stressed: 1 },
     pathway_scores: {},
     pathway_variance_fractions: {},
   };
 }
 
-const YES_NO = { 0: "no", 1: "yes" };
-// One of each kind, and a hidden one, which gets no attribute indicator.
-const attributes: AttributeDefinition[] = [
-  { key: "voices_raised", label: "Voices raised", description: "", type: "binary", valueLabels: YES_NO },
-  { key: "group_size", label: "Group size", description: "", type: "integer", min: 1, max: 6 },
-  { key: "resource_stressed", label: "Resource stressed", description: "", type: "binary", hidden: true },
-];
-
 // The first and third are classified Wait, the second Approach.
 const items = [0, 6, 1].map(i => fixture.messages[i])
-  .map((c, i) => item(c.id, c.text, c.classification, i + 2));
+  .map(c => item(c.id, c.text, c.classification));
 const ids = items.map(i => i.id);
-const index: S3Index = { metadata: { ...fixtureMetadata, attributes }, items };
+const index: S3Index = { metadata: fixtureMetadata, items };
 
 function viewWith(shared: SharedState, state = new LookingInsideState({})) {
   return (
@@ -63,6 +53,14 @@ const filterBox = () => screen.getByRole("textbox", { name: "Filter" });
 const typeQuery = (text: string) => fireEvent.change(filterBox(), { target: { value: text } });
 const wordsOf = (i: number) => items[i].text.split(/\s+/).join(" ");
 const card = () => screen.getByRole("region", { name: "Message" });
+const notesToggle = () => screen.getByRole("button", { name: "Observation notes" });
+
+/** A state with the notes open, so a test can read them. */
+function openNotes() {
+  const state = new LookingInsideState({});
+  state.setNotesOpen(true);
+  return state;
+}
 
 describe("LookingInside", () => {
   beforeEach(() => {
@@ -81,7 +79,7 @@ describe("LookingInside", () => {
     expect(screen.getByText("Loading messages…")).toBeInTheDocument();
     expect(await screen.findByText("1 / 3")).toBeInTheDocument();
     expect(card()).toHaveTextContent(wordsOf(0));
-    expect(screen.getByRole("heading", { name: "The Network" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The Neural Network" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Network diagram" })).toBeInTheDocument();
   });
 
@@ -102,16 +100,41 @@ describe("LookingInside", () => {
     expect(shared.messageId).toBe(ids[0]);
   });
 
-  it("shows the message's label, notes and attribute indicators, with none for a hidden attribute", async () => {
-    showView();
+  it("shows the message's label and notes", async () => {
+    showView(new SharedState({}), openNotes());
     await screen.findByText("1 / 3");
     expect(within(card()).getByText("wait")).toHaveClass("actual-label__pill");
-    expect(within(card()).getByText(`Notes on ${ids[0]}.`)).toBeInTheDocument();
-    expect(within(card()).getAllByRole("listitem").map(spokenText)).toEqual(["Voices raised: no", "Group size: 2"]);
+    expect(within(card()).getByText(`Notes on ${ids[0]}.`)).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Next message" }));
     expect(within(card()).getByText("approach")).toHaveClass("actual-label__pill");
-    expect(within(card()).getByText(`Notes on ${ids[1]}.`)).toBeInTheDocument();
-    expect(within(card()).getAllByRole("listitem").map(spokenText)).toEqual(["Voices raised: yes", "Group size: 3"]);
+    expect(within(card()).getByText(`Notes on ${ids[1]}.`)).toBeVisible();
+  });
+
+  it("starts with the notes closed", async () => {
+    showView();
+    await screen.findByText("1 / 3");
+    expect(notesToggle()).toHaveAttribute("aria-expanded", "false");
+    expect(within(card()).getByText(`Notes on ${ids[0]}.`)).not.toBeVisible();
+  });
+
+  it("keeps the notes open in the view's state, across messages and remounts", async () => {
+    const shared = new SharedState({});
+    const state = new LookingInsideState({});
+    const { unmount } = render(viewWith(shared, state));
+    await screen.findByText("1 / 3");
+    fireEvent.click(notesToggle());
+    expect(state.notesOpen).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Next message" }));
+    expect(notesToggle()).toHaveAttribute("aria-expanded", "true");
+    unmount();
+    render(viewWith(shared, state));
+    expect(await screen.findByRole("button", { name: "Observation notes" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("doesn't save whether the notes are open", async () => {
+    const state = openNotes();
+    expect(getSnapshot(state)).not.toHaveProperty("notesOpen");
+    expect(fromSnapshot(LookingInsideState, getSnapshot(state)).notesOpen).toBe(false);
   });
 
   it("draws the network for the message shown", async () => {
@@ -132,7 +155,7 @@ describe("LookingInside", () => {
   it("names the network's section by its heading", async () => {
     showView();
     await screen.findByText("1 / 3");
-    expect(screen.getByRole("region", { name: "The Network" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "The Neural Network" })).toBeInTheDocument();
   });
 
   it("opens straight on the saved message when the messages are already loaded", async () => {
@@ -214,9 +237,10 @@ describe("LookingInside", () => {
   it("shows Animate and the speed in the network's head", async () => {
     showView();
     await screen.findByText("1 / 3");
-    const network = screen.getByRole("region", { name: "The Network" });
+    const network = screen.getByRole("region", { name: "The Neural Network" });
     expect(within(network).getByRole("checkbox", { name: "Animate" })).toBeChecked();
-    expect(within(network).getByRole("slider", { name: "Animation speed" })).toHaveAttribute("aria-valuetext", "Med");
+    expect(within(network).getByRole("slider", { name: "Animation speed" }))
+      .toHaveAttribute("aria-valuetext", "Medium");
   });
 
   it("stores Animate in the view's state", async () => {
@@ -247,7 +271,7 @@ describe("LookingInside", () => {
     jest.useFakeTimers();
     try {
       fireEvent.click(screen.getByRole("button", { name: "Step 4" }));
-      // Fast takes 0.6 of the Med duration, so the run is done well before Med's would be.
+      // Fast takes 0.6 of the Medium duration, so the run is done well before Medium's would be.
       act(() => jest.advanceTimersByTime(phaseDuration(4, [10, 8, 6, 2]) * 0.7));
       expect(state.marker(ids[0])).toBe(4);
     } finally {
@@ -435,7 +459,7 @@ describe("LookingInside", () => {
       expect(card()).toHaveTextContent("No messages match that search.");
       expect(within(card()).getByRole("status")).toBe(status);
       expect(screen.queryByRole("button", { name: "Step 1" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("heading", { name: "The Network" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "The Neural Network" })).not.toBeInTheDocument();
       expect(shared.messageId).toBe(ids[0]);
     });
 

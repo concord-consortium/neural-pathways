@@ -16,7 +16,7 @@ the deck.
   `src/core/steps/`.
 - `extract-scene.ts`, `setup-timeline.ts`, `collect-timeline.ts`, `collect-all-timeline.ts`,
   `extract-timeline.ts`, `pathways-timeline.ts`: what the view draws at any moment, as pure
-  functions of the marker and the time into a segment, at the prototype's "Med" speed.
+  functions of the marker and the time into a segment, at the prototype's "Medium" speed.
 - `extract-geometry.ts`, `flight.ts`, `extract-drawing.tsx`: the canvas. The network sits in the
   middle, the lifted column in the right strip, the deck in the left (see `ExtractDrawing`). Copies
   of the hidden neurons fly on curved paths, landing in order and settling.

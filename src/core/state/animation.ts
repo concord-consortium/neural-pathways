@@ -4,13 +4,14 @@ import { defineModelMixin, modelAction, tProp, types } from "mobx-keystone";
  * The speed slider's stops, left to right. Each `key` is stored in saved student data: never
  * change one. Keys only order the stops, with normal at 0; they aren't a scale. A new stop goes in
  * its place in this list, with any integer key between its neighbors', or beyond the ends, so no
- * stop is ever renumbered. `name` is shown under the stop, and `durationScale` is how long a run
- * takes there relative to normal.
+ * stop is ever renumbered. `name` is what a screen reader says for the stop. `shown` says whether
+ * `name` is printed under the stop: the middle stop has only its tick, as in the prototype.
+ * `durationScale` is how long a run takes there relative to normal.
  */
 export const SPEED_STOPS = [
-  { key: -100, name: "Slow", durationScale: 1.7 },
-  { key: 0, name: "Med", durationScale: 1 },
-  { key: 100, name: "Fast", durationScale: 0.6 },
+  { key: -100, name: "Slow", shown: true, durationScale: 1.7 },
+  { key: 0, name: "Medium", shown: false, durationScale: 1 },
+  { key: 100, name: "Fast", shown: true, durationScale: 0.6 },
 ] as const;
 
 /** A stored speed: one stop's key. */

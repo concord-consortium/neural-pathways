@@ -67,12 +67,8 @@ It has `version`, `query` and `messageId` so far. Its fields:
 | `query` | The filter query every view uses, stored when the student presses Enter or leaves the filter bar. Unset: no query has been set. `""`: the student cleared it. | In place |
 | `commissioned` | Attribute keys the student commissioned in Identify Contextual Factors, in order, at most 2. Correlations reads them. | Identify Contextual Factors |
 
-`SharedState` also has one volatile field, `queryDraft`: the filter bar's text while it differs
-from `query`. Filtering follows the draft as the student types, but only `setQueryAndCorrect`
-stores a query and corrects the message. The draft lives in the shared state so that every
-view's filter bar shows the same text, and so a half-typed query survives switching views. It is
-volatile (`@observable accessor`, not a `tProp`): it is never saved, never in a snapshot, and never
-an undo step.
+`SharedState` also has one volatile field, `queryDraft`, the filter bar's text while it differs
+from `query`. Its comment says how it is used and why it is kept here.
 
 ## Each view's state
 
@@ -98,8 +94,12 @@ them. Neural Pathway View of Model Reasoning will be the third.
 
 Hover and anything shown only on hover, the About modal, scroll positions, and anything in the
 middle of an animation, such as chips in flight or a step still running. Extract the Neural Pathways
-keeps the stages it has completed, but not one in progress. A query still being typed is kept only
-for the life of the page, in `SharedState.queryDraft`.
+keeps the stages it has completed, but not one in progress. Two things are kept only for the life
+of the page, as volatile fields (`@observable accessor`, not `tProp`), so they survive switching
+views but are never saved or an undo step:
+- a query still being typed, in `SharedState.queryDraft`;
+- whether a view's observation notes are open, in its own state, as in
+  `LookingInsideState.notesOpen`.
 
 ## Rules
 

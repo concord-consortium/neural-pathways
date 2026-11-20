@@ -1,11 +1,12 @@
 @use "../colors" as colors;
+@use "../fonts" as fonts;
 
 .actual-label {
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: fonts.$label-font;
   font-weight: 600;
   text-transform: uppercase;
 }

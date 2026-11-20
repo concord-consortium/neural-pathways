@@ -69,8 +69,8 @@ describe("ExtractPathways", () => {
     expect(screen.getByRole("heading", { name: "Extract the Neural Pathways", level: 1 })).toBeInTheDocument();
     expect(screen.getByText("Loading messages…")).toBeInTheDocument();
     expect(await screen.findByRole("img", { name: "The network." })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "The Network → Activated Pathways" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "The Network → Activated Pathways" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The Neural Network → Activated Pathways" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "The Neural Network → Activated Pathways" })).toBeInTheDocument();
     expect(button("Setup")).toHaveAttribute("aria-disabled", "false");
     expect(button("Collect a Message")).toHaveAttribute("aria-disabled", "false");
     expect(button("Collect All Messages")).toHaveAttribute("aria-disabled", "false");
@@ -197,7 +197,7 @@ describe("ExtractPathways", () => {
   it("shows Animate and the speed in the panel's head, and stores Animate in the view's state", async () => {
     const { state } = showView();
     await screen.findByRole("img", { name: "The network." });
-    const panel = screen.getByRole("region", { name: "The Network → Activated Pathways" });
+    const panel = screen.getByRole("region", { name: "The Neural Network → Activated Pathways" });
     fireEvent.click(within(panel).getByRole("checkbox", { name: "Animate" }));
     expect(state.animate).toBe(false);
     expect(within(panel).getByRole("slider", { name: "Animation speed" })).toBeDisabled();
@@ -302,7 +302,7 @@ describe("ExtractPathways", () => {
       await screen.findByRole("img", { name: "The network." });
       jest.useFakeTimers();
       fireEvent.click(button("Setup"));
-      // Fast takes 0.6 of the Med duration, so the run is done well before Med's would be.
+      // Fast takes 0.6 of the Medium duration, so the run is done well before Medium's would be.
       act(() => jest.advanceTimersByTime(setupDuration(SIZES) * 0.7));
       expect(state.setupDone).toBe(true);
     });

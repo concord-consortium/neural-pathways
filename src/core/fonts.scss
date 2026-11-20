@@ -1,0 +1,16 @@
+// The lesson's font stacks. Lato and Barlow Condensed come from Google Fonts, which
+// src/app/index.html loads.
+
+// Body text.
+$body-font: "Lato", sans-serif;
+
+// Titles, headings, buttons and labels.
+$label-font: "Barlow Condensed", sans-serif;
+
+// Code-like text and counts.
+$mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+// The alien messages' words, and only them. Spline Sans Mono comes from the
+// @fontsource/spline-sans-mono package, so it is served with the app: anything that uses this stack
+// imports @fontsource/spline-sans-mono/400.css, as MessageWords does.
+$message-font: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;

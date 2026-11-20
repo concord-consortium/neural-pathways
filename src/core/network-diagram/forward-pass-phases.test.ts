@@ -26,7 +26,7 @@ describe("unitDuration", () => {
 });
 
 describe("phaseDuration", () => {
-  it("matches the prototype's Med speed", () => {
+  it("matches the prototype's Medium speed", () => {
     expect(phaseDuration(1, SIZES)).toBe(675);
     expect(phaseDuration(2, SIZES)).toBeCloseTo(3830.805, 2);
     expect(phaseDuration(3, SIZES)).toBeCloseTo(3530.805, 2);

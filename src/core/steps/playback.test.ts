@@ -3,7 +3,7 @@ import { speedNamed } from "../state/test-helpers";
 import { durationScale } from "./playback";
 
 describe("durationScale", () => {
-  it("takes the prototype's Med timings as they are at normal speed", () => {
+  it("takes the prototype's Medium timings as they are at normal speed", () => {
     expect(durationScale(NORMAL_SPEED)).toBe(1);
   });
 

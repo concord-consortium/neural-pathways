@@ -182,10 +182,10 @@ test("the speed slider shows focus in forced-colors mode", async ({ page }) => {
 test("Animate and the speed survive switching views", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
-  const network = page.getByRole("region", { name: "The Network" });
+  const network = page.getByRole("region", { name: "The Neural Network" });
   const animate = network.getByRole("checkbox", { name: "Animate" });
   const speed = network.getByRole("slider", { name: "Animation speed" });
-  await expect(speed).toHaveAttribute("aria-valuetext", "Med");
+  await expect(speed).toHaveAttribute("aria-valuetext", "Medium");
   await speed.focus();
   await page.keyboard.press("ArrowRight");
   await expect(speed).toHaveAttribute("aria-valuetext", "Fast");
@@ -203,7 +203,7 @@ test("Animate and the speed survive switching views", async ({ page }) => {
 test("clicking a speed's name moves the slider to it", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
-  const network = page.getByRole("region", { name: "The Network" });
+  const network = page.getByRole("region", { name: "The Neural Network" });
   // The slider is stretched over the names, so a click where a name is lands on the slider.
   const name = await network.getByText("Slow", { exact: true }).boundingBox();
   await page.mouse.click(name!.x + name!.width / 2, name!.y + name!.height / 2);
@@ -215,7 +215,7 @@ test("with Animate off, Step 4 shows the answer at once", async ({ page }) => {
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   await page.getByRole("checkbox", { name: "Animate" }).uncheck();
   await page.getByRole("button", { name: "Step 4" }).click();
-  // Animated at Med, Step 4 takes several seconds to name the answer.
+  // Animated at Medium, Step 4 takes several seconds to name the answer.
   await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
     .toBeVisible({ timeout: 1_000 });
 });
@@ -229,7 +229,7 @@ test("in a narrow window, Animate and the speed wrap below the network's title",
   await page.evaluate(() => document.fonts.ready);
   const head = await page.locator(".looking-inside__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
-  const title = await page.getByRole("heading", { name: "The Network" }).boundingBox();
+  const title = await page.getByRole("heading", { name: "The Neural Network" }).boundingBox();
   expect(controls!.x + controls!.width).toBeLessThanOrEqual(head!.x + head!.width);
   expect(controls!.y).toBeGreaterThanOrEqual(title!.y + title!.height);
 });
@@ -243,40 +243,68 @@ test("Animate and the speed sit at the right end of the network's head", async (
   expect(head!.x + head!.width - (controls!.x + controls!.width)).toBeCloseTo(14, 0);
 });
 
-test("the card shows the message's label, notes and attribute indicators", async ({ page }) => {
+/** Opens the card's observation notes, which start closed. */
+async function openNotes(page: Page) {
+  const toggle = page.getByRole("button", { name: "Observation notes" });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+}
+
+test("the card shows the message's label, and its notes once opened", async ({ page }) => {
   await page.goto("/");
   const card = page.getByRole("region", { name: "Message", exact: true });
   await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
   await expect(card.getByText("wait", { exact: true })).toBeVisible();
-  await expect(card.getByText(/^At least one juvenile was present\./)).toBeVisible();
-  const indicators = card.getByRole("listitem");
-  await expect(indicators).toHaveCount(5);
-  // Each indicator has a drawing, and the drawing has something in it.
-  const icons = indicators.locator("svg");
-  await expect(icons).toHaveCount(5);
-  expect(await icons.evaluateAll(svgs => svgs.map(svg => svg.childElementCount > 0))).toEqual(Array(5).fill(true));
-  // The indicators share the row equally, so a long label wraps rather than widening its indicator.
-  const widths = await indicators.evaluateAll(items =>
-    items.map(item => Math.round(item.getBoundingClientRect().width)));
-  expect(new Set(widths).size).toBe(1);
-  // What a screen reader reads of each indicator; the value shown is hidden from it.
-  const spoken = () => indicators.evaluateAll(items => items.map(item => {
-    const copy = item.cloneNode(true) as Element;
-    copy.querySelectorAll('[aria-hidden="true"]').forEach(hidden => hidden.remove());
-    return copy.textContent;
-  }));
-  expect(await spoken()).toEqual([
-    "Voices raised: no", "Engaged in a task: yes", "Group size: 2", "Near water: yes", "Food present: no",
-  ]);
-  // A hidden attribute gets no attribute indicator until it is commissioned.
-  await expect(card.getByText("Resource stressed")).toHaveCount(0);
+  const notes = card.getByText(/^At least one juvenile was present\./);
+  await expect(notes).toBeHidden();
+  await openNotes(page);
+  await expect(notes).toBeVisible();
 
   await page.getByRole("button", { name: "Next message" }).click();
   await expect(card.getByRole("status")).toHaveText("Message 2 of 800");
   await expect(card.getByText("approach", { exact: true })).toBeVisible();
-  expect(await spoken()).toEqual([
-    "Voices raised: yes", "Engaged in a task: no", "Group size: 3", "Near water: yes", "Food present: yes",
-  ]);
+  await expect(card.getByRole("region", { name: "Observation notes" })).toBeVisible();
+});
+
+test("the observation notes open and close from the keyboard", async ({ page }) => {
+  await page.goto("/");
+  const toggle = page.getByRole("button", { name: "Observation notes" });
+  const notes = page.getByRole("region", { name: "Observation notes" });
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(notes).toBeVisible();
+  await page.keyboard.press("Space");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(notes).toBeHidden();
+});
+
+test("the observation notes stay open when switching views", async ({ page }) => {
+  await page.goto("/");
+  await openNotes(page);
+  const nav = page.getByRole("navigation", { name: "Views" });
+  await nav.getByRole("link", { name: "Correlations", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
+  await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
+  const toggle = page.getByRole("button", { name: "Observation notes" });
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+});
+
+// As on a school network that blocks Google Fonts, where Lato and Barlow Condensed fall back.
+test("the message's words are set in Spline Sans Mono even with Google Fonts blocked", async ({ page }) => {
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
+  await page.goto("/");
+  const words = page.locator(".message-words");
+  await expect(words).toBeVisible();
+  expect(await words.evaluate(el => getComputedStyle(el).fontFamily)).toMatch(/^"Spline Sans Mono"/);
+  const statuses = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return Array.from(document.fonts)
+      .filter(face => face.family.replace(/"/g, "") === "Spline Sans Mono")
+      .map(face => face.status);
+  });
+  // A face per character range, and the browser loads only the ranges the page uses.
+  expect(statuses).toContain("loaded");
 });
 
 test("the card's unavailable arrow looks unavailable in forced-colors mode", async ({ page }) => {
@@ -290,11 +318,24 @@ test("the card's unavailable arrow looks unavailable in forced-colors mode", asy
   expect(await fill("Previous message")).not.toBe(await fill("Next message"));
 });
 
+test("the observation notes' caret stays a triangle in forced-colors mode", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  const caret = page.locator(".observation-notes__caret");
+  // The triangle is its left border. Top and bottom painted the same color would make a square.
+  const borders = await caret.evaluate(el => {
+    const style = getComputedStyle(el);
+    return { top: style.borderTopColor, bottom: style.borderBottomColor, left: style.borderLeftColor };
+  });
+  expect(borders.top).not.toBe(borders.left);
+  expect(borders.bottom).not.toBe(borders.left);
+});
+
 test("the card fits the stacked layout without scrolling sideways", async ({ page }) => {
   await page.setViewportSize({ width: 600, height: 900 });
   await page.goto("/");
   const card = page.getByRole("region", { name: "Message", exact: true });
-  await expect(card.getByRole("listitem")).toHaveCount(5);
+  await openNotes(page);
   // The notes box scrolls on its own, so what overflows inside it doesn't widen the card.
   const notes = card.getByRole("region", { name: "Observation notes" });
   for (const box of [card, notes]) {
@@ -305,12 +346,15 @@ test("the card fits the stacked layout without scrolling sideways", async ({ pag
 test.describe("the card and network panels", () => {
   const panels = (page: Page) => ({
     card: page.getByRole("region", { name: "Message", exact: true }),
-    network: page.getByRole("region", { name: "The Network" }),
+    network: page.getByRole("region", { name: "The Neural Network" }),
   });
   const rect = (locator: Locator) => locator.evaluate(el => {
     const { top, bottom, height } = el.getBoundingClientRect();
     return { top, bottom, height };
   });
+  /** How far the notes box ends below its text: its 10 px padding, unless something stretched it. */
+  const belowNotesText = (notes: Locator) => notes.evaluate(el =>
+    el.getBoundingClientRect().bottom - el.querySelector("p")!.getBoundingClientRect().bottom);
 
   // On a short window the card's body has to give up height, and its head mustn't.
   for (const height of [1000, 450]) {
@@ -318,9 +362,9 @@ test.describe("the card and network panels", () => {
       await page.setViewportSize({ width: 1280, height });
       await page.goto("/");
       const { card, network } = panels(page);
-      await expect(card.getByRole("listitem")).toHaveCount(5);
+      await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
       const cardHead = await rect(card.getByRole("heading", { name: "Message" }).locator(".."));
-      const networkHead = await rect(network.getByRole("heading", { name: "The Network" }).locator(".."));
+      const networkHead = await rect(network.getByRole("heading", { name: "The Neural Network" }).locator(".."));
       expect(networkHead.height).toBeCloseTo(cardHead.height, 0);
     });
   }
@@ -329,7 +373,7 @@ test.describe("the card and network panels", () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/");
     const { card, network } = panels(page);
-    await expect(card.getByRole("listitem")).toHaveCount(5);
+    await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
     const cardBox = await rect(card);
     const networkBox = await rect(network);
     expect(networkBox.height).toBeCloseTo(cardBox.height, 0);
@@ -337,11 +381,19 @@ test.describe("the card and network panels", () => {
     expect(cardBox.bottom).toBeCloseTo(800 - 16, 0);
   });
 
+  test("leave the notes box as tall as its notes when the card has room to spare", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    const { card } = panels(page);
+    await openNotes(page);
+    expect(await belowNotesText(card.getByRole("region", { name: "Observation notes" }))).toBeCloseTo(10, 0);
+  });
+
   test("stop growing at 800 px on a tall window", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 1400 });
     await page.goto("/");
     const { card, network } = panels(page);
-    await expect(card.getByRole("listitem")).toHaveCount(5);
+    await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
     expect((await rect(card)).height).toBeCloseTo(800, 0);
     expect((await rect(network)).height).toBeCloseTo(800, 0);
   });
@@ -350,9 +402,10 @@ test.describe("the card and network panels", () => {
     await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card } = panels(page);
-    // A long message, so its attribute indicators sit well below the bottom of the card.
+    // A long message, so its notes run well below the bottom of the card.
     await page.getByRole("textbox", { name: "Filter" }).fill("n:500");
     await expect(page.getByText("1 / 1", { exact: true })).toBeVisible();
+    await openNotes(page);
     const notes = card.getByRole("region", { name: "Observation notes" });
     await expect(notes).toBeVisible();
     const overflow = (locator: Locator) => locator.evaluate(el => el.scrollHeight - el.clientHeight);
@@ -367,7 +420,8 @@ test.describe("the card and network panels", () => {
     await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card } = panels(page);
-    await expect(card.getByRole("listitem")).toHaveCount(5);
+    // Open, so the card is as full as it gets.
+    await openNotes(page);
     await page.evaluate(() => {
       const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
       const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
@@ -385,15 +439,12 @@ test.describe("the card and network panels", () => {
     await page.setViewportSize({ width: 600, height: 500 });
     await page.goto("/");
     const { card, network } = panels(page);
+    await openNotes(page);
     const notes = card.getByRole("region", { name: "Observation notes" });
-    await expect(notes).toBeVisible();
     expect(await notes.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(0);
     // Nothing to scroll, so it isn't a Tab stop.
     await expect(notes).not.toHaveAttribute("tabindex");
-    // The box ends its 10 px padding below the attribute indicators, so nothing stretched it.
-    const below = await notes.evaluate(el =>
-      el.getBoundingClientRect().bottom - el.querySelector("ul")!.getBoundingClientRect().bottom);
-    expect(below).toBeCloseTo(10, 0);
+    expect(await belowNotesText(notes)).toBeCloseTo(10, 0);
     await page.getByRole("main").evaluate(el => el.scrollTo(0, el.scrollHeight));
     expect((await rect(network)).bottom).toBeCloseTo(500 - 16, 0);
   });
@@ -402,7 +453,7 @@ test.describe("the card and network panels", () => {
     await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card, network } = panels(page);
-    await expect(card.getByRole("listitem")).toHaveCount(5);
+    await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
     expect((await rect(card)).height).toBeCloseTo(380, 0);
     const networkBox = await rect(network);
     expect(networkBox.height).toBeCloseTo(380, 0);
@@ -437,7 +488,7 @@ async function diagramIn(page: Page, width: number, diagramWidth: number) {
 }
 
 /** The diagram's scroller: a group named by its panel's heading. */
-const diagramGroup = (page: Page) => page.getByRole("group", { name: "The Network" });
+const diagramGroup = (page: Page) => page.getByRole("group", { name: "The Neural Network" });
 
 // 380 is the narrowest the diagram is laid out (MIN_WIDTH in layout.ts).
 
@@ -524,7 +575,7 @@ test.describe("About", () => {
     expect(cellBox.height).toBeCloseTo((await box(page.locator(".looking-inside__filter-row"))).height, 0);
     // Still two columns: the card and the network start on the same line.
     const card = await box(page.getByRole("region", { name: "Message", exact: true }));
-    const network = await box(page.getByRole("region", { name: "The Network" }));
+    const network = await box(page.getByRole("region", { name: "The Neural Network" }));
     expect(network.y).toBeCloseTo(card.y, 0);
     const scrolls = await page.evaluate(() => [document.documentElement, document.querySelector("main")!]
       .some(element => element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight));
@@ -534,7 +585,7 @@ test.describe("About", () => {
   test("stays beside the steps when a pixel narrower stacks the columns", async ({ page }) => {
     await openAt(page, MIN_LAYOUT_WIDTH - 1, 900);
     const card = await box(page.getByRole("region", { name: "Message", exact: true }));
-    const network = await box(page.getByRole("region", { name: "The Network" }));
+    const network = await box(page.getByRole("region", { name: "The Neural Network" }));
     expect(network.y).toBeGreaterThan(card.y + card.height);
     const aboutBox = await box(about(page));
     const resetBox = await box(page.getByRole("button", { name: "Reset" }));

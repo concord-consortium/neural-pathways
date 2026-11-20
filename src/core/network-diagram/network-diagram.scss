@@ -1,4 +1,5 @@
 @use "../colors" as colors;
+@use "../fonts" as fonts;
 
 // Scrolls the drawing when its container is narrower than MIN_WIDTH or shorter than MIN_HEIGHT
 // (layout.ts).
@@ -42,19 +43,13 @@
 
 .network-diagram__caption,
 .network-diagram__weight-label {
-  font-family: "Lato", sans-serif;
+  font-family: fonts.$body-font;
   font-size: 12px;
   fill: colors.$ink-2;
 }
 
-.network-diagram__output-caption {
-  font-family: "Lato", sans-serif;
-  font-size: 12px;
-  fill: colors.$ink-3;
-}
-
 .network-diagram__output-label {
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: fonts.$label-font;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;

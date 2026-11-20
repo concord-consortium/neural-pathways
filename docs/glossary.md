@@ -24,13 +24,6 @@ one thing, or one name for two things, settle it and add it here.
 - **position:** a message's index in the list being stepped through, which the filter decides
   (`listPosition` in Looking Inside a Neural Network, `position` on the message card).
 
-## The message card
-
-- **attribute indicator:** how the card shows one of a message's attributes, under the
-  observation notes: the attribute's label, its icon, and its value (a check mark, a blank, a
-  number, or a dash when the value is missing). Not "mark". The value, under the icon, is not a
-  "badge".
-
 ## The step system
 
 - **step:** a button in the step row: Looking Inside a Neural Network's Step 1 to Step 4, Extract
@@ -44,10 +37,10 @@ one thing, or one name for two things, settle it and add it here.
 - **run:** one play of a segment, started by a press. A run still playing is never stored.
 - **frame:** a run at one moment: `currentFrame`, replaced on every animation frame.
 - **timeline time:** the milliseconds a timeline is written in, as in `Frame.t` and `duration`:
-  real milliseconds at normal speed, the prototype's Med. The step player stretches them at Slow
+  real milliseconds at normal speed, the prototype's Medium. The step player stretches them at Slow
   and squeezes them at Fast. Not "virtual time".
-- **normal speed:** `NORMAL_SPEED`, key 0, shown as Med on the slider. Slow and Fast are relative
-  to it.
+- **normal speed:** `NORMAL_SPEED`, key 0, the slider's middle stop, which a screen reader calls
+  Medium. Slow and Fast are relative to it.
 - **current:** the step marked with `aria-current="step"`: the one whose run plays, or, while
   nothing plays, the one its view marks. Not "pressed", since a step isn't a toggle.
 - **unavailable:** a button marked `aria-disabled="true"`, which stays in the tab order and does
