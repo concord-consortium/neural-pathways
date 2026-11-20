@@ -1,0 +1,65 @@
+@use "../../core/message-card/layout";
+
+// At least the window's height, so the layout below the title can fill what is left of it.
+.model-reasoning {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding-bottom: 16px;
+}
+
+// One column, as wide as the card and narrower when the view is: the filter row over the message
+// card. The flow on the right is still to come.
+//
+// The layout takes the height the title leaves, and the card's row grows into it, up to 800 px as
+// Looking Inside's does. It stops at 300 px, below which the card runs past the window and the page
+// scrolls. min-height: 0 because the browser measures the layout's content height with the row at its
+// 800 px most, which would otherwise be its minimum.
+.model-reasoning__layout {
+  display: grid;
+  flex: 1 1 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, layout.$width);
+  grid-template-rows: auto minmax(300px, 800px);
+  align-content: start;
+  gap: 9px;
+}
+
+// The filter, then About at the right end of the row.
+.model-reasoning__filter-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.model-reasoning__filter {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+// The card fills its row, and the readings scroll inside it, so the legend stays in view.
+.model-reasoning__message {
+  align-self: stretch;
+  min-width: 0;
+  min-height: 0;
+}
+
+.model-reasoning__readings {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.model-reasoning__scroller {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 30px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}

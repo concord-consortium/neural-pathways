@@ -12,13 +12,14 @@ function firstLine(viewId: string) {
   return fs.readFileSync(path.join(__dirname, "../views", viewId, "about.md"), "utf8").split("\n")[0];
 }
 
-// Views without state of their own are placeholders, which render without loading data. The built
-// views' About text is checked in playwright/about.test.ts.
-const placeholders = VIEWS.filter(view => !view.stateModel);
+// The views built so far load data before they show About, so their About text is checked in
+// playwright/about.test.ts. Every other view is a placeholder, which renders without loading data.
+const BUILT_VIEWS = ["looking-inside", "extract-pathways", "model-reasoning"];
+const placeholders = VIEWS.filter(view => !BUILT_VIEWS.includes(view.id));
 
 describe("each placeholder view's About", () => {
-  it("covers the four views not built yet", () => {
-    expect(placeholders).toHaveLength(4);
+  it("covers the three views not built yet", () => {
+    expect(placeholders).toHaveLength(3);
   });
 
   it.each(placeholders.map(view => [view.title, view] as const))("shows %s's own text", (title, view) => {

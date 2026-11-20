@@ -38,6 +38,7 @@ test.describe("a placeholder view's About", () => {
 for (const [id, title, text] of [
   ["looking-inside", "Looking Inside a Neural Network", "Students follow a single alien message through the model"],
   ["extract-pathways", "Extract the Neural Pathways", "Students stack many cases’ activations"],
+  ["model-reasoning", "Neural Pathway View of Model Reasoning", "Activation times importance gives a weighted value"],
 ]) {
   test(`${title}'s About opens its own text`, async ({ page }) => {
     await page.goto(`/?interactive=${id}`);
