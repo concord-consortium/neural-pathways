@@ -70,6 +70,8 @@ const forbidden = [
   ["generator/alien/x.ts", "../../src/lab/boundary-test/lab"],
   ["src/core/x.js", "../../generator/boundary-test/gen"],
   ["src/app/x.js", "../../generator/boundary-test/gen"],
+  ["src/ap-preview/x.js", "../lab/boundary-test/lab"],
+  ["src/ap-preview/x.js", "../../scripts/boundary-test/script"],
 ];
 
 const allowed = [
@@ -80,6 +82,9 @@ const allowed = [
   ["src/views/boundary-test-a/x.js", "../../core/README.md"],
   ["src/app/x.js", "../views/boundary-test-b/b"],
   ["src/app/x.js", "../core/README.md"],
+  ["src/ap-preview/x.js", "../app/README.md"],
+  ["src/ap-preview/x.js", "../views/boundary-test-b/b"],
+  ["src/ap-preview/x.js", "../core/README.md"],
   ["src/lab/x.js", "../../scripts/boundary-test/script"],
   ["generator/x.js", "../src/core/README.md"],
   ["generator/x.js", "./boundary-test/gen"],
@@ -103,6 +108,12 @@ describe("reviewed-code import boundary", () => {
       assert.deepEqual(errors, []);
     });
   }
+
+  it("forbids disabling the rule in the Activity Player preview", async () => {
+    const code = `// eslint-disable-next-line import/no-restricted-paths\nexport * from "../lab/boundary-test/lab";\n`;
+    const errors = await boundaryErrors("src/ap-preview/x.js", code);
+    assert.deepEqual(errors.map(e => e.ruleId), ["@eslint-community/eslint-comments/no-restricted-disable"]);
+  });
 
   it("forbids disabling the rule in student-facing code", async () => {
     const code = `// eslint-disable-next-line import/no-restricted-paths\nexport * from "../lab/boundary-test/lab";\n`;

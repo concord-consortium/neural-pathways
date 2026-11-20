@@ -28,6 +28,7 @@ are in [docs/glossary.md](docs/glossary.md). Use them, and add to it when you se
 | `index.html` | The standalone app: a list of views on the left, the first view selected |
 | `index.html#view=<id>` | The standalone app with that view selected |
 | `index.html?interactive=<id>` | That view alone, in interactive mode, for embedding in the Activity Player |
+| `ap-preview.html` | A view in an iframe at the size the Activity Player would give it; see [docs/accessibility.md](docs/accessibility.md) |
 | `lab.html` | Links to the research tools |
 | `explorer.html`, `heatmap.html` | The explorer and the heatmap |
 

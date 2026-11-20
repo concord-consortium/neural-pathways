@@ -50,6 +50,7 @@ module.exports = (env, argv) => {
       app: './src/app/index.tsx',
       heatmap: './src/lab/heatmap/index.tsx',
       explorer: './src/lab/explorer/index.tsx',
+      'ap-preview': './src/ap-preview/index.tsx',
     },
     mode: 'development',
     output: {
@@ -189,6 +190,13 @@ module.exports = (env, argv) => {
         favicon: 'src/public/favicon.ico',
         publicPath: '.',
         chunks: ['explorer'],
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'ap-preview.html',
+        template: 'src/ap-preview/index.html',
+        favicon: 'src/public/favicon.ico',
+        publicPath: '.',
+        chunks: ['ap-preview'],
       }),
       ...(DEPLOY_PATH ? [new HtmlWebpackPlugin({
         filename: 'index-top.html',

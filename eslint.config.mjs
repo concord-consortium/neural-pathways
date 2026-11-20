@@ -43,6 +43,11 @@ const importBoundaryZones = [
     target: "./src/core", from: "./", message: boundaryMessage,
     except: ["./src/core", "./node_modules"],
   },
+  // The Activity Player preview is a dev page, but it is reviewed: it shows the student views.
+  {
+    target: "./src/ap-preview", from: "./", message: boundaryMessage,
+    except: ["./src/ap-preview", "./src/app", "./src/views", "./src/core", "./node_modules"],
+  },
   {
     target: "./generator", from: "./", message: boundaryMessage,
     except: ["./generator", "./src/core", "./node_modules"],
@@ -201,7 +206,7 @@ export default defineConfig(
   },
   {
     name: "reviewed-code import boundary may not be disabled",
-    files: [`src/{app,views,core}/**/*.${sourceExtensions}`, `generator/**/*.${sourceExtensions}`],
+    files: [`src/{app,views,core,ap-preview}/**/*.${sourceExtensions}`, `generator/**/*.${sourceExtensions}`],
     rules: {
       "@eslint-community/eslint-comments/no-restricted-disable": ["error", "import/no-restricted-paths"],
     },
