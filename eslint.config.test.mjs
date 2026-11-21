@@ -17,7 +17,8 @@ const viewB = path.join(root, "src/views/boundary-test-b");
 const labDir = path.join(root, "src/lab/boundary-test");
 const scriptsDir = path.join(root, "scripts/boundary-test");
 const generatorDir = path.join(root, "generator/boundary-test");
-const fixtureDirs = [viewA, viewB, labDir, scriptsDir, generatorDir];
+const previewDir = path.join(root, "src/ap-preview/boundary-test");
+const fixtureDirs = [viewA, viewB, labDir, scriptsDir, generatorDir, previewDir];
 
 let eslint;
 
@@ -27,11 +28,13 @@ before(() => {
   fs.mkdirSync(labDir, { recursive: true });
   fs.mkdirSync(scriptsDir, { recursive: true });
   fs.mkdirSync(generatorDir, { recursive: true });
+  fs.mkdirSync(previewDir, { recursive: true });
   fs.writeFileSync(path.join(viewA, "sub/inner.js"), "export const inner = 1;\n");
   fs.writeFileSync(path.join(viewB, "b.js"), "export const b = 1;\n");
   fs.writeFileSync(path.join(labDir, "lab.js"), "export const lab = 1;\n");
   fs.writeFileSync(path.join(scriptsDir, "script.js"), "export const script = 1;\n");
   fs.writeFileSync(path.join(generatorDir, "gen.js"), "export const gen = 1;\n");
+  fs.writeFileSync(path.join(previewDir, "preview.js"), "export const preview = 1;\n");
   // import/no-cycle crashes on lintText input.
   eslint = new ESLint({ cwd: root, overrideConfig: { rules: { "import/no-cycle": "off" } } });
 });
@@ -72,6 +75,9 @@ const forbidden = [
   ["src/app/x.js", "../../generator/boundary-test/gen"],
   ["src/ap-preview/x.js", "../lab/boundary-test/lab"],
   ["src/ap-preview/x.js", "../../scripts/boundary-test/script"],
+  ["src/app/x.js", "../ap-preview/boundary-test/preview"],
+  ["src/views/boundary-test-a/x.js", "../../ap-preview/boundary-test/preview"],
+  ["src/core/x.js", "../ap-preview/boundary-test/preview"],
 ];
 
 const allowed = [
@@ -85,6 +91,7 @@ const allowed = [
   ["src/ap-preview/x.js", "../app/README.md"],
   ["src/ap-preview/x.js", "../views/boundary-test-b/b"],
   ["src/ap-preview/x.js", "../core/README.md"],
+  ["src/ap-preview/x.js", "./boundary-test/preview"],
   ["src/lab/x.js", "../../scripts/boundary-test/script"],
   ["generator/x.js", "../src/core/README.md"],
   ["generator/x.js", "./boundary-test/gen"],
