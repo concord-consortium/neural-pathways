@@ -1,6 +1,6 @@
 import { ApSettings, apSize } from "./ap-sizing";
 
-// Measured in the deployed Activity Player, or computed from its CSS where marked in the design doc.
+// Measured in the deployed Activity Player, or worked out from its CSS; measurements.md says which.
 const base: ApSettings = {
   fixedWidthLayout: "1100px",
   layout: "full-width",

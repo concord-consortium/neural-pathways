@@ -1,9 +1,8 @@
 // The size the Activity Player (AP) gives an Interactive's iframe, for the settings an author picks
 // in LARA. It copies the AP's CSS and its use-aspect-ratio hook, so when the AP changes, this
 // changes. References name the CSS selector, function or variable and its file, with the file's repo
-// as a prefix: AP: for activity-player, as of 3a38f74d, and LARA: for LARA, as of 3499f294. The
-// design doc, docs/superpowers/specs/2026-11-20-ap-preview-sizes-design.md, has the measurements
-// behind them.
+// as a prefix: AP: for activity-player, as of 3a38f74d, and LARA: for LARA, as of 3499f294.
+// measurements.md has the numbers it is checked against, and how they were measured.
 //
 // It assumes a Multiple Pages activity, and a managed interactive with a name, whose sizing it
 // inherits from its library interactive.
