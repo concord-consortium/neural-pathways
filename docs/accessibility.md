@@ -89,14 +89,19 @@ the Activity Player code each one copies.
 **Height.** The interactive's "Aspect Ratio" sets it.
 - "Default aspect ratio, or set by interactive" makes it 3/4 of the width, but no taller than 98% of
   the window's height less 15 px. When that cap applies, the width may also narrow, to 98% of the
-  window's height × 4/3. The cap is on the iframe alone: the title bar, the border and the buttons
+  window's height × 4/3. The cap is on the iframe alone: the title bar, the border and the space
   below the iframe add 68 px, so a capped interactive is taller than the window.
 - "Manually set the native width & height" makes it the width times height ÷ width, with no cap.
 - "Use all available space for the interactive" stretches it to 98% of the window's height, less
-  the title bar, the buttons below the iframe and the border. It does that only in a full-width
+  the title bar, the border and the space below the iframe. It does that only in a full-width
   section. Everywhere else, including a responsive-full-width section and any column of a
   two-column layout when the setting comes from the library interactive, the iframe stays at its
   300 px default.
+
+The space below the iframe is 30 px of margin. It holds "Clear & start over" when the interactive
+saves the student's work and shows that button, and a teacher's feedback once there is some. Our
+app saves nothing, so for our views it is always empty. Neither one is counted in the heights above,
+so an interactive that shows them is taller.
 
 **The settings that give the designed size.** Set the library interactive to "Manually set the
 native width & height" at 1044 × 562, and put it in a "full-width (single column)" section on a
