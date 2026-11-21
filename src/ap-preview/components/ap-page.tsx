@@ -10,7 +10,7 @@ interface ApPageProps {
 
 /**
  * A copy of the Activity Player's page around one managed interactive: the page, the section and
- * its columns at their real widths, and the interactive's bar, iframe and buttons. Nothing is scaled
+ * its columns at their real widths, and the interactive's title bar, iframe and buttons. Nothing is scaled
  * to fit; a page wider than the window scrolls sideways, as the Activity Player's does.
  */
 export const ApPage: React.FC<ApPageProps> = ({ settings, size, viewId, viewTitle }) => {

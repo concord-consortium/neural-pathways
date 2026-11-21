@@ -40,7 +40,12 @@ export interface ApSize {
   columnWidth: number;
   iframeWidth: number;
   iframeHeight: number;
-  /** How the width and the height were worked out, one line each. */
+  /** The iframe with the title bar, the border and the buttons around it. */
+  interactiveHeight: number;
+  /**
+   * How the width and the height were worked out, one line each, and a line when the interactive is
+   * taller than the window: the Activity Player caps only the iframe's height.
+   */
   explanation: string[];
   warning: string | null;
 }
@@ -57,7 +62,7 @@ const DEFAULT_NATIVE_HEIGHT = 435;
 const DEFAULT_ASPECT_RATIO = 4 / 3;
 const BOTTOM_MARGIN = 15;
 const DEFAULT_IFRAME_HEIGHT = 300;
-// Under the iframe, the buttons div's margins (iframe-runtime.scss:22-28); the header bar
+// Under the iframe, the buttons div's margins (iframe-runtime.scss:22-28); the title bar
 // (embeddable.scss:6-16); a managed interactive's 1 px border, top and bottom (managed-interactive.scss:5-7).
 const BUTTONS_HEIGHT = 30;
 const HEADER_HEIGHT = 36;
@@ -186,7 +191,7 @@ export function apSize(settings: ApSettings, window: ApWindow): ApSize {
     if (settings.layout === "full-width") {
       iframeHeight = M - BUTTONS_HEIGHT - HEADER_HEIGHT - BORDER;
       heightWhy = `Height ${round1(iframeHeight)}: 98% of the ${window.height} px window, less 30 for the buttons, ` +
-        "36 for the bar and 2 for the border.";
+        "36 for the title bar and 2 for the border.";
     } else {
       iframeHeight = DEFAULT_IFRAME_HEIGHT;
       heightWhy = "Height 300: the iframe's default.";
@@ -196,6 +201,14 @@ export function apSize(settings: ApSettings, window: ApWindow): ApSize {
     }
   }
 
+  iframeHeight = Math.max(0, iframeHeight);
+  const interactiveHeight = iframeHeight + HEADER_HEIGHT + BORDER + BUTTONS_HEIGHT;
+  const explanation = [`Column width ${round1(D)}: ${cols.why}.`, heightWhy];
+  if (interactiveHeight > window.height) {
+    explanation.push(`With its title bar, border and buttons the interactive is ${round1(interactiveHeight)} px ` +
+      `tall, taller than the ${window.height} px window.`);
+  }
+
   return {
     responsivePage: isResponsive(settings.layout),
     pageWidth: cols.pageWidth,
@@ -203,8 +216,9 @@ export function apSize(settings: ApSettings, window: ApWindow): ApSize {
     secondaryWidth,
     columnWidth: D,
     iframeWidth: Math.max(0, iframeWidth),
-    iframeHeight: Math.max(0, iframeHeight),
-    explanation: [`Column width ${round1(D)}: ${cols.why}.`, heightWhy],
+    iframeHeight,
+    interactiveHeight,
+    explanation,
     warning,
   };
 }

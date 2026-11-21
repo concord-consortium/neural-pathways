@@ -13,7 +13,7 @@ function iframe() {
 describe("ApPreview", () => {
   afterEach(() => setHash(""));
 
-  it("loads the designed preset by default and names the view in the bar", () => {
+  it("loads the designed preset by default and names the view in the title bar", () => {
     setHash("");
     render(<ApPreview />);
     expect(iframe().getAttribute("src")).toBe("index.html?interactive=looking-inside");
