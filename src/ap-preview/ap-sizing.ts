@@ -40,7 +40,7 @@ export interface ApSize {
   columnWidth: number;
   iframeWidth: number;
   iframeHeight: number;
-  /** The iframe with the title bar, the border and the buttons around it. */
+  /** The iframe with the title bar and the border around it, and the space below it. */
   interactiveHeight: number;
   /**
    * How the width and the height were worked out, one line each, and a line when the interactive is
@@ -62,9 +62,10 @@ const DEFAULT_NATIVE_HEIGHT = 435;
 const DEFAULT_ASPECT_RATIO = 4 / 3;
 const BOTTOM_MARGIN = 15;
 const DEFAULT_IFRAME_HEIGHT = 300;
-// Under the iframe, the buttons div's margins (iframe-runtime.scss:22-28); the title bar
+// Under the iframe, the margins of the div that holds "Clear & start over" and teacher feedback, when
+// there are any (iframe-runtime.scss:22-28, iframe-runtime.tsx:644-652); the title bar
 // (embeddable.scss:6-16); a managed interactive's 1 px border, top and bottom (managed-interactive.scss:5-7).
-const BUTTONS_HEIGHT = 30;
+const BELOW_IFRAME_HEIGHT = 30;
 const HEADER_HEIGHT = 36;
 const BORDER = 2;
 
@@ -189,9 +190,9 @@ export function apSize(settings: ApSettings, window: ApWindow): ApSize {
     // full-width section (section.scss:15-33, embeddable.tsx:154-163) or a primary column whose
     // embed sets MAX itself (section.scss:189-209, section.tsx:133-139).
     if (settings.layout === "full-width") {
-      iframeHeight = M - BUTTONS_HEIGHT - HEADER_HEIGHT - BORDER;
-      heightWhy = `Height ${round1(iframeHeight)}: 98% of the ${window.height} px window, less 30 for the buttons, ` +
-        "36 for the title bar and 2 for the border.";
+      iframeHeight = M - BELOW_IFRAME_HEIGHT - HEADER_HEIGHT - BORDER;
+      heightWhy = `Height ${round1(iframeHeight)}: 98% of the ${window.height} px window, less 36 for the title bar, ` +
+        "2 for the border and 30 for the space below it.";
     } else {
       iframeHeight = DEFAULT_IFRAME_HEIGHT;
       heightWhy = "Height 300: the iframe's default.";
@@ -202,11 +203,11 @@ export function apSize(settings: ApSettings, window: ApWindow): ApSize {
   }
 
   iframeHeight = Math.max(0, iframeHeight);
-  const interactiveHeight = iframeHeight + HEADER_HEIGHT + BORDER + BUTTONS_HEIGHT;
+  const interactiveHeight = iframeHeight + HEADER_HEIGHT + BORDER + BELOW_IFRAME_HEIGHT;
   const explanation = [`Column width ${round1(D)}: ${cols.why}.`, heightWhy];
   if (interactiveHeight > window.height) {
-    explanation.push(`With its title bar, border and buttons the interactive is ${round1(interactiveHeight)} px ` +
-      `tall, taller than the ${window.height} px window.`);
+    explanation.push("With its title bar, border and the space below it, the interactive is " +
+      `${round1(interactiveHeight)} px tall, taller than the ${window.height} px window.`);
   }
 
   return {

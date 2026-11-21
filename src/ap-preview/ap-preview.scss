@@ -138,7 +138,8 @@ body {
   border: 0;
 }
 
-// The buttons div's margins below the iframe (iframe-runtime.scss:22-28).
-.ap-page__buttons {
+// The space below the iframe: the margins of the div that holds "Clear & start over" and teacher
+// feedback, when there are any (iframe-runtime.scss:22-28).
+.ap-page__below {
   height: 30px;
 }
