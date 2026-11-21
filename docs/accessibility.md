@@ -89,10 +89,11 @@ the Activity Player code each one copies.
 **Height.** The interactive's "Aspect Ratio" sets it.
 - "Default aspect ratio, or set by interactive" makes it 3/4 of the width, but no taller than 98% of
   the window's height less 15 px. When that cap applies, the width may also narrow, to 98% of the
-  window's height × 4/3.
+  window's height × 4/3. The cap is on the iframe alone: the title bar, the border and the buttons
+  below the iframe add 68 px, so a capped interactive is taller than the window.
 - "Manually set the native width & height" makes it the width times height ÷ width, with no cap.
 - "Use all available space for the interactive" stretches it to 98% of the window's height, less
-  the header bar, the buttons below the iframe and the border. It does that only in a full-width
+  the title bar, the buttons below the iframe and the border. It does that only in a full-width
   section. Everywhere else, including a responsive-full-width section and any column of a
   two-column layout when the setting comes from the library interactive, the iframe stays at its
   300 px default.
@@ -105,9 +106,9 @@ don't give the designed size. Reporting a height through the interactive API wou
 for its own height; that isn't built.
 
 These sizes assume:
-- **The author gives the interactive a name.** The Activity Player shows it in the bar above the
-  iframe, and in an Interactive the view leaves out its own title. Without a name there is no bar,
-  and nothing names the view.
+- **The author gives the interactive a name.** The Activity Player shows it in the title bar above
+  the iframe, and in an Interactive the view leaves out its own title. Without a name there is no
+  title bar, and nothing names the view.
 - **A Multiple Pages activity.** The Single Page and Notebook layouts size Interactives differently.
 
 **Check it.** `ap-preview.html` shows any view in an iframe at the size the Activity Player would
