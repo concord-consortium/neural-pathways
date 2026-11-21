@@ -12,6 +12,8 @@ Every line here is reviewed, though students don't see it; see `src/core/README.
 
 - `ap-sizing.ts`: the Activity Player's sizing rules, `apSize`, which gives the iframe's width and
   height for a set of settings and a window. Each formula names the Activity Player code it copies.
+- `measurements.md`: the sizes measured in the Activity Player that `ap-sizing.ts` is tested
+  against, and how to measure them again.
 - `preview-state.ts`: the view and settings, read from and written to the URL's hash, and the
   presets.
 - `use-window-size.ts`: the window's width, less any vertical scrollbar, and height.
