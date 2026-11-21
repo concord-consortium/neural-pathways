@@ -75,13 +75,13 @@ body {
   color: #a04a00;
 }
 
-// .app's padding, outside the page (app.scss:65).
+// The Activity Player's .app padding, outside the page (AP:app.scss).
 .ap-page {
   padding: 0 40px;
 }
 
-// The page and its padding (activity-page-content.scss:7). On a responsive page it is as wide as
-// the window.
+// The page and its padding (.page-content in AP:activity-page-content.scss). On a responsive page it
+// is as wide as the window.
 .ap-page__activity {
   // The 1100 or 960 px includes the padding, as the Activity Player's .page-content does.
   box-sizing: border-box;
@@ -90,7 +90,7 @@ body {
   background: #fff;
 }
 
-// The section's margin and the columns' 10 px gap (section.scss:4-13).
+// The section's margin and the columns' 10 px gap (.section in AP:section.scss).
 .ap-page__section {
   display: flex;
   gap: 10px;
@@ -111,12 +111,12 @@ body {
 }
 
 // A managed interactive's 1 px border, content-box, so it overflows the column
-// (managed-interactive.scss:5-7).
+// (.runtime-container.has-border in AP:managed-interactive.scss).
 .ap-page__interactive {
   border: 1px solid #979797;
 }
 
-// The title bar (embeddable.scss:6-28).
+// The title bar (.embeddable .header in AP:embeddable.scss).
 .ap-page__bar {
   display: flex;
   align-items: center;
@@ -139,7 +139,7 @@ body {
 }
 
 // The space below the iframe: the margins of the div that holds "Clear & start over" and teacher
-// feedback, when there are any (iframe-runtime.scss:22-28).
+// feedback, when there are any (.iframe-runtime-buttons in AP:iframe-runtime.scss).
 .ap-page__below {
   height: 30px;
 }
