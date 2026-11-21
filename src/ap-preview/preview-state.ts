@@ -1,5 +1,6 @@
 import {
-  ApSettings, AspectRatioMethod, Column, FixedWidthLayout, SECTION_LAYOUTS, SectionLayout, isResponsive, isTwoColumn,
+  ASPECT_RATIO_METHODS, ApSettings, COLUMNS, FIXED_WIDTH_LAYOUTS, SECTION_LAYOUTS, SectionLayout, isResponsive,
+  isTwoColumn,
 } from "./ap-sizing";
 
 /** What the preview shows: a view, and the settings an author picks in LARA. */
@@ -51,10 +52,6 @@ export const PRESETS: readonly Preset[] = [
 ];
 
 export const DEFAULT_SETTINGS: ApSettings = PRESETS[0].settings;
-
-const FIXED_WIDTH_LAYOUTS: readonly FixedWidthLayout[] = ["1100px", "ipad_friendly"];
-const COLUMNS: readonly Column[] = ["primary", "secondary"];
-const ASPECT_RATIO_METHODS: readonly AspectRatioMethod[] = ["DEFAULT", "MANUAL", "MAX"];
 
 function oneOf<T extends string>(value: string | null, allowed: readonly T[], fallback: T): T {
   return allowed.includes(value as T) ? value as T : fallback;

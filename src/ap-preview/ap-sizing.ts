@@ -6,14 +6,25 @@
 // It assumes a Multiple Pages activity, and a managed interactive with a name, whose sizing it
 // inherits from its library interactive.
 
+// Each setting's values are listed once, in the order LARA lists them, and its type is taken from
+// the list.
+
 /** LARA's "Activity Page Fixed Width": `fixed_width_layout` in the activity JSON. */
-export type FixedWidthLayout = "1100px" | "ipad_friendly";
-/** LARA's section "Layout": `layout` in the activity JSON. The legacy layouts aren't offered. */
-export type SectionLayout = "full-width" | "60-40" | "40-60" | "70-30" | "30-70"
-  | "responsive-30-70" | "responsive-50-50" | "responsive-full-width";
-export type Column = "primary" | "secondary";
+export const FIXED_WIDTH_LAYOUTS = ["1100px", "ipad_friendly"] as const;
+export type FixedWidthLayout = typeof FIXED_WIDTH_LAYOUTS[number];
+/**
+ * LARA's section "Layout": `layout` in the activity JSON (section-layout-utils.ts:31-40). The legacy
+ * layouts aren't offered.
+ */
+export const SECTION_LAYOUTS = [
+  "full-width", "60-40", "40-60", "70-30", "30-70", "responsive-30-70", "responsive-50-50", "responsive-full-width",
+] as const;
+export type SectionLayout = typeof SECTION_LAYOUTS[number];
+export const COLUMNS = ["primary", "secondary"] as const;
+export type Column = typeof COLUMNS[number];
 /** LARA's "Aspect Ratio": `aspect_ratio_method` in the activity JSON. */
-export type AspectRatioMethod = "DEFAULT" | "MANUAL" | "MAX";
+export const ASPECT_RATIO_METHODS = ["DEFAULT", "MANUAL", "MAX"] as const;
+export type AspectRatioMethod = typeof ASPECT_RATIO_METHODS[number];
 
 export interface ApSettings {
   fixedWidthLayout: FixedWidthLayout;
@@ -33,8 +44,15 @@ export interface ApSize {
   responsivePage: boolean;
   /** 1100 or 960; null on a responsive page, which is as wide as the window. */
   pageWidth: number | null;
+  /**
+   * The primary column's width. A single-column layout's one column counts as primary. When the
+   * interactive is in the secondary column, the preview uses this to draw the empty primary column.
+   */
   primaryWidth: number;
-  /** Null for single-column layouts. */
+  /**
+   * The secondary column's width; null for single-column layouts. When the interactive is in the
+   * primary column, the preview uses this to draw the empty secondary column.
+   */
   secondaryWidth: number | null;
   /** The width of the interactive's column. */
   columnWidth: number;
@@ -49,11 +67,6 @@ export interface ApSize {
   explanation: string[];
   warning: string | null;
 }
-
-/** In the order LARA lists them (section-layout-utils.ts:31-40). */
-export const SECTION_LAYOUTS: readonly SectionLayout[] = [
-  "full-width", "60-40", "40-60", "70-30", "30-70", "responsive-30-70", "responsive-50-50", "responsive-full-width",
-];
 
 // LARA's default native size (has_aspect_ratio.rb:3-5), used when the native size can't be divided by.
 const DEFAULT_NATIVE_WIDTH = 576;
