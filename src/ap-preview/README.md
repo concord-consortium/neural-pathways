@@ -54,8 +54,8 @@ rules are for one that doesn't.
   and in the primary column of a two-column layout when the embed sets it with Customize or the
   interactive is a basic iframe. Everywhere else the iframe stays at its 300 px default: in a
   responsive-full-width section, in a secondary column, and in a primary column when the embed
-  inherits the setting from its library interactive. That last case is a bug in the Activity
-  Player, which reads only the embed's own setting there.
+  inherits the setting from its library interactive. These cases where it is 300 px height are
+  considered bugs which hopefully will be fixed soon.
 
 The space below the iframe is 30 px of margin. It holds "Clear & start over" when the interactive
 saves the student's work and shows that button, and a teacher's feedback once there is some.
