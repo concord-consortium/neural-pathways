@@ -4,8 +4,9 @@ import {
 } from "../ap-sizing";
 import { PRESETS, PreviewState, matchingPreset } from "../preview-state";
 
-// LARA's labels, so the settings read as an author sees them (fixed_width_layout.rb:2-11,
-// section-layout-utils.ts:31-40, aspect-ratio-chooser.tsx:4-8).
+// LARA's labels, so the settings read as an author sees them (`FIXED_WIDTH_LAYOUT_OPTIONS` in
+// LARA:fixed_width_layout.rb, `layoutDisplayText` in LARA:section-layout-utils.ts,
+// `availableAspectRatios` in LARA:aspect-ratio-chooser.tsx).
 const PAGE_LABELS: Record<FixedWidthLayout, string> = {
   "1100px": "Standard (1100px)",
   "ipad_friendly": "iPad Friendly (960px)",

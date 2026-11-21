@@ -1,7 +1,9 @@
 // The size the Activity Player (AP) gives an Interactive's iframe, for the settings an author picks
 // in LARA. It copies the AP's CSS and its use-aspect-ratio hook, so when the AP changes, this
-// changes. File references are to the activity-player repo at 3a38f74d; the design doc,
-// docs/superpowers/specs/2026-11-20-ap-preview-sizes-design.md, has the measurements behind them.
+// changes. References name the CSS selector, function or variable and its file, with the file's repo
+// as a prefix: AP: for activity-player, as of 3a38f74d, and LARA: for LARA, as of 3499f294. The
+// design doc, docs/superpowers/specs/2026-11-20-ap-preview-sizes-design.md, has the measurements
+// behind them.
 //
 // It assumes a Multiple Pages activity, and a managed interactive with a name, whose sizing it
 // inherits from its library interactive.
@@ -13,8 +15,8 @@
 export const FIXED_WIDTH_LAYOUTS = ["1100px", "ipad_friendly"] as const;
 export type FixedWidthLayout = typeof FIXED_WIDTH_LAYOUTS[number];
 /**
- * LARA's section "Layout": `layout` in the activity JSON (section-layout-utils.ts:31-40). The legacy
- * layouts aren't offered.
+ * LARA's section "Layout": `layout` in the activity JSON (`layoutDisplayText` in
+ * LARA:section-layout-utils.ts). The legacy layouts aren't offered.
  */
 export const SECTION_LAYOUTS = [
   "full-width", "60-40", "40-60", "70-30", "30-70", "responsive-30-70", "responsive-50-50", "responsive-full-width",
@@ -68,16 +70,19 @@ export interface ApSize {
   warning: string | null;
 }
 
-// LARA's default native size (has_aspect_ratio.rb:3-5), used when the native size can't be divided by.
+// LARA's default native size (`ASPECT_RATIO_DEFAULT_WIDTH` and `_HEIGHT` in
+// LARA:has_aspect_ratio.rb), used when the native size can't be divided by.
 const DEFAULT_NATIVE_WIDTH = 576;
 const DEFAULT_NATIVE_HEIGHT = 435;
-// use-aspect-ratio.ts:13-14 and iframe-runtime.tsx:43.
+// `kDefaultAspectRatio` and `kBottomMargin` in AP:use-aspect-ratio.ts, and `kDefaultHeight` in
+// AP:iframe-runtime.tsx.
 const DEFAULT_ASPECT_RATIO = 4 / 3;
 const BOTTOM_MARGIN = 15;
 const DEFAULT_IFRAME_HEIGHT = 300;
 // Under the iframe, the margins of the div that holds "Clear & start over" and teacher feedback, when
-// there are any (iframe-runtime.scss:22-28, iframe-runtime.tsx:644-652); the title bar
-// (embeddable.scss:6-16); a managed interactive's 1 px border, top and bottom (managed-interactive.scss:5-7).
+// there are any (`.iframe-runtime-buttons` in AP:iframe-runtime.scss and AP:iframe-runtime.tsx); the
+// title bar (`.embeddable .header` in AP:embeddable.scss); a managed interactive's 1 px border, top
+// and bottom (`.runtime-container.has-border` in AP:managed-interactive.scss).
 const BELOW_IFRAME_HEIGHT = 30;
 const HEADER_HEIGHT = 36;
 const BORDER = 2;
@@ -103,23 +108,26 @@ function columnWidths(settings: ApSettings, windowWidth: number): Columns {
   const { layout } = settings;
   const W = windowWidth;
   if (isResponsive(layout)) {
-    // The page is the window less the .app's 40 px padding each side (app.scss:65) and the page's
-    // 20 px each side (activity-page-content.scss:7). The section is 100% of that; its 8 px margin
-    // overflows instead of narrowing it (section.scss:8,11-13).
+    // The page is the window less the `.app`'s 40 px padding each side (AP:app.scss) and the page's
+    // 20 px each side (`.page-content` in AP:activity-page-content.scss). The section is 100% of
+    // that; its 8 px margin overflows instead of narrowing it (`.section` and `.section.responsive`
+    // in AP:section.scss).
     const section = W - 120;
     if (layout === "responsive-full-width") {
-      // The embeddable's 20 px right margin (section.scss:133-135).
+      // The embeddable's 20 px right margin (`.section.responsive .embeddable.full-width > div` in
+      // AP:section.scss).
       return { pageWidth: null, primary: section - 20, secondary: null, why: `the ${W} px window less 140 px` };
     }
     if (layout === "responsive-30-70") {
-      // A 365 px secondary column, a 10 px gap, and the primary's 20 px right margin (section.scss:121-155).
+      // A 365 px secondary column, a 10 px gap, and the primary's 20 px right margin
+      // (`.section.responsive .column.primary` and `.column.secondary` in AP:section.scss).
       return {
         pageWidth: null, primary: section - 365 - 10 - 20, secondary: 365,
         why: settings.column === "primary" ? `the ${W} px window less 515 px` : "the secondary column's fixed 365 px",
       };
     }
     // responsive-50-50: each column 50% of the section; the primary loses the 10 px gap and its 20 px
-    // right margin (section.scss:142-160).
+    // right margin (the `.responsive-50-50` columns under `.section.responsive` in AP:section.scss).
     const half = section / 2;
     return {
       pageWidth: null, primary: half - 30, secondary: half,
@@ -127,8 +135,8 @@ function columnWidths(settings: ApSettings, windowWidth: number): Columns {
     };
   }
 
-  // A fixed page: its padding (activity-page-content.scss:7) and the section's margin (section.scss:8)
-  // take 56 px. The .app's padding sits outside the page, so the window's width doesn't matter.
+  // A fixed page: its padding (`.page-content`) and the section's margin (`.section`) take 56 px. The
+  // `.app`'s padding sits outside the page, so the window's width doesn't matter.
   const pageWidth = settings.fixedWidthLayout === "ipad_friendly" ? 960 : 1100;
   const C = pageWidth - 56;
   const page = `the ${pageWidth} px page`;
@@ -136,15 +144,15 @@ function columnWidths(settings: ApSettings, windowWidth: number): Columns {
     return { pageWidth, primary: C, secondary: null, why: `${page} less 56 px of padding and margin` };
   }
   if (layout === "60-40" || layout === "70-30") {
-    // 10 equal columns with 10 px gaps (section.scss:4-7); the primary spans 6 or 7.
+    // 10 equal columns with 10 px gaps (`.section` in AP:section.scss); the primary spans 6 or 7.
     const span = (n: number) => n * (C - 90) / 10 + 10 * (n - 1);
     const primarySpan = layout === "60-40" ? 6 : 7;
     return {
       pageWidth, primary: span(primarySpan), secondary: span(10 - primarySpan), why: `the ${layout} grid on ${page}`,
     };
   }
-  // 40-60 and 30-70: minmax(45px, auto) then 9 × 1fr, with 10 px gaps (section.scss:63,102). The
-  // secondary's span includes the 45 px track.
+  // 40-60 and 30-70: minmax(45px, auto) then 9 × 1fr, with 10 px gaps (`.section.r_4060` and
+  // `.section.r_3070` in AP:section.scss). The secondary's span includes the 45 px track.
   const fr = (C - 135) / 9;
   const p = layout === "40-60" ? 6 : 7;
   const s = 10 - p;
@@ -175,19 +183,21 @@ export function apSize(settings: ApSettings, window: ApWindow): ApSize {
   let iframeHeight: number;
   let heightWhy: string;
   let warning: string | null = null;
-  // use-aspect-ratio.ts:51-54. The header and delete-data terms there are always 0
-  // (managed-interactive.tsx:90,94,119), leaving the bottom margin.
+  // `maxHeight` and `unusableHeight` in AP:use-aspect-ratio.ts. The header and delete-data terms in
+  // `unusableHeight` are always 0: AP:managed-interactive.tsx never attaches `headerTarget` to an
+  // element, and passes `showDeleteDataButton: false`. That leaves the bottom margin.
   const M = 0.98 * window.height;
 
   if (settings.aspectRatioMethod === "MANUAL") {
-    // use-aspect-ratio.ts:47-48,62: the native ratio of the width, with no cap.
+    // The MANUAL case in AP:use-aspect-ratio.ts: the native ratio of the width, with no cap.
     const valid = settings.nativeWidth > 0 && settings.nativeHeight > 0;
     const nw = valid ? settings.nativeWidth : DEFAULT_NATIVE_WIDTH;
     const nh = valid ? settings.nativeHeight : DEFAULT_NATIVE_HEIGHT;
     iframeHeight = D * nh / nw;
     heightWhy = `Height ${round1(iframeHeight)}: the width × ${nh} / ${nw}, with no cap.`;
   } else if (settings.aspectRatioMethod === "DEFAULT") {
-    // use-aspect-ratio.ts:66-74. The app doesn't use the interactive API, so the ratio is 4:3.
+    // The DEFAULT case in AP:use-aspect-ratio.ts. The app doesn't use the interactive API, so the ratio
+    // is 4:3.
     if (D / DEFAULT_ASPECT_RATIO <= M - BOTTOM_MARGIN) {
       iframeHeight = D / DEFAULT_ASPECT_RATIO;
       heightWhy = `Height ${round1(iframeHeight)}: 3/4 of the width.`;
@@ -200,8 +210,10 @@ export function apSize(settings: ApSettings, window: ApWindow): ApSize {
     }
   } else {
     // MAX: the iframe keeps its 300 px height attribute unless CSS stretches it to 98vh, in a
-    // full-width section (section.scss:15-33, embeddable.tsx:154-163) or a primary column whose
-    // embed sets MAX itself (section.scss:189-209, section.tsx:133-139).
+    // full-width section (`.section.full-width .embeddable.full-width.max-aspect-ratio` in
+    // AP:section.scss, `hasMaxAspectRatio` in AP:embeddable.tsx) or a primary column whose embed sets
+    // MAX itself (`.column.primary.max-aspect-ratio` in AP:section.scss, `renderPrimaryEmbeddables` in
+    // AP:section.tsx).
     if (settings.layout === "full-width") {
       iframeHeight = M - BELOW_IFRAME_HEIGHT - HEADER_HEIGHT - BORDER;
       heightWhy = `Height ${round1(iframeHeight)}: 98% of the ${window.height} px window, less 36 for the title bar, ` +
