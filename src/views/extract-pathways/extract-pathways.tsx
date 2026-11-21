@@ -1,6 +1,7 @@
 import React, { useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
+import { ViewTitle } from "../../core/view-title/view-title";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { alien3Dataset, alien3Loadings, alien3Network } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
@@ -52,7 +53,7 @@ export const ExtractPathways: React.FC = observer(function ExtractPathways() {
     () => (indexState.status === "ready" ? readFromIndex(indexState.index) : undefined), [indexState]);
   return (
     <div className="extract-pathways">
-      <h1 className="extract-pathways__title">{EXTRACT_PATHWAYS_TITLE}</h1>
+      <ViewTitle className="extract-pathways__title">{EXTRACT_PATHWAYS_TITLE}</ViewTitle>
       {indexState.status === "loading" && <p>Loading messages…</p>}
       {indexState.status === "error" &&
         <p role="alert">The messages could not be loaded: {indexState.error.message}</p>}

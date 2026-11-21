@@ -8,6 +8,8 @@ dataset generator (`generator/`): data types, data loading, dataset definitions 
 - Every line under `src/app/`, `src/views/`, `src/core/` and `generator/` is reviewed. Code
   enters these folders only through a story's PR. The generator is reviewed because it writes
   the data students see.
+- `src/ap-preview/`, the Activity Player preview, is reviewed too, though students don't see it:
+  it imports only from itself, `app`, `views`, `core` and packages.
 - `core` imports only from `core` and packages.
 - `generator` imports only from `generator`, `core` and packages.
 - Nothing student-facing imports from `src/lab/` or `scripts/`, which are unreviewed, or from

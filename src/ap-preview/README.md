@@ -1,0 +1,69 @@
+# Activity Player preview
+
+`ap-preview.html` shows a view in an iframe at the size the Activity Player would give it, for the
+settings you pick under LARA's labels, in your window. It is for developers and designers working
+out which settings an interactive should have in LARA, and for checking how a view looks at that
+size. The chosen view and settings are kept in the URL's hash, so a link opens the same preview.
+
+`ap-preview` may import from `src/app/`, `src/views/` and `src/core/`, and nothing imports from it.
+Every line here is reviewed, though students don't see it; see `src/core/README.md`.
+
+## What's here
+
+- `ap-sizing.ts`: the Activity Player's sizing rules, `apSize`, which gives the iframe's width and
+  height for a set of settings and a window. Each formula names the Activity Player code it copies.
+- `preview-state.ts`: the view and settings, read from and written to the URL's hash, and the
+  presets.
+- `use-window-size.ts`: the window's width, less any vertical scrollbar, and height.
+- `components/`: the page. `ap-preview.tsx` holds the state; `preview-controls.tsx` has the controls
+  under LARA's labels; `size-readout.tsx` gives the iframe's size and how it was worked out;
+  `ap-page.tsx` draws the Activity Player's page around the iframe at its real size.
+
+The preview is tied to this app in two places: it lists the views from `src/app/views.ts`, and
+loads each as `index.html?interactive=<view-id>`. Everything else is about the Activity Player.
+
+## How the Activity Player sizes an Interactive
+
+The Activity Player sizes an Interactive's iframe from the settings an author picks in LARA. An
+interactive can instead tell it an aspect ratio or a height through the interactive API; these
+rules are for one that doesn't.
+
+**Width.** The section's layout and the page's "Activity Page Fixed Width" set it.
+- On a fixed page, "Standard (1100px)" or "iPad Friendly (960px)", a "full-width (single column)"
+  section's iframe is the page less 56 px of padding and margin: 1044 or 904 px. The window's width
+  doesn't change it. In a window narrower than the page and its 80 px of outer padding, the
+  Activity Player keeps the page centered: it cuts off as much of the left side as the right, and
+  only the right side can be scrolled to. The preview scrolls sideways instead, so the whole
+  interactive can be seen.
+- The two-column layouts (60-40, 40-60, 70-30, 30-70) split that width into grid columns. The widest
+  column, 30-70's primary on the 1100 px page, is 767 px.
+- Any section whose layout starts with "responsive" makes the page as wide as the window, and the
+  fixed width no longer applies. A "responsive-full-width (single column)" iframe is the window
+  less 140 px: the 80 px of outer padding, the page's 40 px, and a 20 px right margin that only a
+  responsive section adds. The responsive two-column layouts split the window's width between their
+  columns.
+
+**Height.** The interactive's "Aspect Ratio" sets it.
+- "Default aspect ratio, or set by interactive" makes it 3/4 of the width, but no taller than 98% of
+  the window's height less 15 px. When that cap applies, the width may also narrow, to 98% of the
+  window's height × 4/3. The cap is on the iframe alone: the title bar, the border and the space
+  below the iframe add 68 px, so a capped interactive is taller than the window.
+- "Manually set the native width & height" makes it the width times height ÷ width, with no cap.
+- "Use all available space for the interactive" stretches it to 98% of the window's height, less
+  the title bar, the border and the space below the iframe. It does that in a full-width section,
+  and in the primary column of a two-column layout when the embed sets it with Customize or the
+  interactive is a basic iframe. Everywhere else the iframe stays at its 300 px default: in a
+  responsive-full-width section, in a secondary column, and in a primary column when the embed
+  inherits the setting from its library interactive. These cases where it is 300 px height are
+  considered bugs which hopefully will be fixed soon.
+
+The space below the iframe is 30 px of margin. It holds "Clear & start over" when the interactive
+saves the student's work and shows that button, and a teacher's feedback once there is some.
+Neither one is counted in the heights above, so an interactive that shows them is taller.
+
+These sizes assume:
+- **A managed interactive**, an embed of a library interactive. Its 1 px border, top and bottom,
+  takes 2 px; a basic iframe interactive has none, so its iframe is 2 px wider.
+- **The author gives the interactive a name.** The Activity Player shows it in a 36 px title bar
+  above the iframe. Without a name there is no title bar.
+- **A Multiple Pages activity.** The Single Page and Notebook layouts size Interactives differently.

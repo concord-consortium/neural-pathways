@@ -1,6 +1,7 @@
 import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
+import { ViewTitle } from "../../core/view-title/view-title";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { MessageCard } from "../../core/message-card/message-card";
 import { MessageWords } from "../../core/message-card/message-words";
@@ -57,7 +58,7 @@ export const LookingInside: React.FC = observer(function LookingInside() {
 
   return (
     <div className="looking-inside">
-      <h1 className="looking-inside__title">{LOOKING_INSIDE_TITLE}</h1>
+      <ViewTitle className="looking-inside__title">{LOOKING_INSIDE_TITLE}</ViewTitle>
       {indexState.status === "loading" && <p>Loading messages…</p>}
       {indexState.status === "error" &&
         <p role="alert">
