@@ -109,9 +109,11 @@ describe("apSize", () => {
     expect(responsive.iframeHeight).toBeCloseTo(660, 0);
   });
 
-  it("all available space: 98% of the window less the buttons, title bar and border, in a full-width section", () => {
+  it("all available space: 98% of the window less what is around the iframe, in a full-width section", () => {
     const size = apSize({ ...base, aspectRatioMethod: "MAX" }, { width: 1400, height: 900 });
     expect(size.iframeHeight).toBeCloseTo(814, 1);
+    expect(size.explanation[1]).toBe("Height 814: 98% of the 900 px window, less 36 for the title bar, " +
+      "2 for the border and 30 for the space below it.");
     expect(size.warning).toBeNull();
   });
 
@@ -145,7 +147,7 @@ describe("apSize", () => {
     expect(size.explanation[1]).toMatch(/600/);
   });
 
-  it("adds the title bar, border and buttons to the iframe's height for the interactive's", () => {
+  it("adds the title bar, border and the space below it to the iframe's height for the interactive's", () => {
     // 573 + 36 + 2 + 30
     expect(apSize(base, { width: 1400, height: 600 }).interactiveHeight).toBeCloseTo(641, 1);
   });
@@ -154,12 +156,13 @@ describe("apSize", () => {
     const capped = apSize(base, { width: 1400, height: 600 });
     expect(capped.iframeHeight).toBeLessThan(600);
     expect(capped.explanation).toContain(
-      "With its title bar, border and buttons the interactive is 641 px tall, taller than the 600 px window.");
+      "With its title bar, border and the space below it, the interactive is 641 px tall, " +
+      "taller than the 600 px window.");
   });
 
   it("says nothing more when the interactive fits the window", () => {
     expect(apSize(base, { width: 1400, height: 1200 }).explanation).toHaveLength(2);
-    // All available space leaves room for the title bar, border and buttons.
+    // All available space leaves room for the title bar, border and the space below it.
     expect(apSize({ ...base, aspectRatioMethod: "MAX" }, { width: 1400, height: 900 }).explanation).toHaveLength(2);
   });
 
