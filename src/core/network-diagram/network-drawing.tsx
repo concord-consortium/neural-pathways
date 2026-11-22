@@ -72,7 +72,7 @@ export interface NetworkDrawingProps {
 /** What the edges around a highlighted neuron's two gaps dim to. */
 const DIMMED_EDGE_OPACITY = 0.1;
 /** A ring sits this far outside its node's circle. */
-const RING_GAP = 3.5;
+export const RING_GAP = 3.5;
 
 /**
  * One message's pass through the network as an SVG group, laid out by `layout` and drawn as

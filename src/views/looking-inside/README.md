@@ -57,8 +57,8 @@ generator fits to the alien3 data; the view reads it from the index (`alien3Netw
 
 ## Size
 
-The minimum layout size (see `docs/accessibility.md`) is 981 × 559 px as an Interactive, inside the
-designed size of 1024 × 562.
+The minimum layout size (see `docs/accessibility.md`) is 981 × 562 px as an Interactive, inside the
+designed size of 1024 × 562 with no height to spare.
 
 The minimum layout width, 981 px, is the narrowest at which the network panel's head holds its
 title, the activation legend and the Animate controls on one line, measured with the web fonts
@@ -68,12 +68,12 @@ Step 1 to Step 4, Reset and About on one line, and is wider than the network pan
 382 px. Between 910 and 981 px the two columns hold and the head wraps, the legend and the controls
 dropping below the title together; the view works there, but no reviewed design covers it.
 
-The minimum layout height, 559 px, adds up from the top:
+The minimum layout height, 562 px, adds up from the top:
 - the view's 9 px top padding, which takes the title's place in an Interactive;
 - the filter bar and the step row, 44 px;
 - a 9 px gap;
-- the card and network panels at their smallest, 497 px. That is the diagram's smallest layout,
-  328 px (`MIN_HEIGHT` in `layout.ts`), 80 px for the network panel's head, padding and border, the
+- the card and network panels at their smallest, 500 px. That is the diagram's smallest layout,
+  331 px (`MIN_HEIGHT` in `layout.ts`), 80 px for the network panel's head, padding and border, the
   readout box, 81 px with its margin, and 8 px of padding under it. The panel row's minimum is the
   network panel's min-content height, so where the head wraps, between 910 and 981 px or in the
   fallback font, the panels' smallest grows with it and the page scrolls sooner.

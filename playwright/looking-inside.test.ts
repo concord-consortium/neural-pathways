@@ -456,9 +456,9 @@ test.describe("the card and network panels", () => {
     await page.goto("/");
     const { card, network } = panels(page);
     await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
-    // The diagram at MIN_HEIGHT (328) with its 8 px padding above and below, and the panels the same
+    // The diagram at MIN_HEIGHT (331) with its 8 px padding above and below, and the panels the same
     // height.
-    expect((await rect(network.locator(".looking-inside__diagram"))).height).toBeCloseTo(328 + 16, 0);
+    expect((await rect(network.locator(".looking-inside__diagram"))).height).toBeCloseTo(331 + 16, 0);
     const networkBox = await rect(network);
     expect((await rect(card)).height).toBeCloseTo(networkBox.height, 0);
     // The drawing and the readout box still fit in the panel at its smallest.
@@ -560,7 +560,7 @@ test.describe("About", () => {
   /** The narrowest Interactive with two columns, where the head wraps. */
   const TWO_COLUMN_WIDTH = 910;
   /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
-  const MIN_LAYOUT_HEIGHT = 559;
+  const MIN_LAYOUT_HEIGHT = 562;
   const about = (page: Page) => page.getByRole("button", { name: "About Looking Inside a Neural Network" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
 
@@ -625,8 +625,11 @@ test.describe("About", () => {
         expect(head.height).toBeGreaterThan(62);
         const readoutBox = await box(page.getByTestId("readout-box"));
         expect(readoutBox.y + readoutBox.height).toBeLessThanOrEqual(network.y + network.height);
-        const card = await box(page.getByRole("region", { name: "Message", exact: true }));
-        expect(card.height).toBeCloseTo(network.height, 0);
+        // Read together, since the box measures its texts again as the layout settles.
+        await expect.poll(() => page.evaluate(() => {
+          const height = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().height;
+          return Math.abs(height(".message-card") - height(".looking-inside__network"));
+        })).toBeLessThan(0.5);
       });
   }
 
