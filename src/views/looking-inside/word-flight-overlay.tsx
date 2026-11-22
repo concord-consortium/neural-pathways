@@ -27,8 +27,8 @@ function measure(container: HTMLElement): Geometry {
 /**
  * Draws one chip per copy of a word in flight toward an input neuron, over `container`, which must
  * be positioned. `time` is the time into Step 1, or undefined when nothing is flying. Positions
- * are measured when Step 1 starts and again whenever the container resizes, so the chips follow
- * the layout.
+ * are measured when Step 1 starts and again whenever the container resizes or anything in it
+ * scrolls, so the chips follow the layout.
  */
 export const WordFlightOverlay: React.FC<{
   time: number | undefined;
@@ -43,11 +43,16 @@ export const WordFlightOverlay: React.FC<{
     if (!flying || !container) {
       return undefined;
     }
+    const remeasure = () => setGeometry(measure(container));
     // Observing reports the container's size at once, which measures for the start of the run.
-    const observer = new ResizeObserver(() => setGeometry(measure(container)));
+    const observer = new ResizeObserver(remeasure);
     observer.observe(container);
+    // Scrolling the diagram moves the neurons without resizing anything. A scroll event doesn't
+    // bubble, but the capture phase sees it.
+    container.addEventListener("scroll", remeasure, { capture: true, passive: true });
     return () => {
       observer.disconnect();
+      container.removeEventListener("scroll", remeasure, { capture: true });
       // Forget the measurement, so the next run draws nothing until it has measured its own.
       setGeometry(undefined);
     };

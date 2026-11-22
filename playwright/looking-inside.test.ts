@@ -720,7 +720,23 @@ test.describe("Step 1's word flights", () => {
     await page.getByRole("button", { name: "Step 1" }).click();
     await expect(chips(page).first()).toBeVisible({ timeout: 500 });
     await page.setViewportSize({ width: 600, height: 900 });
-    // A chip about to land, which has faded a little, sits on its neuron.
+    expect(await aLandingChipIsOnItsNeuron(page)).toBe(true);
+  });
+
+  test("re-aim at the neurons' new places when the diagram scrolls", async ({ page }) => {
+    // Narrow enough that the diagram scrolls sideways in its panel.
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.goto("/?interactive=looking-inside");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    await page.locator(".network-diagram").evaluate(scroller => { scroller.scrollLeft = scroller.scrollWidth; });
+    expect(await page.locator(".network-diagram").evaluate(scroller => scroller.scrollLeft)).toBeGreaterThan(50);
+    expect(await aLandingChipIsOnItsNeuron(page)).toBe(true);
+  });
+
+  /** Waits for a chip about to land, which has faded a little, to sit on an input neuron. */
+  async function aLandingChipIsOnItsNeuron(page: Page) {
     const near = await page.waitForFunction(() => {
       const outlines = Array.from(document.querySelectorAll(".network-diagram__node[data-column='0']"), node => {
         const rect = node.getBoundingClientRect();
@@ -739,8 +755,8 @@ test.describe("Step 1's word flights", () => {
       }
       return false;
     }, undefined, { timeout: 10_000, polling: "raf" });
-    expect(await near.jsonValue()).toBe(true);
-  });
+    return near.jsonValue();
+  }
 });
 
 test.describe("the neurons' readouts", () => {
