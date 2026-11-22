@@ -17,8 +17,8 @@ finished view.
 
 Jira: [NPW-23](https://concord-consortium.atlassian.net/browse/NPW-23). It builds on NPW-32 (the
 first version), NPW-35 (filter), NPW-36 (message card), NPW-38 (Animate and speed) and NPW-44
-(About), and is stacked on NPW-74 (v1.4 design, PR #53), which is stacked on NPW-73 (PR #52). The
-branch is `NPW-23-looking-inside`, from `NPW-74-v1.4-design`.
+(About), and is stacked on NPW-75 (PR #57), which follows NPW-74 (v1.4 design, PR #53, merged).
+The branch is `NPW-23-looking-inside`, from `NPW-75-interactive-title-and-sizes`.
 
 The source is prototype v1.4: `index.html` at commit `7acc4db` on the `neural-net-maker` branch of
 the demos repo ([live](https://models-resources.concord.org/demos/branch/neural-net-maker/),
@@ -102,14 +102,14 @@ was dropped: it fails "fly from the card".
 
 - Input neuron *i* (top to bottom) gets a pass of `dur(i) = max(170, 1400 × 0.7^i)` ms. Passes run
   back to back (`PASS_OVERLAP = 1`). Pass *i* starts at the sum of the earlier passes.
-- In a pass, every word of the message sends one copy to that neuron. Copies are ordered by their
-  distance from the word to the neuron, nearest first. Copy *k* of *n* lands at
+- In a pass, every word of the message sends one chip to that neuron. Chips are ordered by their
+  distance from the word to the neuron, nearest first. Chip *k* of *n* lands at
   `dur × (0.7 + 0.3 × k / (n − 1))` (all at `dur` when *n* = 1), so the nearest lands at 70% of the
   pass and the farthest at its end.
-- A copy moves horizontally with `cubic-bezier(.7,0,.75,.75)` and vertically with
+- A chip moves horizontally with `cubic-bezier(.7,0,.75,.75)` and vertically with
   `cubic-bezier(.45,.05,.3,1)`, so it drops first and sweeps in sideways. Opacity and scale stay at
   1 until 86% of its flight, then go linearly to 0 and 0.12 at landing.
-- Each landing deepens the neuron: after *k* + 1 of *n* copies its fill is `(k + 1) / n`, and the
+- Each landing deepens the neuron: after *k* + 1 of *n* chips its fill is `(k + 1) / n`, and the
   last lands it exactly on its activation. The fill eases to each new level over the shared
   `FILL_DURATION` (180 ms), as the fan phases do. The prototype uses a 0.18 s CSS transition.
 - Step 1 ends when the last landing's fill has eased in: `FILL_DURATION` after the last pass ends.
@@ -125,9 +125,9 @@ message.
 
 **Where it lives.** `forward-pass-phases.ts` keeps phase 1 as it is, for Extract the Neural
 Pathways. Looking Inside gets its own Step 1 timing in a new pure module in its folder (say
-`word-flights.ts`): pass starts and lengths, each copy's landing time, its position along its path
-for a time *t*, and the input fill for a time *t*. `traceTimeline` uses it for marker 0 → 1 and the
-shared phases for 2–4.
+`word-flights.ts`): pass starts and lengths, each chip's landing time, its position along its path
+for a time *t*, and the input fill for a time *t*. `lookingInsideTimeline` uses it for marker 0 → 1
+and the shared phases for 2–4.
 
 **The scene.** Looking Inside's timeline gets its own scene type: the network `Scene`, plus, while
 Step 1 plays, the time into Step 1. The flight positions aren't in the scene, since they depend on
@@ -136,16 +136,15 @@ pure functions above. At rest, and in every other step, there is nothing in flig
 
 **The overlay.** A layer positioned over the view's layout (`position: absolute`, the layout
 `position: relative`, `pointer-events: none`, above the panels), drawn only while Step 1 plays. It
-holds one chip per copy in flight: an HTML element in the message font (Spline Sans Mono, 12.5 px),
+holds each chip in flight: an HTML element in the message font (Spline Sans Mono, 12.5 px),
 white with the rule border, 4 px radius, `2px 5px` padding and the prototype's shadow (2088–2095),
 `aria-hidden`. The words in the card stay as they are.
 
-**Geometry.** At the start of Step 1, and again if the layout resizes while it plays, the overlay
-measures, relative to the layout:
+**Geometry.** At the start of Step 1, and again if the layout resizes or anything in it scrolls
+while it plays, the overlay measures, relative to the layout:
 
 - each word span's center (`.message-words__word`);
-- each input neuron's center: the diagram host's offset, less its scroll, plus the node's layout
-  position.
+- each input neuron's center, from its outline's bounding rectangle.
 
 The prototype aims at each chip's own center, since a chip is wider than its word. The overlay does
 the same: it starts each chip centered on its word's center and ends it centered on the neuron.
@@ -169,7 +168,8 @@ pointer cursor, and aren't focusable.
 
 **Hit targets.** As in the prototype (12544–12576), each neuron gets an invisible rectangle above
 the drawing, 10 px wider than the circle and one row's pitch tall, so neighbors touch and moving down
-a column doesn't flicker. The output pills are a second target for their neuron (12616–12621). The
+a column doesn't flicker. Each output's pill is part of its neuron's target (12616–12621), so a
+click on the pill focuses the neuron as a click on any target does. The
 cursor is a pointer only on targets of reached neurons (2364–2373). Each target carries a `<title>`:
 the neuron's name before it is reached, and "Activation: −0.42" after (`actLine`, 12981, and
 13004–13007).
@@ -178,20 +178,21 @@ the neuron's name before it is reached, and "Activation: −0.42" after (`actLin
 keyboard, or pinned:
 
 - the edges touching it stay at full strength and are drawn above the others;
-- the other edges in the two gaps it sits between (the one into its layer and the one out of it)
+- the other edges in the gaps on either side of it (the one into its layer and the one out of it)
   dim to an opacity of 0.1;
 - edges in other gaps, and the gray wires, are unchanged.
 
 Only drawn edges take part: a gap the steps haven't reached shows wires, which aren't dimmed. While
 a neuron is pinned, hovering another doesn't change the highlight; it stays on the pinned one
-(12665).
+(12665). Keyboard focus takes the highlight from a neuron the pointer is only resting on.
 
 **Rings** (2384–2412, 12581–12589). Each neuron has a ring 3.5 px outside its circle, never a CSS
 outline (SVG outlines are square). Hover shows it at half strength in ink; pinned at full strength
 in ink; keyboard focus in the focus blue. Pinned wins the color where a neuron is both. Only
 `:focus-visible` focus counts: a click also focuses the neuron, but must not leave a blue ring or a
-highlight behind once it is unpinned (12178–12205). The drawing passes these as props;
-`NetworkDrawing` stays stateless.
+highlight behind once it is unpinned (12178–12205). In forced colors the rings take the theme's
+colors, `CanvasText` for hover and the pin and `Highlight` for focus, since a dark theme's canvas
+would hide the ink. The drawing passes these as props; `NetworkDrawing` stays stateless.
 
 **During a run.** The neurons reached by the marker the run started from stay live while it plays,
 as in the prototype, whose `live()` checks only whether a neuron is reached (12529). So a student
@@ -218,9 +219,12 @@ stop. Before Step 1 there is no neuron stop.
 | Enter / Space | Pin or unpin it. |
 | Escape | Clear the pin. |
 
-Focusing a neuron from the keyboard applies the same highlight as hovering it. Moving focus scrolls the diagram to
-show it, as `focus()` does. If the stop's neuron stops being reached (Reset, a message change), the
-stop moves to the first reached input neuron, or goes away.
+Focusing a neuron from the keyboard applies the same highlight as hovering it. Moving focus scrolls
+the diagram to show it, as `focus()` does. If the stop's neuron stops being reached (Reset, a step
+back, a message change), the stop moves to the first reached input neuron, or goes away; the shared
+diagram leaves unreached neurons out, so a view passes its state as it is. If the focused neuron
+stops being reached without focus moving, as when Safari doesn't focus a clicked step button,
+focus moves to the stop rather than falling to the page.
 
 The diagram's scroller (`useKeyboardScrollable`) stays a Tab stop of its own while it overflows,
 since it scrolls the drawing's text as well. Arrow keys on the scroller scroll it; on a neuron they
@@ -229,7 +233,8 @@ move between neurons.
 **ARIA.** Each reached neuron is `role="button"` with `aria-pressed` and an accessible name: its
 layer and number and its activation, as "Hidden Layer 1 Neuron 3, activation −0.42"; an output is
 "Output Layer: Approach, activation 1.83" (12511–12512, 13013–13014). Unreached neurons are
-`aria-hidden`, not buttons.
+`aria-hidden`, not buttons. A click is handled on the button itself, not on its invisible
+shapes, since a screen reader's activation clicks the button.
 
 The SVG is `role="img"` today, which hides everything inside it from assistive technology, so the
 buttons would be unreachable. It becomes a `role="group"` with the same label ("Network diagram",
@@ -260,8 +265,9 @@ font size changes:
 
 - Browser zoom changes the box's width in CSS pixels; a `ResizeObserver` on the box catches it.
 - Text-only zoom (Firefox's "Zoom text only") changes the font size but may leave the width alone.
-  The measuring copy, an off-layout twin of the box at its width and type, is observed too: bigger
-  text makes it taller, which triggers the measurement.
+  The measuring copy is an off-layout twin of the box at its width and type, held at no height. The
+  stack of candidates inside it is observed too: bigger text makes it taller, which triggers the
+  measurement.
 - The held height is a `min-height`, never a `height`, and nothing is clipped, so text that outgrows
   it before the next measurement grows the box rather than being cut off.
 
@@ -316,8 +322,9 @@ a 22 px circle filled orange from the middle up, "+" (2098–2141, 11530–11547
 `forced-color-adjust: none` so they keep their colors in forced colors, like the diagram. The swatches
 are `aria-hidden`; the caption and signs are text.
 
-**The head's order** (11740–11751): title, legend, a short vertical rule, Animate, speed. The legend
-takes the `margin-left: auto` that pushes everything after it right, so the title stays left.
+**The head's order** (11740–11751): title, legend, a short vertical rule, Animate, speed. The legend,
+the rule and the controls are one group, which takes the `margin-left: auto` and drops below the
+title as a whole when the head is too narrow, so the title stays left.
 
 ### The head without the web font
 
@@ -326,34 +333,36 @@ than 184 px and run 16 px past the head. Adding the legend makes this worse. The
 CSS, whatever the root cause turns out to be: the head wraps, its items don't overflow it, and in a
 narrow head the legend and controls drop below the title. Check, with Google Fonts blocked:
 
-- at the minimum layout width (910 px view) and at 480 px, nothing in the head runs past its edge;
-- the existing "wrap below the title" test keeps passing with the web font.
+- at 480 px, at the minimum layout width (981 px) and at the designed 1024 px, nothing in the head
+  runs past its edge;
+- the existing "wrap below the title" test keeps passing with the web font, at 910 px.
+
+A wrapped head is 27 px taller. The panel row's minimum is the network panel's min-content height,
+so where the head wraps, in the fallback font or between 910 and 981 px, the panels grow with it
+and the page scrolls down sooner, rather than the readout box running past the panel's border.
 
 Update `docs/accessibility.md`'s known gap (the head growing between 910 and about 935 px in the
 fallback font) with the new measurements.
 
 ### Minimum layout size
 
-The legend and the readout box don't fit the view's current minimum layout size, 910 × 524 px.
-Scott chose to raise the width and give the height back from the diagram:
+The legend and the readout box didn't fit the view's earlier minimum layout size, 910 × 442 px as
+an Interactive once #57 leaves the title out. Scott chose to raise the width, and to size the height
+from what the diagram needs:
 
-- **Width.** With the legend, the network panel's head holds its title, legend and controls on one
-  line only from about 1,010 px of view width (an estimate: title about 150 px, legend about 130 px,
-  rule and gaps about 30 px, controls 184 px, padding 28 px). Below that the head wraps, which the
-  design doesn't show, so the minimum layout width becomes the width where the head fits on one
-  line, inside the designed 1024. Measure it with the web fonts loaded, and set it from what the
-  head holds, as the step row's width is set today (`$step-row-width` in `looking-inside.scss`). The
-  two columns still stack below 910 px as now; between 910 px and the new minimum the head wraps
-  and the view still works.
-- **Height.** The box adds about 62 px to the network panel at two lines: 8 px margin, 2 px of
-  border, 14 px of padding and two 18.85 px lines. That would take the minimum layout height from
-  524 px to about 586 px, 24 px over the designed 562. Lower the diagram's smallest layout
-  (`MIN_HEIGHT` in `layout.ts`, 300 px) by what it takes for the view to fit 562 tall at the new
-  minimum layout width, about 276 px. At that height the neurons' radius goes from 10 to 9 px.
-  `MIN_HEIGHT` is shared with Extract the Neural Pathways: check its layout still holds.
+- **Width.** The minimum layout width is 981 px as an Interactive, a 949 px view: the narrowest at
+  which the network panel's head holds its title, legend and controls on one line, measured with
+  the web fonts loaded. The README gives the number. The two columns still stack below 910 px;
+  between 910 and 981 px the head wraps and the view still works.
+- **Height.** `MIN_HEIGHT` in `layout.ts` is 331 px, the least that draws the network's tallest
+  column, 10 input neurons, at radius 12, the most the layout draws: 9 × 30 px between neighbors,
+  44 px above for the captions and 17 px below for the bottom neuron's ring. With the readout box at
+  three lines, 81 px with its margin, the minimum layout height is 562 px as an Interactive, the
+  designed height with nothing to spare. Extract the Neural Pathways lays its network out in a
+  440 px canvas, so `MIN_HEIGHT` doesn't limit it.
 
-Update the README's size sections, the comments that set these numbers, and the Playwright checks
-of the minimum layout size.
+The README's size section, the comments that set these numbers, and the Playwright checks of the
+minimum layout size say the same.
 
 ## State
 
@@ -368,7 +377,7 @@ switch or a message change, as in the prototype, which forgets them on every red
 | pinned neuron | view component | click, keys, clears | readout, rings, highlight | per click | nothing: cleared by steps, Reset, message change | no |
 | hovered neuron | view component | pointer, focus | rings, highlight | per pointer move | nothing | no |
 | keyboard stop | view component | focus, reached change | roving tabindex | per arrow | nothing | no |
-| flight geometry | overlay | measuring at Step 1 start and on resize | overlay | per Step 1 | nothing | no |
+| flight geometry | overlay | measuring at Step 1 start, on resize and on scroll | overlay | per Step 1 | nothing | no |
 
 Add the pinned neuron and the keyboard stop to `docs/view-state.md`'s "Deliberately not kept".
 
@@ -391,42 +400,51 @@ Add to `docs/glossary.md`, under the network diagram:
 
 - **reached:** a neuron whose step has ended: column *c* once the marker is at least *c* + 1. Only
   reached neurons answer hover, click and the keyboard.
-- **pin:** the neuron clicked, whose readout shows. Not "selected".
+- **pin:** make a reached neuron's readout show, by clicking it or pressing Enter or Space on it; the
+  pinned neuron is the one shown. Not "select".
 - **readout:** the text about the pinned neuron.
-- **prompt:** the text in the same box when nothing is pinned.
-- **chip:** a copy of a word in flight at Step 1. Not "fly" or "flier".
+- **prompt:** what the readout box says when nothing is pinned and no step plays: what to do next.
+- **readout box:** the box under the network that shows the prompt or the readout (`ReadoutBox`).
+- **chip:** a word in flight to an input neuron at Step 1: each pass sends one per word. Not "copy",
+  which is Extract the Neural Pathways', or "fly" or "flier".
 
 ## Testing
 
 Jest:
 
-- The Step 1 timing: pass starts and lengths, landing times, copy positions at given times, the
-  input fill per landing, and that the duration doesn't depend on the word count.
-- `traceTimeline`: Step 1 uses the new timing and Steps 2–4 the shared phases; Extract's collect
-  timeline is unchanged.
-- The prompt and readout text for every row of the tables above, with the minus sign.
-- Reached, hover and pin: unreached neurons ignore pointer and keys; clears on each of the listed
-  events; the pin stays through an Animate change.
-- The keyboard: each key in the table, the stop moving on Reset, no stop before Step 1.
+- The Step 1 timing: pass starts and lengths, landing times, chip positions, fade and size at given
+  times, the input fill per landing, and that the duration doesn't depend on the word count.
+- `lookingInsideTimeline`: Step 1 uses the new timing and Steps 2–4 the shared phases. Extract's
+  own tests cover its collect timeline.
+- The prompt and readout text for every row of the tables above, with the minus sign, and that the
+  box measures every prompt and readout the message can show.
+- Reached, hover and pin: unreached neurons ignore pointer and keys and are left out of the Tab
+  stop and the rings; clears on a step press, Reset and a message change, and not on Animate; the
+  highlight's order, pin then focus then hover.
+- The keyboard: each key in the table, the stop moving on Reset and on a step back, focus moving to
+  the stop when its neuron stops being reached, no stop before Step 1.
 - The legend's markup and names.
 
 Playwright:
 
 - Hover on a reached neuron dims the other edges in its gaps and not the rest.
-- Click pins a readout; Step, Reset and message change clear it.
-- Keyboard: Tab to the neurons, arrows, Enter pins, Escape clears.
+- Click pins a readout, including on an output's pill; Escape and Clear clear it.
+- Keyboard: Tab to the neurons, arrows, Enter pins, Escape clears; focus stays in the diagram when
+  a step press that doesn't move focus leaves the focused neuron unreached.
+- The rings' colors, and in a dark forced-colors theme the theme's colors.
 - During Step 1 chips appear over the layout and are gone after it, in both layouts; with Animate
-  off none appear.
-- The box is two lines tall at rest and grows, uncut, at 200% zoom and with text-only zoom.
-- The head with Google Fonts blocked, at 480 px and at the minimum layout width.
-- At the new minimum layout size, the head is one line, nothing scrolls, and the page doesn't
-  scroll down; at 910 px wide the head wraps without overflowing.
+  off none appear; they re-aim when the window resizes or the diagram scrolls.
+- The box holds one height for every text, and grows, uncut, at 200% zoom and with text-only zoom.
+- The head with Google Fonts blocked, at 480, 981 and 1024 px, and the readout box inside the panel
+  where the head wraps.
+- At the minimum layout size, the head is one line, nothing scrolls, and the page doesn't scroll
+  down; at 910 px wide the head wraps without overflowing.
 
 ## Docs to update
 
 - `src/views/looking-inside/README.md`: what's here, the new minimum layout size, and drop "Still
   to come".
-- `src/core/README.md`: the legend.
+- `src/core/README.md`: the neuron interaction files and the legend.
 - `docs/view-state.md`, `docs/glossary.md`, `docs/accessibility.md` as above.
 - NPW-49: the box can grow where v1.4 clips; the SVG is now a `group` with buttons in it.
 
