@@ -86,9 +86,8 @@ This assumes a Multiple Pages activity, and that **the author gives the interact
 Activity Player shows the name in the title bar above the iframe, and in an Interactive the view
 leaves out its own title. Without a name there is no title bar, and nothing names the view.
 
-**Check it.** `ap-preview.html` shows any view in an iframe at the size the Activity Player would
-give it, for the settings you pick under LARA's labels, in your window. For a quick check without
-it, open `index.html?interactive=<view-id>` in DevTools' device toolbar at an exact size.
+**Check it.** Open `index.html?interactive=<view-id>` in DevTools' device toolbar at the size the
+Activity Player would give it.
 
 **Each view has a minimum layout size:** the narrowest and shortest it can be while keeping its
 layout as designed, before anything stacks, wraps or scrolls in a way the design doesn't show. It
