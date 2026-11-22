@@ -58,9 +58,11 @@ one thing, or one name for two things, settle it and add it here.
   edges into each later column. Looking Inside a Neural Network's Step *k* plays phase *k*.
 - **reached:** a neuron whose step has ended: column *c* once the marker is at least *c* + 1. Only
   reached neurons answer hover, click and the keyboard.
-- **pin:** the neuron clicked, whose readout shows. Not "selected".
+- **pin:** make a reached neuron's readout show, by clicking it or pressing Enter or Space on it; the
+  pinned neuron is the one shown. Not "select".
 - **readout:** the text about the pinned neuron.
-- **prompt:** the text in the same box when nothing is pinned.
+- **prompt:** what the readout box says when nothing is pinned and no step plays: what to do next.
+- **readout box:** the box under the network that shows the prompt or the readout (`ReadoutBox`).
 - **chip:** a word in flight to an input neuron at Step 1: each pass sends one per word. Not "copy",
   which is Extract the Neural Pathways', or "fly" or "flier".
 - **spotlight:** `hiddenLayerSpotlight`, how strongly the hidden layers' nodes are picked out;

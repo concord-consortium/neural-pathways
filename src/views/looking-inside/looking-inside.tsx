@@ -126,8 +126,8 @@ const LookingInsideBody = observer(function LookingInsideBody(
     setAttention({ messageId: shownId });
   }
   const attention = storedAttention;
-  // A change that leaves everything as it was keeps the state object, so a step press with nothing
-  // pinned doesn't render the view again.
+  // A change that leaves everything as it was returns the same state object, so React bails out before
+  // rendering the view's children.
   const updateAttention = (change: Partial<NeuronAttention>) => setAttention(previous => {
     const unchanged = (Object.keys(change) as Exclude<keyof NeuronAttention, "messageId">[])
       .every(key => change[key] === previous[key] || sameNeuron(change[key], previous[key]));
@@ -184,8 +184,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
       rings: { hovered: attention.hovered, pinned: attention.pinned, focused: attention.focused },
       onHover: hovered => updateAttention({ hovered }),
       // A blur reports no neuron, and an arrow key moves focus with a blur and then a focus. Any focus
-      // takes the Tab stop; only keyboard focus rings and highlights the neuron, so a click that unpins
-      // leaves nothing marked.
+      // takes the Tab stop; only keyboard focus rings (see `onFocusChange`).
       onFocusChange: (neuron, visible) => updateAttention(
         neuron ? { focused: visible ? neuron : undefined, lastFocused: neuron } : { focused: undefined }),
       onToggle: neuron => updateAttention(
@@ -264,7 +263,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
               )}
             </Observer>
           </div>
-          <div className="looking-inside__readout">
+          <div className="looking-inside__readout-box">
             <Observer>
               {() => (
                 <ReadoutBox content={contentFor(player, pass!)} candidates={candidates}

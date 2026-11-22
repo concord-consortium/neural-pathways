@@ -16,7 +16,10 @@ export const LOOKING_INSIDE_BUTTONS: readonly StepButton[] = PHASES.map(phase =>
   showAsCurrentWhenAt: (marker: Marker) => marker === phase,
 }));
 
-/** What Looking Inside draws: the network's scene, and where Step 1's word flights are. */
+/**
+ * What Looking Inside draws: the network's scene, and the time into Step 1, from which the overlay
+ * places the word flights.
+ */
 export interface LookingInsideScene {
   network: Scene;
   /** ms into Step 1 while it plays; undefined otherwise */
@@ -26,7 +29,8 @@ export interface LookingInsideScene {
 /**
  * The forward pass's phases as Looking Inside a Neural Network plays them: Step k is phase k, so
  * marker k is k steps done, and the segment to it plays phase k. Step 1 is the message's words
- * flying to the input neurons, so it lasts as long as those flights, which depend on the word count.
+ * flying to the input neurons. Its length depends only on the number of inputs; the inputs' fill
+ * depends on the word count, so the timeline is made per message.
  */
 export function lookingInsideTimeline(
   columnSizes: readonly number[], wordCount: number,

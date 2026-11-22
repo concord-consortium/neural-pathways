@@ -61,15 +61,15 @@ export interface NetworkDrawingProps {
   outputLabels: Record<number, string>;
   scene: Scene;
   /**
-   * A neuron whose edges to show at full strength, drawn above the rest. The other edges in the two
-   * gaps it sits between dim.
+   * A neuron whose edges to show at full strength, drawn above the rest. The other edges in the gaps
+   * on either side of it dim.
    */
   highlighted?: NeuronRef;
   /** The neurons to ring: for hover, pin and keyboard focus. */
   rings?: NeuronRings;
 }
 
-/** What the edges around a highlighted neuron's two gaps dim to. */
+/** What the other edges in a highlighted neuron's gaps dim to. */
 const DIMMED_EDGE_OPACITY = 0.1;
 /** A ring sits this far outside its node's circle. */
 export const RING_GAP = 3.5;
@@ -306,8 +306,8 @@ interface RingsProps {
 }
 
 /**
- * A ring 3.5 px outside each hovered, pinned or focused neuron's circle. A circle, because an SVG
- * element's CSS outline is square. When one neuron has several, one ring takes every class.
+ * A ring 3.5 px outside each hovered, pinned or focused neuron's circle. When one neuron has several,
+ * one ring takes every class.
  */
 function Rings({ layout, rings }: RingsProps) {
   if (!rings) {

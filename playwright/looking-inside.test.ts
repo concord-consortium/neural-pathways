@@ -224,8 +224,8 @@ test("in a narrow window, Animate and the speed wrap below the network's title",
   await page.setViewportSize({ width: 480, height: 900 });
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
-  // Measured once the web font has loaded: the fallback font is wider, so the controls would
-  // overrun the head.
+  // Measured once the web font has loaded, since the fallback font is wider and wraps the head
+  // differently.
   await page.evaluate(() => document.fonts.ready);
   const head = await page.locator(".looking-inside__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
@@ -403,8 +403,7 @@ test.describe("the card and network panels", () => {
     await page.goto("/");
     const { card } = panels(page);
     // The message with the longest notes, which run about 15 px below the bottom of the card at its
-    // smallest. Shorter notes fit, now that the diagram's smallest layout draws the neurons at full
-    // size.
+    // smallest. Shorter notes fit in the card at its smallest.
     await page.getByRole("textbox", { name: "Filter" }).fill("n:44");
     await expect(page.getByText("1 / 1", { exact: true })).toBeVisible();
     await openNotes(page);
@@ -761,7 +760,8 @@ test.describe("Step 1's word flights", () => {
 
 test.describe("the neurons' readouts", () => {
   const neuron = (page: Page, name: string) => page.getByRole("button", { name: new RegExp(`^${name},`) });
-  const readout = (page: Page) => page.getByTestId("readout-box").getByRole("status");
+  /** What the readout box says: the prompt or the readout. */
+  const readoutBox = (page: Page) => page.getByTestId("readout-box").getByRole("status");
 
   /** Opens the view with Animate off, so a step ends at once, and plays the steps up to `step`. */
   async function stepTo(page: Page, step: number) {
@@ -783,7 +783,7 @@ test.describe("the neurons' readouts", () => {
 
   test("clicking a neuron pins its readout, and the keyboard can do the same", async ({ page }) => {
     await stepTo(page, 4);
-    await expect(readout(page)).toHaveText("Click any neuron in any layer to see how data flows.");
+    await expect(readoutBox(page)).toHaveText("Click any neuron in any layer to see how data flows.");
 
     await page.getByRole("checkbox", { name: "Animate" }).focus();
     // The speed slider is disabled and the diagram doesn't scroll, so the neurons are next.
@@ -792,15 +792,15 @@ test.describe("the neurons' readouts", () => {
     await page.keyboard.press("ArrowRight");
     await expect(neuron(page, "Hidden Layer 1 Neuron 1")).toBeFocused();
     await page.keyboard.press("Enter");
-    await expect(readout(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
+    await expect(readoutBox(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
     await page.keyboard.press("Escape");
-    await expect(readout(page)).toHaveText("Click any neuron in any layer to see how data flows.");
+    await expect(readoutBox(page)).toHaveText("Click any neuron in any layer to see how data flows.");
 
     await neuron(page, "Hidden Layer 2 Neuron 1").click();
-    await expect(readout(page)).toContainText("Hidden Layer 2 Neuron 1: Activation = ");
+    await expect(readoutBox(page)).toContainText("Hidden Layer 2 Neuron 1: Activation = ");
     await page.getByRole("button", { name: "Clear" }).click();
     await expect(neuron(page, "Hidden Layer 2 Neuron 1")).toBeFocused();
-    await expect(readout(page)).toHaveText("Click any neuron in any layer to see how data flows.");
+    await expect(readoutBox(page)).toHaveText("Click any neuron in any layer to see how data flows.");
   });
 
   // The pill covers the output's circle, so most clicks on an output land on it.
@@ -872,13 +872,13 @@ test.describe("the neurons' readouts", () => {
       await page.mouse.move(0, 0);
       await expect(ring(page, 1, 0)).toHaveCount(0);
       await expect(dimmedEdges(page)).toHaveCount(0);
-      await expect(readout(page)).toHaveText(/^Click any neuron in the Input Layer or Hidden Layer 1/);
+      await expect(readoutBox(page)).toHaveText(/^Click any neuron in the Input Layer or Hidden Layer 1/);
     });
 
     test("clearing with the mouse leaves no ring and no highlight on the neuron it focuses", async ({ page }) => {
       await stepTo(page, 4);
       await page.getByTestId("pill-target-1").click();
-      await expect(readout(page)).toContainText("Approach");
+      await expect(readoutBox(page)).toContainText("Approach");
       await page.getByRole("button", { name: "Clear" }).click();
       await expect(neuron(page, "Output Layer: Approach")).toBeFocused();
       await expect(ring(page, 3, 1)).toHaveCount(0);
@@ -924,7 +924,7 @@ test.describe("the neurons' readouts", () => {
     test("the readout is never cut off", async ({ page }) => {
       await stepTo(page, 2);
       await neuron(page, "Hidden Layer 1 Neuron 1").click();
-      await expect(readout(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
+      await expect(readoutBox(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
       expect(await cutOff(page)).toBe(false);
     });
   });
@@ -933,7 +933,7 @@ test.describe("the neurons' readouts", () => {
   test("the readout is never cut off when only the text is zoomed", async ({ page }) => {
     await stepTo(page, 2);
     await neuron(page, "Hidden Layer 1 Neuron 1").click();
-    await expect(readout(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
+    await expect(readoutBox(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
     await page.evaluate(() => {
       const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
       const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
@@ -954,7 +954,7 @@ test.describe("the neurons' readouts", () => {
     expect(before.held).toBe(before.tallest);
     // The box is empty while Step 1 plays, about 5 s, so zooming its text doesn't resize it.
     await page.getByRole("button", { name: "Step 1" }).click();
-    await expect(readout(page)).toBeEmpty();
+    await expect(readoutBox(page)).toBeEmpty();
     // Only the box's text, so nothing else that is observed changes size.
     await page.addStyleTag({ content: ".readout-box, .readout-box__candidate { font-size: 26px !important; }" });
     await expect.poll(async () => {
@@ -962,7 +962,7 @@ test.describe("the neurons' readouts", () => {
       return after.held === after.tallest && after.tallest > before.tallest;
     }, { timeout: 1_000 }).toBe(true);
     // Measured while Step 1 still plays, not by the render its end brings.
-    await expect(readout(page)).toBeEmpty();
+    await expect(readoutBox(page)).toBeEmpty();
   });
 });
 

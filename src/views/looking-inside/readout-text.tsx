@@ -38,8 +38,9 @@ function readoutSentence(
     return `Data from the neurons in the ${layerName(column - 1)} are weighted and combined ` +
       `to determine the probability of “${name}”.`;
   }
-  // A layer's data is first on screen at the step that fills it: the input layer's at Step 2, where
-  // its values start to be multiplied, and a hidden layer's at the step that computes it.
+  // The sentence describes where a value goes or comes from, so it appears once that is on screen: an
+  // input's at Step 2, where its values are first multiplied, and a hidden neuron's at the step that
+  // computes it.
   if (marker < Math.max(2, column + 1)) return "";
   if (column === 0) {
     return "This value is multiplied by different weights before being passed to the Hidden Layer 1 neurons.";

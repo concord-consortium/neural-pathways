@@ -6,25 +6,20 @@ The lesson's first view: follow one message through the network, a layer at a ti
 
 - `looking-inside.tsx`: the view. It loads the alien3 messages, keeps the shared message
   valid, and lays out the filter bar over the message card and the step row over the network.
-  The network panel's head holds the shared Animate and speed control. Prev/next step through the
+  The network panel's head holds the activation legend and the shared Animate and speed control. Prev/next step through the
   messages the filter matches. When nothing matches, the card says so, and the steps and the
   network are left out. The observation notes start closed, under a heading the student opens
   and closes them with.
 - `word-flights.ts`, `word-flight-overlay.tsx`: Step 1's word flights. `word-flights.ts` is the
   timing, as pure functions of the time into Step 1: each input neuron gets a pass, back to back,
   sending it a chip for each of the message's words, and each chip's landing fills the input a
-  share. Passes shorten from 1.4 s to a 170 ms floor, so the length of Step 1 depends on
-  the number of inputs and not on the number of words. `WordFlightOverlay` draws the chips over the
-  whole layout, from the card's words to the input neurons. It measures both when Step 1 starts and
-  again when the layout resizes, so the chips follow the layout, and draws nothing when Animate is
-  off.
+  share. Passes shorten from 1.4 s to a 170 ms floor, so the length of Step 1 depends on the number
+  of inputs and not on the number of words. `WordFlightOverlay` draws the chips over the whole
+  layout, from the card's words to the input neurons, and nothing when Animate is off.
 - `readout-box.tsx`, `readout-text.tsx`: the box under the network, which holds the prompt for the
   marker the timeline rests at, or the readout of the pinned neuron. The text is in
-  `readout-text.tsx`. The box measures an off-layout twin holding every text it can show for the
-  message, and keeps the height of the tallest as a `min-height`, so that pinning a neuron never
-  resizes the diagram under the pointer. It doesn't clip: text that outgrows the height grows the
-  box. It measures again whenever its width or font size changes, which browser zoom and text-only
-  zoom both do. The box is a polite live region.
+  `readout-text.tsx`. The box holds the height of the tallest text it can show for the message, so
+  that pinning a neuron never resizes the diagram under the pointer. It is a polite live region.
 - `looking-inside-steps.ts`: Looking Inside a Neural Network on the shared step system in
   `src/core/steps/`: the Step 1–4 buttons; the timeline, where Step *k* plays phase *k* of
   `src/core/network-diagram/forward-pass-phases.ts`; and the progress, the marker each message rests
@@ -37,19 +32,18 @@ The lesson's first view: follow one message through the network, a layer at a ti
 
 The pinned neuron, the hovered one and the one holding the keyboard's Tab stop are the view's
 component state, not `LookingInsideState`: they aren't saved, and they don't survive a view switch
-(see `docs/view-state.md`). A neuron is *reached* once its step has ended, which is when the marker
-is at least its column + 1. Only reached neurons answer hover, click and the keyboard, and they stay
-live while a later step plays. A step press, Reset, a message change, Escape on a neuron, a click
+(see `docs/view-state.md`). Only *reached* neurons (see `docs/glossary.md`) answer hover, click and
+the keyboard, and they stay live while a later step plays. A step press, Reset, a message change, Escape on a neuron, a click
 on the diagram's empty space and the readout's Clear button clear the pin; Animate and the speed
 don't. The view hears a step press through `StepButtonGroup`'s `onPress`.
 
 Hovering a reached neuron rings it at half strength in ink, pinning it rings it in full ink, and
-keyboard focus rings it in blue; where a neuron has more than one, the pin wins. Hover, keyboard
-focus and the pin each highlight the neuron's edges. Keyboard focus is the browser's
-`:focus-visible`: a click focuses a neuron too, and takes the Tab stop, but rings and highlights
-nothing of its own, so a click that unpins a neuron, or a click on the readout's Clear button, which
-sends focus back to the neuron, leaves it unmarked. A key pressed on that neuron makes its focus
-keyboard focus.
+keyboard focus rings it in blue; where a neuron has more than one, the pin wins. One neuron's edges
+are highlighted: the pinned one's, or else the one with keyboard focus, or else the hovered one.
+
+Keyboard focus is the browser's `:focus-visible`. A click focuses a neuron and takes the Tab stop,
+but rings and highlights nothing, so unpinning by click, or clearing with the mouse, leaves the
+neuron unmarked. A key pressed on it makes its focus keyboard focus.
 
 The network, the diagram, the message card and the data loading live in `src/core/`, where Extract
 the Neural Pathways and Investigate the Neural Pathways can use them. The network is the one the
@@ -62,8 +56,9 @@ designed size of 1024 × 562 with no height to spare.
 
 The minimum layout width, 981 px, is the narrowest at which the network panel's head holds its
 title, the activation legend and the Animate controls on one line, measured with the web fonts
-loaded (`$one-line-head-width` in `looking-inside.scss`). The two columns still stack below 910 px:
-the card's 447 px, a 10 px gap, and the step row, 421 px (`$two-columns-width`). The step row holds
+loaded: a 949 px view inside the Interactive's 16 px gutters. The two columns stack below 910 px: the
+card's 447 px, a 10 px gap and the step row's 421 px (`$two-columns-width` in `looking-inside.scss`),
+878 px, inside the gutters. The step row holds
 Step 1 to Step 4, Reset and About on one line, and is wider than the network panel's narrowest,
 382 px. Between 910 and 981 px the two columns hold and the head wraps, the legend and the controls
 dropping below the title together; the view works there, but no reviewed design covers it.
@@ -88,7 +83,7 @@ counted. The standalone app has no top padding, and shows the view's title above
 instead: 82 px for a 32 px heading's line and its 0.67em margins, then a 9 px gap.
 
 Narrower than its minimum layout width, it still works, but no reviewed design covers it:
-- Between 910 and 981 px the head wraps. Below 910 px the columns stack, and the page scrolls down.
+- Below 910 px the columns stack, and the page scrolls down.
   As an Interactive it is about 920 px tall just below that width, with the observation notes
   closed, and grows as more of it wraps, to about 1,210 px at 320 px.
 - The head's Animate controls wrap too, the speed dropping below Animate, so the head stays inside
