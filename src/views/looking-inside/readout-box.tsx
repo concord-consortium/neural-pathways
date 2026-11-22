@@ -1,9 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import "./readout-box.scss";
 
-/** The gap above the box, which `onHeightChange` counts in the height it reports. */
-const MARGIN_TOP = 8;
-
 interface ReadoutBoxProps {
   /** What the box shows now; the box is empty when this is undefined. */
   content: React.ReactNode | undefined;
@@ -16,8 +13,6 @@ interface ReadoutBoxProps {
   idle: boolean;
   /** Shows the Clear button, which calls this. */
   onClear?: () => void;
-  /** Called with the box's held height, plus its margin, whenever that changes. */
-  onHeightChange?: (px: number) => void;
 }
 
 /**
@@ -27,14 +22,10 @@ interface ReadoutBoxProps {
  * and font size. It is a `min-height` and nothing is clipped, so text that outgrows it before the
  * next measurement grows the box instead of being cut off.
  */
-export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idle, onClear, onHeightChange }) => {
+export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idle, onClear }) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
-  const heightChange = useRef(onHeightChange);
-  useLayoutEffect(() => {
-    heightChange.current = onHeightChange;
-  });
 
   const measure = () => {
     const tallest = Array.from(stackRef.current?.children ?? [])
@@ -56,10 +47,6 @@ export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idl
     if (stackRef.current) resizes.observe(stackRef.current);
     return () => resizes.disconnect();
   }, []);
-
-  useLayoutEffect(() => {
-    heightChange.current?.(height + MARGIN_TOP);
-  }, [height]);
 
   return (
     <div className="readout-box__wrap">

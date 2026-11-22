@@ -2,8 +2,6 @@
 @use "../../core/panel";
 
 $diagram-padding: 8px;
-// The network panel's height around the diagram: its head, the diagram's padding and its border.
-$network-chrome: panel.$head-height + 2 * $diagram-padding + 2px;
 // The step row at its narrowest, on one line: Step 1 to Step 4 and Reset (329.4 px), a 6 px gap and
 // About (85.3 px), rounded up, in 16 px Barlow Condensed. It is wider than the network panel's
 // narrowest, 382 px, so it sets the second column's minimum.
@@ -38,23 +36,21 @@ $one-line-head-width: 981px;
 //
 // The layout takes the height the title leaves, and the panel row grows into it, up to 800 px so a
 // very tall window doesn't leave the network floating in empty space. It stops at the network
-// panel's smallest: the diagram's smallest layout, $network-chrome, the readout box's height
-// (--readout-height) and the padding under it, 497 px at the minimum layout width
-// (328 + 80 + 81 + 8). Below that the panels run past the window and the page scrolls.
-// min-height: 0 because the browser measures the layout's content height with the row at its 800 px
-// most, which would otherwise be its minimum.
+// panel's smallest, its min-content height: the head, however many lines it wraps to, the diagram's
+// smallest layout and the readout box. Below that the panels run past the window and the page
+// scrolls. The message card is size-contained so that it never sets the row's height: its notes
+// scroll instead. min-height: 0 because the browser measures the layout's content height with the
+// row at its 800 px most, which would otherwise be its minimum.
 //
 // --diagram-min-height is MIN_HEIGHT from layout.ts, set on this element by the view, so the
-// diagram's smallest layout is written down once. With it the view still fits 562 px tall as an
-// Interactive at $one-line-head-width: 9 px of top padding, the filter and step rows and the gaps
-// under them, 62 px, and the panels' 497 px make 559.
+// diagram's smallest layout is written down once.
 .looking-inside__layout {
   position: relative; // The word flights are drawn over it.
   display: grid;
   flex: 1 1 0;
   min-height: 0;
   grid-template-columns: 447px minmax($step-row-width, 1fr);
-  grid-template-rows: auto minmax(calc(var(--diagram-min-height) + #{$network-chrome} + var(--readout-height, 0px) + #{$diagram-padding}), 800px);
+  grid-template-rows: auto minmax(min-content, 800px);
   grid-template-areas:
     "filter-row   step-row"
     "message network";
@@ -106,6 +102,14 @@ $one-line-head-width: 981px;
   grid-area: message;
   align-self: stretch;
   min-width: 0;
+  contain: size;
+}
+
+// Stacked, the card is as tall as its content.
+@container (width < #{$two-columns-width}) {
+  .looking-inside__message {
+    contain: none;
+  }
 }
 
 .looking-inside__network {
@@ -144,10 +148,11 @@ $one-line-head-width: 981px;
   background: colors.$rule;
 }
 
-// 440 px tall when the panel's height comes from its content (stacked), and otherwise the panel's
-// height less the head. Never smaller than the diagram's smallest layout.
+// The panel's height less the head and the readout box, and never smaller than the diagram's smallest
+// layout, which is its share of the panel's min-content height. 440 px tall when stacked, where the
+// panel's height comes from its content.
 .looking-inside__diagram {
-  flex: 1 1 440px;
+  flex: 1 1 0;
   width: 100%;
   max-width: 537px;
   min-height: var(--diagram-min-height);
@@ -155,8 +160,13 @@ $one-line-head-width: 981px;
   padding: $diagram-padding 0;
 }
 
-// The prompt or readout under the diagram, as wide as the diagram. --readout-height, set by the
-// view, is the box's held height plus its margin.
+@container (width < #{$two-columns-width}) {
+  .looking-inside__diagram {
+    flex-basis: 440px;
+  }
+}
+
+// The prompt or readout under the diagram, as wide as the diagram.
 .looking-inside__readout {
   flex: none;
   width: 100%;

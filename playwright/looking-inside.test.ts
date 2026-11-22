@@ -456,17 +456,14 @@ test.describe("the card and network panels", () => {
     await page.goto("/");
     const { card, network } = panels(page);
     await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
-    // MIN_HEIGHT (328), the network's chrome (80), the box's held height with its margin, and the
-    // 8 px of padding under the box.
-    const readoutHeight = await page.locator(".looking-inside__layout")
-      .evaluate(el => parseFloat(el.style.getPropertyValue("--readout-height")));
-    expect(readoutHeight).toBeGreaterThan(0);
-    const smallest = 328 + 80 + readoutHeight + 8;
-    expect((await rect(card)).height).toBeCloseTo(smallest, 0);
+    // The diagram at MIN_HEIGHT (328) with its 8 px padding above and below, and the panels the same
+    // height.
+    expect((await rect(network.locator(".looking-inside__diagram"))).height).toBeCloseTo(328 + 16, 0);
     const networkBox = await rect(network);
-    expect(networkBox.height).toBeCloseTo(smallest, 0);
-    // The drawing still fits in the panel at its smallest.
+    expect((await rect(card)).height).toBeCloseTo(networkBox.height, 0);
+    // The drawing and the readout box still fit in the panel at its smallest.
     expect((await rect(network.locator("svg").first())).bottom).toBeLessThanOrEqual(networkBox.bottom);
+    expect((await rect(page.getByTestId("readout-box"))).bottom).toBeLessThanOrEqual(networkBox.bottom);
     const view = page.getByRole("main");
     expect(await view.evaluate(el => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0);
   });
@@ -614,6 +611,24 @@ test.describe("About", () => {
     expect(controls.x + controls.width).toBeLessThanOrEqual(head.x + head.width);
     expect(controls.y + controls.height).toBeLessThanOrEqual(head.y + head.height);
   });
+
+  // A wrapped head is taller than one line, and the panels' smallest grows with it rather than
+  // pushing the readout box past the panel's border.
+  for (const [where, width, blockFonts] of [["where the head wraps", 950, false],
+    ["with Google Fonts blocked", 1024, true]] as const) {
+    test(`keeps the readout box inside the network panel ${where}, at the minimum layout height`,
+      async ({ page }) => {
+        if (blockFonts) await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
+        await openAt(page, width, MIN_LAYOUT_HEIGHT);
+        const network = await box(page.getByRole("region", { name: "The Neural Network" }));
+        const head = await box(page.locator(".looking-inside__network-head"));
+        expect(head.height).toBeGreaterThan(62);
+        const readoutBox = await box(page.getByTestId("readout-box"));
+        expect(readoutBox.y + readoutBox.height).toBeLessThanOrEqual(network.y + network.height);
+        const card = await box(page.getByRole("region", { name: "Message", exact: true }));
+        expect(card.height).toBeCloseTo(network.height, 0);
+      });
+  }
 
   test("stays beside the steps when a pixel narrower stacks the columns", async ({ page }) => {
     await openAt(page, TWO_COLUMN_WIDTH - 1, 900);
@@ -870,13 +885,12 @@ test.describe("the neurons' readouts", () => {
     await page.goto("/");
     await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
     const heights = () => page.evaluate(() => ({
-      held: parseFloat(document.querySelector<HTMLElement>(".looking-inside__layout")!.style
-        .getPropertyValue("--readout-height")),
+      held: parseFloat(document.querySelector<HTMLElement>(".readout-box")!.style.minHeight),
       tallest: Math.max(...Array.from(document.querySelectorAll<HTMLElement>(".readout-box__candidate"),
         candidate => candidate.offsetHeight)),
     }));
     const before = await heights();
-    expect(before.held).toBe(before.tallest + 8);
+    expect(before.held).toBe(before.tallest);
     // The box is empty while Step 1 plays, about 5 s, so zooming its text doesn't resize it.
     await page.getByRole("button", { name: "Step 1" }).click();
     await expect(readout(page)).toBeEmpty();
@@ -884,7 +898,7 @@ test.describe("the neurons' readouts", () => {
     await page.addStyleTag({ content: ".readout-box, .readout-box__candidate { font-size: 26px !important; }" });
     await expect.poll(async () => {
       const after = await heights();
-      return after.held === after.tallest + 8 && after.tallest > before.tallest;
+      return after.held === after.tallest && after.tallest > before.tallest;
     }, { timeout: 1_000 }).toBe(true);
     // Measured while Step 1 still plays, not by the render its end brings.
     await expect(readout(page)).toBeEmpty();

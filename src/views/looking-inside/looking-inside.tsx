@@ -133,7 +133,6 @@ const LookingInsideBody = observer(function LookingInsideBody(
       .every(key => change[key] === previous[key] || sameNeuron(change[key], previous[key]));
     return unchanged ? previous : { ...previous, ...change };
   });
-  const [readoutHeight, setReadoutHeight] = useState(0);
   const diagramRef = useRef<HTMLDivElement>(null);
   // The layout the word flights are drawn over and measured against.
   const [layoutElement, setLayoutElement] = useState<HTMLElement | null>(null);
@@ -228,9 +227,8 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // The filter comes first: it sits over the card in both layouts. The card comes before the steps,
   // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
   // card says so, and the steps and the network are left out, but the step row stays to hold About.
-  const layoutStyle = { ...LAYOUT_STYLE, "--readout-height": `${readoutHeight}px` } as React.CSSProperties;
   return (
-    <div className="looking-inside__layout" style={layoutStyle} ref={setLayoutElement}>
+    <div className="looking-inside__layout" style={LAYOUT_STYLE} ref={setLayoutElement}>
       <div className="looking-inside__filter-row">
         <FilterBar {...bar} />
       </div>
@@ -276,8 +274,8 @@ const LookingInsideBody = observer(function LookingInsideBody(
             <Observer>
               {() => (
                 <ReadoutBox content={contentFor(player, pass!)} candidates={candidates}
-                  idle={!ifReached(attention.pinned)} onClear={ifReached(attention.pinned) ? clearReadout : undefined}
-                  onHeightChange={setReadoutHeight} />
+                  idle={!ifReached(attention.pinned)}
+                  onClear={ifReached(attention.pinned) ? clearReadout : undefined} />
               )}
             </Observer>
           </div>

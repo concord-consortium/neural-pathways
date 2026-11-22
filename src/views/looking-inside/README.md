@@ -24,8 +24,7 @@ The lesson's first view: follow one message through the network, a layer at a ti
   message, and keeps the height of the tallest as a `min-height`, so that pinning a neuron never
   resizes the diagram under the pointer. It doesn't clip: text that outgrows the height grows the
   box. It measures again whenever its width or font size changes, which browser zoom and text-only
-  zoom both do. The box is a polite live region. The view sets `--readout-height` from it, so the
-  diagram's panel leaves room for it.
+  zoom both do. The box is a polite live region.
 - `looking-inside-steps.ts`: Looking Inside a Neural Network on the shared step system in
   `src/core/steps/`: the Step 1–4 buttons; the timeline, where Step *k* plays phase *k* of
   `src/core/network-diagram/forward-pass-phases.ts`; and the progress, the marker each message rests
@@ -75,7 +74,9 @@ The minimum layout height, 559 px, adds up from the top:
 - a 9 px gap;
 - the card and network panels at their smallest, 497 px. That is the diagram's smallest layout,
   328 px (`MIN_HEIGHT` in `layout.ts`), 80 px for the network panel's head, padding and border, the
-  readout box, 81 px with its margin, and 8 px of padding under it.
+  readout box, 81 px with its margin, and 8 px of padding under it. The panel row's minimum is the
+  network panel's min-content height, so where the head wraps, between 910 and 981 px or in the
+  fallback font, the panels' smallest grows with it and the page scrolls sooner.
 
 `MIN_HEIGHT` is the least height that draws the network's tallest column, 10 input neurons, at
 radius 12, the most the layout draws. The readout box holds three lines of its longest text at

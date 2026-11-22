@@ -83,29 +83,17 @@ describe("ReadoutBox", () => {
       if (offsetHeight) Object.defineProperty(HTMLElement.prototype, "offsetHeight", offsetHeight);
     });
 
-    it("holds the tallest candidate as min-height and reports it with the margin", () => {
-      const onHeightChange = jest.fn();
-      render((
-        <ReadoutBox
-          content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle onHeightChange={onHeightChange}
-        />
-      ));
+    it("holds the tallest candidate as min-height", () => {
+      render(<ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle />);
       expect(screen.getByTestId("readout-box").style.minHeight).toBe("60px");
       expect(screen.getByTestId("readout-box").style.height).toBe("");
-      expect(onHeightChange).toHaveBeenLastCalledWith(68);
     });
 
     it("measures again when the observed layout resizes", () => {
-      const onHeightChange = jest.fn();
-      render((
-        <ReadoutBox
-          content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle onHeightChange={onHeightChange}
-        />
-      ));
+      render(<ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle />);
       heights.tall = 90;
       act(() => resized());
       expect(screen.getByTestId("readout-box").style.minHeight).toBe("90px");
-      expect(onHeightChange).toHaveBeenLastCalledWith(98);
     });
 
     it("observes the box, whose width zoom changes, and the candidates' stack, which text zoom grows", () => {
