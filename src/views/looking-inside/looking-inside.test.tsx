@@ -411,6 +411,14 @@ describe("LookingInside", () => {
       expect(screen.queryByRole("button", { name: "Clear" })).not.toBeInTheDocument();
     });
 
+    // So the box holds the tallest of them, and pinning a neuron never resizes it: two forms of each
+    // input's readout, one of each other neuron's, and the five prompts.
+    it("measures every prompt and every readout the message can show", async () => {
+      await showInstant();
+      expect(screen.getAllByTestId("readout-stand-in")).toHaveLength(10 * 2 + 8 + 6 + 2);
+      expect(screen.getAllByTestId("readout-candidate")).toHaveLength(36 + 5);
+    });
+
     it("changes the prompt with each step", async () => {
       await showInstant();
       press("Step 1");
