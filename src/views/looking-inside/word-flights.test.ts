@@ -1,3 +1,4 @@
+import { flightEaseX, flightEaseY } from "../../core/network-diagram/easing";
 import { chipsAt, inputFillAt, landingTime, passDuration, passStart, step1Duration } from "./word-flights";
 
 describe("Step 1's timing", () => {
@@ -25,6 +26,8 @@ describe("Step 1's timing", () => {
     expect(inputFillAt(landingTime(0, 0, 2) + 180, 10, 2)[0]).toBeCloseTo(0.5);
     expect(inputFillAt(step1Duration(10), 10, 4)).toEqual(new Array(10).fill(1));
     expect(inputFillAt(step1Duration(10), 10, 1)).toEqual(new Array(10).fill(1));
+    // Ten shares of 0.1 sum to a hair under 1.
+    expect(inputFillAt(step1Duration(10), 10, 10)).toEqual(new Array(10).fill(1));
   });
 });
 
@@ -43,12 +46,25 @@ describe("chipsAt", () => {
     const nearLands = landingTime(0, 0, 2);
     expect(chipsAt(nearLands, words, inputs).map(c => c.word)).toEqual([0]);
   });
+  it("moves a chip along x and y by their own curves, so its path bends", () => {
+    // Word 0 is the farther from input 0, so it lands at the pass's end: halfway at 700 ms.
+    const chip = chipsAt(landingTime(0, 1, 2) / 2, words, inputs).find(c => c.word === 0)!;
+    expect(chip.x).toBeCloseTo(300 * flightEaseX(0.5));
+    expect(chip.y).toBeCloseTo(200 * flightEaseY(0.5));
+  });
   it("fades a chip only after 86% of its flight", () => {
     const land = landingTime(0, 1, 2);
-    expect(chipsAt(land * 0.85, words, inputs).find(c => c.word === 0)!.opacity).toBe(1);
-    const late = chipsAt(land * 0.95, words, inputs).find(c => c.word === 0)!;
+    const word0At = (t: number) => chipsAt(t, words, inputs).find(c => c.word === 0)!;
+    expect(word0At(land * 0.859).opacity).toBe(1);
+    expect(word0At(land * 0.861).opacity).toBeLessThan(1);
+    const late = word0At(land * 0.95);
     expect(late.opacity).toBeLessThan(1);
     expect(late.scale).toBeGreaterThan(0.12);
+  });
+  it("shrinks a chip to 0.12 of its size as it lands", () => {
+    const last = chipsAt(landingTime(0, 1, 2) - 0.001, words, inputs).find(c => c.word === 0)!;
+    expect(last.scale).toBeCloseTo(0.12, 4);
+    expect(last.opacity).toBeCloseTo(0, 4);
   });
   it("has nothing in flight once Step 1 is over", () => {
     expect(chipsAt(step1Duration(2), words, inputs)).toEqual([]);
