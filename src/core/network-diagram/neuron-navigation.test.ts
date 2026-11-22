@@ -15,6 +15,10 @@ describe("neuronAfterKey", () => {
     return best;
   }
 
+  it("stops at the outputs even when a view says columns past them are reached", () => {
+    expect(neuronAfterKey({ column: 3, unit: 1 }, "ArrowRight", layout, 99)).toEqual({ column: 3, unit: 1 });
+  });
+
   it("moves up and down a column and stops at its ends", () => {
     expect(neuronAfterKey({ column: 0, unit: 3 }, "ArrowDown", layout, 4)).toEqual({ column: 0, unit: 4 });
     expect(neuronAfterKey({ column: 0, unit: 3 }, "ArrowUp", layout, 4)).toEqual({ column: 0, unit: 2 });

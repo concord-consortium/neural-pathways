@@ -238,7 +238,7 @@ describe("NetworkDiagram neuron targets", () => {
     expect(screen.getByRole("button", { name: /^Input Layer Neuron 1,/ })).toHaveAttribute("tabindex", "0");
     expect(screen.queryAllByTestId(/^ring-/)).toHaveLength(0);
     expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
-    expect(document.querySelectorAll("[data-testid^='edge-'][opacity]")).toHaveLength(0);
+    expect(screen.queryAllByTestId(/^edge-/).filter(edge => edge.hasAttribute("opacity"))).toHaveLength(0);
   });
 
   it("keeps the highlight on the pinned neuron while another is hovered", () => {
@@ -287,6 +287,7 @@ describe("NetworkDiagram neuron targets", () => {
     fireEvent.click(screen.getByTestId("neuron-target-1-0"));
     fireEvent.pointerEnter(screen.getByTestId("neuron-target-1-0"));
     fireEvent.click(screen.getByTestId("pill-target-1"));
+    fireEvent.pointerEnter(screen.getByTestId("pill-target-1"));
     expect(interaction.onToggle).not.toHaveBeenCalled();
     expect(interaction.onClear).not.toHaveBeenCalled();
     expect(interaction.onHover).not.toHaveBeenCalled();
@@ -311,8 +312,9 @@ describe("NetworkDiagram neuron targets", () => {
     expect(interaction.onClear).not.toHaveBeenCalled();
 
     const button = screen.getAllByRole("button")[0];
-    fireEvent.keyDown(button, { key: "Enter" });
-    fireEvent.keyDown(button, { key: " " });
+    // fireEvent returns false when a handler called preventDefault: Space mustn't scroll the page.
+    expect(fireEvent.keyDown(button, { key: "Enter" })).toBe(false);
+    expect(fireEvent.keyDown(button, { key: " " })).toBe(false);
     expect(interaction.onToggle).toHaveBeenCalledTimes(3);
 
     fireEvent.keyDown(button, { key: "Escape" });
@@ -391,8 +393,23 @@ describe("NetworkDiagram neuron targets", () => {
     renderInteractive(makeInteraction({ tabStop: { column: 0, unit: 0 } }));
     const buttons = screen.getAllByRole("button");
     buttons[0].focus();
-    fireEvent.keyDown(buttons[0], { key: "ArrowDown" });
+    // Handled, so the arrow doesn't scroll the page or the diagram too.
+    expect(fireEvent.keyDown(buttons[0], { key: "ArrowDown" })).toBe(false);
     expect(buttons[1]).toHaveFocus();
+  });
+
+  it("makes each target wider than its circle and one row's pitch tall, so neighbors in a column touch", () => {
+    renderInteractive(makeInteraction());
+    const box = (id: string) => {
+      const rect = screen.getByTestId(id);
+      return { y: Number(rect.getAttribute("y")), width: Number(rect.getAttribute("width")),
+        height: Number(rect.getAttribute("height")) };
+    };
+    const first = box("neuron-target-0-0");
+    const second = box("neuron-target-0-1");
+    expect(first.width).toBeGreaterThan(2 * layout.radius);
+    expect(first.y + first.height).toBeCloseTo(second.y);
+    expect(first.y).toBeLessThan(layout.nodes[0][0].y - layout.radius);
   });
 
   it("leaves keys with Alt, Ctrl or Meta held to the browser", () => {

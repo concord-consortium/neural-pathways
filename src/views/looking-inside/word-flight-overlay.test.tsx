@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { landingTime, step1Duration } from "./word-flights";
 import { WordFlightOverlay } from "./word-flight-overlay";
 
@@ -91,6 +91,31 @@ describe("WordFlightOverlay", () => {
 
   it("draws nothing once Step 1 is over", () => {
     expect(chips(step1Duration(INPUTS))).toHaveLength(0);
+  });
+
+  it("measures again when anything in the layout scrolls", () => {
+    const container = makeContainer();
+    render(<WordFlightOverlay time={landingTime(0, 0, WORDS.length) - 1} words={WORDS} container={container} />);
+    const before = parseFloat(screen.queryAllByText(/./)[0].style.left);
+    // The diagram scrolls 100 px to the left, taking the outlines with it. The container is a stand-in
+    // built outside the document, so there is no Testing Library query for its parts.
+    // eslint-disable-next-line testing-library/no-node-access
+    const outlines = Array.from(container.querySelectorAll<HTMLElement>(".network-diagram__node"));
+    outlines.forEach((outline, unit) => { outline.dataset.rect = `200,${20 + unit * 20}`; });
+    // A scroll event doesn't bubble, so the overlay has to catch it on the way down.
+    act(() => { outlines[0].dispatchEvent(new Event("scroll")); });
+    expect(before - parseFloat(screen.queryAllByText(/./)[0].style.left)).toBeGreaterThan(90);
+  });
+
+  it("stops observing and listening once Step 1 is over", () => {
+    const disconnect = jest.spyOn((globalThis as any).ResizeObserver.prototype, "disconnect");
+    const container = makeContainer();
+    const removeListener = jest.spyOn(container, "removeEventListener");
+    const { rerender } = render(<WordFlightOverlay time={0} words={WORDS} container={container} />);
+    rerender(<WordFlightOverlay time={undefined} words={WORDS} container={container} />);
+    expect(disconnect).toHaveBeenCalledTimes(1);
+    expect(removeListener).toHaveBeenCalledWith("scroll", expect.any(Function), { capture: true });
+    disconnect.mockRestore();
   });
 
   it("draws nothing of an earlier run before the new run has measured", () => {

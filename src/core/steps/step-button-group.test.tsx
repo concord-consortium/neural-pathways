@@ -161,6 +161,16 @@ describe("StepButtonGroup", () => {
     expect(markers).toEqual([1, 2]);
   });
 
+  it("reports a press before it plays, even one whose run starts below the marker", () => {
+    const markers: number[] = [];
+    const player = new StepPlayer(timeline, new TestProgress(2), new TestSettings());
+    const onPress = jest.fn(() => markers.push(player.marker));
+    render(<StepButtonGroup player={player} buttons={BUTTONS} onPress={onPress} />);
+    // One always plays from 0 to 1.
+    fireEvent.click(button("One"));
+    expect(markers).toEqual([2]);
+  });
+
   it("reports nothing for an unavailable Reset", () => {
     const onPress = jest.fn();
     const player = new StepPlayer(timeline, new TestProgress(0), new TestSettings());
