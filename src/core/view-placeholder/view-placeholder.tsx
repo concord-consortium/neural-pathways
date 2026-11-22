@@ -13,8 +13,8 @@ interface ViewPlaceholderProps {
 
 /**
  * A view that isn't built yet: its title (outside an Interactive), its About button and a note.
- * About sits at the right of a
- * head row, as in the prototype's unbuilt views, until the view's own layout gives it a place.
+ * About sits at the right of a head row, as in the prototype's unbuilt views, until the view's own
+ * layout gives it a place.
  */
 export const ViewPlaceholder: React.FC<ViewPlaceholderProps> = ({ className, title, about }) => (
   <div className={`view-placeholder ${className}`}>

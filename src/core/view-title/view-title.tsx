@@ -13,8 +13,8 @@ interface ViewTitleProps {
 
 /**
  * A view's title, as the page's h1. In an Interactive it isn't rendered at all: the Activity
- * Player's bar above the iframe names the view, and a visually hidden h1 would make a screen reader
- * read the name twice.
+ * Player's title bar above the iframe names the view, and a visually hidden h1 would make a screen
+ * reader read the name twice.
  */
 export const ViewTitle: React.FC<ViewTitleProps> = ({ className, children }) => {
   const interactive = useContext(InteractiveModeContext);

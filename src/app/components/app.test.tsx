@@ -107,7 +107,7 @@ describe("App", () => {
       expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
     });
 
-    it("leaves the view's title out, since the Activity Player's bar names it", () => {
+    it("leaves the view's title out, since the Activity Player's title bar names it", () => {
       for (const view of VIEWS) {
         setUrl(`/?interactive=${view.id}`);
         const { unmount } = render(<App appState={new AppState()} />);

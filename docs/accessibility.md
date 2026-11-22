@@ -59,35 +59,41 @@ are an Interactive's: the whole iframe a view is embedded in, the app's 16 px gu
   gets there on a 1366 × 768 Chromebook, below the browser's tabs and address bar, the ChromeOS
   shelf and the Activity Player's header. The prototype lays every view out at this height
   (`AP_CONTENT_H` in its device preview).
-- **1024 px wide.** This is the width a view gets on its own, outside the Activity Player, on a
-  landscape iPad (9th generation and older), and the widest the prototype's standalone layout gets
-  (`standaloneMax`). The most common use is an Interactive in the Activity Player's full-width
-  section on its fixed 1100 px page, where the iframe is 1044 px wide. So the views are designed
-  for 1024 px or less, which fits both.
+- **1024 px wide.** This is the width a view gets in the standalone app on a landscape iPad (9th
+  generation and older), and the widest the prototype's standalone layout gets (`standaloneMax`).
+  It counts on the standalone app's view nav collapsing to a button that floats over the view, so
+  the view gets the whole width. That is the plan, but it isn't designed or built yet: today the
+  nav takes 241 px, which leaves the view 783 px. The most common use is an Interactive in the
+  Activity Player's full-width section on its fixed 1100 px page, where the iframe is 1044 px wide.
+  So the views are designed for 1024 px or less, which fits both.
 
 ### In the Activity Player
 
 Our app doesn't use the interactive API, so it never tells the Activity Player a size or an aspect
 ratio. The Activity Player sizes the iframe from the settings the author picks in LARA, as
 [`docs/activity-player-sizing.md`](activity-player-sizing.md) describes. For our views:
-- Every column of a two-column layout is narrower than every view's minimum layout width. The widest,
-  30-70's primary on the 1100 px page, is 767 px.
+- On a fixed page, every column of a two-column layout is narrower than every view's minimum layout
+  width. The widest, 30-70's primary on the 1100 px page, is 767 px. A responsive section's primary
+  column grows with the window: in responsive-30-70 it is the window less 515 px.
 - The space below the iframe is always empty: our app saves nothing, so there is no "Clear & start
   over" and no teacher feedback.
 
 **The settings that give the designed size.** Set the library interactive to "Manually set the
 native width & height" at 1044 × 562, and put it in a "full-width (single column)" section on a
-"Standard (1100px)" page. The iframe is then 1044 × 562 on every window. Each embed inherits the
-setting, so authors don't set it themselves. The responsive layouts and the default aspect ratio
-don't give the designed size. Reporting a height through the interactive API would let the app ask
-for its own height; that isn't built.
+"Standard (1100px)" page with no responsive section. The iframe is then 1044 × 562 on every window.
+A responsive section anywhere on the page makes the whole page as wide as the window, so this
+section's iframe would follow the window too. Each embed inherits the setting, so authors don't set
+it themselves. The responsive layouts and the default aspect ratio don't give the designed size.
+Reporting a height through the interactive API would let the app ask for its own height; that isn't
+built.
 
 This assumes a Multiple Pages activity, and that **the author gives the interactive a name.** The
 Activity Player shows the name in the title bar above the iframe, and in an Interactive the view
 leaves out its own title. Without a name there is no title bar, and nothing names the view.
 
 **Check it.** Open `index.html?interactive=<view-id>` in DevTools' device toolbar at the size the
-Activity Player would give it.
+Activity Player would give it, which [`activity-player-sizing.md`](activity-player-sizing.md) says
+how to work out.
 
 **Each view has a minimum layout size:** the narrowest and shortest it can be while keeping its
 layout as designed, before anything stacks, wraps or scrolls in a way the design doesn't show. It

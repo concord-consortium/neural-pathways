@@ -13,7 +13,8 @@ $step-row-width: 421px;
 $two-columns-width: 447px + 10px + $step-row-width;
 
 // At least the window's height, so the layout below the title can fill what is left of it. In an
-// Interactive there is no title, and the shell's top padding takes its place (see app.scss).
+// Interactive there is no title, and the top padding takes its place. The shell sets its size (see
+// app.scss).
 .looking-inside {
   display: flex;
   flex-direction: column;
