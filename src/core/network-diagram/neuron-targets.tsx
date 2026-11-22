@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { ForwardPass } from "../network/forward";
 import { NetworkLayout } from "./layout";
 import {
-  formatActivation, neuronName, NeuronRef, NeuronRings, OUTPUT_ORDER, sameNeuron, unitAt
+  formatActivation, neuronName, NeuronRef, NeuronRings, sameNeuron, unitAt
 } from "./neuron";
 import { neuronAfterKey } from "./neuron-navigation";
 
@@ -48,9 +48,9 @@ interface NeuronTargetsProps {
 /**
  * Invisible targets above the drawing, one per neuron, as the prototype draws them: each is one row's
  * pitch tall so that moving down a column doesn't flicker. A reached neuron's target is a button;
- * the rest are hidden from assistive technology and answer nothing. Each output pill is a further
- * mouse target for its neuron. The reached neurons are one Tab stop (a roving tabindex), and the
- * arrow keys move between them.
+ * the rest are hidden from assistive technology and answer nothing. An output's pill is part of its
+ * target, so a click on the pill focuses the neuron as a click on any other target does. The reached
+ * neurons are one Tab stop (a roving tabindex), and the arrow keys move between them.
  */
 export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outputLabels, interaction }) => {
   const layerRef = useRef<SVGGElement>(null);
@@ -92,37 +92,49 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
       const pitch = column.length > 1 ? column[1].y - column[0].y : layout.radius * 4;
       const reached = c < reachedColumns;
       const value = pass.layers[c][unit];
-      const rect = (
-        <rect data-testid={`neuron-target-${c}-${unit}`}
-          className={reached ? "network-diagram__target network-diagram__target--reached" : "network-diagram__target"}
-          x={node.x - layout.radius - TARGET_EXTRA_WIDTH / 2} y={node.y - pitch / 2}
-          width={layout.radius * 2 + TARGET_EXTRA_WIDTH} height={pitch}
-          fill="transparent" pointerEvents="all"
-          onClick={event => {
-            event.stopPropagation();
-            if (reached) {
-              onToggle(neuron);
-            }
-          }}>
-          <title>
-            {reached ? `Activation: ${formatActivation(value)}` : neuronName(neuron, lastColumn, outputLabels)}
-          </title>
-        </rect>
+      const className = `network-diagram__target${reached ? " network-diagram__target--reached" : ""}`;
+      const pill = c === lastColumn ? layout.pills[row] : undefined;
+      const shapes = (
+        <>
+          <rect data-testid={`neuron-target-${c}-${unit}`} className={className}
+            x={node.x - layout.radius - TARGET_EXTRA_WIDTH / 2} y={node.y - pitch / 2}
+            width={layout.radius * 2 + TARGET_EXTRA_WIDTH} height={pitch}
+            fill="transparent" pointerEvents="all">
+            <title>
+              {reached ? `Activation: ${formatActivation(value)}` : neuronName(neuron, lastColumn, outputLabels)}
+            </title>
+          </rect>
+          {pill &&
+            <rect data-testid={`pill-target-${unit}`} className={className}
+              x={pill.x} y={pill.y} width={pill.width} height={pill.height}
+              fill="transparent" pointerEvents="all" />}
+        </>
       );
+      // On the button itself, not its shapes: a screen reader's activation clicks the button. Either
+      // way the click stops here, short of the diagram's click on empty space, which clears.
+      const onClick = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        if (reached) {
+          onToggle(neuron);
+        }
+      };
       targets.push(reached ? (
         <g key={`${c}-${unit}`} role="button" aria-pressed={sameNeuron(rings.pinned, neuron)}
           aria-label={`${neuronName(neuron, lastColumn, outputLabels)}, activation ${formatActivation(value)}`}
           tabIndex={sameNeuron(tabStop, neuron) ? 0 : -1} data-column={c} data-unit={unit}
+          onClick={onClick}
           onPointerEnter={() => onHover(neuron)} onPointerLeave={() => onHover(undefined)}
           onFocus={event => onFocusChange(neuron, hasVisibleFocus(event.currentTarget))}
           onBlur={() => onFocusChange(undefined, false)}
           onKeyDown={event => onKeyDown(event, neuron)}>
-          {rect}
+          {shapes}
         </g>
       ) : (
         // It still hears the pointer leave: a step press from the keyboard can leave the neuron under
         // the pointer unreached, and its hover would otherwise come back when it is reached again.
-        <g key={`${c}-${unit}`} aria-hidden="true" onPointerLeave={() => onHover(undefined)}>{rect}</g>
+        <g key={`${c}-${unit}`} aria-hidden="true" onClick={onClick} onPointerLeave={() => onHover(undefined)}>
+          {shapes}
+        </g>
       ));
     });
   });
@@ -130,25 +142,6 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
   return (
     <g ref={layerRef} className="network-diagram__targets">
       {targets}
-      {layout.pills.map((box, row) => {
-        const unit = OUTPUT_ORDER[row];
-        const neuron: NeuronRef = { column: lastColumn, unit };
-        const reached = lastColumn < reachedColumns;
-        return (
-          <rect key={`pill-${unit}`} data-testid={`pill-target-${unit}`} aria-hidden="true"
-            className={reached ? "network-diagram__target network-diagram__target--reached" : "network-diagram__target"}
-            x={box.x} y={box.y} width={box.width} height={box.height}
-            fill="transparent" pointerEvents="all"
-            onPointerEnter={reached ? () => onHover(neuron) : undefined}
-            onPointerLeave={() => onHover(undefined)}
-            onClick={event => {
-              event.stopPropagation();
-              if (reached) {
-                onToggle(neuron);
-              }
-            }} />
-        );
-      })}
     </g>
   );
 };

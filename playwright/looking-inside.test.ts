@@ -787,6 +787,17 @@ test.describe("the neurons' readouts", () => {
     await expect(readout(page)).toHaveText("Click any neuron in any layer to see how data flows.");
   });
 
+  // The pill covers the output's circle, so most clicks on an output land on it.
+  test("a click on an output's circle focuses that neuron, so Escape then unpins it", async ({ page }) => {
+    await stepTo(page, 4);
+    const circle = (await page.getByTestId("neuron-target-3-1").boundingBox())!;
+    await page.mouse.click(circle.x + circle.width / 2, circle.y + circle.height / 2);
+    await expect(neuron(page, "Output Layer: Approach")).toHaveAttribute("aria-pressed", "true");
+    await expect(neuron(page, "Output Layer: Approach")).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(neuron(page, "Output Layer: Approach")).toHaveAttribute("aria-pressed", "false");
+  });
+
   test.describe("the rings", () => {
     const ring = (page: Page, column: number, unit: number) => page.getByTestId(`ring-${column}-${unit}`);
     const dimmedEdges = (page: Page) => page.locator("[data-testid^='edge-'][opacity='0.1']");

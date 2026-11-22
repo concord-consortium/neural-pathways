@@ -367,6 +367,20 @@ describe("NetworkDiagram neuron targets", () => {
     expect(interaction.onToggle).not.toHaveBeenCalled();
   });
 
+  it("toggles when the button itself is clicked, as a screen reader's activation does", () => {
+    const interaction = makeInteraction();
+    renderInteractive(interaction);
+    fireEvent.click(screen.getByRole("button", { name: /^Hidden Layer 1 Neuron 1,/ }));
+    expect(interaction.onToggle).toHaveBeenCalledWith({ column: 1, unit: 0 });
+    expect(interaction.onClear).not.toHaveBeenCalled();
+  });
+
+  it("puts each output's pill inside its button, so a click on the pill focuses the neuron", () => {
+    renderInteractive(makeInteraction({ reachedColumns: 4 }));
+    expect(screen.getByRole("button", { name: /^Output Layer: Approach,/ }))
+      .toContainElement(screen.getByTestId("pill-target-1"));
+  });
+
   it("lets the output pill stand in for its neuron", () => {
     const interaction = makeInteraction({ reachedColumns: 4 });
     renderInteractive(interaction);
