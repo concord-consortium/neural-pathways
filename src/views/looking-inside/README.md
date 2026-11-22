@@ -58,7 +58,7 @@ generator fits to the alien3 data; the view reads it from the index (`alien3Netw
 
 ## Size
 
-The minimum layout size (see `docs/accessibility.md`) is 981 × 480 px as an Interactive, inside the
+The minimum layout size (see `docs/accessibility.md`) is 981 × 559 px as an Interactive, inside the
 designed size of 1024 × 562.
 
 The minimum layout width, 981 px, is the narrowest at which the network panel's head holds its
@@ -69,17 +69,18 @@ Step 1 to Step 4, Reset and About on one line, and is wider than the network pan
 382 px. Between 910 and 981 px the two columns hold and the head wraps, the legend and the controls
 dropping below the title together; the view works there, but no reviewed design covers it.
 
-The minimum layout height, 480 px, adds up from the top:
+The minimum layout height, 559 px, adds up from the top:
 - the view's 9 px top padding, which takes the title's place in an Interactive;
 - the filter bar and the step row, 44 px;
 - a 9 px gap;
-- the card and network panels at their smallest, 418 px. That is the diagram's smallest layout,
-  249 px (`MIN_HEIGHT` in `layout.ts`), 80 px for the network panel's head, padding and border, the
+- the card and network panels at their smallest, 497 px. That is the diagram's smallest layout,
+  328 px (`MIN_HEIGHT` in `layout.ts`), 80 px for the network panel's head, padding and border, the
   readout box, 81 px with its margin, and 8 px of padding under it.
 
-The readout box holds three lines of its longest text at 981 px wide, which is what `MIN_HEIGHT` is
-derived from. `MIN_HEIGHT` is shared with Extract the Neural Pathways, whose own
-minimum layout size is set by its own content.
+`MIN_HEIGHT` is the least height that draws the network's tallest column, 10 input neurons, at
+radius 12, the most the layout draws. The readout box holds three lines of its longest text at
+981 px wide. Extract the Neural Pathways lays the network out taller, in its 440 px canvas, so
+`MIN_HEIGHT` doesn't change it.
 
 The view's 16 px bottom padding is the first thing to go as the window gets shorter, so it isn't
 counted. The standalone app has no top padding, and shows the view's title above the filter bar

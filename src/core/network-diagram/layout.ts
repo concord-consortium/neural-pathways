@@ -27,12 +27,12 @@ export interface NetworkLayout {
 
 export const MIN_WIDTH = 380;
 /**
- * The smallest height the diagram is laid out in. It is what lets the Looking Inside view fit 562 px
- * tall: 562 less 144 for the view's title, gaps and step row, 80 for the network panel's head,
- * padding and border, 81 for the readout box's held height and margin at the minimum layout width,
- * and 8 for the padding under the box, leaves 249.
+ * The smallest height the diagram is laid out in: the least that draws the alien3 network's tallest
+ * column, 10 neurons, at radius 12, the most the layout draws. That takes 30 px between neighbors
+ * and TOP and BOTTOM's 58 px: 9 × 30 + 58 = 328. Looking Inside a Neural Network still fits 562 px
+ * tall as an Interactive with it: its minimum layout height is 559 px.
  */
-export const MIN_HEIGHT = 249;
+export const MIN_HEIGHT = 328;
 /** The most space between neighboring nodes. */
 const STEP_MAX = 30;
 /** Room above the first node, for the captions. */

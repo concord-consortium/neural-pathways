@@ -87,9 +87,8 @@ describe("layoutNetwork", () => {
     expect(layout.height).toBe(MIN_HEIGHT);
   });
 
-  it("draws the neurons at radius 7 in the smallest layout, and at 10 in a 300 px one", () => {
-    expect(layoutNetwork(SIZES, MIN_WIDTH, MIN_HEIGHT).radius).toBe(7);
-    expect(layoutNetwork(SIZES, MIN_WIDTH, 300).radius).toBe(10);
+  it("draws the neurons at radius 12, the most it draws, in the smallest layout", () => {
+    expect(layoutNetwork(SIZES, MIN_WIDTH, MIN_HEIGHT).radius).toBe(12);
   });
 
   it("spaces nodes 30 apart at most and centers the diagram in a tall space", () => {

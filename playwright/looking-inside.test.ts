@@ -402,8 +402,10 @@ test.describe("the card and network panels", () => {
     await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card } = panels(page);
-    // A long message, so its notes run well below the bottom of the card.
-    await page.getByRole("textbox", { name: "Filter" }).fill("n:500");
+    // The message with the longest notes, which run about 15 px below the bottom of the card at its
+    // smallest. Shorter notes fit, now that the diagram's smallest layout draws the neurons at full
+    // size.
+    await page.getByRole("textbox", { name: "Filter" }).fill("n:44");
     await expect(page.getByText("1 / 1", { exact: true })).toBeVisible();
     await openNotes(page);
     const notes = card.getByRole("region", { name: "Observation notes" });
@@ -454,12 +456,12 @@ test.describe("the card and network panels", () => {
     await page.goto("/");
     const { card, network } = panels(page);
     await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
-    // MIN_HEIGHT (249), the network's chrome (80), the box's held height with its margin, and the
+    // MIN_HEIGHT (328), the network's chrome (80), the box's held height with its margin, and the
     // 8 px of padding under the box.
     const readoutHeight = await page.locator(".looking-inside__layout")
       .evaluate(el => parseFloat(el.style.getPropertyValue("--readout-height")));
     expect(readoutHeight).toBeGreaterThan(0);
-    const smallest = 249 + 80 + readoutHeight + 8;
+    const smallest = 328 + 80 + readoutHeight + 8;
     expect((await rect(card)).height).toBeCloseTo(smallest, 0);
     const networkBox = await rect(network);
     expect(networkBox.height).toBeCloseTo(smallest, 0);
@@ -561,7 +563,7 @@ test.describe("About", () => {
   /** The narrowest Interactive with two columns, where the head wraps. */
   const TWO_COLUMN_WIDTH = 910;
   /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
-  const MIN_LAYOUT_HEIGHT = 480;
+  const MIN_LAYOUT_HEIGHT = 559;
   const about = (page: Page) => page.getByRole("button", { name: "About Looking Inside a Neural Network" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
 

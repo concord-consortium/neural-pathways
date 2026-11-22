@@ -39,15 +39,15 @@ $one-line-head-width: 981px;
 // The layout takes the height the title leaves, and the panel row grows into it, up to 800 px so a
 // very tall window doesn't leave the network floating in empty space. It stops at the network
 // panel's smallest: the diagram's smallest layout, $network-chrome, the readout box's height
-// (--readout-height) and the padding under it, 418 px at the minimum layout width
-// (249 + 80 + 81 + 8). Below that the
-// panels run past the window and the page scrolls. min-height: 0 because the browser measures the
-// layout's content height with the row at its 800 px most, which would otherwise be its minimum.
+// (--readout-height) and the padding under it, 497 px at the minimum layout width
+// (328 + 80 + 81 + 8). Below that the panels run past the window and the page scrolls.
+// min-height: 0 because the browser measures the layout's content height with the row at its 800 px
+// most, which would otherwise be its minimum.
 //
 // --diagram-min-height is MIN_HEIGHT from layout.ts, set on this element by the view, so the
-// diagram's smallest layout is written down once. MIN_HEIGHT is what lets the layout fit 562 px at
-// $one-line-head-width: 562 less 144 for the title, gaps and step row, $network-chrome (80), the
-// box's 81 px and the 8 px of padding under it.
+// diagram's smallest layout is written down once. With it the view still fits 562 px tall as an
+// Interactive at $one-line-head-width: 9 px of top padding, the filter and step rows and the gaps
+// under them, 62 px, and the panels' 497 px make 559.
 .looking-inside__layout {
   position: relative; // The word flights are drawn over it.
   display: grid;
