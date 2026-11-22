@@ -70,6 +70,22 @@
   opacity: 1;
 }
 
+// Forced colors leave an SVG stroke as it is, and a dark theme's canvas would hide the ink rings.
+// The same precedence, in the theme's colors.
+@media (forced-colors: active) {
+  .network-diagram__ring--hovered {
+    stroke: CanvasText;
+  }
+
+  .network-diagram__ring--focused {
+    stroke: Highlight;
+  }
+
+  .network-diagram__ring--pinned {
+    stroke: CanvasText;
+  }
+}
+
 // The hit rectangles are invisible; the ring shows focus, so the <g> buttons get no outline of their own.
 .network-diagram__targets g:focus {
   outline: none;

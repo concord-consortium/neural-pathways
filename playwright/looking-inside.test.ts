@@ -817,6 +817,27 @@ test.describe("the neurons' readouts", () => {
       expect(await strokeOf(page, 1, 0)).toEqual({ stroke: INK, opacity: "1" });
     });
 
+    // A dark theme's canvas would hide the ink rings, which forced colors leave as they are.
+    test("draws the rings in the theme's colors in a dark forced-colors theme", async ({ page }) => {
+      await page.emulateMedia({ forcedColors: "active", colorScheme: "dark" });
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await page.keyboard.press("ArrowDown");
+      await expect(neuron(page, "Hidden Layer 1 Neuron 2")).toBeFocused();
+      await neuron(page, "Input Layer Neuron 1").hover();
+      const theme = await page.evaluate(() => {
+        const probe = document.createElement("div");
+        document.body.append(probe);
+        const colorOf = (value: string) => { probe.style.color = value; return getComputedStyle(probe).color; };
+        const colors = { canvasText: colorOf("CanvasText"), highlight: colorOf("Highlight") };
+        probe.remove();
+        return colors;
+      });
+      expect((await strokeOf(page, 1, 0)).stroke).toBe(theme.canvasText);
+      expect((await strokeOf(page, 1, 1)).stroke).toBe(theme.highlight);
+      expect((await strokeOf(page, 0, 0)).stroke).toBe(theme.canvasText);
+    });
+
     test("a click that unpins leaves no ring and no highlight once the mouse moves away", async ({ page }) => {
       await stepTo(page, 2);
       await neuron(page, "Hidden Layer 1 Neuron 1").click();
