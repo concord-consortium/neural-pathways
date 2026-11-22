@@ -10,12 +10,12 @@ describe("Step 1's timing", () => {
   it("ends 180 ms after the last pass, whatever the word count", () => {
     expect(step1Duration(10)).toBeCloseTo(4977.638, 3);
   });
-  it("lands the nearest copy at 70% of the pass and the farthest at its end", () => {
+  it("lands the nearest chip at 70% of the pass and the farthest at its end", () => {
     expect(landingTime(0, 0, 5)).toBeCloseTo(980);
     expect(landingTime(0, 4, 5)).toBeCloseTo(1400);
     expect(landingTime(1, 0, 5)).toBeCloseTo(1400 + 686);
   });
-  it("lands a one-word message's only copy at the end of each pass", () => {
+  it("lands a one-word message's only chip at the end of each pass", () => {
     expect(landingTime(0, 0, 1)).toBe(1400);
     expect(landingTime(2, 0, 1)).toBeCloseTo(passStart(2) + 686);
   });
@@ -31,19 +31,19 @@ describe("Step 1's timing", () => {
 describe("chipsAt", () => {
   const words = [{ x: 0, y: 0 }, { x: 100, y: 0 }];
   const inputs = [{ x: 300, y: 200 }, { x: 300, y: 230 }];
-  it("starts every copy of a pass on its word at the pass's start", () => {
+  it("starts every chip of a pass on its word at the pass's start", () => {
     const chips = chipsAt(0, words, inputs);
     expect(chips.map(c => [c.word, c.unit, c.x, c.y, c.opacity, c.scale]))
       .toEqual(expect.arrayContaining([[0, 0, 0, 0, 1, 1], [1, 0, 100, 0, 1, 1]]));
     expect(chips).toHaveLength(2);
   });
-  it("orders a pass's copies nearest first, so the farther word lands last", () => {
-    // Word 1 is nearer input 0 (283 px against 361), so its copy lands first and word 0's is
+  it("orders a pass's chips nearest first, so the farther word lands last", () => {
+    // Word 1 is nearer input 0 (283 px against 361), so its chip lands first and word 0's is
     // still flying.
     const nearLands = landingTime(0, 0, 2);
     expect(chipsAt(nearLands, words, inputs).map(c => c.word)).toEqual([0]);
   });
-  it("fades a copy only after 86% of its flight", () => {
+  it("fades a chip only after 86% of its flight", () => {
     const land = landingTime(0, 1, 2);
     expect(chipsAt(land * 0.85, words, inputs).find(c => c.word === 0)!.opacity).toBe(1);
     const late = chipsAt(land * 0.95, words, inputs).find(c => c.word === 0)!;

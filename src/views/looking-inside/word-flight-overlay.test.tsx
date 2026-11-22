@@ -76,14 +76,14 @@ describe("WordFlightOverlay", () => {
     expect(chips(undefined)).toHaveLength(0);
   });
 
-  it("draws each copy in flight with its word, hidden from assistive technology", () => {
+  it("draws each chip in flight with its word, hidden from assistive technology", () => {
     const drawn = chips(0);
     expect(drawn.map(chip => chip.textContent).sort()).toEqual([...WORDS].sort());
     expect(screen.getByTestId("word-flight-overlay")).toHaveAttribute("aria-hidden", "true");
   });
 
   it("aims at the input neurons' outlines, not at other elements with their data attributes", () => {
-    // Just before the first copy lands on the first input, it is all but there.
+    // Just before the first chip lands on the first input, it is all but there.
     const drawn = chips(landingTime(0, 0, WORDS.length) - 1);
     const x = parseFloat(drawn[0].style.left);
     expect(Math.abs(x - 305)).toBeLessThan(20);

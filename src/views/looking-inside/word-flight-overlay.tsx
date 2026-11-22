@@ -25,7 +25,7 @@ function measure(container: HTMLElement): Geometry {
 }
 
 /**
- * Draws one chip per copy of a word in flight toward an input neuron, over `container`, which must
+ * Draws each chip in flight toward an input neuron, over `container`, which must
  * be positioned. `time` is the time into Step 1, or undefined when nothing is flying. Positions
  * are measured when Step 1 starts and again whenever the container resizes or anything in it
  * scrolls, so the chips follow the layout.

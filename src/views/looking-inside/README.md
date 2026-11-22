@@ -12,8 +12,8 @@ The lesson's first view: follow one message through the network, a layer at a ti
   and closes them with.
 - `word-flights.ts`, `word-flight-overlay.tsx`: Step 1's word flights. `word-flights.ts` is the
   timing, as pure functions of the time into Step 1: each input neuron gets a pass, back to back,
-  sending one chip (a copy of each of the message's words) toward it, and each chip's landing fills
-  the input a share. Passes shorten from 1.4 s to a 170 ms floor, so the length of Step 1 depends on
+  sending it a chip for each of the message's words, and each chip's landing fills the input a
+  share. Passes shorten from 1.4 s to a 170 ms floor, so the length of Step 1 depends on
   the number of inputs and not on the number of words. `WordFlightOverlay` draws the chips over the
   whole layout, from the card's words to the input neurons. It measures both when Step 1 starts and
   again when the layout resizes, so the chips follow the layout, and draws nothing when Animate is

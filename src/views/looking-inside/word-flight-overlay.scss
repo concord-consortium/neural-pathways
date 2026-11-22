@@ -10,7 +10,7 @@
   pointer-events: none;
 }
 
-// A copy of a word, as the prototype draws it. Its position is its center.
+// A chip: a word in flight, as the prototype draws it. Its position is its center.
 .word-flight-overlay__chip {
   position: absolute;
   padding: 2px 5px;

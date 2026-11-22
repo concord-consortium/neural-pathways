@@ -61,7 +61,8 @@ one thing, or one name for two things, settle it and add it here.
 - **pin:** the neuron clicked, whose readout shows. Not "selected".
 - **readout:** the text about the pinned neuron.
 - **prompt:** the text in the same box when nothing is pinned.
-- **chip:** a copy of a word in flight at Step 1. Not "fly" or "flier".
+- **chip:** a word in flight to an input neuron at Step 1: each pass sends one per word. Not "copy",
+  which is Extract the Neural Pathways', or "fly" or "flier".
 - **spotlight:** `hiddenLayerSpotlight`, how strongly the hidden layers' nodes are picked out;
   everything else fades to 1 − its strength. Not "dim" for the field. "Dim" and "undim" name the
   spotlight rising and falling, as in the prototype's `dimRest` and `undim`.
