@@ -6,7 +6,7 @@ import { useElementSize } from "../use-element-size";
 import { useKeyboardScrollable } from "../use-keyboard-scrollable";
 import { layoutNetwork } from "./layout";
 import { NetworkDrawing } from "./network-drawing";
-import { NeuronInteraction, NeuronTargets } from "./neuron-targets";
+import { NeuronInteraction, NeuronTargets, reachedInteraction } from "./neuron-targets";
 import { Scene } from "./scene";
 import "./network-diagram.scss";
 
@@ -60,8 +60,11 @@ export const NetworkDiagram: React.FC<NetworkDiagramProps> = ({
     ? `Network diagram. The network predicts ${capitalize(outputLabels[predictedClass(pass)])}.`
     : "Network diagram";
 
-  const rings = interaction?.rings;
-  const highlighted = rings?.pinned ?? rings?.hovered ?? rings?.focused;
+  const reached = interaction && reachedInteraction(interaction);
+  const rings = reached?.rings;
+  // The pin holds the highlight while the pointer moves on, and keyboard focus takes it from a pointer
+  // that is only resting over the diagram.
+  const highlighted = rings?.pinned ?? rings?.focused ?? rings?.hovered;
 
   return (
     <div ref={ref} className="network-diagram" role="group" aria-labelledby={headingId} {...scrollerProps}>
@@ -69,8 +72,8 @@ export const NetworkDiagram: React.FC<NetworkDiagramProps> = ({
         width={layout.width} height={layout.height} viewBox={`0 0 ${layout.width} ${layout.height}`}>
         <NetworkDrawing network={network} layout={layout} pass={pass} scales={scales} outputLabels={outputLabels}
           scene={scene} highlighted={highlighted} rings={rings} />
-        {interaction && <NeuronTargets layout={layout} pass={pass} outputLabels={outputLabels}
-          interaction={interaction} />}
+        {reached && <NeuronTargets layout={layout} pass={pass} outputLabels={outputLabels}
+          interaction={reached} />}
       </svg>
     </div>
   );

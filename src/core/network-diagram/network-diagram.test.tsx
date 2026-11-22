@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { DIAGRAM_DEFAULT_SIZE, NetworkDiagram } from "./network-diagram";
 import { popScale } from "./network-drawing";
 import { formatActivation } from "./neuron";
@@ -228,6 +228,49 @@ describe("NetworkDiagram neuron targets", () => {
     expect(tabIndexes.filter(t => t === "0")).toHaveLength(1);
     expect(tabIndexes.filter(t => t === "-1")).toHaveLength(17);
     expect(screen.getByRole("button", { name: /^Input Layer Neuron 4,/ })).toHaveAttribute("tabindex", "0");
+  });
+
+  it("leaves out an unreached Tab stop and rings, and gives the stop to the first input", () => {
+    renderInteractive(makeInteraction({
+      reachedColumns: 2, tabStop: { column: 2, unit: 0 },
+      rings: { pinned: { column: 2, unit: 0 }, hovered: { column: 3, unit: 1 }, focused: { column: 2, unit: 1 } },
+    }));
+    expect(screen.getByRole("button", { name: /^Input Layer Neuron 1,/ })).toHaveAttribute("tabindex", "0");
+    expect(screen.queryAllByTestId(/^ring-/)).toHaveLength(0);
+    expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
+    expect(document.querySelectorAll("[data-testid^='edge-'][opacity]")).toHaveLength(0);
+  });
+
+  it("keeps the highlight on the pinned neuron while another is hovered", () => {
+    renderInteractive(makeInteraction({
+      reachedColumns: 4, rings: { pinned: { column: 1, unit: 0 }, hovered: { column: 2, unit: 0 } },
+    }));
+    // In the gap before the pinned neuron: an edge into it, and one into its neighbor.
+    expect(screen.getByTestId("edge-near-0-0-0")).not.toHaveAttribute("opacity");
+    expect(screen.getByTestId("edge-near-0-0-1")).toHaveAttribute("opacity", "0.1");
+  });
+
+  it("gives the highlight to keyboard focus over a pointer resting on another neuron", () => {
+    renderInteractive(makeInteraction({
+      reachedColumns: 4, rings: { focused: { column: 1, unit: 0 }, hovered: { column: 2, unit: 0 } },
+    }));
+    expect(screen.getByTestId("edge-near-0-0-0")).not.toHaveAttribute("opacity");
+    expect(screen.getByTestId("edge-near-0-0-1")).toHaveAttribute("opacity", "0.1");
+  });
+
+  it("moves focus to the Tab stop when the focused neuron stops being reached", () => {
+    const { rerender } = renderInteractive(makeInteraction({ reachedColumns: 4 }));
+    const output = screen.getByRole("button", { name: /^Output Layer: Wait,/ });
+    act(() => output.focus());
+    // As a step press that doesn't move focus does: the output's button goes, and focus stays put.
+    rerender(
+      <>
+        <h2 id="network-head">The Neural Network</h2>
+        <NetworkDiagram network={fixtureNetwork} pass={waitPass} scales={scales} outputLabels={LABELS}
+          scene={fullScene(SIZES)} headingId="network-head" interaction={makeInteraction({ reachedColumns: 2 })} />
+      </>,
+    );
+    expect(screen.getByRole("button", { name: /^Input Layer Neuron 1,/ })).toHaveFocus();
   });
 
   it("marks the pinned neuron as pressed", () => {

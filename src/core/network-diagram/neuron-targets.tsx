@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { ForwardPass } from "../network/forward";
 import { NetworkLayout } from "./layout";
 import {
@@ -6,11 +6,17 @@ import {
 } from "./neuron";
 import { neuronAfterKey } from "./neuron-navigation";
 
-/** How a view takes part in the neurons' hover, focus and pin. */
+/**
+ * How a view takes part in the neurons' hover, focus and pin. The view keeps its state as it is: the
+ * diagram leaves out whatever the steps haven't reached.
+ */
 export interface NeuronInteraction {
   /** Columns 0 to reachedColumns − 1 answer; the rest don't. */
   reachedColumns: number;
-  /** The reached neuron holding the Tab stop, or none. */
+  /**
+   * The neuron to hold the Tab stop, such as the one that last had focus. When it isn't reached the
+   * first input holds it.
+   */
   tabStop?: NeuronRef;
   rings: NeuronRings;
   onHover(neuron: NeuronRef | undefined): void;
@@ -23,7 +29,7 @@ export interface NeuronInteraction {
   onClear(): void;
 }
 
-/** Each target is this much wider than its circle, so neighbors in a row don't leave a gap. */
+/** Each target is this much wider than its circle, half each side, so the pointer needn't be exactly on it. */
 const TARGET_EXTRA_WIDTH = 10;
 
 /**
@@ -38,10 +44,31 @@ function hasVisibleFocus(element: Element): boolean {
   }
 }
 
+/** `interaction` with the neurons the steps haven't reached left out, and the Tab stop on a reached neuron. */
+export function reachedInteraction(interaction: NeuronInteraction): NeuronInteraction {
+  const { reachedColumns, tabStop, rings } = interaction;
+  const ifReached = (neuron: NeuronRef | undefined) => (neuron && neuron.column < reachedColumns ? neuron : undefined);
+  return {
+    ...interaction,
+    tabStop: ifReached(tabStop) ?? (reachedColumns >= 1 ? { column: 0, unit: 0 } : undefined),
+    rings: { hovered: ifReached(rings.hovered), focused: ifReached(rings.focused), pinned: ifReached(rings.pinned) },
+  };
+}
+
+/**
+ * Focuses a reached neuron's button inside `container`. The drawing's own circles carry the same data
+ * attributes, so it asks for the button.
+ */
+export function focusNeuronButton(container: ParentNode | null | undefined, neuron: NeuronRef): void {
+  const selector = `[role="button"][data-column="${neuron.column}"][data-unit="${neuron.unit}"]`;
+  container?.querySelector<SVGGElement>(selector)?.focus();
+}
+
 interface NeuronTargetsProps {
   layout: NetworkLayout;
   pass: ForwardPass;
   outputLabels: Record<number, string>;
+  /** Only reached neurons in its Tab stop and rings: see `reachedInteraction`. */
   interaction: NeuronInteraction;
 }
 
@@ -57,10 +84,26 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
   const lastColumn = layout.nodes.length - 1;
   const { reachedColumns, tabStop, rings, onHover, onFocusChange, onToggle, onClear } = interaction;
 
-  const focusNeuron = (neuron: NeuronRef) => {
-    const selector = `[data-column="${neuron.column}"][data-unit="${neuron.unit}"]`;
-    layerRef.current?.querySelector<SVGGElement>(selector)?.focus();
-  };
+  const focusNeuron = (neuron: NeuronRef) => focusNeuronButton(layerRef.current, neuron);
+  // The neuron with focus, from its focus event to its blur.
+  const focusedRef = useRef<NeuronRef>(undefined);
+
+  // A step press can leave the focused neuron unreached without moving focus, as a click on a step
+  // button does in Safari, which doesn't focus the button. Its button is gone, and focus would fall to
+  // the page, so it goes to the Tab stop instead. The browser may not have let go of the old button
+  // yet, or may have dropped focus without a blur.
+  useLayoutEffect(() => {
+    const lost = focusedRef.current;
+    if (!lost || lost.column < reachedColumns) {
+      return;
+    }
+    focusedRef.current = undefined;
+    const active = document.activeElement;
+    const dropped = !active || active === document.body || layerRef.current?.contains(active);
+    if (dropped && tabStop) {
+      focusNeuron(tabStop);
+    }
+  });
 
   const onKeyDown = (event: React.KeyboardEvent, neuron: NeuronRef) => {
     // Leave browser and OS shortcuts such as Alt+Left (Back) alone.
@@ -124,8 +167,14 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
           tabIndex={sameNeuron(tabStop, neuron) ? 0 : -1} data-column={c} data-unit={unit}
           onClick={onClick}
           onPointerEnter={() => onHover(neuron)} onPointerLeave={() => onHover(undefined)}
-          onFocus={event => onFocusChange(neuron, hasVisibleFocus(event.currentTarget))}
-          onBlur={() => onFocusChange(undefined, false)}
+          onFocus={event => {
+            focusedRef.current = neuron;
+            onFocusChange(neuron, hasVisibleFocus(event.currentTarget));
+          }}
+          onBlur={() => {
+            focusedRef.current = undefined;
+            onFocusChange(undefined, false);
+          }}
           onKeyDown={event => onKeyDown(event, neuron)}>
           {shapes}
         </g>

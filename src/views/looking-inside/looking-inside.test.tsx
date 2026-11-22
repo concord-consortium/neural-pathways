@@ -572,6 +572,17 @@ describe("LookingInside", () => {
       expect(neuron("Hidden Layer 1 Neuron 1")).toHaveAttribute("tabindex", "-1");
     });
 
+    it("moves the Tab stop and focus to the first input when a step press leaves the focused neuron unreached",
+      async () => {
+        await showInstant();
+        press("Step 4");
+        act(() => neuron("Output Layer: Wait").focus());
+        // A click that doesn't focus the step button, as in Safari.
+        press("Step 2");
+        expect(neuron("Input Layer Neuron 1")).toHaveAttribute("tabindex", "0");
+        expect(neuron("Input Layer Neuron 1")).toHaveFocus();
+      });
+
     it("dims the other edges in a hovered neuron's gaps", async () => {
       await showInstant();
       press("Step 2");

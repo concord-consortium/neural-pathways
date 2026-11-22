@@ -17,7 +17,7 @@ import { indexPasses } from "../../core/network/index-passes";
 import { Network } from "../../core/network/network";
 import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
-import { NeuronInteraction } from "../../core/network-diagram/neuron-targets";
+import { focusNeuronButton, NeuronInteraction } from "../../core/network-diagram/neuron-targets";
 import { sameNeuron, NeuronRef } from "../../core/network-diagram/neuron";
 import { messageWords } from "../../core/message-text";
 import { validMessageId } from "../../core/state/message";
@@ -176,16 +176,12 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // the marker is the one it started from, so the neurons the run is reaching become live when it ends.
   const ifReached = (neuron: NeuronRef | undefined) =>
     neuron && player && neuron.column < player.marker ? neuron : undefined;
+  // The diagram leaves out whatever isn't reached.
   const interaction = (): NeuronInteraction => {
-    const reachedColumns = player?.marker ?? 0;
-    const lastFocused = ifReached(attention.lastFocused);
     return {
-      reachedColumns,
-      tabStop: lastFocused ?? (reachedColumns >= 1 ? { column: 0, unit: 0 } : undefined),
-      rings: {
-        hovered: ifReached(attention.hovered), pinned: ifReached(attention.pinned),
-        focused: ifReached(attention.focused),
-      },
+      reachedColumns: player?.marker ?? 0,
+      tabStop: attention.lastFocused,
+      rings: { hovered: attention.hovered, pinned: attention.pinned, focused: attention.focused },
       onHover: hovered => updateAttention({ hovered }),
       // A blur reports no neuron, and an arrow key moves focus with a blur and then a focus. Any focus
       // takes the Tab stop; only keyboard focus rings and highlights the neuron, so a click that unpins
@@ -202,9 +198,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
     updateAttention({ pinned: undefined });
     if (pinned) {
       // The Clear button is about to leave the page, so focus goes back to where the student was.
-      // The drawing's own circles carry the same data attributes, so ask for the button.
-      const selector = `[role="button"][data-column="${pinned.column}"][data-unit="${pinned.unit}"]`;
-      diagramRef.current?.querySelector<SVGGElement>(selector)?.focus();
+      focusNeuronButton(diagramRef.current, pinned);
     }
   };
   // A press clears the pin: the readout would describe a step that is about to change. Reset also

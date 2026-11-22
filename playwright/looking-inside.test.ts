@@ -798,6 +798,16 @@ test.describe("the neurons' readouts", () => {
     await expect(neuron(page, "Output Layer: Approach")).toHaveAttribute("aria-pressed", "false");
   });
 
+  // Safari doesn't focus a button it clicks, and element.click() doesn't either.
+  test("keeps focus in the diagram when a step press that doesn't move focus leaves the neuron unreached",
+    async ({ page }) => {
+      await stepTo(page, 4);
+      await neuron(page, "Output Layer: Wait").focus();
+      await page.getByRole("button", { name: "Step 2" }).evaluate(button => (button as HTMLElement).click());
+      await expect(page.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-current", "step");
+      await expect(neuron(page, "Input Layer Neuron 1")).toBeFocused();
+    });
+
   test.describe("the rings", () => {
     const ring = (page: Page, column: number, unit: number) => page.getByTestId(`ring-${column}-${unit}`);
     const dimmedEdges = (page: Page) => page.locator("[data-testid^='edge-'][opacity='0.1']");
