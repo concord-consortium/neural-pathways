@@ -18,18 +18,13 @@
   line-height: 1;
 }
 
+// The zero line is drawn once, down the middle of the pair, so it runs unbroken through the gap
+// between the bars. Like the bars' colors, it is meant to stay in forced colors.
 .loading-legend__bars {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 1px;
-}
-
-// A bar's colored half is a gradient, and the line down its middle is the zero line. The colors are
-// meant to stay in forced colors, like the drawing's.
-.loading-legend__bar {
-  position: relative;
-  width: 88px;
-  height: 6px;
   forced-color-adjust: none;
 
   &::after {
@@ -42,6 +37,14 @@
     margin-left: -0.5px;
     background: colors.$rule;
   }
+}
+
+// A bar's colored half is a gradient. The colors are meant to stay in forced colors, like the
+// drawing's.
+.loading-legend__bar {
+  width: 88px;
+  height: 6px;
+  forced-color-adjust: none;
 
   &--negative {
     background: linear-gradient(to right, colors.$negative 50%, transparent 50%);
