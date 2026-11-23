@@ -1,4 +1,5 @@
 import React from "react";
+import { fromSnapshot, SnapshotInOf } from "mobx-keystone";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/alien3-messages.json";
@@ -15,7 +16,6 @@ import { collectDuration } from "./collect-timeline";
 import { ExtractPathways } from "./extract-pathways";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 import pathwaysDoneSnapshot from "./__fixtures__/extract-pathways-state.v1-pathways-done.json";
-import { fromSnapshot } from "mobx-keystone";
 import { EXTRACT_MS } from "./pathways-timeline";
 import { setupDuration } from "./setup-timeline";
 
@@ -219,7 +219,7 @@ describe("ExtractPathways", () => {
   });
 
   it("shows the loading legend once the pathways are drawn", async () => {
-    showView(fromSnapshot(ExtractPathwaysState, pathwaysDoneSnapshot as any));
+    showView(fromSnapshot(ExtractPathwaysState, pathwaysDoneSnapshot as SnapshotInOf<ExtractPathwaysState>));
     await screen.findByRole("img", { name: PATHWAYS });
     expect(screen.getByText("Loading")).toBeVisible();
   });

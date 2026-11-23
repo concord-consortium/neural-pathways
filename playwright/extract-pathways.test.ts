@@ -371,14 +371,24 @@ test.describe("with Google Fonts blocked", () => {
     await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
   });
 
-  /** Opens the view at `width`, draws the pathways, and returns the boxes of the head's parts. */
-  async function headAt(page: Page, width: number) {
+  /**
+   * Opens the view at `width`, as an Interactive if `interactive`, draws the pathways, and returns
+   * the boxes of the head's parts.
+   */
+  async function headAt(page: Page, width: number, interactive = false) {
     await page.setViewportSize({ width, height: 900 });
-    await open(page);
+    if (interactive) {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/?interactive=extract-pathways");
+      await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
+    } else {
+      await open(page);
+    }
     await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
     await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
-    // Done, so the loading legend is at its full width.
+    // Done, so the loading legend is at its full width: shown, and no longer held to a width.
     await expect(page.getByText("Loading", { exact: true })).toBeVisible();
+    await expect(page.locator(".extract-pathways__loading-legend")).not.toHaveAttribute("style", /width/);
     const head = (await page.locator(".extract-pathways__network-head").boundingBox())!;
     const title = (await page.getByRole("heading", { name: "The Neural Network → Activated Pathways" }).boundingBox())!;
     const tools = (await page.locator(".extract-pathways__network-tools").boundingBox())!;
@@ -403,7 +413,7 @@ test.describe("with Google Fonts blocked", () => {
   });
 
   test("nothing in the head runs past it at the minimum layout width", async ({ page }) => {
-    const { head, parts } = await headAt(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA);
+    const { head, parts } = await headAt(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, true);
     expectInside(head, parts);
   });
 
