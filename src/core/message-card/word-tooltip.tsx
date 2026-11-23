@@ -59,8 +59,9 @@ function reduceTooltip(state: TooltipState, action: TooltipAction): TooltipState
   }
   const { target } = action;
   const next = action.type === "hover" ? { ...state, hovered: target } : { ...state, focused: target };
-  // The most recent move wins: the focus moving to another word takes the tooltip from the word under
-  // the pointer, which a click or an arrow key leaves there. Entering a word takes it back.
+  // The most recent move wins. When the focus moves to another word, as an arrow key moves it on from
+  // a clicked word, the word under the pointer loses the tooltip. The pointer entering a word takes it
+  // back.
   if (action.type === "focus" && target && target.element !== state.hovered?.element) {
     next.hovered = undefined;
   }
