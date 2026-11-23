@@ -30,7 +30,7 @@ file.
 - Hover and keyboard focus on a reached neuron highlight its connections. Clicking it, or Enter or
   Space on it, pins a readout with its activation and its layer's sentence.
 - The prompt under the diagram says what to do after each step, and is empty while a step runs.
-- At Step 1, copies of the message's words fly from the card into each input neuron, filling it as
+- At Step 1, chips of the message's words fly from the card into each input neuron, filling it as
   they land.
 - The panel head shows the neuron activation legend. The title, legend and Animate controls fit or
   wrap when Barlow Condensed hasn't loaded.
@@ -366,17 +366,19 @@ minimum layout size say the same.
 
 ## State
 
-The pin, the hovered neuron, the keyboard stop and the flight geometry are the view's component
-state, never in the state tree. They aren't saved, aren't undo steps, and don't survive a view
-switch or a message change, as in the prototype, which forgets them on every redraw.
+The pin, the hovered and keyboard-focused neurons, the keyboard stop and the flight geometry are
+the view's component state, never in the state tree. They aren't saved, aren't undo steps, and
+don't survive a view switch or a message change, as in the prototype, which forgets them on every
+redraw.
 
 | Value | Owner | Written by | Read by | Changes | Survives | Saved |
 |---|---|---|---|---|---|---|
 | marker per message | `LookingInsideState` (exists) | `StepPlayer` | timeline, prompt, reached | step end, Reset | everything | yes |
 | run playing | `StepPlayer` (exists) | `play`, `stop` | prompt (empty), overlay | step press, end | nothing | no |
 | pinned neuron | view component | click, keys, clears | readout, rings, highlight | per click | nothing: cleared by steps, Reset, message change | no |
-| hovered neuron | view component | pointer, focus | rings, highlight | per pointer move | nothing | no |
-| keyboard stop | view component | focus, reached change | roving tabindex | per arrow | nothing | no |
+| hovered neuron | view component | pointer | rings, highlight | per pointer move | nothing | no |
+| keyboard-focused neuron | view component | `:focus-visible` focus | rings, highlight | per arrow, Tab or blur | nothing: cleared by Reset | no |
+| keyboard stop | view component | focus, from a key or a click | roving tabindex | per focus | nothing: cleared by Reset | no |
 | flight geometry | overlay | measuring at Step 1 start, on resize and on scroll | overlay | per Step 1 | nothing | no |
 
 Add the pinned neuron and the keyboard stop to `docs/view-state.md`'s "Deliberately not kept".
