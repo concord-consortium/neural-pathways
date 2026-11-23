@@ -1,8 +1,9 @@
-# How the Activity Player sizes an Interactive
+# How the Activity Player sizes an interactive
 
-The Activity Player sizes an Interactive's iframe from the settings an author picks in LARA. An
+The Activity Player sizes an interactive's iframe from the settings an author picks in LARA. An
 interactive can instead tell it an aspect ratio or a height through the interactive API; these
-rules are for one that doesn't.
+rules are for one that doesn't. They were checked against the Activity Player at commit `3a38f74d`
+and LARA at `3499f294`.
 
 **Width.** The section's layout and the page's "Activity Page Fixed Width" set it.
 - On a fixed page, "Standard (1100px)" or "iPad Friendly (960px)", a "full-width (single column)"
@@ -44,4 +45,4 @@ These sizes assume:
   it adds 2 px to the height around the iframe but doesn't narrow it. Without a name there is no
   title bar, and a basic iframe interactive has no border either; a managed interactive, an embed
   of a library interactive, keeps its border.
-- **A Multiple Pages activity.** The Single Page and Notebook layouts size Interactives differently.
+- **A Multiple Pages activity.** The Single Page and Notebook layouts size interactives differently.

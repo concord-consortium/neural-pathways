@@ -47,8 +47,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   view keeps its text in an `about.md` beside its code, in markdown, and `marked` renders it.
   Webpack imports an `.md` file as its text, and so does `jest/md-transform.js` under Jest.
   `markdown.d.ts` types the import.
-- `view-placeholder/`: `ViewPlaceholder`, a view that isn't built yet: its title, its About button
-  and a note.
+- `view-title/`: `ViewTitle`, the `h1` every view renders its title with, and
+  `InteractiveModeContext`, which the shell sets in an Interactive. There the title is left out.
+- `view-placeholder/`: `ViewPlaceholder`, a view that isn't built yet: its About button and a note,
+  under its title in the standalone app.
 - `network/`: the network types, the forward pass, and the scales the diagram draws against
   (`network-scales.ts`). The network itself comes with the alien3 data: the generator fits it and
   writes it into the index (`alien3Network` in `datasets/alien3-dataset.ts`). `index-passes.ts`
