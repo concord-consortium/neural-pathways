@@ -1,4 +1,5 @@
 import React from "react";
+import { InteractiveModeContext } from "../../core/view-title/view-title";
 import { getInteractiveViewId } from "../url-state";
 import { AppState } from "../state/app-state";
 import { StandaloneLayout } from "./standalone-layout";
@@ -18,7 +19,9 @@ export const App: React.FC<AppProps> = ({ appState }) => {
   }
   return (
     <main className="interactive-view view-frame">
-      <ViewContent viewId={interactiveViewId} appState={appState} />
+      <InteractiveModeContext.Provider value={true}>
+        <ViewContent viewId={interactiveViewId} appState={appState} />
+      </InteractiveModeContext.Provider>
     </main>
   );
 };

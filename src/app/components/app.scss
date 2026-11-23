@@ -1,4 +1,12 @@
-// The shell owns the gutter around a view, the same in both modes, so views never pad themselves.
+// The shell owns the gutter around a view, the same in both modes, so views never pad their sides.
 .view-frame {
   padding: 0 16px;
+}
+
+// In an Interactive the view has no title, so its first row would sit on the iframe's top edge.
+// Each view root pads its top by this much, the 9 px gap that follows the title in the standalone
+// app, as the prototype's view stack does. It pads inside the view rather than here so a view that
+// is at least the window's height (Looking Inside) doesn't make the page scroll by 9 px.
+.interactive-view {
+  --view-top-padding: 9px;
 }

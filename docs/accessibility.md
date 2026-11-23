@@ -59,8 +59,38 @@ are an Interactive's: the whole iframe a view is embedded in, the app's 16 px gu
   gets there on a 1366 × 768 Chromebook, below the browser's tabs and address bar, the ChromeOS
   shelf and the Activity Player's header. The prototype lays every view out at this height
   (`AP_CONTENT_H` in its device preview).
-- **1024 px wide.** This is the widest the prototype's standalone layout gets (`standaloneMax`), and
-  the width its views look designed for. It hasn't been confirmed with the designer.
+- **1024 px wide.** This is a view's width in the standalone app on a landscape iPad (9th
+  generation and older), and the widest the prototype's standalone layout gets (`standaloneMax`).
+  It counts on the view nav collapsing to a button that floats over the view, which is planned but
+  not designed or built; today the nav leaves the view 783 px. It also fits the most common use, the
+  Activity Player's 1044 px full-width section.
+
+### In the Activity Player
+
+Our app doesn't use the interactive API, so it never tells the Activity Player a size or an aspect
+ratio; reporting its own height that way isn't built. The Activity Player sizes the iframe from the
+settings the author picks in LARA, as [`docs/activity-player-sizing.md`](activity-player-sizing.md)
+describes. For our views:
+- Every column of a two-column layout on a fixed page is narrower than every view's minimum layout
+  width, and so is a full-width section on an "iPad Friendly (960px)" page, at 904 px. A responsive
+  section's primary column grows with the window.
+- The space below the iframe is always empty: our app saves nothing, so there is no "Clear & start
+  over" and no teacher feedback.
+
+**The settings that fit the designed size.** Set the library interactive to "Manually set the
+native width & height" at 1044 × 562, and put it in a "full-width (single column)" section on a
+"Standard (1100px)" page with no responsive section. The iframe is then 1044 × 562 on every window:
+the designed height, and room for the designed width. A responsive section anywhere on the page
+makes the whole page as wide as the window, so this section's iframe would follow the window too.
+Each embed inherits the setting, so authors don't set it themselves. The responsive layouts and the
+default aspect ratio don't fit the designed size.
+
+This assumes a Multiple Pages activity, and that **the author gives the interactive a name.** The
+Activity Player shows the name in the title bar above the iframe, and in an Interactive the view
+leaves out its own title. Without a name there is no title bar, and nothing names the view.
+
+**Check it.** Open `index.html?interactive=<view-id>` in DevTools' device toolbar at the size the
+Activity Player would give it (see [`activity-player-sizing.md`](activity-player-sizing.md)).
 
 **Each view has a minimum layout size:** the narrowest and shortest it can be while keeping its
 layout as designed, before anything stacks, wraps or scrolls in a way the design doesn't show. It
@@ -85,9 +115,22 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   views are built to meet 1.4.10 and 2.1.1 there, and checked in Chromium, but may be too cumbersome
   to be useful to students. At 320 px Extract the Neural Pathways' steps wrap into three rows, with
   About on a fourth, above a canvas that scrolls sideways, and Looking Inside a Neural Network
-  stacks into a page about 1,510 px tall ([its README](../src/views/looking-inside/README.md) has
-  the heights).
-- Extract the Neural Pathways' minimum layout height, 680 px, doesn't fit the designed size yet, so
+  stacks into a page about 1,030 px tall in an Interactive
+  ([its README](../src/views/looking-inside/README.md) has the heights).
+- An Activity Player page that has a responsive section is as wide as the window, with no minimum
+  width for the page or its iframes, so an Interactive there is only as wide as the window allows,
+  less the Activity Player's padding and margins
+  ([`activity-player-sizing.md`](activity-player-sizing.md)). On a 1024 px landscape iPad a
+  responsive-full-width iframe is 884 px wide, narrower than every view's minimum layout width.
+- The recommended fixed page doesn't reflow when a student zooms in. It stays 1100 CSS px wide, so
+  the iframe stays 1044 CSS px wide and the views never reach their narrow layouts. In a window
+  narrower than the page and its padding, 1180 CSS px, the Activity Player keeps the page centered,
+  and its left side can't be scrolled to. At 200% zoom on a 1366 px Chromebook the window is 683 CSS
+  px wide, and about 250 px of the page's left side, part of the iframe included, is out of reach.
+  The cut-off side is a bug in the Activity Player. A page with a responsive section follows the
+  zoom, but then no setting fits the designed size; we recommend the fixed page for the designed
+  size, at this cost.
+- Extract the Neural Pathways' minimum layout height, 598 px, doesn't fit the designed size yet, so
   in an Interactive 562 px tall its page scrolls down.
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
   and where a network blocks it they fall back to a wider sans-serif. Then, from Looking Inside a

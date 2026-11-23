@@ -4,6 +4,8 @@
   display: flex;
   flex-direction: column;
   gap: 9px;
+  // --view-top-padding: see app.scss.
+  padding-top: var(--view-top-padding, 0);
   padding-bottom: 16px;
   container-type: inline-size;
 }

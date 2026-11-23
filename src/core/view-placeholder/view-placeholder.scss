@@ -1,3 +1,8 @@
+// --view-top-padding: see app.scss.
+.view-placeholder {
+  padding-top: var(--view-top-padding, 0);
+}
+
 .view-placeholder__head {
   display: flex;
   justify-content: flex-end;

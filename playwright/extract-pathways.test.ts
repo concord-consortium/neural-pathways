@@ -57,6 +57,27 @@ test("an Interactive just wide enough holds the canvas at full size without scro
   await expect(drawingGroup(page)).not.toHaveAttribute("tabindex");
 });
 
+/** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
+const MIN_LAYOUT_HEIGHT = 598;
+
+/**
+ * Opens the view as an Interactive at the minimum layout width and `height` tall, and says whether
+ * the page scrolls down.
+ */
+async function scrollsDownAt(page: Page, height: number) {
+  await page.setViewportSize({ width: NARROWEST_CANVAS + INTERACTIVE_EXTRA, height });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?interactive=extract-pathways");
+  await expect(page.getByRole("img", { name: "The network." })).toHaveAttribute("width", String(NARROWEST_CANVAS));
+  await page.evaluate(() => document.fonts.ready);
+  return page.evaluate(() => document.documentElement.scrollHeight > document.documentElement.clientHeight);
+}
+
+test("an Interactive at the minimum layout height doesn't scroll down, and a pixel shorter does", async ({ page }) => {
+  expect(await scrollsDownAt(page, MIN_LAYOUT_HEIGHT)).toBe(false);
+  expect(await scrollsDownAt(page, MIN_LAYOUT_HEIGHT - 1)).toBe(true);
+});
+
 test("a wider Interactive widens the canvas to fill it", async ({ page }) => {
   expect(await canvasIn(page, 1200 + INTERACTIVE_EXTRA, 1200)).toEqual({ page: false, drawing: false });
 });

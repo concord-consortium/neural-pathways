@@ -24,6 +24,10 @@ in interactive mode: that view is shown alone and the hash is ignored. Otherwise
 `StandaloneLayout` shows the view nav and follows `#view=`. An id that is not in the registry
 shows "Unknown view" with the list of valid ids, in either mode.
 
+In interactive mode the view also leaves out its title, since the Activity Player's title bar names
+it; see `ViewTitle` in `src/core/view-title/`. A 9 px top padding takes the title's place (see
+`components/app.scss`).
+
 When the standalone app changes view, it scrolls the new view to the top and announces its title
 in a status region. Focus stays on the nav link, so a student can keep stepping through the
 views. In both modes the page title names the view, and the shell, not the view, owns the gutter
@@ -32,7 +36,9 @@ around it.
 ## Adding a view
 
 1. Create `src/views/<view-id>/<view-id>.tsx` exporting the view component. See
-   `src/views/README.md` for what a view may import.
+   `src/views/README.md` for what a view may import. Render its title with `ViewTitle`, and pad its
+   root's top with `var(--view-top-padding, 0)`, which takes the title's place in an Interactive
+   (see `components/app.scss`).
 2. Add it to `VIEWS` in `views.ts`, at its place in the lesson order.
 3. If the view keeps state, create its state model in the view's folder, or in `src/core/state/`
    if another view uses it too, and set `stateModel` in its `VIEWS` entry. See "How the state

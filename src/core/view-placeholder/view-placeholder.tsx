@@ -1,5 +1,6 @@
 import React from "react";
 import { AboutButton } from "../about/about-button";
+import { ViewTitle } from "../view-title/view-title";
 import "./view-placeholder.scss";
 
 interface ViewPlaceholderProps {
@@ -11,12 +12,13 @@ interface ViewPlaceholderProps {
 }
 
 /**
- * A view that isn't built yet: its title, its About button and a note. About sits at the right of a
- * head row, as in the prototype's unbuilt views, until the view's own layout gives it a place.
+ * A view that isn't built yet: its title (outside an Interactive), its About button and a note.
+ * About sits at the right of a head row, as in the prototype's unbuilt views, until the view's own
+ * layout gives it a place.
  */
 export const ViewPlaceholder: React.FC<ViewPlaceholderProps> = ({ className, title, about }) => (
-  <div className={className}>
-    <h1>{title}</h1>
+  <div className={`view-placeholder ${className}`}>
+    <ViewTitle>{title}</ViewTitle>
     <div className="view-placeholder__head">
       <AboutButton title={title} markdown={about} />
     </div>

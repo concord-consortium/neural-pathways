@@ -553,7 +553,7 @@ test.describe("About", () => {
   /** The narrowest Interactive with two columns: see the README's Size section. */
   const MIN_LAYOUT_WIDTH = 910;
   /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
-  const MIN_LAYOUT_HEIGHT = 524;
+  const MIN_LAYOUT_HEIGHT = 442;
   const about = (page: Page) => page.getByRole("button", { name: "About Looking Inside a Neural Network" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
 

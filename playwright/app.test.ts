@@ -34,6 +34,23 @@ test("the view hash selects a view on load", async ({ page }) => {
 
 test("the interactive param shows one view in interactive mode, with no nav", async ({ page }) => {
   await page.goto("/?interactive=correlations");
-  await expect(page.getByRole("heading", { name: "Correlations", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "About Correlations" })).toBeVisible();
+  // The view leaves its title out: see ViewTitle.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
   await expect(page.getByRole("navigation")).toHaveCount(0);
+});
+
+test("in an Interactive, each view pads its top in place of its title", async ({ page }) => {
+  // The view ids come from the nav, so a new view is checked too.
+  await page.goto("/");
+  const links = page.getByRole("navigation", { name: "Views" }).getByRole("link");
+  // evaluateAll doesn't wait, so wait for the nav to render first.
+  await expect(links.first()).toBeVisible();
+  const hrefs = await links.evaluateAll(elements => elements.map(link => link.getAttribute("href")!));
+  for (const href of hrefs) {
+    const id = href.replace(/^#view=/, "");
+    await page.goto(`/?interactive=${id}`);
+    const paddingTop = await page.locator("main > *").first().evaluate(view => getComputedStyle(view).paddingTop);
+    expect(paddingTop, id).toBe("9px");
+  }
 });
