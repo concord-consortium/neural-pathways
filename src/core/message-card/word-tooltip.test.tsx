@@ -71,6 +71,22 @@ describe("WordTooltipArea", () => {
     expect(tooltip()).toHaveClass("word-tooltip--focused");
   });
 
+  it("keeps the tooltip of a clicked word under the pointer as the pointer's", () => {
+    const { tooltip } = renderArea(tarrak);
+    const a = screen.getByText("tarrak");
+    fireEvent.pointerEnter(a);
+    act(() => a.focus());
+    expect(tooltip()).not.toHaveClass("word-tooltip--focused");
+  });
+
+  it("keeps the hovered word's tooltip when the focus leaves another word", () => {
+    const { tooltip } = renderArea(tarrak, vosh);
+    act(() => screen.getByText("vosh").focus());
+    fireEvent.pointerEnter(screen.getByText("tarrak"));
+    act(() => screen.getByText("vosh").blur());
+    expect(tooltip()).toHaveTextContent("tarrak: −0.0624");
+  });
+
   it("stays while the pointer moves from the word onto it, and goes when the pointer leaves it", () => {
     const { tooltip } = renderArea(tarrak);
     const word = screen.getByText("tarrak");
@@ -137,6 +153,16 @@ describe("WordTooltipArea", () => {
     expect(tooltip()).toBeNull();
     fireEvent.pointerEnter(a);
     expect(tooltip()).toHaveTextContent("tarrak: −0.0624");
+  });
+
+  it("after Escape over a hovered word, doesn't bring back the focused one when the pointer leaves", () => {
+    const { tooltip } = renderArea(tarrak, vosh);
+    const a = screen.getByText("tarrak");
+    act(() => screen.getByText("vosh").focus());
+    fireEvent.pointerEnter(a);
+    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.pointerLeave(a, { relatedTarget: document.body });
+    expect(tooltip()).toBeNull();
   });
 
   it("after Escape, brings back the focused word when the pointer leaves another, if the focus moved " +
