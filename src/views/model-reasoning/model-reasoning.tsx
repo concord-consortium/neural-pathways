@@ -21,9 +21,14 @@ import "./model-reasoning.scss";
 /** The view's title, in its heading, its About and the app's list of views. */
 export const MODEL_REASONING_TITLE = "Neural Pathway View of Model Reasoning";
 
-/** The index's fit, whose word scores the view loads, and its scale maximum, or the error reading them. */
+/**
+ * The index's fit, whose word scores the view loads, and its scale maximum, or the error reading them.
+ * It also builds the index's filter, which the body uses, since a mount with the index already loaded
+ * renders the body before onLoaded would.
+ */
 function readScale(index: S3Index): { fitName: string; max: number } | { error: Error } {
   try {
+    messageFilterFor(index);
     return { fitName: alien3FitName(index), max: alien3WordScoreMax(index) };
   } catch (error: unknown) {
     return { error: error instanceof Error ? error : new Error(String(error)) };

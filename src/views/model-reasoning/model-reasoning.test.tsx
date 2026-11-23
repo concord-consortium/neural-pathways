@@ -50,12 +50,11 @@ function shapFor(message: S3Item): ItemShapData {
 }
 
 function showView(shared = new SharedState({})) {
-  render(
+  return render(
     <ViewStateProvider viewId="model-reasoning" view={undefined} shared={shared}>
       <ModelReasoning />
     </ViewStateProvider>,
   );
-  return shared;
 }
 
 const filterBox = () => screen.getByRole("textbox", { name: "Filter" });
@@ -132,6 +131,19 @@ describe("ModelReasoning", () => {
       "The messages could not be shown: " +
       "The alien3 data has no word score maximum. Run npm run generate:alien to generate it.");
     expect(screen.queryByRole("region", { name: "Message" })).toBeNull();
+  });
+
+  it("says the messages can't be shown when the filter's attributes are bad, on every mount", async () => {
+    const badAttribute = { key: "pathway_1", label: "Pathway 1", description: "", type: "binary" as const };
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata: { ...fixtureMetadata, attributes: [badAttribute] } });
+    const alert = "The messages could not be shown: " +
+      'Attribute key "pathway_1" collides with the reserved pathway_<n> pattern';
+    const { unmount } = showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(alert);
+    unmount();
+    // The index is cached now, so this mount starts ready and renders before onLoaded runs.
+    showView();
+    expect(screen.getByRole("alert")).toHaveTextContent(alert);
   });
 
   it("shares the current word across the three readings", async () => {
