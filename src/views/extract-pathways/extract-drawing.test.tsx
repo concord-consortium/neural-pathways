@@ -27,7 +27,7 @@ function renderDrawing(scene: ExtractScene) {
   return render(
     <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
       headingId="panel-head" deckSize={passes.length}
-      loadings={fixtureLoadings} />,
+      loadings={fixtureLoadings} pick={undefined} />,
   );
 }
 
@@ -78,7 +78,7 @@ describe("ExtractDrawing", () => {
         <h2 id="panel-head">The Neural Network → Activated Pathways</h2>
         <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS}
           scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length}
-          loadings={fixtureLoadings} />
+          loadings={fixtureLoadings} pick={undefined} />
       </>,
     );
     const group = screen.getByRole("group", { name: "The Neural Network → Activated Pathways" });
@@ -229,7 +229,7 @@ describe("ExtractDrawing", () => {
     const scene = collectAllSceneAt(SIZES, 3, 800, close.start + close.duration / 2);
     render(
       <ExtractDrawing network={fixtureNetwork} passes={deckPasses} scales={scales} outputLabels={LABELS}
-        scene={scene} headingId="panel-head" deckSize={800} loadings={fixtureLoadings} />,
+        scene={scene} headingId="panel-head" deckSize={800} loadings={fixtureLoadings} pick={undefined} />,
     );
     const places = scene.deck!.sets.map((_, index) => screen.getByTestId(`deck-place-${index}`))
       .map((place, index) => [index, placeOf(place).x, place.getAttribute("opacity")]);

@@ -115,6 +115,7 @@ one thing, or one name for two things, settle it and add it here.
 - **particle:** one dot carrying a reading from the deck's faces to a loading bar while Extract
   Pathways builds the bars.
 - **particle canvas:** the `<canvas>` over the SVG that the particles are painted on while they fly.
+- **pick:** the one lifted neuron or pathway whose loadings are shown alone, or none. `Pick`.
 - **pathway box:** the square a pathway is drawn as, built from the bar copies of its 14 loading bars.
 - **line:** a loading's connector, from its bar's zero to its pathway box.
 

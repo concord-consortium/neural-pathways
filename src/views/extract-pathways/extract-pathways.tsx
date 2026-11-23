@@ -120,7 +120,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
             {() => (
               <ExtractDrawing network={network} passes={passes} scales={scales}
                 outputLabels={alien3Dataset.classificationLabels} scene={player.scene} headingId={panelHeadId}
-                deckSize={size} loadings={loadings} />
+                deckSize={size} loadings={loadings} pick={undefined} />
             )}
           </Observer>
         </div>

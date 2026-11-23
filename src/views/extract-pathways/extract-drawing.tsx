@@ -16,6 +16,7 @@ import { ExtractScene } from "./extract-scene";
 import { Flight, flightDuration, Placed, placeCopy } from "./flight";
 import { ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
 import { Loadings, pathwaysLayout } from "./pathways-layout";
+import { Pick } from "./pick";
 import "./extract-drawing.scss";
 
 /** The label's drop-in, overshooting as it lands (the prototype's bounceIn). */
@@ -141,6 +142,8 @@ interface ExtractDrawingProps {
   deckSize: number;
   /** The alien3 factor-analysis fit's loadings, [neuron][pathway], which the loading bars draw. */
   loadings: Loadings;
+  /** The neuron or pathway whose loadings are shown alone, if any. */
+  pick: Pick;
 }
 
 /**
@@ -154,7 +157,7 @@ interface ExtractDrawingProps {
  * the panel is already a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
-  network, passes, scales, outputLabels, scene, headingId, deckSize, loadings,
+  network, passes, scales, outputLabels, scene, headingId, deckSize, loadings, pick,
 }) => {
   // Until the host is measured, and in jsdom, which can't measure it: the narrowest layout.
   const [hostRef, size] = useElementSize<HTMLDivElement>({ width: 0, height: CANVAS_HEIGHT });
@@ -219,7 +222,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
               </g>
             );
           })}
-        {scene.pathways && <PathwaysLayer pathways={scene.pathways} layout={pathways} />}
+        {scene.pathways && <PathwaysLayer pathways={scene.pathways} layout={pathways} lifted={lifted} pick={pick} />}
         {scene.label && scene.networkOpacity > 0 && (
           <g opacity={scene.networkOpacity < 1 ? scene.networkOpacity : undefined}>
             <MessageLabel x={networkX + NETWORK_WIDTH / 2} n={scene.label.n} bounce={scene.label.bounce} />

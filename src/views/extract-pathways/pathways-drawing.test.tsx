@@ -8,6 +8,7 @@ import { finishedPathways, PathwaysScene } from "./extract-scene";
 import { extractGeometry } from "./extract-geometry";
 import { kickScale, mixColor, ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
 import { faceSources, PARTICLE_R, particleAt, particlePlan, particleTarget } from "./particles";
+import { Pick } from "./pick";
 import { BOX_SIDE, pathwaysLayout } from "./pathways-layout";
 import { COPY_END_SCALE } from "./pathways-timeline";
 
@@ -17,7 +18,7 @@ const layout = pathwaysLayout(geometry, 20, fixtureLoadings);
 const passes = fixture.messages.map(c => forward(fixtureNetwork, c.text));
 
 const drawLayer = (pathways: PathwaysScene) =>
-  render(<svg><PathwaysLayer pathways={pathways} layout={layout} /></svg>);
+  render(<svg><PathwaysLayer pathways={pathways} layout={layout} lifted={geometry.lifted} pick={undefined} /></svg>);
 
 describe("mixColor", () => {
   it("mixes two colors, landing exactly on each", () => {
@@ -100,6 +101,60 @@ describe("PathwaysLayer", () => {
       .map((line, b) => [b, Number(line.getAttribute("x2")), Number(line.getAttribute("y2"))]);
     expect(ends).toEqual(layout.bars.map((bar, b) => [b, layout.boxes[bar.pathway].x, layout.boxes[bar.pathway].cy]));
     expect(layout.bars.map(bar => bar.pathway)).toEqual(layout.bars.map((_, b) => b % 3));
+  });
+
+  describe("with a pick", () => {
+    const drawPicked = (pick: Pick) => render(
+      <svg>
+        <PathwaysLayer pathways={finishedPathways(fixtureLoadings)} layout={layout} lifted={geometry.lifted}
+          pick={pick} />
+      </svg>,
+    );
+
+    it("mutes the bars a pick leaves out", () => {
+      drawPicked({ kind: "neuron", index: 2 });
+      screen.getAllByTestId("loading-bar").forEach((bar, b) => {
+        const lit = b >= 3 * 2 && b <= 3 * 2 + 2;
+        expect([b, bar.getAttribute("fill")])
+          .toEqual([b, lit ? signColor(layout.bars[b].loading) : RULE_COLOR]);
+      });
+    });
+
+    it("draws only the picked item's lines", () => {
+      const { unmount } = drawPicked({ kind: "neuron", index: 5 });
+      expect(screen.getAllByTestId("pathway-line")).toHaveLength(3);
+      unmount();
+      const { unmount: unmountPathway } = drawPicked({ kind: "pathway", index: 1 });
+      expect(screen.getAllByTestId("pathway-line")).toHaveLength(14);
+      unmountPathway();
+      drawPicked(undefined);
+      expect(screen.getAllByTestId("pathway-line")).toHaveLength(42);
+    });
+
+    it("rings the picked neuron", () => {
+      drawPicked({ kind: "neuron", index: 4 });
+      const ring = screen.getByTestId("pick-ring");
+      expect(ring).toHaveAttribute("cx", String(geometry.lifted.x + layout.liftedDx));
+      expect(ring).toHaveAttribute("cy", String(geometry.lifted.ys[4]));
+      expect(ring).toHaveAttribute("r", String(geometry.lifted.r + 3.5));
+    });
+
+    it("draws no ring when nothing or a pathway is picked", () => {
+      const { unmount } = drawPicked(undefined);
+      expect(screen.queryByTestId("pick-ring")).not.toBeInTheDocument();
+      unmount();
+      drawPicked({ kind: "pathway", index: 0 });
+      expect(screen.queryByTestId("pick-ring")).not.toBeInTheDocument();
+    });
+
+    it("outlines the picked box", () => {
+      drawPicked({ kind: "pathway", index: 1 });
+      screen.getAllByTestId("pathway-box").forEach((box, p) => {
+        // eslint-disable-next-line testing-library/no-node-access -- the outline is a class on the box's square
+        const square = box.querySelector("rect")!;
+        expect([p, square.classList.contains("extract-drawing__box--picked")]).toEqual([p, p === 1]);
+      });
+    });
   });
 
   it("flies bar copies of the flying pathway's bars, in their colors, to the middle of its box", () => {
