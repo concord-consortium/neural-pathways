@@ -110,7 +110,7 @@ test("the tooltip follows its word when the readings scroll", async ({ page }) =
   await openView(page);
   await showLongMessage(page);
   // A colored word far enough down the scroller to stay in view when it scrolls 40 px, and far enough
-  // from its sides that the tooltip is centered on it rather than kept inside the card.
+  // from its sides that the tooltip is centered on it rather than kept inside the readings.
   const index = await options(page, 1).evaluateAll((elements, view) => elements.findIndex(element => {
     const { top, left, right } = element.getBoundingClientRect();
     return element.classList.contains("pathway-reading__word--colored") && top >= view.y + 80 &&
