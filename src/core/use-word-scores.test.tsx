@@ -26,10 +26,12 @@ const ok = (body: unknown) => ({ ok: true, json: async () => body });
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>(res => {
+  let reject!: (error: Error) => void;
+  const promise = new Promise<T>((res, rej) => {
     resolve = res;
+    reject = rej;
   });
-  return { promise, resolve };
+  return { promise, resolve, reject };
 }
 
 const Probe: React.FC<{ item: S3Item }> = ({ item }) => {
@@ -96,6 +98,18 @@ describe("useWordScores", () => {
     rerender(<Probe item={itemWith("bb1", "b b")} />);
     await screen.findByText("ready [[1,0,-1],[2,0,-2]]");
     await act(async () => slow.resolve(ok({ reviews: [shapReview("aa1", ["[CLS]", "a", "[SEP]"])] })));
+    expect(screen.getByText("ready [[1,0,-1],[2,0,-2]]")).toBeInTheDocument();
+  });
+
+  it("ignores a message's failure that arrives after the message changed", async () => {
+    const slow = deferred<unknown>();
+    mockFetch.mockImplementation((url: string) => url.endsWith("/aa.json")
+      ? slow.promise
+      : Promise.resolve(ok({ reviews: [shapReview("bb1", ["[CLS]", "b", "b", "[SEP]"])] })));
+    const { rerender } = render(<Probe item={itemWith("aa1", "a")} />);
+    rerender(<Probe item={itemWith("bb1", "b b")} />);
+    await screen.findByText("ready [[1,0,-1],[2,0,-2]]");
+    await act(async () => slow.reject(new Error("offline")));
     expect(screen.getByText("ready [[1,0,-1],[2,0,-2]]")).toBeInTheDocument();
   });
 
