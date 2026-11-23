@@ -22,8 +22,9 @@ test("Setup lifts the hidden neurons out of the network, animated", async ({ pag
 /** What an Interactive takes from the canvas's width: its 16 px gutters and the panel's borders. */
 const INTERACTIVE_EXTRA = 34;
 /**
- * The narrowest the canvas is laid out (`minCanvasWidth`): the finished deck needs the room. It
- * depends on the network's layer sizes.
+ * The narrowest the canvas is laid out (`minCanvasWidth`): the strips for the deck's columns
+ * collected by hand set it, and the finished deck fits its room with a little to spare. It depends
+ * on the network's layer sizes.
  */
 const NARROWEST_CANVAS = 881;
 
