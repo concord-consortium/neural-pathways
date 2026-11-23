@@ -99,8 +99,8 @@ describe("ExtractDrawing", () => {
     const width = String(minCanvasWidth(SIZES));
     const svg = screen.getByRole("img", { name: "The network." });
     expect(svg).toHaveAttribute("width", width);
-    expect(svg).toHaveAttribute("height", "440");
-    expect(svg).toHaveAttribute("viewBox", `0 0 ${width} 440`);
+    expect(svg).toHaveAttribute("height", "404");
+    expect(svg).toHaveAttribute("viewBox", `0 0 ${width} 404`);
   });
 
   it("stands the 14 lifted copies in their column once Setup is done, named by their neurons", () => {

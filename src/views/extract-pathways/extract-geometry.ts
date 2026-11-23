@@ -2,7 +2,7 @@ import { layoutNetwork, NetworkLayout, Point } from "../../core/network-diagram/
 import { deckWidth, MAX_DECK } from "./deck-layout";
 import { MAX_COLLECTED } from "./extract-steps";
 
-export const CANVAS_HEIGHT = 440;
+export const CANVAS_HEIGHT = 404;
 export const NETWORK_WIDTH = 537;
 /** The baseline of "Message n" and "Hidden Layer Neurons". */
 export const LABEL_Y = 22;

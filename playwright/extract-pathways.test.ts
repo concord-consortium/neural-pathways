@@ -25,7 +25,7 @@ const INTERACTIVE_EXTRA = 34;
  * The narrowest the canvas is laid out (`minCanvasWidth`): the finished deck needs the room. It
  * depends on the network's layer sizes.
  */
-const NARROWEST_CANVAS = 959;
+const NARROWEST_CANVAS = 881;
 
 /**
  * Opens the view as an Interactive `width` wide, waits until the canvas is laid out at
@@ -58,7 +58,7 @@ test("an Interactive just wide enough holds the canvas at full size without scro
 });
 
 /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
-const MIN_LAYOUT_HEIGHT = 598;
+const MIN_LAYOUT_HEIGHT = 562;
 
 /**
  * Opens the view as an Interactive at the minimum layout width and `height` tall, and says whether
@@ -421,4 +421,20 @@ test.describe("with Google Fonts blocked", () => {
     const { title, tools } = await headAt(page, 480);
     expect(tools.y).toBeGreaterThanOrEqual(title.y + title.height);
   });
+});
+
+test("at the minimum layout width the head is one line, with both legends", async ({ page }) => {
+  await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
+  await page.evaluate(() => document.fonts.ready);
+  const headBox = () => page.locator(".extract-pathways__network-head").boundingBox();
+  const before = (await headBox())!;
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
+  await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+  await expect(page.getByText("Loading", { exact: true })).toBeVisible();
+  await expect(page.locator(".extract-pathways__loading-legend")).not.toHaveAttribute("style", /width/);
+  expect((await headBox())!.height).toBe(before.height);
+  const title = (await page.getByRole("heading", { name: "The Neural Network → Activated Pathways" }).boundingBox())!;
+  const tools = (await page.locator(".extract-pathways__network-tools").boundingBox())!;
+  // The tools are taller than the title and centered on it, so they start above it, not below it.
+  expect(tools.y).toBeLessThan(title.y + title.height);
 });

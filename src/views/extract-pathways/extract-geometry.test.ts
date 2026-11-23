@@ -3,18 +3,17 @@ import { MAX_COLLECTED } from "./extract-steps";
 
 const SIZES = [10, 8, 6, 2];
 /** The narrowest canvas for these sizes. */
-const NARROWEST = 959;
+const NARROWEST = 881;
 
 describe("minCanvasWidth", () => {
-  it("is the narrowest canvas whose room holds the finished deck, 10 clear each side", () => {
+  it("is the narrowest the strips allow, and its room holds the finished deck, 10 clear each side", () => {
     expect(minCanvasWidth(SIZES)).toBe(NARROWEST);
     const room = (width: number) => {
       const g = canvasLayout(SIZES, width);
       return g.lifted.x - g.lifted.r;
     };
-    const needed = 8.3 * 99 + 2 * 10;
+    const needed = 7.6 * 99 + 2 * 10;
     expect(room(NARROWEST)).toBeGreaterThanOrEqual(needed);
-    expect(room(NARROWEST - 1)).toBeLessThan(needed);
   });
 
   it("holds the ten columns collected by hand in the left strip, at least 10 clear", () => {
@@ -36,7 +35,7 @@ describe("extractGeometry", () => {
 
   it("centers the 537-wide network with a strip each side", () => {
     expect(g.width).toBe(995);
-    expect(g.height).toBe(440);
+    expect(g.height).toBe(404);
     expect(g.networkX).toBe(229);
     expect(g.network.width).toBe(537);
     expect(g.network.radius).toBe(12);
@@ -44,7 +43,7 @@ describe("extractGeometry", () => {
 
   it("lays out at the host's width in whole pixels, but no narrower than its minimum", () => {
     expect(extractGeometry(SIZES, 600).width).toBe(NARROWEST);
-    expect(extractGeometry(SIZES, 600).networkX).toBe(211);
+    expect(extractGeometry(SIZES, 600).networkX).toBe(172);
     expect(extractGeometry(SIZES, 980.6).width).toBe(980);
     const wide = extractGeometry(SIZES, 1300);
     expect(wide.width).toBe(1300);
@@ -57,20 +56,21 @@ describe("extractGeometry", () => {
     expect(g.hidden[8]).toEqual({ x: g.network.nodes[2][0].x + 229, y: g.network.nodes[2][0].y });
   });
 
-  it("stands the lifted column in the middle of the right strip, 28 apart, under its label", () => {
+  it("stands the lifted column in the middle of the right strip, 25.8 apart, under its label", () => {
     expect(g.lifted.x).toBe(881);
-    expect(g.lifted.r).toBe(12);
-    expect(g.lifted.ys[0]).toBe(53);
-    expect(g.lifted.ys[13]).toBeCloseTo(53 + 13 * 28);
-    expect(g.lifted.ys[13] + g.lifted.r).toBeLessThanOrEqual(440 - 10);
+    expect(g.lifted.r).toBeCloseTo(78 / 7);
+    expect(g.lifted.ys[0]).toBe(48);
+    expect(g.lifted.ys[13]).toBeCloseTo(382.857);
+    expect((g.lifted.ys[13] - g.lifted.ys[0]) / 13).toBeCloseTo(25.758);
+    expect(g.lifted.ys[13] + g.lifted.r).toBeLessThanOrEqual(404 - 10);
   });
 
   it("sizes the deck for 20 columns and starts it in the middle of the left strip", () => {
-    expect(g.deck.r).toBe(8.3);
-    expect(g.deck.ys[0]).toBeCloseTo(44.3);
+    expect(g.deck.r).toBe(7.6);
+    expect(g.deck.ys[0]).toBeCloseTo(43.6);
     expect(g.deck.x).toBe(115);
     const deepest = deckPosition(g.deck, 19, 13);
-    expect(deepest.y + g.deck.r).toBeCloseTo(430);
+    expect(deepest.y + g.deck.r).toBeCloseTo(394);
   });
 });
 

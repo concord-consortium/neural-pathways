@@ -80,8 +80,9 @@ describe("setOffset", () => {
 describe("deckMid and centerShift", () => {
   it("put the room's middle halfway between the canvas's left edge and the lifted column's left edge", () => {
     const g = extractGeometry(SIZES, 995);
-    expect(deckMid(g)).toBe((881 - 12) / 2);
-    expect(centerShift(g)).toBe((881 - 12) / 2 - 115);
+    const mid = (881 - 78 / 7) / 2;
+    expect(deckMid(g)).toBeCloseTo(mid);
+    expect(centerShift(g)).toBeCloseTo(mid - 115);
   });
 });
 

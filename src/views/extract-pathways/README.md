@@ -35,11 +35,11 @@ the deck.
 
 ## Size
 
-The minimum layout size (see `docs/accessibility.md`) is 993 × 598 px as an Interactive. Its width
-fits inside the designed size of 1024 × 562, but its height doesn't yet.
+The minimum layout size (see `docs/accessibility.md`) is 915 × 562 px as an Interactive, inside the
+designed size of 1024 × 562 with no height to spare.
 
-The minimum layout width, 993 px, is the canvas's narrowest layout, 959 px (`minCanvasWidth` in
-`extract-geometry.ts`), with the panel's border and the app's 16 px gutters. At 959, the finished
+The minimum layout width, 915 px, is the canvas's narrowest layout, 881 px (`minCanvasWidth` in
+`extract-geometry.ts`), with the panel's border and the app's 16 px gutters. At 881, the finished
 deck of 800 fits between the canvas's left edge and the lifted column with 10 px clear each side,
 and the left strip holds the deck's columns collected by hand. Once Extract Pathways is done, the
 pathway labels end inside the canvas too. Narrower, the canvas scrolls sideways inside its panel
@@ -48,16 +48,16 @@ and the step row wraps, down to 320 px.
 About sits at the right end of the step row, with the steps centered on the panel. Below 820 px it
 goes on its own line below the steps.
 
-The minimum layout height, 598 px, adds up from the top:
+The minimum layout height, 562 px, adds up from the top:
 - the view's 9 px top padding, which takes the title's place in an Interactive;
 - the step row, 44 px;
 - a 9 px gap;
-- the panel, 520 px: the canvas's 440 px (`CANVAS_HEIGHT`), and 80 px for the panel's head, padding
+- the panel, 484 px: the canvas's 404 px (`CANVAS_HEIGHT`), and 80 px for the panel's head, padding
   and border;
 - the view's 16 px bottom padding.
 
 Nothing in the view gives way as the window gets shorter, not even the padding, so the page scrolls
-down below 598 px, as it does in an Interactive 562 px tall. The standalone app has no top padding,
+down below 562 px. The standalone app has no top padding,
 and shows the view's title above the step row instead: 82 px for a 32 px heading's line and its
 0.67em margins, then a 9 px gap.
 
@@ -65,5 +65,4 @@ and shows the view's title above the step row instead: 82 px for a 32 px heading
 
 The view still needs:
 - picking a neuron or a pathway to see its loadings;
-- to fit the 562 px designed height;
 - the activation legend.

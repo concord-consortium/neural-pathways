@@ -133,8 +133,6 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   The cut-off side is a bug in the Activity Player. A page with a responsive section follows the
   zoom, but then no setting fits the designed size; we recommend the fixed page for the designed
   size, at this cost.
-- Extract the Neural Pathways' minimum layout height, 598 px, doesn't fit the designed size yet, so
-  in an Interactive 562 px tall its page scrolls down.
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
   and where a network blocks it they fall back to a wider sans-serif. In the fallback font the
   legend is wider, and so are the Animate controls, 207 px rather than 184 px, so Looking Inside a
