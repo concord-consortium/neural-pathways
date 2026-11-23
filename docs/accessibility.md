@@ -71,8 +71,10 @@ Our app doesn't use the interactive API, so it never tells the Activity Player a
 ratio; reporting its own height that way isn't built. The Activity Player sizes the iframe from the
 settings the author picks in LARA, as [`docs/activity-player-sizing.md`](activity-player-sizing.md)
 describes. For our views:
-- Every column of a two-column layout on a fixed page is narrower than every view's minimum layout
-  width, and so is a full-width section on an "iPad Friendly (960px)" page, at 904 px. A responsive
+- Every column of a two-column layout on a fixed page is narrower than Looking Inside a Neural
+  Network's and Extract the Neural Pathways' minimum layout widths, and so is a full-width section on
+  an "iPad Friendly (960px)" page, at 904 px. Neural Pathway View of Model Reasoning's is 479 px
+  while its flow isn't built, so for now it fits in a layout's 60 or 70 percent column. A responsive
   section's primary column grows with the window.
 - The space below the iframe is always empty: our app saves nothing, so there is no "Clear & start
   over" and no teacher feedback.
@@ -121,7 +123,8 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   width for the page or its iframes, so an Interactive there is only as wide as the window allows,
   less the Activity Player's padding and margins
   ([`activity-player-sizing.md`](activity-player-sizing.md)). On a 1024 px landscape iPad a
-  responsive-full-width iframe is 884 px wide, narrower than every view's minimum layout width.
+  responsive-full-width iframe is 884 px wide, narrower than Looking Inside a Neural Network's and
+  Extract the Neural Pathways' minimum layout widths.
 - The recommended fixed page doesn't reflow when a student zooms in. It stays 1100 CSS px wide, so
   the iframe stays 1044 CSS px wide and the views never reach their narrow layouts. In a window
   narrower than the page and its padding, 1180 CSS px, the Activity Player keeps the page centered,
@@ -151,12 +154,13 @@ scroller with nothing focusable in it reachable by Tab; Safari doesn't.
   inside panels named by the same heading, and About's text is, inside its dialog. Otherwise it is a
   `region` named by its heading, or by the button in its heading, as the observation notes are. A
   `region` inside a landmark with the same name would list the landmark twice.
-- A scroller that holds only listboxes doesn't use `useKeyboardScrollable`, and has no role or
-  name, since Tab and the arrow keys reach every option and a focused option scrolls into view.
-  Making it a Tab stop as well would only add a stop. Neural Pathway View of Model Reasoning's
-  readings are one once their scores have loaded (see `model-reasoning-readings.tsx`). While the
-  scores load, their scroller holds plain words, and when it overflows Chromium and Firefox may make
-  it a Tab stop with no name. That is accepted, since it lasts only for the fetch.
+- A scroller whose content is all in listboxes, apart from their labels, doesn't use
+  `useKeyboardScrollable`, and has no role or name, since Tab and the arrow keys reach every option
+  and a focused option scrolls into view. Making it a Tab stop as well would only add a stop. Neural
+  Pathway View of Model Reasoning's readings are one once their scores have loaded (see
+  `model-reasoning-readings.tsx`). While the scores load, their scroller holds plain words, and when
+  it overflows Chromium and Firefox may make it a Tab stop with no name. That is accepted, since it
+  lasts only for the fetch.
 - A scroller clips what is drawn outside it, so keep the drawing inside its own box, down to a
   fraction of a pixel. The network diagram leaves room for its winning pill to grow as it pops.
 
