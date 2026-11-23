@@ -90,6 +90,10 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   Activation" over a miniature blue neuron for "−" and an orange one for "+". The swatches are
   `aria-hidden` and keep their colors in forced-colors mode, as the diagram does; the caption and
   signs are the text. A view places it in its own head.
+- `loading-legend/`: `LoadingLegend`, the key to a loading bar: the caption "Loading" over two
+  stacked bars, one running left from the middle for "−" and one running right for "+". The bars are
+  `aria-hidden` and keep their colors in forced-colors mode; the caption and signs are the text. A
+  view places it in its own head, beside `ActivationLegend`.
 - `animation-controls/`: the Animate checkbox and the Slow/Medium/Fast speed slider, for any view
   whose state is `Animated`. The step player reads the same two values from the state the view
   gives it, so a view places the control and passes its state to both.

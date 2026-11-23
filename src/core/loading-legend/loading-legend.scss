@@ -1,0 +1,53 @@
+@use "../colors" as colors;
+@use "../legend";
+
+// The caption over a row of two stacked bars, each with its sign beside it: the negative bar runs
+// left from the middle, the positive one right. Where it sits in its row is up to the row.
+.loading-legend {
+  @include legend.legend;
+  white-space: nowrap;
+}
+
+// line-height 1 keeps the row as tall as its bars rather than the line box of its signs. The minimum
+// height is the activation legend's swatch, so the two captions sit on one line.
+.loading-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  line-height: 1;
+}
+
+.loading-legend__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+// A bar's colored half is a gradient, and the line down its middle is the zero line. The colors are
+// meant to stay in forced colors, like the drawing's.
+.loading-legend__bar {
+  position: relative;
+  width: 88px;
+  height: 6px;
+  forced-color-adjust: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    margin-left: -0.5px;
+    background: colors.$rule;
+  }
+
+  &--negative {
+    background: linear-gradient(to right, colors.$negative 50%, transparent 50%);
+  }
+
+  &--positive {
+    background: linear-gradient(to right, transparent 50%, colors.$positive 50%);
+  }
+}
