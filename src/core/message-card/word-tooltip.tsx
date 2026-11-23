@@ -187,15 +187,6 @@ export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, chi
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [showing]);
 
-  // Leaving the tooltip for anywhere but its word ends the hover.
-  const onTooltipPointerLeave = (event: React.PointerEvent) => {
-    const to = event.relatedTarget;
-    if (to instanceof Node && state.hovered?.element.contains(to)) {
-      return;
-    }
-    dispatch({ type: "hover", target: undefined });
-  };
-
   return (
     <WordTooltipContext.Provider value={events}>
       <div ref={areaRef} className={`word-tooltip-area${className ? ` ${className}` : ""}`}>
@@ -204,7 +195,7 @@ export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, chi
           // One the focus opened lets the pointer through to the words it covers. Only one the pointer
           // opened must take the pointer, so the pointer can move onto it.
           <div ref={tooltipRef} className={`word-tooltip${state.hovered ? "" : " word-tooltip--focused"}`}
-            aria-hidden="true" onPointerLeave={onTooltipPointerLeave}>
+            aria-hidden="true" onPointerLeave={() => dispatch({ type: "hover", target: undefined })}>
             {shown.note.word}:{" "}
             {shown.note.kind === "score"
               ? <span className="word-tooltip__value">{signedScore(shown.note.value)}</span>

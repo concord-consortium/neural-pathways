@@ -105,7 +105,9 @@ describe("WordTooltipArea", () => {
     fireEvent.pointerEnter(word);
     const shown = tooltip()!;
     fireEvent.pointerLeave(word, { relatedTarget: shown });
+    // The word's pointerenter follows the tooltip's pointerleave, as in a browser.
     fireEvent.pointerLeave(shown, { relatedTarget: word });
+    fireEvent.pointerEnter(word);
     expect(tooltip()).toHaveTextContent("tarrak: −0.0624");
   });
 
