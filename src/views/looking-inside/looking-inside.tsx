@@ -122,7 +122,8 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // drops it all when the message changes, with no effect to clear it.
   const [storedAttention, setAttention] = useState<NeuronAttention>(NO_ATTENTION);
   if (storedAttention.messageId !== shownId) {
-    // Adjusting state while rendering is React's way to reset it when a prop changes, with no effect.
+    // Setting state during render resets it before anything renders with the old value, without the
+    // extra commit a useEffect would take. Once set, the check above is false, so it happens once.
     setAttention({ messageId: shownId });
   }
   const attention = storedAttention;
@@ -200,9 +201,9 @@ const LookingInsideBody = observer(function LookingInsideBody(
       focusNeuronButton(diagramRef.current, pinned);
     }
   };
-  // A press clears the pin: the readout would describe a step that is about to change. Reset also
-  // takes the Tab stop back, since the neuron that held it is no longer reached.
-  const onPress = (key: string) => {
+  // A step or Reset press clears the pin: the readout would describe a step that is about to change.
+  // Reset also takes the Tab stop back, since the neuron that held it is no longer reached.
+  const onStepPress = (key: string) => {
     if (key === "reset") {
       updateAttention({ pinned: undefined, hovered: undefined, focused: undefined, lastFocused: undefined });
     } else if (attention.pinned) {
@@ -239,7 +240,7 @@ const LookingInsideBody = observer(function LookingInsideBody(
       </div>
       <div className="looking-inside__step-row">
         {player && place !== undefined &&
-          <StepButtonGroup player={player} buttons={LOOKING_INSIDE_BUTTONS} onPress={onPress} />}
+          <StepButtonGroup player={player} buttons={LOOKING_INSIDE_BUTTONS} onPress={onStepPress} />}
         <div className="looking-inside__about">
           <AboutButton title={LOOKING_INSIDE_TITLE} markdown={about} />
         </div>
