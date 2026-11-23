@@ -288,7 +288,15 @@ test("at 320 px the card takes the full width and nothing scrolls sideways", asy
   expect(await options(page, 1).first().evaluate(el => getComputedStyle(el).fontSize)).toBe("13px");
 });
 
-// Like Firefox's "Zoom text only": every font twice its size, nothing else.
+/** Like Firefox's "Zoom text only": every font twice its size, nothing else. */
+async function zoomTextOnly(page: Page) {
+  await page.evaluate(() => {
+    const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
+    const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
+    elements.forEach((element, i) => { element.style.fontSize = `${sizes[i] * 2}px`; });
+  });
+}
+
 test("when only the text is zoomed, the words and the tooltip double, and the tooltip follows its word",
   async ({ page }) => {
     await openView(page);
@@ -299,11 +307,7 @@ test("when only the text is zoomed, the words and the tooltip double, and the to
     await word.focus();
     const before = await box(word);
     await expect(tooltip(page)).toBeVisible();
-    await page.evaluate(() => {
-      const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
-      const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
-      elements.forEach((element, i) => { element.style.fontSize = `${sizes[i] * 2}px`; });
-    });
+    await zoomTextOnly(page);
     expect(await word.evaluate(el => getComputedStyle(el).fontSize)).toBe("26px");
     expect(await tooltip(page).evaluate(el => getComputedStyle(el).fontSize)).toBe("25px");
     await expect(tooltip(page)).toBeVisible();
@@ -317,6 +321,30 @@ test("when only the text is zoomed, the words and the tooltip double, and the to
     expect(await pointerCenter(page)).toBeCloseTo(after.x + after.width / 2, 0);
     expect(within(await box(tooltip(page)), await box(card(page)))).toBe(true);
   });
+
+test("at 320 px with only the text zoomed, every word's tooltip wraps to stay inside the readings", async ({ page }) => {
+  await openView(page, 320);
+  await zoomTextOnly(page);
+  // A tooltip is drawn again when the focus moves to it from a word with none, so a rule sets its
+  // doubled size.
+  await page.addStyleTag({ content: ".word-tooltip { font-size: 25px; }" });
+  const count = await options(page, 1).count();
+  let checked = 0;
+  for (let i = 0; i < count; i++) {
+    await options(page, 1).nth(i).focus();
+    if (await tooltip(page).count() === 0) {
+      continue;
+    }
+    checked++;
+    await expect(tooltip(page)).toBeVisible();
+    const areaBox = await box(page.locator(".word-tooltip-area"));
+    await expect.poll(async () => {
+      const tooltipBox = await box(tooltip(page));
+      return tooltipBox.x >= areaBox.x - 0.5 && tooltipBox.x + tooltipBox.width <= areaBox.x + areaBox.width + 0.5;
+    }).toBe(true);
+  }
+  expect(checked).toBeGreaterThan(0);
+});
 
 test("in forced-colors mode the focused word has an outline and the tooltip a border", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });
