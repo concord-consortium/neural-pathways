@@ -1,5 +1,4 @@
-// In an Interactive there is no title, and this padding takes its place. The shell sets its size
-// (see app.scss).
+// --view-top-padding: see app.scss.
 .view-placeholder {
   padding-top: var(--view-top-padding, 0);
 }
