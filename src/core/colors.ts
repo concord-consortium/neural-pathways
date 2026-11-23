@@ -4,10 +4,13 @@ export const FILL_POS: readonly string[] = ["#EFD3C4", "#E0B6A4", "#D29A84", "#C
 /** Five steps of blue for negative word scores, palest first. */
 export const FILL_NEG: readonly string[] = ["#C8D6E9", "#A9BDD8", "#8DA6CA", "#7694BD", "#1F4E8F"];
 
-/** The text on a word, which is ink on every step but the darkest. */
+/** The lesson's ink, for text. colors.scss's $ink holds the same value. */
 export const INK_COLOR = "#1E242C";
 
-/** The stops of the signed legend gradient, from the negative end through white to the positive end. */
+/**
+ * The stops of the signed legend gradient, from the negative end through white to the positive end.
+ * colors.scss's $ramp-stops holds the same stops.
+ */
 export const RAMP_STOPS: readonly string[] = ["#1F4E8F", "#C8D6E9", "#FFFFFF", "#EFD3C4", "#A84A2C"];
 
 /**
