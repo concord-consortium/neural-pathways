@@ -14,7 +14,7 @@ import { S3Index, S3Item } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { useWordScores } from "../../core/use-word-scores";
 import { ViewTitle } from "../../core/view-title/view-title";
-import { ModelReasoningReadings } from "./model-reasoning-readings";
+import { ModelReasoningReadings, PATHWAYS } from "./model-reasoning-readings";
 import about from "./about.md";
 import "./model-reasoning.scss";
 
@@ -29,7 +29,12 @@ export const MODEL_REASONING_TITLE = "Neural Pathway View of Model Reasoning";
 function readScale(index: S3Index): { fitName: string; max: number } | { error: Error } {
   try {
     messageFilterFor(index);
-    return { fitName: alien3FitName(index), max: alien3WordScoreMax(index) };
+    const fitName = alien3FitName(index);
+    const pathways = index.metadata.fa_fits[fitName].n_pathways;
+    if (pathways !== PATHWAYS.length) {
+      throw new Error(`The alien3 data has ${pathways} pathways, but this view shows ${PATHWAYS.length}.`);
+    }
+    return { fitName, max: alien3WordScoreMax(index) };
   } catch (error: unknown) {
     return { error: error instanceof Error ? error : new Error(String(error)) };
   }

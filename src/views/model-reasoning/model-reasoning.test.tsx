@@ -126,6 +126,18 @@ describe("ModelReasoning", () => {
       .toHaveTextContent(/^The word scores could not be shown: The word scores have 0 words but the message has/);
   });
 
+  it("says when the fit doesn't have the three pathways the view shows", async () => {
+    const [fitName, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    mockedFetchIndex.mockResolvedValue({
+      ...index,
+      metadata: { ...fixtureMetadata, fa_fits: { [fitName]: { ...fit, n_pathways: 4 } } },
+    });
+    showView();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The messages could not be shown: The alien3 data has 4 pathways, but this view shows 3.");
+    expect(screen.queryByRole("region", { name: "Message" })).toBeNull();
+  });
+
   it("says when the data has no word score maximum", async () => {
     const [fitName, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
     const { word_score_max: _max, ...fitWithoutMax } = fit;

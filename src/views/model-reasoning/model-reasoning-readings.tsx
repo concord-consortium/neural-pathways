@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { PathwayReading } from "../../core/message-card/pathway-reading";
 import { WordTooltipArea } from "../../core/message-card/word-tooltip";
 
-// The alien3 fit's three pathways, 0-based.
-const PATHWAYS = [0, 1, 2];
+/** The alien3 fit's three pathways, 0-based. The view checks that the fit has this many. */
+export const PATHWAYS = [0, 1, 2];
 
 interface ModelReasoningReadingsProps {
   /** messageWords(text) of the message shown. */
