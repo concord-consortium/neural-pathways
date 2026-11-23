@@ -8,8 +8,8 @@ The lesson's view of how the model reasons from a message: each pathway's readin
   and lays out the filter row, with About at its right end, over the message card. Prev/next step
   through the messages the filter matches. The card's body is the Word Contribution legend over the
   three pathway readings. While a message's word scores load, its readings show the words
-  uncolored; if they fail to load, an alert in the card says so, and the filter and the navigation
-  still work.
+  uncolored; if they fail to load or don't match the message, an alert in the card says so, and the
+  filter and the navigation still work.
 - `model-reasoning-readings.tsx`: the three pathway readings, Pathway 1 to Pathway 3, in a scroller
   under one tooltip for them all. They share one current word, so Tab from one reading to the next
   lands on the same word. The readings are keyed by the message. Once the scores load, the scroller

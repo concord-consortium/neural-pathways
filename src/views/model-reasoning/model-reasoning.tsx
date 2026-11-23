@@ -108,7 +108,7 @@ interface ModelReasoningMessageProps {
   max: number;
 }
 
-/** The card's body: the legend over the message's readings, or over an alert if its scores fail to load. */
+/** The card's body: the legend over the message's readings, or over an alert if its scores fail. */
 const ModelReasoningMessage: React.FC<ModelReasoningMessageProps> = ({ item, fitName, max }) => {
   const scores = useWordScores(alien3Dataset, fitName, item);
   const words = useMemo(() => messageWords(item.text), [item.text]);
@@ -116,7 +116,11 @@ const ModelReasoningMessage: React.FC<ModelReasoningMessageProps> = ({ item, fit
     <>
       <WordContributionLegend max={max} />
       {scores.status === "error"
-        ? <p role="alert">The word scores could not be loaded: {scores.error.message}</p>
+        ? (
+          <p role="alert">
+            The word scores could not be {scores.failed === "load" ? "loaded" : "shown"}: {scores.error.message}
+          </p>
+        )
         : <ModelReasoningReadings key={item.id} words={words}
           scores={scores.status === "ready" ? scores.scores : undefined} max={max} />}
     </>

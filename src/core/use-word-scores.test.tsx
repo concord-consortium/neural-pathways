@@ -36,7 +36,7 @@ function deferred<T>() {
 
 const Probe: React.FC<{ item: S3Item }> = ({ item }) => {
   const state = useWordScores(alien3Dataset, FIT, item);
-  const text = state.status === "error" ? `error: ${state.error.message}`
+  const text = state.status === "error" ? `error (${state.failed}): ${state.error.message}`
     : state.status === "ready" ? `ready ${JSON.stringify(state.scores)}`
     : state.status;
   return <p>{text}</p>;
@@ -66,14 +66,15 @@ describe("useWordScores", () => {
   it("is an error when the fetch fails", async () => {
     mockFetch.mockResolvedValue({ ok: false, status: 404, statusText: "Not Found" });
     render(<Probe item={itemWith("aa1", "hi there")} />);
-    expect(await screen.findByText(/^error: .*shap\/alien-fa-3\/aa\.json.*404 Not Found/)).toBeInTheDocument();
+    expect(await screen.findByText(/^error \(load\): .*shap\/alien-fa-3\/aa\.json.*404 Not Found/)).toBeInTheDocument();
   });
 
   it("is an error when the words don't line up", async () => {
     mockFetch.mockResolvedValue(ok({ reviews: [shapReview("aa1", ["[CLS]", "hi", "zz", "[SEP]"])] }));
     render(<Probe item={itemWith("aa1", "hi there")} />);
     expect(await screen.findByText(
-      'error: The word scores don\'t match the message: word 2 is "zz" in the scores but "there" in the message.',
+      "error (show): The word scores don't match the message: " +
+      'word 2 is "zz" in the scores but "there" in the message.',
     )).toBeInTheDocument();
   });
 

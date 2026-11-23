@@ -6,7 +6,8 @@ import { alignWordScores } from "./word-scores";
 
 export type WordScoresState =
   | { status: "loading" }
-  | { status: "error"; error: Error }
+  /** `failed` says which part failed: the fetch, or lining the scores up with the message. */
+  | { status: "error"; error: Error; failed: "load" | "show" }
   /** `scores` is `[word][pathway]`, one row per word of the message. */
   | { status: "ready"; scores: number[][] };
 
@@ -44,12 +45,12 @@ export function useWordScores(dataset: DatasetDefinition, fitName: string, item:
         try {
           setState({ key, value: { status: "ready", scores: alignWordScores(text, shap.words) } });
         } catch (error: unknown) {
-          setState({ key, value: { status: "error", error: toError(error) } });
+          setState({ key, value: { status: "error", error: toError(error), failed: "show" } });
         }
       },
       (error: unknown) => {
         if (active) {
-          setState({ key, value: { status: "error", error: toError(error) } });
+          setState({ key, value: { status: "error", error: toError(error), failed: "load" } });
         }
       },
     );

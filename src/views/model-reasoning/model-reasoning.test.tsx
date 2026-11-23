@@ -119,6 +119,13 @@ describe("ModelReasoning", () => {
     expect(await within(card()).findByRole("alert")).toHaveTextContent("The word scores could not be loaded:");
   });
 
+  it("says the word scores can't be shown when they don't match the message", async () => {
+    mockedFetchShap.mockResolvedValue({ words: [], base_values: [], unmasked_values: [] });
+    showView();
+    expect(await within(await screen.findByRole("region", { name: "Message" })).findByRole("alert"))
+      .toHaveTextContent(/^The word scores could not be shown: The word scores have 0 words but the message has/);
+  });
+
   it("says when the data has no word score maximum", async () => {
     const [fitName, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
     const { word_score_max: _max, ...fitWithoutMax } = fit;
