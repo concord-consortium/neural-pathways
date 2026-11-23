@@ -68,8 +68,8 @@ chose its version A, v1.4's tooltip, which now also follows the keyboard focus.
   layout size fits inside 1024 × 562; down to 320 px wide everything still works; a scroller works
   from the keyboard.
 - Michael owns the visual design. Where accessibility conflicts with it, keep his design and log the
-  conflict for him to decide. This view has no accessibility story yet; if one is needed, create it
-  then, as NPW-49 is for the network diagram.
+  conflict for him to decide. The view's accessibility story is NPW-76, as NPW-49 is for the network
+  diagram.
 - `src/core/` holds what more than one view uses. The ramp, the pathway reading, the legend and the
   word-score loading are all used again by later views, so they go there.
 - Don't edit `src/views/looking-inside/looking-inside.scss` on this branch; NPW-23 is changing it.
@@ -126,12 +126,11 @@ Both were mocked up for Michael and Jie, who chose A.
 ### The view
 
 `ModelReasoning` replaces its `ViewPlaceholder` with the view's title and a 447 px left column
-holding the
-filter row and, under it, the message card. As in v1.4, About sits beside the filter, at the right
-end of the filter row (`nnm-filterrow`, 5994–5999), not over a second column as in Looking Inside.
-The right side stays empty until NPW-39. It loads the index with `useDatasetIndex(alien3Dataset, { onLoaded })` and
-corrects the shared message and query as Looking Inside does, through `SharedState`, so the
-message and the query are the same in every view.
+holding the filter row and, under it, the message card. As in v1.4, About sits beside the filter, at
+the right end of the filter row (`nnm-filterrow`, 5994–5999), not over a second column as in
+Looking Inside. The right side stays empty until NPW-39. It loads the index with
+`useDatasetIndex(alien3Dataset, { onLoaded })` and corrects the shared message and query as Looking
+Inside does, through `SharedState`, so the message and the query are the same in every view.
 
 The card is the shared `MessageCard` (title, count, previous and next). Its body is the legend and
 then a scroller holding the three readings. Unlike Looking Inside, this card has no actual label and
@@ -141,14 +140,14 @@ no observation notes (v1.4's 2B has neither).
 `$width: 447px`, which this view's stylesheet uses. Looking Inside switches to it after NPW-23
 merges. (The `.scss` partial holds only the variable, so `@use` adds no CSS.)
 
-**Narrower than the card.** As Looking Inside does, below its minimum layout width the view stacks
-into one column and the card takes the full width; the words wrap.
+**Narrower than the card.** Below its minimum layout width the card takes the full width between
+the gutters, and the words wrap.
 
 **The card's height.** The card fills the column's height, up to 800 px as Looking Inside's does
 (our call), and the readings scroll inside it (`.nnm-readscroll`, 1768), so the legend stays in
-view. With the view's title shown, the designed size leaves about 270 px for the readings: three
+view. With the view's title shown, the designed size leaves about 255 px for the readings: three
 readings of a 12-word message need about 280 px, and of a 40-word message about 560 px. NPW-75
-leaves the view titles out of the Interactives, which gives the card about 90 px more: about 340 px
+leaves the view titles out of the Interactives, which gives the card about 80 px more: about 340 px
 for the readings, so a short message's readings fit and a long one's scroll.
 
 **The scroller and the keyboard (our call).** The scroller doesn't use `useKeyboardScrollable`,
@@ -210,20 +209,26 @@ fixed weight per word.
 **Reading it.** `alien3WordScoreMax(index)` in `src/core/datasets/alien3-dataset.ts` returns it
 from the index's single fit, and throws, with the same "regenerate" advice as the loadings reader,
 when it is missing or not a positive number. The view catches the error and shows it in an alert,
-as Looking Inside does for the network.
+as Looking Inside does for the network. In the same place the view checks that the fit has the three
+pathways it shows (`n_pathways`), and builds the index's filter, so that a mount with the index
+already loaded shows the alert for bad filter attributes too, rather than throwing while it
+renders.
 
 ### Loading the word scores
 
-A core hook, `useWordScores(dataset, fitName, messageId)`, loads the message's scores with
-`fetchShap`, keeping one bucket cache per dataset so stepping back and forth doesn't fetch again.
-NPW-27 and NPW-39 use it too. It returns loading, an error, or the scores.
+A core hook, `useWordScores(dataset, fitName, item)` in `src/core/use-word-scores.ts`, loads the
+message's scores with `fetchShap`, keeping one bucket cache per dataset so stepping back and forth
+doesn't fetch again. NPW-27 and NPW-39 use it too. It returns loading, an error, or the scores. An
+error says which part failed, the fetch or lining the scores up, as `useDatasetIndex`'s does.
 
 The scores it returns are one entry per word of `messageWords(text)` (`src/core/message-text.ts`),
-so they line up with what the card shows: it drops `[CLS]` and `[SEP]`, then checks the remaining
-words match the message's words one for one, and is an error if they don't.
+so they line up with what the card shows: `alignWordScores` (`src/core/word-scores.ts`) drops
+`[CLS]` and `[SEP]`, then checks the remaining words match the message's words one for one, and
+throws if they don't.
 
 While a message's scores load, the readings show its words uncolored and not yet in a listbox. If
-they fail to load, an alert in the card body says so; the filter and the navigation still work.
+they fail to load, an alert in the card body says they could not be loaded, and if they don't match
+the message, that they could not be shown; the filter and the navigation still work.
 
 ### The pathway reading
 
@@ -276,7 +281,7 @@ message.
 **Forced colors.** The word backgrounds go away in forced-colors mode, so the focus ring must be an
 `outline` (a `box-shadow` is removed), and the tooltip needs a border to stand out from the page.
 The tooltip still gives the number, but nothing marks which words are colored; that is a known gap,
-to log in the view's accessibility story for Michael (see Constraints).
+logged in NPW-76 for Michael (see Constraints).
 
 ### Showing the score
 
@@ -285,7 +290,9 @@ this is a drawn one, so it can show on keyboard focus and meet 1.4.13.
 
 **What it says.** For this reading's pathway: "tarrak: +0.0624", four decimals with the U+2212
 minus, the value monospaced; or, for a word that is zero here, "tarrak: a Pathway 1 word", naming
-the pathway it scores on (6430–6432). A word that is zero on every pathway has no tooltip.
+the pathway it scores on (6430–6432). A word that is zero on every pathway has no tooltip. The
+text is in `src/core/message-card/word-score-text.ts`, which the readings' names and the legend
+share.
 
 **When it shows.** There is one tooltip per card. It follows whichever moved last, the pointer or the
 keyboard focus, over the word the pointer entered or the word the focus moved to. A word that is zero
@@ -296,12 +303,17 @@ and hides while that word is scrolled out of the scroller's view.
 **1.4.13** ([Content on Hover or Focus](https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus.html)):
 - *Dismissible:* Escape hides it without moving the focus. It comes back on the next word the
   pointer or the keyboard moves to.
-- *Hoverable:* the pointer can move from the word onto the tooltip without it going away.
+- *Hoverable:* the pointer can move from the word onto a tooltip the pointer opened without it
+  going away. A tooltip the focus opened lets the pointer through to the words it covers.
 - *Persistent:* it stays until the pointer leaves both the word and the tooltip, the focus leaves the
   word, the pointer or the focus moves to another word, or Escape.
 
-**Where and how it's drawn.** It is centered over the word, with a small pointer under it, and kept
-inside the card from side to side. It is `$ink` with white Lato 12.5 px text, as in the mockup. It
+**Where and how it's drawn.** `WordTooltipArea` (`src/core/message-card/word-tooltip.tsx`) draws
+it. It is centered over the word, with a small pointer under it, and kept inside the readings from
+side to side, with its pointer still over the word. floating-ui (`computePosition` and
+`autoUpdate`) places it, and places it again when the word or the tooltip moves or changes size,
+as after a text-only zoom. It is at most as wide as the readings, and wraps when it would be wider,
+as at 320 px with the text zoomed. It is `$ink` with white Lato 12.5 px text, as in the mockup. It
 lives outside the readings' scroller, so the scroller doesn't clip it. It is `aria-hidden`: the
 word's name already says the same thing.
 
@@ -315,9 +327,9 @@ already exist. `ModelReasoningState` (`docs/view-state.md`) is NPW-39's to add.
 | message, query | `SharedState` (exists) | filter, card navigation | the view | per step, per query | everything | yes |
 | scale maximum | the index | the generator | legend, readings | never | everything | n/a |
 | word scores | `useWordScores` cache | fetch | readings | per message | the page | no |
-| current word | view component | click, keys, focus | tabindex, `aria-selected` | per click or key | nothing: cleared on message change | no |
-| hovered word | card | pointer | tooltip | per pointer move | nothing | no |
-| tooltip dismissed | card | Escape, next word | tooltip | per Escape | nothing | no |
+| current word | `ModelReasoningReadings` | click, keys, focus | tabindex, `aria-selected` | per click or key | nothing: cleared on message change | no |
+| hovered word | `WordTooltipArea`'s reducer | pointer | tooltip | per pointer move | nothing | no |
+| tooltip dismissed | `WordTooltipArea`'s reducer | Escape, next word | tooltip | per Escape | nothing | no |
 
 Add the current word to `docs/view-state.md`'s "Deliberately not kept". Hover is already listed.
 
@@ -326,7 +338,7 @@ Add the current word to `docs/view-state.md`'s "Deliberately not kept". Hover is
 | Index | Matches | Word scores | Card body |
 |---|---|---|---|
 | loading | — | — | no card; "Loading messages…" |
-| error, or no scale maximum | — | — | no card; an alert |
+| error; no scale maximum, not three pathways, or bad filter attributes | — | — | no card; an alert |
 | ready | none | — | the card's "No messages match that search." |
 | ready | some | loading | legend; three readings, uncolored, not yet listboxes |
 | ready | some | error | legend; an alert in the body |
@@ -340,10 +352,11 @@ Add to `docs/glossary.md`, under Messages:
   that pathway. Not to be confused with a reading in Extract the Neural Pathways, which is a value.
 - **word score:** how much a word pushes a pathway up or down, from the SHAP data. The legend calls
   it Word Contribution, which is the name students see.
-- **scale maximum:** the largest |word score| in the dataset (`word_score_max`), the legend's ends.
-- **current word:** the word clicked or arrowed to, the same position in all three readings, which
-  holds each reading's Tab stop. Not "selected" in prose, though it is `aria-selected` in the
-  markup.
+- **scale maximum:** the largest |word score| in a fit's SHAP buckets (`word_score_max`), the
+  legend's ends.
+- **current word:** the word last focused or clicked in a reading, the same position in all three
+  readings, which holds each reading's Tab stop. Not "selected" in prose, though it is
+  `aria-selected` in the markup.
 
 ## Testing
 
@@ -375,7 +388,9 @@ Playwright:
 - Tab order: filter, About, card navigation, then one stop per reading, with no stop on the
   readings' scroller even when it overflows; Tab into the next reading lands on the same word.
 - At the minimum layout size nothing scrolls but the readings, and the page doesn't scroll down; at
-  320 px the card stacks and wraps; at 200% zoom the words and the tooltip are twice the size.
+  320 px the card takes the full width and nothing scrolls sideways; with only the text zoomed to
+  200%, the words and the tooltip are twice the size, the tooltip follows its word and stays inside
+  the card, and at 320 px every tooltip wraps to stay inside the readings.
 - Forced colors: the focus ring and the tooltip can still be seen.
 
 ## Docs to update
@@ -384,15 +399,20 @@ Playwright:
   still to come (the flow and the steps).
 - `src/core/README.md`: the ramp, the legend, `PathwayReading`, `useWordScores`, the card width.
 - `docs/view-state.md`, `docs/glossary.md` as above.
+- `docs/accessibility.md`: the readings' scroller, which is a Tab stop only while the scores load.
 - `docs/data/s3-data-format.md`: `word_score_max`.
 
 ## Left to the builder
 
+Each was settled while building:
+
 - The exact component split between the view, the three readings and `PathwayReading`, as long as
-  `PathwayReading` is controlled and works alone.
+  `PathwayReading` is controlled and works alone. *Settled:* the view, `ModelReasoningReadings`
+  (the three readings, their scroller and the current word) and `PathwayReading`.
 - The view's minimum layout size, measured and recorded in its README. Until NPW-39 it is the left
-  column only; it must fit 1024 × 562, with no title in an Interactive (NPW-75).
+  column only; it must fit 1024 × 562, with no title in an Interactive (NPW-75). *Settled:*
+  479 × 362 px.
 - How `useWordScores` shares its cache between views (module-level per dataset, or a context), as
-  long as a dataset change gets a fresh one.
+  long as a dataset change gets a fresh one. *Settled:* module-level, by dataset id.
 - Whether the readings render before their scores arrive or wait, if showing uncolored words first
-  looks wrong in the browser.
+  looks wrong in the browser. *Settled:* they show the words uncolored while the scores load.
