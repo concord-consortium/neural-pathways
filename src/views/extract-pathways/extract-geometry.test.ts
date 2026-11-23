@@ -6,20 +6,22 @@ const SIZES = [10, 8, 6, 2];
 const NARROWEST = 881;
 
 describe("minCanvasWidth", () => {
-  it("is the narrowest the strips allow, and its room holds the finished deck, 10 clear each side", () => {
+  const clearLeftOfCollected = (width: number) => {
+    const g = canvasLayout(SIZES, width);
+    return deckPosition(g.deck, MAX_COLLECTED - 1, 0).x - g.deck.r;
+  };
+
+  it("is set by the strips: the ten columns collected by hand keep 10 clear, and a few pixels less does not", () => {
     expect(minCanvasWidth(SIZES)).toBe(NARROWEST);
-    const room = (width: number) => {
-      const g = canvasLayout(SIZES, width);
-      return g.lifted.x - g.lifted.r;
-    };
-    const needed = 7.6 * 99 + 2 * 10;
-    expect(room(NARROWEST)).toBeGreaterThanOrEqual(needed);
+    expect(clearLeftOfCollected(NARROWEST)).toBeGreaterThanOrEqual(10);
+    // The strips are sized in whole half-strips, so the bound is not tight to the pixel.
+    expect(clearLeftOfCollected(NARROWEST - 4)).toBeLessThan(10);
   });
 
-  it("holds the ten columns collected by hand in the left strip, at least 10 clear", () => {
-    const g = extractGeometry(SIZES, 0);
-    const last = deckPosition(g.deck, MAX_COLLECTED - 1, 0);
-    expect(last.x - g.deck.r).toBeGreaterThanOrEqual(10);
+  it("leaves the room for the finished deck of 800 with 10 px to spare beyond its 10 clear each side", () => {
+    const g = canvasLayout(SIZES, NARROWEST);
+    const needed = 7.6 * 99 + 2 * 10;
+    expect(g.lifted.x - g.lifted.r).toBeGreaterThan(needed + 10);
   });
 
   it("lays out a host one pixel narrower at the minimum, and one pixel wider at its own width", () => {

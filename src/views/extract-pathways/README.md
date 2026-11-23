@@ -39,11 +39,11 @@ The minimum layout size (see `docs/accessibility.md`) is 915 × 562 px as an Int
 designed size of 1024 × 562 with no height to spare.
 
 The minimum layout width, 915 px, is the canvas's narrowest layout, 881 px (`minCanvasWidth` in
-`extract-geometry.ts`), with the panel's border and the app's 16 px gutters. At 881, the finished
-deck of 800 fits between the canvas's left edge and the lifted column with 10 px clear each side,
-and the left strip holds the deck's columns collected by hand. Once Extract Pathways is done, the
-pathway labels end inside the canvas too. Narrower, the canvas scrolls sideways inside its panel
-and the step row wraps, down to 320 px.
+`extract-geometry.ts`), with the panel's border and the app's 16 px gutters. The strips set it: at
+881, the left strip holds the deck's columns collected by hand with 10 px clear. The finished deck
+of 800 fits between the canvas's left edge and the lifted column with 11 px to spare beyond its 10 px clear each side. Once Extract
+Pathways is done, the pathway labels end inside the canvas too. Narrower, the canvas scrolls
+sideways inside its panel and the step row wraps, down to 320 px.
 
 About sits at the right end of the step row, with the steps centered on the panel. Below 820 px it
 goes on its own line below the steps.
@@ -65,4 +65,3 @@ and shows the view's title above the step row instead: 82 px for a 32 px heading
 
 The view still needs:
 - picking a neuron or a pathway to see its loadings;
-- the activation legend.
