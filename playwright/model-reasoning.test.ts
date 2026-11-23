@@ -146,6 +146,8 @@ test("the tooltip follows its word when the readings scroll", async ({ page }) =
 
 test("the tooltip of a word on the first line stays inside the card", async ({ page }) => {
   await openView(page);
+  // Its readings overflow the scroller, so they can be scrolled.
+  await showLongMessage(page);
   const cardBox = await box(card(page));
   const first = coloredOptions(page, 1).first();
   expect((await box(first)).y).toBeCloseTo((await box(options(page, 1).first())).y, 0);
@@ -211,6 +213,7 @@ test("the tooltip of a word at either side is kept inside the readings, its poin
 
 test("Tab goes from the card's arrows to one stop per reading, landing on the same word", async ({ page }) => {
   await openView(page);
+  await showLongMessage(page);
   expect(await scroller(page).evaluate(el => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0);
   await options(page, 1).nth(1).click();
   await page.getByRole("button", { name: "Next message" }).focus();
@@ -252,8 +255,8 @@ test("About sits at the right end of the filter row and comes between the filter
 });
 
 // The minimum layout size is in the README's Size section: the card's width inside the gutters, and
-// at that width a two-line title.
-const SIZES = [["the designed size", 1024, 562], ["the minimum layout size", 479, 483]] as const;
+// the filter row over the card at its smallest.
+const SIZES = [["the designed size", 1024, 562], ["the minimum layout size", 479, 362]] as const;
 for (const [name, width, height] of SIZES) {
   test(`at ${name}, only the readings scroll`, async ({ page }) => {
     await openView(page, width, height);

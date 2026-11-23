@@ -13,8 +13,9 @@ for its focus pathway, and the flow on the right of this view (NPW-39) lines up 
 
 Jira: [NPW-37](https://concord-consortium.atlassian.net/browse/NPW-37). It builds on NPW-35
 (filter) and NPW-36 (message card), and on the v1.4 design (NPW-74). The branch is
-`NPW-37-word-contributions`, from `main`. NPW-23 (Looking Inside a Neural Network) is being built
-beside it on `NPW-23-looking-inside`.
+`NPW-37-word-contributions`, from NPW-75's branch (`NPW-75-interactive-title-and-sizes`), which
+leaves the view titles out of the Interactives. NPW-23 (Looking Inside a Neural Network) is being
+built beside it on `NPW-23-looking-inside`.
 
 The source is prototype v1.4: `index.html` at commit `7acc4db` on the `neural-net-maker` branch of
 the demos repo ([live](https://models-resources.concord.org/demos/branch/neural-net-maker/),
@@ -146,9 +147,9 @@ into one column and the card takes the full width; the words wrap.
 **The card's height.** The card fills the column's height, up to 800 px as Looking Inside's does
 (our call), and the readings scroll inside it (`.nnm-readscroll`, 1768), so the legend stays in
 view. With the view's title shown, the designed size leaves about 270 px for the readings: three
-readings of a 12-word message need about 280 px, and of a 40-word message about 560 px. A separate
-story removes the view titles from the Interactives, which gives the card about 90 px more; until
-then this view shows its title as the others do, and the readings scroll for most messages.
+readings of a 12-word message need about 280 px, and of a 40-word message about 560 px. NPW-75
+leaves the view titles out of the Interactives, which gives the card about 90 px more: about 340 px
+for the readings, so a short message's readings fit and a long one's scroll.
 
 **The scroller and the keyboard (our call).** The scroller doesn't use `useKeyboardScrollable`,
 which would make it a fourth Tab stop whenever it overflows. Everything in it but the Pathway rows
@@ -390,8 +391,7 @@ Playwright:
 - The exact component split between the view, the three readings and `PathwayReading`, as long as
   `PathwayReading` is controlled and works alone.
 - The view's minimum layout size, measured and recorded in its README. Until NPW-39 it is the left
-  column only; it must fit 1024 × 562, with the title shown until the story that removes the titles
-  from the Interactives lands.
+  column only; it must fit 1024 × 562, with no title in an Interactive (NPW-75).
 - How `useWordScores` shares its cache between views (module-level per dataset, or a context), as
   long as a dataset change gets a fresh one.
 - Whether the readings render before their scores arrive or wait, if showing uncolored words first

@@ -13,6 +13,7 @@ import { useSharedState } from "../../core/state/view-state-context";
 import { S3Index, S3Item } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
 import { useWordScores } from "../../core/use-word-scores";
+import { ViewTitle } from "../../core/view-title/view-title";
 import { ModelReasoningReadings } from "./model-reasoning-readings";
 import about from "./about.md";
 import "./model-reasoning.scss";
@@ -46,7 +47,7 @@ export const ModelReasoning: React.FC = observer(function ModelReasoning() {
 
   return (
     <div className="model-reasoning">
-      <h1 className="model-reasoning__title">{MODEL_REASONING_TITLE}</h1>
+      <ViewTitle className="model-reasoning__title">{MODEL_REASONING_TITLE}</ViewTitle>
       {indexState.status === "loading" && <p>Loading messages…</p>}
       {indexState.status === "error" &&
         <p role="alert">

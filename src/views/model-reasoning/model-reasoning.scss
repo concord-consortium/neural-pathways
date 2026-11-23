@@ -1,12 +1,15 @@
 @use "../../core/message-card/layout";
 
-// At least the window's height, so the layout below the title can fill what is left of it.
+// At least the window's height, so the layout below the title can fill what is left of it. In an
+// Interactive there is no title, and the top padding takes its place. The shell sets its size (see
+// app.scss).
 .model-reasoning {
   display: flex;
   flex-direction: column;
   gap: 9px;
   box-sizing: border-box;
   min-height: 100vh;
+  padding-top: var(--view-top-padding, 0);
   padding-bottom: 16px;
 }
 
