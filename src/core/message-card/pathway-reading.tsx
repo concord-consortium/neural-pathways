@@ -2,7 +2,7 @@ import React, { useId, useRef } from "react";
 import { wordFill } from "../colors";
 import { noteName, pathwayName, wordScoreNote } from "./word-score-text";
 import { useWordTooltipEvents } from "./word-tooltip";
-// The messages' face, served with the app so a network that blocks Google Fonts still gets it.
+// The messages' face (see message-words.tsx).
 import "@fontsource/spline-sans-mono/400.css";
 import "./pathway-reading.scss";
 

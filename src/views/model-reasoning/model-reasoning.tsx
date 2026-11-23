@@ -33,15 +33,12 @@ function readScale(index: S3Index): { fitName: string; max: number } | { error: 
 /** A message's words read by each pathway, colored by how much each word pushes it up or down. */
 export const ModelReasoning: React.FC = observer(function ModelReasoning() {
   const shared = useSharedState();
-  // Correct the shared message when the list arrives, not in a useEffect: see docs/undo.md.
-  // The list is the stored query's matches: a query still being typed never moves the stored
-  // message.
+  // Corrects the shared message when the list arrives, as looking-inside.tsx does.
   const onLoaded = useCallback((index: S3Index) => {
     shared.ensureValidMessage(idsFor(messageFilterFor(index), shared.query ?? ""));
   }, [shared]);
   const indexState = useDatasetIndex(alien3Dataset, { onLoaded });
-  // Checked when the index is ready, on every mount, so data without a scale maximum shows the alert
-  // rather than breaking the view.
+  // Checked on every mount, as looking-inside.tsx checks its network.
   const scale = useMemo(
     () => (indexState.status === "ready" ? readScale(indexState.index) : undefined), [indexState]);
 
@@ -75,11 +72,9 @@ const ModelReasoningBody = observer(function ModelReasoningBody({ index, fitName
   if (index.items.length === 0) {
     return <p>No messages.</p>;
   }
-  // Shown even before the store's correction lands, and while a query is being typed, so an id
-  // the list doesn't include never reaches the screen.
+  // The shown message, found as in looking-inside.tsx.
   const currentId = validMessageId(shared.messageId, ids);
   const listPosition = currentId === undefined ? -1 : ids.indexOf(currentId);
-  // No message is shown when nothing matches: the empty list leaves the stored id in place.
   const shown = listPosition < 0 || currentId === undefined ? undefined : itemById.get(currentId);
   const goTo = (to: number) => shared.setMessageId(ids[to]);
 

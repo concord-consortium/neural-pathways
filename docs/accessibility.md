@@ -154,10 +154,9 @@ scroller with nothing focusable in it reachable by Tab; Safari doesn't.
 - A scroller that holds only listboxes doesn't use `useKeyboardScrollable`, and has no role or
   name, since Tab and the arrow keys reach every option and a focused option scrolls into view.
   Making it a Tab stop as well would only add a stop. Neural Pathway View of Model Reasoning's
-  readings are one once their scores have loaded: everything in their scroller but the Pathway rows
-  is then in the three listboxes. While the scores load, it holds plain words, and when it overflows
-  Chromium and Firefox may make it a Tab stop with no name. That is accepted, since it lasts only for
-  the fetch.
+  readings are one once their scores have loaded (see `model-reasoning-readings.tsx`). While the
+  scores load, their scroller holds plain words, and when it overflows Chromium and Firefox may make
+  it a Tab stop with no name. That is accepted, since it lasts only for the fetch.
 - A scroller clips what is drawn outside it, so keep the drawing inside its own box, down to a
   fraction of a pixel. The network diagram leaves room for its winning pill to grow as it pops.
 

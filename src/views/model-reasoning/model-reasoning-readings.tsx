@@ -17,7 +17,7 @@ interface ModelReasoningReadingsProps {
 /**
  * The message's three pathway readings, one under another in a scroller, with one tooltip for them
  * all. They share the current word, so Tab from one reading to the next lands on the same word. Key
- * this by the message, so a new message starts with no current word and no tooltip.
+ * this by the message, so a new message starts with no current word.
  *
  * The scroller isn't a Tab stop of its own once the scores load: everything in it but the Pathway
  * rows is then in the listboxes, which Tab and the arrow keys reach, and a focused word scrolls into

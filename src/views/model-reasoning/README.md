@@ -12,9 +12,8 @@ The lesson's view of how the model reasons from a message: each pathway's readin
   still work.
 - `model-reasoning-readings.tsx`: the three pathway readings, Pathway 1 to Pathway 3, in a scroller
   under one tooltip for them all. They share one current word, so Tab from one reading to the next
-  lands on the same word. The current word isn't kept: the readings are keyed by the message, so a
-  new message starts with none, and with no tooltip. Once the scores load, the scroller isn't a Tab
-  stop of its own (see `docs/accessibility.md`).
+  lands on the same word. The readings are keyed by the message. Once the scores load, the scroller
+  isn't a Tab stop of its own (see `model-reasoning-readings.tsx`).
 - `model-reasoning.scss`: the layout. The card is `$width` from `src/core/message-card/layout.scss`
   wide, and narrower when the view is. It fills the height the title, if any, and the filter row
   leave, up to 800 px, and the readings scroll inside it, so the legend stays in view.

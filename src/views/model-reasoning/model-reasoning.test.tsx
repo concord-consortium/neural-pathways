@@ -70,12 +70,6 @@ const readings = () => screen.findAllByRole("listbox");
 // eslint-disable-next-line testing-library/no-node-access
 const tooltip = () => document.querySelector<HTMLElement>(".word-tooltip");
 
-// jsdom has no PointerEvent, and the plain Event that stands in for it drops `relatedTarget`. A
-// MouseEvent keeps it.
-beforeAll(() => {
-  window.PointerEvent ??= MouseEvent as unknown as typeof PointerEvent;
-});
-
 describe("ModelReasoning", () => {
   beforeEach(() => {
     clearDatasetIndexCache();

@@ -46,12 +46,6 @@ const options = (pathway = 1) =>
 // eslint-disable-next-line testing-library/no-node-access
 const tooltip = () => document.querySelector<HTMLElement>(".word-tooltip");
 
-// jsdom has no PointerEvent, and the plain Event that stands in for it drops `relatedTarget`, which
-// says where the pointer went. A MouseEvent keeps it.
-beforeAll(() => {
-  window.PointerEvent ??= MouseEvent as unknown as typeof PointerEvent;
-});
-
 describe("PathwayReading", () => {
   it("shows plain words, and no listbox, while the scores load", () => {
     render(<Harness scores={undefined} />);

@@ -36,12 +36,6 @@ const renderArea = (...notes: WordScoreNote[]) => {
   return { ...view, tooltip };
 };
 
-// jsdom has no PointerEvent, and the plain Event that stands in for it drops `relatedTarget`, which
-// says where the pointer went. A MouseEvent keeps it.
-beforeAll(() => {
-  window.PointerEvent ??= MouseEvent as unknown as typeof PointerEvent;
-});
-
 describe("WordTooltipArea", () => {
   it("shows the hovered word's score, with a U+2212 minus", () => {
     const { tooltip } = renderArea(tarrak);

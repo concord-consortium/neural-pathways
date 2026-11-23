@@ -98,8 +98,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   readings can share it. `WordTooltipArea` goes around a card's readings and shows one tooltip for
   them all, the score of the word under the pointer or else of the focused word.
 
-  `layout.scss` holds only `$width`, the card's width in the lesson's two-column layouts, so a
-  view's stylesheet can `@use` it without adding CSS.
+  `layout.scss`: `$width`, the card's width in the lesson's two-column layouts.
 - `fonts.scss`: the font stacks, and where each font comes from. A stylesheet uses its variables
   rather than spelling a stack out.
 - `alien-icons/`: `AlienIcon` and the alien attributes' icons, one `.svg` file per attribute,

@@ -1,8 +1,7 @@
 @use "../../core/message-card/layout";
 
-// At least the window's height, so the layout below the title can fill what is left of it. In an
-// Interactive there is no title, and the top padding takes its place. The shell sets its size (see
-// app.scss).
+// At least the window's height, so the layout can fill what the title, or the top padding in an
+// Interactive, leaves of it. --view-top-padding: see app.scss.
 .model-reasoning {
   display: flex;
   flex-direction: column;
@@ -16,10 +15,10 @@
 // One column, as wide as the card and narrower when the view is: the filter row over the message
 // card. The flow on the right is still to come.
 //
-// The layout takes the height the title leaves, and the card's row grows into it, up to 800 px as
-// Looking Inside's does. It stops at 300 px, below which the card runs past the window and the page
-// scrolls. min-height: 0 because the browser measures the layout's content height with the row at its
-// 800 px most, which would otherwise be its minimum.
+// The layout takes the height left below the title, or below the top padding in an Interactive, and
+// the card's row grows into it, up to 800 px, as Looking Inside's does (see looking-inside.scss for
+// why, and for min-height: 0). It stops at 300 px, below which the card runs past the window and the
+// page scrolls.
 .model-reasoning__layout {
   display: grid;
   flex: 1 1 0;
