@@ -554,8 +554,11 @@ test("the diagram is never drawn bigger than its box, even by a fraction of a pi
 });
 
 test.describe("About", () => {
-  /** The narrowest Interactive that holds the network's head on one line: see the README's Size section. */
-  const MIN_LAYOUT_WIDTH = 981;
+  /**
+   * The narrowest Interactive the view is designed for, which holds the network's head on one line with
+   * room to spare for text drawn wider: see the README's Size section.
+   */
+  const MIN_LAYOUT_WIDTH = 990;
   /** The narrowest Interactive with two columns, where the head wraps. */
   const TWO_COLUMN_WIDTH = 910;
   /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
@@ -981,11 +984,11 @@ test("the network's head holds its title, legend and controls in that order", as
   expect(Math.abs(center(legend) - center(controls))).toBeLessThanOrEqual(4);
 });
 
-// As on a school network that blocks Google Fonts, in an Interactive. 981 is the minimum layout width;
+// As on a school network that blocks Google Fonts, in an Interactive. 990 is the minimum layout width;
 // 1024 the designed width, where the wider fallback font still wraps the head; 480 is a narrow window.
 // Every item must stay inside the head's side padding, and when the head wraps the legend drops below
 // the title with the controls rather than staying on the title's line.
-for (const width of [480, 981, 1024]) {
+for (const width of [480, 990, 1024]) {
   test(`with Google Fonts blocked, nothing in the network's head runs past it at ${width} px`, async ({ page }) => {
     await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
     await page.setViewportSize({ width, height: 900 });

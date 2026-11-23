@@ -51,17 +51,20 @@ generator fits to the alien3 data; the view reads it from the index (`alien3Netw
 
 ## Size
 
-The minimum layout size (see `docs/accessibility.md`) is 981 × 562 px as an Interactive, inside the
+The minimum layout size (see `docs/accessibility.md`) is 990 × 562 px as an Interactive, inside the
 designed size of 1024 × 562 with no height to spare.
 
-The minimum layout width, 981 px, is the narrowest at which the network panel's head holds its
-title, the activation legend and the Animate controls on one line, measured with the web fonts
-loaded: a 949 px view inside the Interactive's 16 px gutters. The two columns stack below 910 px: the
+The minimum layout width, 990 px, is set by the network panel's head, which must hold its title,
+the activation legend and the Animate controls on one line with the web fonts loaded. Nothing in
+the CSS fixes that width: it is where the text happens to fit, and that depends on how the system
+draws the text. Chrome on macOS fits it from 981 px. Chrome on Linux, as in CI, draws the title
+about 2 px wider and needs 982 px. Other systems may need more, so the minimum leaves about 8 px to
+spare: a 958 px view inside the Interactive's 16 px gutters. The two columns stack below 910 px: the
 card's 447 px, a 10 px gap and the step row's 421 px (`$two-columns-width` in `looking-inside.scss`),
 878 px, inside the gutters. The step row holds
 Step 1 to Step 4, Reset and About on one line, and is wider than the network panel's narrowest,
-382 px. Between 910 and 981 px the two columns hold and the head wraps, the legend and the controls
-dropping below the title together; the view works there, but no reviewed design covers it.
+382 px. Between 910 px and about 981 px the two columns hold and the head wraps, the legend and the
+controls dropping below the title together; the view works there, but no reviewed design covers it.
 
 The minimum layout height, 562 px, adds up from the top:
 - the view's 9 px top padding, which takes the title's place in an Interactive;
@@ -70,12 +73,12 @@ The minimum layout height, 562 px, adds up from the top:
 - the card and network panels at their smallest, 500 px. That is the diagram's smallest layout,
   331 px (`MIN_HEIGHT` in `layout.ts`), 80 px for the network panel's head, padding and border, the
   readout box, 81 px with its margin, and 8 px of padding under it. The panel row's minimum is the
-  network panel's min-content height, so where the head wraps, between 910 and 981 px or in the
-  fallback font, the panels' smallest grows with it and the page scrolls sooner.
+  network panel's min-content height, so where the head wraps, between 910 and about 981 px or in
+  the fallback font, the panels' smallest grows with it and the page scrolls sooner.
 
 `MIN_HEIGHT` is the least height that draws the network's tallest column, 10 input neurons, at
 radius 12, the most the layout draws. The readout box holds three lines of its longest text at
-981 px wide. Extract the Neural Pathways lays the network out taller, in its 440 px canvas, so
+990 px wide. Extract the Neural Pathways lays the network out taller, in its 440 px canvas, so
 `MIN_HEIGHT` doesn't change it.
 
 The view's 16 px bottom padding is the first thing to go as the window gets shorter, so it isn't

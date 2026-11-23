@@ -131,9 +131,9 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
   and where a network blocks it they fall back to a wider sans-serif. In the fallback font the legend
   and the Animate controls (207 px rather than 184 px) are wider, so Looking Inside a Neural
-  Network's head wraps up to about 1,115 px, where with the web fonts it is on one line from 981 px.
-  Wrapped, the legend and the controls drop below the title together, and the head is 89 px tall
-  rather than 62, at 981 px and at 910 px alike. Its items wrap rather than overflow, so nothing runs
+  Network's head wraps up to about 1,115 px, where with the web fonts it is on one line from about
+  981 px. Wrapped, the legend and the controls drop below the title together, and the head is 89 px
+  tall rather than 62, at 990 px and at 910 px alike. Its items wrap rather than overflow, so nothing runs
   past the panel at 910 px or at 480 px, and the panels' smallest grows with the head, so the page
   scrolls down sooner. Only the
   messages' font, Spline Sans Mono, is served with the app so far. Serving the other two the same way

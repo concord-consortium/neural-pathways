@@ -333,13 +333,13 @@ than 184 px and run 16 px past the head. Adding the legend makes this worse. The
 CSS, whatever the root cause turns out to be: the head wraps, its items don't overflow it, and in a
 narrow head the legend and controls drop below the title. Check, with Google Fonts blocked:
 
-- at 480 px, at the minimum layout width (981 px) and at the designed 1024 px, nothing in the head
+- at 480 px, at the minimum layout width (990 px) and at the designed 1024 px, nothing in the head
   runs past its edge;
 - the existing "wrap below the title" test keeps passing with the web font, at 910 px.
 
 A wrapped head is 27 px taller. The panel row's minimum is the network panel's min-content height,
-so where the head wraps, in the fallback font or between 910 and 981 px, the panels grow with it
-and the page scrolls down sooner, rather than the readout box running past the panel's border.
+so where the head wraps, in the fallback font or between 910 and about 981 px, the panels grow with
+it and the page scrolls down sooner, rather than the readout box running past the panel's border.
 
 Update `docs/accessibility.md`'s known gap (the head growing between 910 and about 935 px in the
 fallback font) with the new measurements.
@@ -350,10 +350,13 @@ The legend and the readout box didn't fit the view's earlier minimum layout size
 an Interactive once #57 leaves the title out. Scott chose to raise the width, and to size the height
 from what the diagram needs:
 
-- **Width.** The minimum layout width is 981 px as an Interactive, a 949 px view: the narrowest at
-  which the network panel's head holds its title, legend and controls on one line, measured with
-  the web fonts loaded. The README gives the number. The two columns still stack below 910 px;
-  between 910 and 981 px the head wraps and the view still works.
+- **Width.** The minimum layout width is 990 px as an Interactive, a 958 px view. The network
+  panel's head must hold its title, legend and controls on one line with the web fonts loaded. That
+  first measured 981 px in Chrome on macOS, but Chrome on Linux, where CI runs, draws the title
+  about 2 px wider and needs 982 px, so the head wrapped in CI. Since other systems may differ again,
+  Scott chose 990 px, which leaves about 8 px to spare. The README gives the number and the reason.
+  The two columns still stack below 910 px; between 910 and about 981 px the head wraps and the view
+  still works.
 - **Height.** `MIN_HEIGHT` in `layout.ts` is 331 px, the least that draws the network's tallest
   column, 10 input neurons, at radius 12, the most the layout draws: 9 × 30 px between neighbors,
   44 px above for the captions and 17 px below for the bottom neuron's ring. With the readout box at
@@ -437,7 +440,7 @@ Playwright:
 - During Step 1 chips appear over the layout and are gone after it, in both layouts; with Animate
   off none appear; they re-aim when the window resizes or the diagram scrolls.
 - The box holds one height for every text, and grows, uncut, at 200% zoom and with text-only zoom.
-- The head with Google Fonts blocked, at 480, 981 and 1024 px, and the readout box inside the panel
+- The head with Google Fonts blocked, at 480, 990 and 1024 px, and the readout box inside the panel
   where the head wraps.
 - At the minimum layout size, the head is one line, nothing scrolls, and the page doesn't scroll
   down; at 910 px wide the head wraps without overflowing.
