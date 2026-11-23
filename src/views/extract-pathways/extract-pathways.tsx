@@ -2,20 +2,25 @@ import React, { useId, useLayoutEffect, useMemo } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
 import { ViewTitle } from "../../core/view-title/view-title";
+import { ActivationLegend } from "../../core/activation-legend/activation-legend";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { alien3Dataset, alien3Loadings, alien3Network } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
+import { LoadingLegend } from "../../core/loading-legend/loading-legend";
 import { Network } from "../../core/network/network";
 import { useViewState } from "../../core/state/view-state-context";
 import { StepPlayer } from "../../core/steps/step-player";
 import { StepButtonGroup } from "../../core/steps/step-button-group";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
+import { useElementSize } from "../../core/use-element-size";
 import { deckSize } from "./deck-layout";
 import { ExtractDrawing } from "./extract-drawing";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 import { extractButtons, extractProgress, MAX_COLLECTED } from "./extract-steps";
+import { ExtractScene } from "./extract-scene";
 import { extractTimeline } from "./extract-timeline";
+import { loadingLegendReveal } from "./loading-legend-reveal";
 import { checkLoadingsShape, Loadings } from "./pathways-layout";
 import about from "./about.md";
 import "./extract-pathways.scss";
@@ -103,7 +108,12 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
       <section className="extract-pathways__network" aria-labelledby={panelHeadId}>
         <div className="extract-pathways__network-head">
           <h2 id={panelHeadId} className="extract-pathways__network-title">{PANEL_TITLE}</h2>
-          <AnimationControls animated={state} />
+          <div className="extract-pathways__network-tools">
+            <ActivationLegend />
+            <LoadingLegendSlot player={player} />
+            <span className="extract-pathways__network-rule" aria-hidden="true" />
+            <AnimationControls animated={state} />
+          </div>
         </div>
         <div className="extract-pathways__drawing">
           <Observer>
@@ -116,5 +126,34 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
         </div>
       </section>
     </>
+  );
+});
+
+/**
+ * The loading legend, which slides open and fades in with the pathways' lines. It stays out of the
+ * layout until they start, so the activation legend has the head to itself. Reads the player's scene
+ * on its own, so the view's body doesn't re-render while a run plays.
+ */
+const LoadingLegendSlot = observer(function LoadingLegendSlot({ player }: { player: StepPlayer<ExtractScene> }) {
+  const [setNatural, natural] = useElementSize<HTMLDivElement>({ width: 0, height: 0 });
+  const reveal = loadingLegendReveal(player.scene);
+  let style: React.CSSProperties;
+  if (!reveal) {
+    style = { display: "none" };
+  } else if (reveal.width === 1) {
+    style = { opacity: reveal.opacity };
+  } else {
+    // Until the legend is measured, its width is left to its content.
+    style = { overflow: "hidden", opacity: reveal.opacity };
+    if (natural.width > 0) {
+      style.width = reveal.width * natural.width;
+    }
+  }
+  return (
+    <div className="extract-pathways__loading-legend" style={style}>
+      <div ref={setNatural} className="extract-pathways__loading-legend-natural">
+        <LoadingLegend />
+      </div>
+    </div>
   );
 });

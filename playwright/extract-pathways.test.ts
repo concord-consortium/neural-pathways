@@ -363,3 +363,52 @@ test("Extract Pathways flies its particles on the particle canvas, and removes i
   await expect(page.getByTestId("particles")).toHaveCount(0, { timeout: 10_000 });
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible({ timeout: 15_000 });
 });
+
+// As on a school network that blocks Google Fonts, where Lato and Barlow Condensed fall back to
+// wider fonts.
+test.describe("with Google Fonts blocked", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
+  });
+
+  /** Opens the view at `width`, draws the pathways, and returns the boxes of the head's parts. */
+  async function headAt(page: Page, width: number) {
+    await page.setViewportSize({ width, height: 900 });
+    await open(page);
+    await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
+    await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+    // Done, so the loading legend is at its full width.
+    await expect(page.getByText("Loading", { exact: true })).toBeVisible();
+    const head = (await page.locator(".extract-pathways__network-head").boundingBox())!;
+    const title = (await page.getByRole("heading", { name: "The Neural Network → Activated Pathways" }).boundingBox())!;
+    const tools = (await page.locator(".extract-pathways__network-tools").boundingBox())!;
+    const parts = {
+      title,
+      activation: (await page.locator(".activation-legend").boundingBox())!,
+      loading: (await page.locator(".loading-legend").boundingBox())!,
+      controls: (await page.locator(".animation-controls").boundingBox())!,
+    };
+    return { head, title, tools, parts };
+  }
+
+  function expectInside(head: { x: number; width: number }, parts: Record<string, { x: number; width: number }>) {
+    for (const [name, box] of Object.entries(parts)) {
+      expect(box.x + box.width, name).toBeLessThanOrEqual(head.x + head.width);
+    }
+  }
+
+  test("nothing in the head runs past it at 480 px", async ({ page }) => {
+    const { head, parts } = await headAt(page, 480);
+    expectInside(head, parts);
+  });
+
+  test("nothing in the head runs past it at the minimum layout width", async ({ page }) => {
+    const { head, parts } = await headAt(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA);
+    expectInside(head, parts);
+  });
+
+  test("the tools drop below the title when they don't fit beside it", async ({ page }) => {
+    const { title, tools } = await headAt(page, 480);
+    expect(tools.y).toBeGreaterThanOrEqual(title.y + title.height);
+  });
+});

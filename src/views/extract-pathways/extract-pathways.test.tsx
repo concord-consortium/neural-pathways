@@ -14,6 +14,8 @@ import { collectAllDuration } from "./collect-all-timeline";
 import { collectDuration } from "./collect-timeline";
 import { ExtractPathways } from "./extract-pathways";
 import { ExtractPathwaysState } from "./extract-pathways-state";
+import pathwaysDoneSnapshot from "./__fixtures__/extract-pathways-state.v1-pathways-done.json";
+import { fromSnapshot } from "mobx-keystone";
 import { EXTRACT_MS } from "./pathways-timeline";
 import { setupDuration } from "./setup-timeline";
 
@@ -201,6 +203,25 @@ describe("ExtractPathways", () => {
     fireEvent.click(within(panel).getByRole("checkbox", { name: "Animate" }));
     expect(state.animate).toBe(false);
     expect(within(panel).getByRole("slider", { name: "Animation speed" })).toBeDisabled();
+  });
+
+  it("shows the activation legend in the panel's head", async () => {
+    showView();
+    await screen.findByRole("img", { name: "The network." });
+    const panel = screen.getByRole("region", { name: "The Neural Network → Activated Pathways" });
+    expect(within(panel).getByText("Neuron Activation")).toBeInTheDocument();
+  });
+
+  it("keeps the loading legend out of the layout until the pathways are drawn", async () => {
+    showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true, pathwaysDone: false }));
+    await screen.findByRole("img", { name: DECK });
+    expect(screen.getByText("Loading")).not.toBeVisible();
+  });
+
+  it("shows the loading legend once the pathways are drawn", async () => {
+    showView(fromSnapshot(ExtractPathwaysState, pathwaysDoneSnapshot as any));
+    await screen.findByRole("img", { name: PATHWAYS });
+    expect(screen.getByText("Loading")).toBeVisible();
   });
 
   it("builds the deck of every message with Collect All, and stores it", async () => {
