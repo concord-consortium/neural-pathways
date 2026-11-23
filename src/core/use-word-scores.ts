@@ -15,7 +15,7 @@ function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
-/** The loaded SHAP buckets, one Map per dataset, so a bucket is fetched once per page load. */
+/** The loaded SHAP buckets, one Map per dataset, so a bucket that has loaded isn't fetched again. */
 const bucketCaches = new Map<string, Map<string, S3ShapBucket>>();
 
 function bucketCache(dataset: DatasetDefinition): Map<string, S3ShapBucket> {
