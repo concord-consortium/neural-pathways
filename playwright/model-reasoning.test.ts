@@ -148,6 +148,21 @@ test("the tooltip follows its word when the readings scroll", async ({ page }) =
   await expect(tooltip(page)).toBeHidden();
 });
 
+test("the tooltip hides when its word scrolls below the readings", async ({ page }) => {
+  await openView(page);
+  await showLongMessage(page);
+  await scroller(page).evaluate(el => { el.scrollTop = el.scrollHeight; });
+  const word = coloredOptions(page, 3).last();
+  await word.evaluate(el => el.focus({ preventScroll: true }));
+  await expect(tooltip(page)).toBeVisible();
+  // Scrolled until the word's top is just below the scroller's bottom.
+  await scroller(page).evaluate((el, focused) => {
+    el.scrollTop -= el.getBoundingClientRect().bottom - focused.getBoundingClientRect().top + 1;
+  }, await word.elementHandle());
+  expect((await box(word)).y).toBeGreaterThan((await box(scroller(page))).y + (await box(scroller(page))).height);
+  await expect(tooltip(page)).toBeHidden();
+});
+
 test("the tooltip of a word on the first line stays inside the card", async ({ page }) => {
   await openView(page);
   // Its readings overflow the scroller, so they can be scrolled.
