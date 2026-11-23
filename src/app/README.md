@@ -20,11 +20,13 @@ line here is reviewed; see `src/core/README.md`.
 ## Modes
 
 `App` (`components/app.tsx`) decides the mode from `?interactive=`. If it is present, the page is
-in interactive mode: that view is shown alone and the hash is ignored. The view also leaves out its
-title, since the Activity Player's title bar names it; see `ViewTitle` in `src/core/view-title/`. A
-9 px top padding takes the title's place (see `components/app.scss`). Otherwise
+in interactive mode: that view is shown alone and the hash is ignored. Otherwise
 `StandaloneLayout` shows the view nav and follows `#view=`. An id that is not in the registry
 shows "Unknown view" with the list of valid ids, in either mode.
+
+In interactive mode the view also leaves out its title, since the Activity Player's title bar names
+it; see `ViewTitle` in `src/core/view-title/`. A 9 px top padding takes the title's place (see
+`components/app.scss`).
 
 When the standalone app changes view, it scrolls the new view to the top and announces its title
 in a status region. Focus stays on the nav link, so a student can keep stepping through the
