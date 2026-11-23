@@ -13,9 +13,9 @@ import { COPY_END_SCALE } from "./pathways-timeline";
 /** The box's kick (the prototype's d1a-boxkick): keyframes of time and scale, each eased. */
 const KICK_KEYFRAMES: readonly [number, number][] = [[0, 1], [0.38, 1.1], [0.7, 0.98], [1, 1]];
 const kickEase = cubicBezier(0.34, 1.1, 0.5, 1);
-const BOX_CORNER = 6;
+export const BOX_CORNER = 6;
 /** How far outside a picked neuron its ring is drawn. */
-const PICK_RING_GAP = 3.5;
+export const PICK_RING_GAP = 3.5;
 
 /** `from` mixed toward `to` by `t`, both #RRGGBB; exactly each at 0 and 1. */
 export function mixColor(from: string, to: string, t: number): string {

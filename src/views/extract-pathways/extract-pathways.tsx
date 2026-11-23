@@ -1,4 +1,4 @@
-import React, { useId, useLayoutEffect, useMemo } from "react";
+import React, { useId, useLayoutEffect, useMemo, useState } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
 import { ViewTitle } from "../../core/view-title/view-title";
@@ -22,6 +22,7 @@ import { ExtractScene } from "./extract-scene";
 import { extractTimeline } from "./extract-timeline";
 import { loadingLegendReveal } from "./loading-legend-reveal";
 import { checkLoadingsShape, Loadings } from "./pathways-layout";
+import { Pick } from "./pick";
 import about from "./about.md";
 import "./extract-pathways.scss";
 
@@ -90,6 +91,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
   // Stop the player when the view unmounts. A layout effect, so no existing run can finish and
   // store its marker after the view is gone.
   useLayoutEffect(() => () => player.stop(), [player]);
+  const [pick, setPick] = useState<Pick>();
 
   if (passes.length === 0) {
     return <p>No messages.</p>;
@@ -116,11 +118,13 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
           </div>
         </div>
         <div className="extract-pathways__drawing">
+          {/* Reads the player on its own, so the view's body doesn't re-render while a run plays. */}
           <Observer>
             {() => (
               <ExtractDrawing network={network} passes={passes} scales={scales}
                 outputLabels={alien3Dataset.classificationLabels} scene={player.scene} headingId={panelHeadId}
-                deckSize={size} loadings={loadings} pick={undefined} />
+                deckSize={size} loadings={loadings} pick={pick} onPick={setPick}
+                atRest={player.currentRun === undefined} />
             )}
           </Observer>
         </div>

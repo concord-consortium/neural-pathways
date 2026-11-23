@@ -17,6 +17,7 @@ import { Flight, flightDuration, Placed, placeCopy } from "./flight";
 import { ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
 import { Loadings, pathwaysLayout } from "./pathways-layout";
 import { Pick } from "./pick";
+import { PickTargets } from "./pick-targets";
 import "./extract-drawing.scss";
 
 /** The label's drop-in, overshooting as it lands (the prototype's bounceIn). */
@@ -144,6 +145,10 @@ interface ExtractDrawingProps {
   loadings: Loadings;
   /** The neuron or pathway whose loadings are shown alone, if any. */
   pick: Pick;
+  /** Picks a neuron or a pathway, or clears the pick, from the pick targets. */
+  onPick(next: Pick): void;
+  /** No step is playing. The pick targets are offered only at rest after Extract Pathways. */
+  atRest: boolean;
 }
 
 /**
@@ -151,13 +156,14 @@ interface ExtractDrawingProps {
  * strip, and the deck in the left strip, until Collect All moves it to the middle of the room left
  * of the lifted column. Extract Pathways then slides both left and draws the pathways beside the
  * column (`PathwaysLayer`), with the particles on the particle canvas over the SVG
- * (`ParticleCanvas`). Drawn as `scene` says, at full size and as wide as its container, but never
+ * (`ParticleCanvas`). At rest after Extract Pathways, the pick targets and the tip go over both
+ * (`PickTargets`). Drawn as `scene` says, at full size and as wide as its container, but never
  * narrower than `minCanvasWidth`; a narrower container scrolls it sideways, and the keyboard can
  * reach and scroll it (`useKeyboardScrollable`). It is a group named by the panel heading, since
  * the panel is already a region with that name.
  */
 export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
-  network, passes, scales, outputLabels, scene, headingId, deckSize, loadings, pick,
+  network, passes, scales, outputLabels, scene, headingId, deckSize, loadings, pick, onPick, atRest,
 }) => {
   // Until the host is measured, and in jsdom, which can't measure it: the narrowest layout.
   const [hostRef, size] = useElementSize<HTMLDivElement>({ width: 0, height: CANVAS_HEIGHT });
@@ -232,6 +238,10 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
       {scene.pathways?.particles !== undefined && (
         <ParticleCanvas t={scene.pathways.particles} geometry={geometry} passes={passes} size={deckSize}
           layout={pathways} loadings={loadings} />
+      )}
+      {scene.pathways?.done && atRest && (
+        <PickTargets width={width} height={height} lifted={lifted} layout={pathways} names={names} pick={pick}
+          onPick={onPick} />
       )}
     </div>
   );

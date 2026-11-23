@@ -365,6 +365,93 @@ test("Extract Pathways flies its particles on the particle canvas, and removes i
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible({ timeout: 15_000 });
 });
 
+/** Opens the view and draws the pathways at once, with reduced motion. */
+async function openPathways(page: Page) {
+  await open(page);
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
+  await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+}
+
+const neuronTarget = (page: Page, name: string) =>
+  page.getByRole("button", { name: `${name}, show its loadings on the three pathways` });
+const pathwayTarget = (page: Page, n: number) =>
+  page.getByRole("button", { name: `Pathway ${n}, show its loadings on the 14 neurons` });
+
+/** Whether a target's focus ring shows. */
+const focusRingShows = (target: Locator) =>
+  target.locator(".pick-targets__focus").evaluate(ring => getComputedStyle(ring).visibility === "visible");
+
+test("picks a box and a neuron by mouse", async ({ page }) => {
+  await openPathways(page);
+  const box = pathwayTarget(page, 2);
+  await box.click();
+  await expect(box).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("pathway-line")).toHaveCount(14);
+  // A click leaves no focus ring.
+  await expect(box).toBeFocused();
+  expect(await focusRingShows(box)).toBe(false);
+  await box.click();
+  await expect(box).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByTestId("pathway-line")).toHaveCount(42);
+
+  const neuron = neuronTarget(page, "Hidden Layer 1 Neuron 3");
+  await neuron.click();
+  await expect(neuron).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("pathway-line")).toHaveCount(3);
+  await expect(page.getByTestId("pick-ring")).toBeVisible();
+});
+
+test("picks by keyboard", async ({ page }) => {
+  await openPathways(page);
+  await page.getByRole("slider", { name: "Animation speed" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(neuronTarget(page, "Hidden Layer 1 Neuron 1")).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  const second = neuronTarget(page, "Hidden Layer 1 Neuron 2");
+  await expect(second).toBeFocused();
+  await expect(second).toHaveAttribute("aria-pressed", "true");
+  // Picked and focused, it shows both rings.
+  await expect(page.getByTestId("pick-ring")).toBeVisible();
+  expect(await focusRingShows(second)).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(second).toHaveAttribute("aria-pressed", "false");
+
+  await page.keyboard.press("Tab");
+  const box = pathwayTarget(page, 1);
+  await expect(box).toBeFocused();
+  expect(await focusRingShows(box)).toBe(true);
+  await page.keyboard.press(" ");
+  await expect(box).toHaveAttribute("aria-pressed", "true");
+});
+
+test("draws the pick and focus in system colors in forced colors", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await openPathways(page);
+  /** What the browser resolves a system color to, read from a probe styled with it. */
+  const systemColor = (color: string) => page.evaluate(name => {
+    const probe = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    probe.style.stroke = name;
+    document.body.append(probe);
+    const resolved = getComputedStyle(probe).stroke;
+    probe.remove();
+    return resolved;
+  }, color);
+  const stroke = (locator: Locator) => locator.evaluate(element => getComputedStyle(element).stroke);
+
+  await pathwayTarget(page, 2).click();
+  expect(await stroke(page.locator(".extract-drawing__box--picked"))).toBe(await systemColor("CanvasText"));
+
+  await page.getByRole("slider", { name: "Animation speed" }).focus();
+  await page.keyboard.press("Tab");
+  const neuron = neuronTarget(page, "Hidden Layer 1 Neuron 1");
+  await expect(neuron).toBeFocused();
+  expect(await focusRingShows(neuron)).toBe(true);
+  expect(await stroke(neuron.locator(".pick-targets__focus"))).toBe(await systemColor("Highlight"));
+  // So the check above can fail: Highlight isn't the focus color drawn without forced colors.
+  expect(await systemColor("Highlight")).not.toBe("rgb(58, 114, 190)");
+});
+
 // As on a school network that blocks Google Fonts, where Lato and Barlow Condensed fall back to
 // wider fonts.
 test.describe("with Google Fonts blocked", () => {
@@ -421,6 +508,17 @@ test.describe("with Google Fonts blocked", () => {
   test("the tools drop below the title when they don't fit beside it", async ({ page }) => {
     const { title, tools } = await headAt(page, 480);
     expect(tools.y).toBeGreaterThanOrEqual(title.y + title.height);
+  });
+
+  test("keeps the tip inside the canvas and clear of the boxes in the fallback font", async ({ page }) => {
+    await headAt(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, true);
+    const canvas = page.getByRole("img", { name: PATHWAYS });
+    await expect(canvas).toHaveAttribute("width", String(NARROWEST_CANVAS));
+    const canvasBox = (await canvas.boundingBox())!;
+    const tip = (await page.getByTestId("pick-tip").boundingBox())!;
+    const firstBox = (await page.locator(".extract-drawing__box").first().boundingBox())!;
+    expect(tip.x + tip.width).toBeLessThanOrEqual(canvasBox.x + canvasBox.width);
+    expect(tip.y + tip.height).toBeLessThan(firstBox.y);
   });
 });
 

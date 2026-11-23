@@ -1,0 +1,78 @@
+@use "../../core/colors" as colors;
+@use "../../core/fonts" as fonts;
+
+// Over the drawing and the particle canvas. Only the targets take the pointer.
+.pick-targets {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.pick-targets__hit {
+  fill: transparent;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+// The buttons are invisible; their rings and outlines show focus, so they get no outline of their own.
+.pick-targets g:focus {
+  outline: none;
+}
+
+// Never a CSS outline on the rings: an SVG element's outline is square.
+.pick-targets__hover-ring,
+.pick-targets__focus {
+  fill: none;
+  stroke-width: 2;
+  visibility: hidden;
+}
+
+.pick-targets__hover-ring {
+  stroke: colors.$ink;
+  opacity: 0.5;
+}
+
+.pick-targets__neuron:hover .pick-targets__hover-ring {
+  visibility: visible;
+}
+
+// Over the box's own outline, darkening it, and as thick as a pick while pressed.
+.pick-targets__box:hover .pick-targets__box-outline {
+  stroke: colors.$ink;
+  stroke-width: 2;
+}
+
+.pick-targets__box:active .pick-targets__box-outline {
+  stroke-width: 3;
+}
+
+// Keyboard focus only, so a click leaves no ring; outside the pick ring and the picked outline.
+.pick-targets__focus {
+  stroke: colors.$wait;
+}
+
+.pick-targets g:focus-visible .pick-targets__focus {
+  visibility: visible;
+}
+
+// The prototype's d1a-loadtip.
+.pick-targets__tip {
+  font-family: fonts.$body-font;
+  font-size: 13px;
+  font-style: italic;
+  fill: colors.$ink-2;
+}
+
+// Forced colors leave an SVG stroke as it is, and a dark theme's canvas would hide the ink.
+@media (forced-colors: active) {
+  .pick-targets__hover-ring,
+  .pick-targets__box:hover .pick-targets__box-outline {
+    stroke: CanvasText;
+  }
+
+  .pick-targets__focus {
+    stroke: Highlight;
+  }
+}

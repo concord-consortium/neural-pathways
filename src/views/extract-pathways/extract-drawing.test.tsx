@@ -14,6 +14,7 @@ import { extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { flightDuration } from "./flight";
 import { extractPathwaysSceneAt } from "./pathways-timeline";
 import { pathwaysLayout } from "./pathways-layout";
+import { TIP_LINES } from "./pick-targets";
 import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
@@ -23,11 +24,11 @@ const scales = networkScales(fixtureNetwork, passes);
 // jsdom has no ResizeObserver, so the drawing lays out at its narrowest.
 const geometry = extractGeometry(SIZES, 0);
 
-function renderDrawing(scene: ExtractScene) {
+function renderDrawing(scene: ExtractScene, atRest = true) {
   return render(
     <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
       headingId="panel-head" deckSize={passes.length}
-      loadings={fixtureLoadings} pick={undefined} />,
+      loadings={fixtureLoadings} pick={undefined} onPick={jest.fn()} atRest={atRest} />,
   );
 }
 
@@ -78,7 +79,7 @@ describe("ExtractDrawing", () => {
         <h2 id="panel-head">The Neural Network → Activated Pathways</h2>
         <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS}
           scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length}
-          loadings={fixtureLoadings} pick={undefined} />
+          loadings={fixtureLoadings} pick={undefined} onPick={jest.fn()} atRest />
       </>,
     );
     const group = screen.getByRole("group", { name: "The Neural Network → Activated Pathways" });
@@ -229,7 +230,8 @@ describe("ExtractDrawing", () => {
     const scene = collectAllSceneAt(SIZES, 3, 800, close.start + close.duration / 2);
     render(
       <ExtractDrawing network={fixtureNetwork} passes={deckPasses} scales={scales} outputLabels={LABELS}
-        scene={scene} headingId="panel-head" deckSize={800} loadings={fixtureLoadings} pick={undefined} />,
+        scene={scene} headingId="panel-head" deckSize={800} loadings={fixtureLoadings} pick={undefined}
+        onPick={jest.fn()} atRest />,
     );
     const places = scene.deck!.sets.map((_, index) => screen.getByTestId(`deck-place-${index}`))
       .map((place, index) => [index, placeOf(place).x, place.getAttribute("opacity")]);
@@ -284,6 +286,41 @@ describe("ExtractDrawing", () => {
     const share = columnX(900) / dx;
     expect(share).toBeGreaterThan(0);
     expect(share).toBeLessThan(1);
+  });
+
+  it("offers the pick targets and the tip at rest after Extract Pathways, over the drawing", () => {
+    renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings));
+    const targets = screen.getByRole("group", { name: TIP_LINES.join(" ") });
+    expect(screen.getAllByRole("button", { name: /, show its loadings on / })).toHaveLength(17);
+    // Over the drawing's SVG, as its last layer, and the same size.
+    const svg = screen.getByRole("img");
+    // eslint-disable-next-line testing-library/no-node-access -- the drawing's layers, bottom to top
+    const layers = [...svg.parentElement!.children];
+    expect(layers.indexOf(targets)).toBe(layers.length - 1);
+    expect(targets).toHaveAttribute("width", svg.getAttribute("width"));
+    expect(targets).toHaveAttribute("height", svg.getAttribute("height"));
+  });
+
+  it("names the neuron targets as the lifted copies are named", () => {
+    renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings));
+    expect(screen.getByRole("button", { name: "Hidden Layer 2 Neuron 6, show its loadings on the three pathways" }))
+      .toBeInTheDocument();
+  });
+
+  it("offers no pick targets while a step plays, or before the pathways are done", () => {
+    jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    try {
+      const { unmount } = renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings), false);
+      expect(screen.queryByRole("group", { name: TIP_LINES.join(" ") })).not.toBeInTheDocument();
+      unmount();
+      const view = renderDrawing(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, 3000));
+      expect(screen.queryByRole("group", { name: TIP_LINES.join(" ") })).not.toBeInTheDocument();
+      view.unmount();
+      renderDrawing(deckRestScene(SIZES, 20));
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    } finally {
+      jest.restoreAllMocks();
+    }
   });
 
   it("shows the particle canvas only while the particles fly", () => {
