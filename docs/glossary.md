@@ -27,10 +27,11 @@ one thing, or one name for two things, settle it and add it here.
   that pathway. Not to be confused with a reading in Extract the Neural Pathways, which is a value.
 - **word score:** how much a word pushes a pathway up or down, from the SHAP data. The legend calls
   it Word Contribution, which is the name students see.
-- **scale maximum:** the largest |word score| in the dataset (`word_score_max`), the legend's ends.
-- **current word:** the word clicked or arrowed to, the same position in all three readings, which
-  holds each reading's Tab stop. Not "selected" in prose, though it is `aria-selected` in the
-  markup.
+- **scale maximum:** the largest |word score| in a fit's SHAP buckets (`word_score_max`), the
+  legend's ends.
+- **current word:** the word last focused or clicked in a reading, the same position in all three
+  readings, which holds each reading's Tab stop. Not "selected" in prose, though it is
+  `aria-selected` in the markup.
 
 ## The step system
 
