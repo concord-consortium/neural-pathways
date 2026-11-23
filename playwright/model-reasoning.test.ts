@@ -337,7 +337,7 @@ test("when only the text is zoomed, the words and the tooltip double, and the to
     expect(within(await box(tooltip(page)), await box(card(page)))).toBe(true);
   });
 
-test("at 320 px with only the text zoomed, every word's tooltip wraps to stay inside the readings", async ({ page }) => {
+test("at 320 px with only the text zoomed, every tooltip wraps to stay inside the readings", async ({ page }) => {
   await openView(page, 320);
   await zoomTextOnly(page);
   // A tooltip is drawn again when the focus moves to it from a word with none, so a rule sets its
