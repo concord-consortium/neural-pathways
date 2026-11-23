@@ -58,6 +58,10 @@ async function tabToFirstColoredWord(page: Page) {
   return word;
 }
 
+/** Where the tooltip's pointer is centered: at its left, which is measured from inside the border. */
+const pointerCenter = (page: Page) => tooltip(page).evaluate(el =>
+  el.getBoundingClientRect().left + el.clientLeft + parseFloat(getComputedStyle(el, "::after").left));
+
 /** Whether the element at the tooltip's center is the tooltip, so nothing clips or covers it there. */
 const tooltipOnTop = (page: Page) => tooltip(page).evaluate(el => {
   const { left, top, width, height } = el.getBoundingClientRect();
@@ -202,11 +206,7 @@ test("the tooltip of a word at either side is kept inside the readings, its poin
       // Kept within the readings from side to side. It may rise above them, over the legend.
       expect(tooltipBox.x).toBeGreaterThanOrEqual(areaBox.x - 0.5);
       expect(tooltipBox.x + tooltipBox.width).toBeLessThanOrEqual(areaBox.x + areaBox.width + 0.5);
-      // The pointer, which is centered at its left, over the tooltip's padding box, is centered on the
-      // word.
-      const pointerCenter = await tooltip(page).evaluate(el =>
-        el.getBoundingClientRect().left + el.clientLeft + parseFloat(getComputedStyle(el, "::after").left));
-      expect(pointerCenter).toBeCloseTo(wordCenter, 0);
+      expect(await pointerCenter(page)).toBeCloseTo(wordCenter, 0);
       expect(await tooltipOnTop(page)).toBe(true);
     }
   });
@@ -289,23 +289,34 @@ test("at 320 px the card takes the full width and nothing scrolls sideways", asy
 });
 
 // Like Firefox's "Zoom text only": every font twice its size, nothing else.
-test("when only the text is zoomed, the words and the tooltip double and stay inside the card", async ({ page }) => {
-  await openView(page);
-  // The focus, not the pointer, opens it, so the pointer can't land on another word as the text grows.
-  const word = coloredOptions(page, 1).first();
-  await word.focus();
-  await expect(tooltip(page)).toBeVisible();
-  await page.evaluate(() => {
-    const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
-    const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
-    elements.forEach((element, i) => { element.style.fontSize = `${sizes[i] * 2}px`; });
+test("when only the text is zoomed, the words and the tooltip double, and the tooltip follows its word",
+  async ({ page }) => {
+    await openView(page);
+    await showLongMessage(page);
+    // The focus, not the pointer, opens it, so the pointer can't land on another word as the text grows.
+    // The fourth colored word moves to another line when the text doubles.
+    const word = coloredOptions(page, 1).nth(3);
+    await word.focus();
+    const before = await box(word);
+    await expect(tooltip(page)).toBeVisible();
+    await page.evaluate(() => {
+      const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
+      const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
+      elements.forEach((element, i) => { element.style.fontSize = `${sizes[i] * 2}px`; });
+    });
+    expect(await word.evaluate(el => getComputedStyle(el).fontSize)).toBe("26px");
+    expect(await tooltip(page).evaluate(el => getComputedStyle(el).fontSize)).toBe("25px");
+    await expect(tooltip(page)).toBeVisible();
+    const after = await box(word);
+    expect(after.x).not.toBeCloseTo(before.x, 0);
+    // Still 6 px above the word, its pointer over the word, and inside the card.
+    await expect.poll(async () => {
+      const tooltipBox = await box(tooltip(page));
+      return Math.abs((await box(word)).y - tooltipBox.y - tooltipBox.height - 6);
+    }).toBeLessThanOrEqual(1);
+    expect(await pointerCenter(page)).toBeCloseTo(after.x + after.width / 2, 0);
+    expect(within(await box(tooltip(page)), await box(card(page)))).toBe(true);
   });
-  expect(await word.evaluate(el => getComputedStyle(el).fontSize)).toBe("26px");
-  expect(await tooltip(page).evaluate(el => getComputedStyle(el).fontSize)).toBe("25px");
-  await expect(tooltip(page)).toBeVisible();
-  const cardBox = await box(card(page));
-  await expect.poll(async () => within(await box(tooltip(page)), cardBox)).toBe(true);
-});
 
 test("in forced-colors mode the focused word has an outline and the tooltip a border", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });

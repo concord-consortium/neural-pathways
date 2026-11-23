@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { PathwayReading } from "../../core/message-card/pathway-reading";
 import { WordTooltipArea } from "../../core/message-card/word-tooltip";
 
@@ -25,10 +25,9 @@ interface ModelReasoningReadingsProps {
  */
 export const ModelReasoningReadings: React.FC<ModelReasoningReadingsProps> = ({ words, scores, max }) => {
   const [current, setCurrent] = useState<number | undefined>(undefined);
-  const scrollerRef = useRef<HTMLDivElement>(null);
   return (
-    <WordTooltipArea className="model-reasoning__readings" scrollerRef={scrollerRef}>
-      <div ref={scrollerRef} className="model-reasoning__scroller">
+    <WordTooltipArea className="model-reasoning__readings">
+      <div className="model-reasoning__scroller">
         {PATHWAYS.map(pathway => (
           <PathwayReading key={pathway} pathway={pathway} words={words} scores={scores} max={max}
             current={current} onCurrentChange={setCurrent} />

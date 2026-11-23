@@ -138,6 +138,7 @@
     "webpack-dev-server": "^5.2.0"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.8.0",
     "@fontsource/spline-sans-mono": "^5.3.0",
     "core-js": "^3.50.0",
     "liqe": "^3.8.5",

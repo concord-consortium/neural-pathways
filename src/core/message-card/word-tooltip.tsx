@@ -1,5 +1,5 @@
-import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef }
-  from "react";
+import { autoUpdate, computePosition, hide, Middleware, offset, shift } from "@floating-ui/dom";
+import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef } from "react";
 import { pathwayName, signedScore, WordScoreNote } from "./word-score-text";
 import "./word-tooltip.scss";
 
@@ -81,32 +81,59 @@ const visibleTarget = (state: TooltipState): NotedTarget | undefined => {
 // The gap between the word and the tooltip, which the tooltip's pointer fills.
 const POINTER_SIZE = 6;
 
+/** Runs last, so it reads the tooltip's final left: where the word's center is from that left. */
+const pointerLeft: Middleware = {
+  name: "pointerLeft",
+  fn: ({ x, rects }) => ({ data: { left: rects.reference.x + rects.reference.width / 2 - x } }),
+};
+
 /**
- * Places the tooltip, in the area's coordinates, centered over the word and kept inside the area's
- * sides. Its pointer stays over the word. It is hidden while the word is scrolled wholly out of the
- * scroller's view.
+ * Places the tooltip centered over the word and kept inside the area's sides, with its pointer over
+ * the word. It is hidden while the word is scrolled wholly out of view.
  */
-function placeTooltip(tooltip: HTMLElement, word: HTMLElement, area: HTMLElement, scroller: HTMLElement | null) {
-  const wordBox = word.getBoundingClientRect();
-  const areaBox = area.getBoundingClientRect();
-  const tooltipBox = tooltip.getBoundingClientRect();
-  const wordCenter = wordBox.left + wordBox.width / 2 - areaBox.left;
-  const maxLeft = Math.max(0, areaBox.width - tooltipBox.width);
-  const left = Math.min(Math.max(wordCenter - tooltipBox.width / 2, 0), maxLeft);
-  const top = wordBox.top - areaBox.top - POINTER_SIZE - tooltipBox.height;
-  const scrollerBox = scroller?.getBoundingClientRect();
-  const outOfView = !!scrollerBox && (wordBox.bottom <= scrollerBox.top || wordBox.top >= scrollerBox.bottom);
-  tooltip.style.left = `${left}px`;
-  tooltip.style.top = `${top}px`;
-  // The pointer's left is measured from inside the tooltip's border.
-  tooltip.style.setProperty("--word-tooltip-pointer", `${wordCenter - left - tooltip.clientLeft}px`);
-  tooltip.style.visibility = outOfView ? "hidden" : "";
+async function placeTooltip(tooltip: HTMLElement, word: HTMLElement, area: HTMLElement) {
+  const { x, y, middlewareData } = await computePosition(word, tooltip, {
+    placement: "top",
+    middleware: [offset(POINTER_SIZE), shift({ boundary: area }), hide(), pointerLeft],
+  });
+  return { x, y, pointer: middlewareData.pointerLeft.left as number, hidden: !!middlewareData.hide?.referenceHidden };
+}
+
+/**
+ * Places the tooltip over the word, and again whenever the word or the tooltip moves or changes size,
+ * or anything around the word scrolls.
+ */
+function useTooltipPlacement(tooltipRef: React.RefObject<HTMLElement | null>,
+  areaRef: React.RefObject<HTMLElement | null>, word: HTMLElement | undefined) {
+  useLayoutEffect(() => {
+    const tooltip = tooltipRef.current;
+    const area = areaRef.current;
+    if (!word || !tooltip || !area) {
+      return;
+    }
+    let active = true;
+    const place = () => {
+      void placeTooltip(tooltip, word, area).then(({ x, y, pointer, hidden }) => {
+        if (!active) {
+          return;
+        }
+        tooltip.style.left = `${x}px`;
+        tooltip.style.top = `${y}px`;
+        // The pointer's left is measured from inside the tooltip's border.
+        tooltip.style.setProperty("--word-tooltip-pointer", `${pointer - tooltip.clientLeft}px`);
+        tooltip.style.visibility = hidden ? "hidden" : "";
+      });
+    };
+    const stop = autoUpdate(word, tooltip, place);
+    return () => {
+      active = false;
+      stop();
+    };
+  }, [tooltipRef, areaRef, word]);
 }
 
 interface WordTooltipAreaProps {
   className?: string;
-  /** The readings' scroller, so the tooltip hides while its word is scrolled out of view. */
-  scrollerRef?: React.RefObject<HTMLElement | null>;
   children: React.ReactNode;
 }
 
@@ -122,7 +149,7 @@ interface WordTooltipAreaProps {
  * to another word.
  * It is hidden from screen readers, since the word's name says the same thing.
  */
-export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, scrollerRef, children }) => {
+export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, children }) => {
   const [state, dispatch] = useReducer(reduceTooltip, { dismissed: [] });
   const areaRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -141,25 +168,7 @@ export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, scr
     },
   }), []);
 
-  const place = useCallback(() => {
-    const tooltip = tooltipRef.current;
-    const area = areaRef.current;
-    if (shown && tooltip && area) {
-      placeTooltip(tooltip, shown.element, area, scrollerRef?.current ?? null);
-    }
-  }, [shown, scrollerRef]);
-
-  useLayoutEffect(place, [place]);
-
-  useEffect(() => {
-    const area = areaRef.current;
-    if (!shown || !area || typeof ResizeObserver === "undefined") {
-      return;
-    }
-    const observer = new ResizeObserver(place);
-    observer.observe(area);
-    return () => observer.disconnect();
-  }, [shown, place]);
+  useTooltipPlacement(tooltipRef, areaRef, shown?.element);
 
   // Escape hides the tooltip wherever the focus is, since a tooltip the pointer opened shows while the
   // focus is outside the area. The key is left to reach anything else that wants it, and the focus
@@ -189,8 +198,7 @@ export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, scr
 
   return (
     <WordTooltipContext.Provider value={events}>
-      <div ref={areaRef} className={`word-tooltip-area${className ? ` ${className}` : ""}`}
-        onScrollCapture={place}>
+      <div ref={areaRef} className={`word-tooltip-area${className ? ` ${className}` : ""}`}>
         {children}
         {shown &&
           // One the focus opened lets the pointer through to the words it covers. Only one the pointer
