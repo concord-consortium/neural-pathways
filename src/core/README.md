@@ -96,7 +96,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   the scale maximum. `PathwayReading` is one pathway's reading of a message: its words colored by
   their scores on that pathway, as a listbox. The caller holds the current word, so several
   readings can share it. `WordTooltipArea` goes around a card's readings and shows one tooltip for
-  them all, the score of the word under the pointer or else of the focused word.
+  them all, over the word the pointer or the focus moved to last.
 
   `layout.scss`: `$width`, the card's width in the lesson's two-column layouts.
 - `fonts.scss`: the font stacks, and where each font comes from. A stylesheet uses its variables
