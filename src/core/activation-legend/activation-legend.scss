@@ -7,12 +7,8 @@
   @include legend.legend;
 }
 
-// The minimum height is a swatch's diameter.
 .activation-legend__row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 22px;
+  @include legend.legend-row;
 }
 
 .activation-legend__minus {

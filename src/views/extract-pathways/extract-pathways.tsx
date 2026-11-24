@@ -147,11 +147,8 @@ const LoadingLegendSlot = observer(function LoadingLegendSlot({ player }: { play
   } else if (reveal.width === 1) {
     style = { opacity: reveal.opacity };
   } else {
-    // Until the legend is measured, its width is left to its content.
-    style = { overflow: "hidden", opacity: reveal.opacity };
-    if (natural.width > 0) {
-      style.width = reveal.width * natural.width;
-    }
+    // Until the legend is measured it takes no width, so the head doesn't hold its full width for a frame.
+    style = { overflow: "hidden", opacity: reveal.opacity, width: reveal.width * natural.width };
   }
   return (
     <div className="extract-pathways__loading-legend" style={style}>

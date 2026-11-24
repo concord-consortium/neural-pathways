@@ -7,8 +7,8 @@ import { PathwaysScene } from "./extract-scene";
 import { easeX } from "./flight";
 import { faceSources, PARTICLE_R, particleAt, particlePlan, particleTarget, SOURCE_STEP } from "./particles";
 import { BAR_HEIGHT, BOX_SIDE, LABEL_GAP, Loadings, PathwaysLayout } from "./pathways-layout";
-import { isLit, Pick } from "./pick";
 import { COPY_END_SCALE } from "./pathways-timeline";
+import { isLit, Pick } from "./pick";
 
 /** The box's kick (the prototype's d1a-boxkick): keyframes of time and scale, each eased. */
 const KICK_KEYFRAMES: readonly [number, number][] = [[0, 1], [0.38, 1.1], [0.7, 0.98], [1, 1]];

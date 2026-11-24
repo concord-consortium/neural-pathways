@@ -16,3 +16,12 @@
   text-transform: uppercase;
   color: colors.$ink-2;
 }
+
+// A legend's row: the swatches and their signs on one line. The minimum height is a miniature
+// neuron's diameter, so legends side by side have their captions on one line.
+@mixin legend-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+}

@@ -118,7 +118,6 @@ $two-columns-width: layout.$width + 10px + $step-row-width;
 
 .looking-inside__network-title {
   @include panel.panel-head-title;
-  margin-right: 0;
 }
 
 // The legend, the rule and the controls, which move as one.

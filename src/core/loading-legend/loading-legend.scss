@@ -8,14 +8,8 @@
   white-space: nowrap;
 }
 
-// line-height 1 keeps the row as tall as its bars rather than the line box of its signs. The minimum
-// height is the activation legend's swatch, so the two captions sit on one line.
 .loading-legend__row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 22px;
-  line-height: 1;
+  @include legend.legend-row;
 }
 
 // The zero line is drawn once, down the middle of the pair, so it runs unbroken through the gap

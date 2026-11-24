@@ -105,7 +105,8 @@ export function PickTargets({ width, height, lifted, layout, names, pick, onPick
   });
 
   const x = lifted.x + layout.liftedDx;
-  const pitch = lifted.ys.length > 1 ? lifted.ys[1] - lifted.ys[0] : lifted.r * 4;
+  // The lifted column always has 14 rows, so there is a second row to measure the pitch from.
+  const pitch = lifted.ys[1] - lifted.ys[0];
   const tipX = Math.min(layout.boxes[0].x, width - TIP_ROOM) - TIP_INSET;
   const boxLabel = (p: number) => `Pathway ${p + 1}, show its loadings on the ${lifted.ys.length} neurons`;
 

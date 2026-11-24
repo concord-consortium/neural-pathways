@@ -67,7 +67,6 @@ $step-row-width: 596px + 2 * (86px + 10px);
 
 .extract-pathways__network-title {
   @include panel.panel-head-title;
-  margin-right: 0;
 }
 
 // The legends, the rule and the controls, which move as one.

@@ -34,15 +34,20 @@
   opacity: 0.5;
 }
 
-.pick-targets__neuron:hover .pick-targets__hover-ring {
-  visibility: visible;
+// Only where there is a real hover: on a touch screen a tap would leave the ring behind.
+@media (hover: hover) {
+  .pick-targets__neuron:hover .pick-targets__hover-ring {
+    visibility: visible;
+  }
+
+  // Over the box's own outline, darkening it.
+  .pick-targets__box:hover .pick-targets__box-outline {
+    stroke: colors.$ink;
+    stroke-width: 2;
+  }
 }
 
-// Over the box's own outline, darkening it, and as thick as a pick while pressed.
-.pick-targets__box:hover .pick-targets__box-outline {
-  stroke: colors.$ink;
-  stroke-width: 2;
-}
+// As thick as a pick while pressed.
 
 .pick-targets__box:active .pick-targets__box-outline {
   stroke-width: 3;
