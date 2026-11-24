@@ -96,8 +96,8 @@ export function extractGeometry(columnSizes: readonly number[], hostWidth: numbe
  * columns collected by hand, each with DECK_PAD_SIDE clear, and the finished deck of 800 in its
  * room left of the lifted column, with DECK_PAD_SIDE clear each side. The function enforces both
  * bounds: it starts from the width the strips need and widens until the finished deck fits. At the
- * canvas's 404 px height the strips set the minimum, and the deck fits its room with about 11 px to spare.
- * A narrower panel scrolls the drawing sideways rather than scaling it down, since text scaled to
+ * canvas's 404 px height the strips set the minimum, and the deck fits its room with about 11 px
+ * to spare. A narrower panel scrolls the drawing sideways rather than scaling it down, since text scaled to
  * fit stops growing when the page is zoomed (WCAG 1.4.4).
  *
  * The prototype has no minimum: it widens its canvas to whatever the panel has.

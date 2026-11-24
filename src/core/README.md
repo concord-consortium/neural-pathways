@@ -138,6 +138,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   `alignWordScores` drops the model's `[CLS]` and `[SEP]` markers and checks the rest are the
   message's words (`messageWords`), one for one. `useWordScores` loads a message's scores under a
   fit, keeping one bucket cache per dataset so stepping back and forth doesn't fetch again.
+- `legend.scss`: the styles the key legends share, the caption over its row and the row itself.
 - `use-element-size.ts`: an element's size, kept current with a ResizeObserver.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and

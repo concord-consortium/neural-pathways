@@ -7,8 +7,9 @@ the deck.
 ## What's here
 
 - `extract-pathways.tsx`: the view. It loads the alien3 messages and shows the step row above
-  one full-width panel holding the drawing. The panel's head holds the shared Animate and speed
-  control. There is no filter and no message panel.
+  one full-width panel holding the drawing. The panel's head holds the activation legend, the loading
+  legend (hidden until Extract Pathways' lines arrive, then sliding in), a divider and the shared
+  Animate and speed controls. There is no filter and no message panel.
 - `extract-pathways-state.ts`: the view's saved state, `ExtractPathwaysState`: whether Setup is
   done, how many messages are collected, whether the deck and the pathways are done, and
   Animate and the speed. A stage still playing isn't stored.
@@ -51,9 +52,17 @@ designed size of 1024 × 562 with no height to spare.
 The minimum layout width, 915 px, is the canvas's narrowest layout, 881 px (`minCanvasWidth` in
 `extract-geometry.ts`), with the panel's border and the app's 16 px gutters. The strips set it: at
 881, the left strip holds the deck's columns collected by hand with 10 px clear. The finished deck
-of 800 fits between the canvas's left edge and the lifted column with 11 px to spare beyond its 10 px clear each side. Once Extract
-Pathways is done, the pathway labels end inside the canvas too. Narrower, the canvas scrolls
-sideways inside its panel and the step row wraps, down to 320 px.
+of 800 fits between the canvas's left edge and the lifted column with about 11 px beyond its 10 px
+clear each side. Once Extract Pathways is done, the pathway labels end inside the canvas too.
+Narrower, the canvas scrolls sideways inside its panel and the step row wraps, down to 320 px.
+
+The panel's head must also hold the title, both legends and the Animate controls on one line at
+915 px, with the web fonts loaded. It does, with room to spare: measured in Chromium through
+Playwright on a Mac, with Extract Pathways done, the head stays one line down to an Interactive
+801 px wide, 114 px under the minimum. Chrome on Linux draws text about 2 px wider (see Looking
+Inside's README), which doesn't touch that. In the fallback font, which is wider, the head may
+wrap, the legends and the controls dropping below the title, and the page then scrolls down in a
+562 px Interactive. That is accepted, as it is for Looking Inside's head.
 
 About sits at the right end of the step row, with the steps centered on the panel. Below 820 px it
 goes on its own line below the steps.

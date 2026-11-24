@@ -140,8 +140,11 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   about 981 px. Wrapped, the legend and the controls drop below the title together, and the head is
   89 px tall rather than 62, at 990 px and at 910 px alike. Its items wrap rather than overflow, so
   nothing runs past the panel at 910 px or at 480 px, and the panels' smallest grows with the head,
-  so the page scrolls down sooner. Only the messages' font, Spline Sans Mono, is served with the app
-  so far. Serving the other two the same way would close this gap.
+  so the page scrolls down sooner. Extract the Neural Pathways' head, which holds both legends, may
+  wrap in the fallback font too. Nothing in it runs past the panel at 480 px or at the view's
+  minimum layout width, and where it wraps, the page scrolls down in a 562 px Interactive. Only the
+  messages' font, Spline Sans Mono, is served with the app so far. Serving the other two the same
+  way would close this gap.
 
 **Scrollers.** A scroller must work from the keyboard
 ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). It may scroll
