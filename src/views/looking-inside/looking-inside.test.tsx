@@ -209,6 +209,19 @@ describe("LookingInside", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(alert);
   });
 
+  it("says the messages can't be shown when the filter's attributes are bad, on every mount", async () => {
+    const badAttribute = { key: "pathway_1", label: "Pathway 1", description: "", type: "binary" as const };
+    mockedFetchIndex.mockResolvedValue({ ...index, metadata: { ...fixtureMetadata, attributes: [badAttribute] } });
+    const alert = "The messages could not be shown: " +
+      'Attribute key "pathway_1" collides with the reserved pathway_<n> pattern';
+    const { unmount } = render(viewWith(new SharedState({})));
+    expect(await screen.findByRole("alert")).toHaveTextContent(alert);
+    unmount();
+    // The index is cached now, so this mount starts ready and renders the body before onLoaded runs.
+    showView();
+    expect(screen.getByRole("alert")).toHaveTextContent(alert);
+  });
+
   it("says the messages couldn't be shown when correcting the message fails", async () => {
     const shared = new SharedState({});
     jest.spyOn(shared, "ensureValidMessage").mockImplementation(() => {

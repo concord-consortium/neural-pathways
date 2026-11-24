@@ -57,9 +57,13 @@ const NO_ATTENTION: NeuronAttention = { messageId: undefined };
 /** The five prompts, by the marker they are shown at. */
 const PROMPT_MARKERS = [0, 1, 2, 3, 4];
 
-/** The index's fitted network, or the error reading it. */
+/**
+ * The index's fitted network, or the error reading it. It also builds the index's filter, which the
+ * body uses, since a mount with the index already loaded renders the body before onLoaded would.
+ */
 function readNetwork(index: S3Index): { network: Network } | { error: Error } {
   try {
+    messageFilterFor(index);
     return { network: alien3Network(index) };
   } catch (error: unknown) {
     return { error: error instanceof Error ? error : new Error(String(error)) };
