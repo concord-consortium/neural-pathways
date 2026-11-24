@@ -249,7 +249,7 @@ describe("ExtractPathways", () => {
       expect(pathwayBox()).toHaveAttribute("aria-pressed", "false");
     });
 
-    it("clears the pick on Reset", async () => {
+    it("no pick survives Reset and a new extraction", async () => {
       setReducedMotion(true);
       await showPathways();
       fireEvent.click(pathwayBox());

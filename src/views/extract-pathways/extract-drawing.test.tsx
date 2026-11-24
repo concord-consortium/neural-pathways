@@ -5,6 +5,7 @@ import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
+import { formatActivation } from "../../core/network-diagram/neuron";
 import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { collectAllPlan, collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
@@ -15,7 +16,6 @@ import { flightDuration } from "./flight";
 import { extractPathwaysSceneAt } from "./pathways-timeline";
 import { pathwaysLayout } from "./pathways-layout";
 import { TIP_LINES } from "./pick-targets";
-import { formatActivation } from "../../core/network-diagram/neuron";
 import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
@@ -263,7 +263,8 @@ describe("ExtractDrawing", () => {
 
   describe("describeScene with a pick", () => {
     const scene = pathwaysRestScene(SIZES, 20, fixtureLoadings);
-    const names = Array.from({ length: 14 }, (_, k) => `Hidden Layer ${k < 10 ? 1 : 2} Neuron ${k + 1}`);
+    const names = Array.from({ length: 14 }, (_, k) =>
+      (k < 8 ? `Hidden Layer 1 Neuron ${k + 1}` : `Hidden Layer 2 Neuron ${k - 7}`));
     const detail = { names, loadings: fixtureLoadings };
     const signed = (value: number) => (value < 0 ? "" : "+") + formatActivation(value);
     const base = "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 messages.";

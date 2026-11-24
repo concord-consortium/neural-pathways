@@ -469,7 +469,8 @@ test("draws the pick and focus in system colors in forced colors", async ({ page
   await expect(neuron).toBeFocused();
   expect(await focusRingShows(neuron)).toBe(true);
   expect(await stroke(neuron.locator(".pick-targets__focus"))).toBe(await systemColor("Highlight"));
-  // So the check above can fail: Highlight isn't the focus color drawn without forced colors.
+  // So the check above can fail: Highlight isn't the focus color drawn without forced colors, which
+  // is $wait (#3A72BE) in src/core/colors.scss.
   expect(await systemColor("Highlight")).not.toBe("rgb(58, 114, 190)");
 });
 
@@ -566,8 +567,14 @@ test("picks in a canvas that scrolls sideways", async ({ page }) => {
   await drawingGroup(page).evaluate(group => {
     group.scrollLeft = group.scrollWidth;
   });
+  // A real mouse click at the drawn box's center, so a target that sits off its box after the scroll
+  // would miss. Clicking the target itself would scroll it into view and hide that.
+  const drawn = page.locator(".extract-drawing__box").nth(2);
+  const drawnBox = (await drawn.boundingBox())!;
   const box = pathwayTarget(page, 3);
-  await box.click();
+  const centerX = drawnBox.x + drawnBox.width / 2;
+  const centerY = drawnBox.y + drawnBox.height / 2;
+  await page.mouse.click(centerX, centerY);
   await expect(box).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -583,6 +590,7 @@ test("doesn't keep the pick on switching views, but keeps the pathways, with the
     await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
     await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
     await expect(page.getByRole("button", { pressed: true })).toHaveCount(0);
+    await expect(pathwayTarget(page, 2)).toHaveAttribute("aria-pressed", "false");
     const legend = page.locator(".extract-pathways__loading-legend");
     await expect(legend).not.toHaveAttribute("style", /width/);
     await expect(legend).toHaveCSS("opacity", "1");
