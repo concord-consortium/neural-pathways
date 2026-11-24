@@ -1,0 +1,49 @@
+@use "../colors" as colors;
+@use "../fonts" as fonts;
+
+// The caption over a row of two miniature neurons, each followed by its sign. Where it sits in its
+// row is up to the row.
+.activation-legend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: fonts.$label-font;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: colors.$ink-2;
+}
+
+// The minimum height is a swatch's diameter.
+.activation-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+}
+
+.activation-legend__minus {
+  margin-right: 4px;
+}
+
+// A circle filled from the middle, as the diagram fills a neuron; its colors are meant to stay in
+// forced colors, like the diagram's.
+.activation-legend__swatch {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px colors.$node-outline;
+  forced-color-adjust: none;
+
+  &--negative {
+    background: linear-gradient(to bottom, #fff 50%, colors.$negative 50%);
+  }
+
+  &--positive {
+    background: linear-gradient(to bottom, colors.$positive 50%, #fff 50%);
+  }
+}

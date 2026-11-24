@@ -13,8 +13,8 @@ test("Step 4 animates to the network's answer", async ({ page }) => {
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Step 4" }).click();
   // The step takes a few seconds, so the answer isn't named yet.
-  await expect(page.getByRole("img", { name: "Network diagram", exact: true })).toBeVisible();
-  await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
+  await expect(page.getByRole("group", { name: "Network diagram", exact: true })).toBeVisible();
+  await expect(page.getByRole("group", { name: /The network predicts (Approach|Wait)\./ }))
     .toBeVisible({ timeout: 10_000 });
 });
 
@@ -216,7 +216,7 @@ test("with Animate off, Step 4 shows the answer at once", async ({ page }) => {
   await page.getByRole("checkbox", { name: "Animate" }).uncheck();
   await page.getByRole("button", { name: "Step 4" }).click();
   // Animated at Medium, Step 4 takes several seconds to name the answer.
-  await expect(page.getByRole("img", { name: /The network predicts (Approach|Wait)\./ }))
+  await expect(page.getByRole("group", { name: /The network predicts (Approach|Wait)\./ }))
     .toBeVisible({ timeout: 1_000 });
 });
 
@@ -224,8 +224,8 @@ test("in a narrow window, Animate and the speed wrap below the network's title",
   await page.setViewportSize({ width: 480, height: 900 });
   await page.goto("/");
   await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
-  // Measured once the web font has loaded: the fallback font is wider, so the controls would
-  // overrun the head.
+  // Measured once the web font has loaded, since the fallback font is wider and wraps the head
+  // differently.
   await page.evaluate(() => document.fonts.ready);
   const head = await page.locator(".looking-inside__network-head").boundingBox();
   const controls = await page.locator(".animation-controls").boundingBox();
@@ -356,7 +356,7 @@ test.describe("the card and network panels", () => {
   const belowNotesText = (notes: Locator) => notes.evaluate(el =>
     el.getBoundingClientRect().bottom - el.querySelector("p")!.getBoundingClientRect().bottom);
 
-  // On a short window the card's body has to give up height, and its head mustn't.
+  // On a short window the card's body has to give up height, and its head must not.
   for (const height of [1000, 450]) {
     test(`have heads of the same height on a ${height} px window`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height });
@@ -402,8 +402,9 @@ test.describe("the card and network panels", () => {
     await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card } = panels(page);
-    // A long message, so its notes run well below the bottom of the card.
-    await page.getByRole("textbox", { name: "Filter" }).fill("n:500");
+    // The message with the longest notes, which run about 15 px below the bottom of the card at its
+    // smallest. Shorter notes fit in the card at its smallest.
+    await page.getByRole("textbox", { name: "Filter" }).fill("n:44");
     await expect(page.getByText("1 / 1", { exact: true })).toBeVisible();
     await openNotes(page);
     const notes = card.getByRole("region", { name: "Observation notes" });
@@ -449,16 +450,19 @@ test.describe("the card and network panels", () => {
     expect((await rect(network)).bottom).toBeCloseTo(500 - 16, 0);
   });
 
-  test("stop shrinking at 380 px, and the page scrolls instead", async ({ page }) => {
+  test("stop shrinking at the diagram's smallest with its chrome, and the page scrolls instead", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 450 });
     await page.goto("/");
     const { card, network } = panels(page);
     await expect(card.getByRole("status")).toHaveText("Message 1 of 800");
-    expect((await rect(card)).height).toBeCloseTo(380, 0);
+    // The diagram at MIN_HEIGHT (331) with its 8 px padding above and below, and the panels the same
+    // height.
+    expect((await rect(network.locator(".looking-inside__diagram"))).height).toBeCloseTo(331 + 16, 0);
     const networkBox = await rect(network);
-    expect(networkBox.height).toBeCloseTo(380, 0);
-    // The drawing still fits in the panel at its smallest.
+    expect((await rect(card)).height).toBeCloseTo(networkBox.height, 0);
+    // The drawing and the readout box still fit in the panel at its smallest.
     expect((await rect(network.locator("svg").first())).bottom).toBeLessThanOrEqual(networkBox.bottom);
+    expect((await rect(page.getByTestId("readout-box"))).bottom).toBeLessThanOrEqual(networkBox.bottom);
     const view = page.getByRole("main");
     expect(await view.evaluate(el => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0);
   });
@@ -475,7 +479,7 @@ const INTERACTIVE_EXTRA = 34;
 async function diagramIn(page: Page, width: number, diagramWidth: number) {
   await page.setViewportSize({ width, height: 900 });
   await page.goto("/?interactive=looking-inside");
-  const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
+  const diagram = page.getByRole("group", { name: "Network diagram", exact: true });
   await expect(diagram).toHaveAttribute("width", String(diagramWidth));
   return page.evaluate(() => {
     const scrollsSideways = (element: Element) => element.scrollWidth > element.clientWidth;
@@ -535,7 +539,7 @@ test("the diagram keeps the focus when its Interactive widens and it stops scrol
 test("the diagram is never drawn bigger than its box, even by a fraction of a pixel", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/?interactive=looking-inside");
-  const diagram = page.getByRole("img", { name: "Network diagram", exact: true });
+  const diagram = page.getByRole("group", { name: "Network diagram", exact: true });
   await expect(diagram).toBeVisible();
   for (const padding of [16.2, 16.4, 16.6, 16.8]) {
     await page.locator(".looking-inside").evaluate((el, px) => { el.style.paddingBottom = `${px}px`; }, padding);
@@ -550,10 +554,15 @@ test("the diagram is never drawn bigger than its box, even by a fraction of a pi
 });
 
 test.describe("About", () => {
-  /** The narrowest Interactive with two columns: see the README's Size section. */
-  const MIN_LAYOUT_WIDTH = 910;
+  /**
+   * The narrowest Interactive the view is designed for, which holds the network's head on one line with
+   * room to spare for text drawn wider: see the README's Size section.
+   */
+  const MIN_LAYOUT_WIDTH = 990;
+  /** The narrowest Interactive with two columns, where the head wraps. */
+  const TWO_COLUMN_WIDTH = 910;
   /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
-  const MIN_LAYOUT_HEIGHT = 442;
+  const MIN_LAYOUT_HEIGHT = 562;
   const about = (page: Page) => page.getByRole("button", { name: "About Looking Inside a Neural Network" });
   const box = async (locator: Locator) => (await locator.boundingBox())!;
 
@@ -582,8 +591,52 @@ test.describe("About", () => {
     expect(scrolls).toBe(false);
   });
 
+  test("holds the network's head on one line at the minimum layout size", async ({ page }) => {
+    await openAt(page, MIN_LAYOUT_WIDTH, MIN_LAYOUT_HEIGHT);
+    const title = await box(page.getByRole("heading", { name: "The Neural Network" }));
+    const controls = await box(page.locator(".animation-controls"));
+    const center = (b: { y: number; height: number }) => b.y + b.height / 2;
+    expect(Math.abs(center(title) - center(controls))).toBeLessThanOrEqual(4);
+  });
+
+  test("wraps the network's head, without overflowing, below the minimum layout width", async ({ page }) => {
+    await openAt(page, TWO_COLUMN_WIDTH, 900);
+    const head = await box(page.locator(".looking-inside__network-head"));
+    const title = await box(page.getByRole("heading", { name: "The Neural Network" }));
+    const legend = await box(page.locator(".activation-legend"));
+    const rule = await box(page.locator(".looking-inside__network-rule"));
+    const controls = await box(page.locator(".animation-controls"));
+    // The legend, the rule and the controls drop below the title together, the controls still last.
+    expect(legend.y).toBeGreaterThanOrEqual(title.y + title.height);
+    expect(controls.y).toBeGreaterThanOrEqual(title.y + title.height);
+    expect(rule.x + rule.width).toBeLessThanOrEqual(controls.x);
+    expect(controls.x + controls.width).toBeLessThanOrEqual(head.x + head.width);
+    expect(controls.y + controls.height).toBeLessThanOrEqual(head.y + head.height);
+  });
+
+  // A wrapped head is taller than one line, and the panels' smallest grows with it rather than
+  // pushing the readout box past the panel's border.
+  for (const [where, width, blockFonts] of [["where the head wraps", 950, false],
+    ["with Google Fonts blocked", 1024, true]] as const) {
+    test(`keeps the readout box inside the network panel ${where}, at the minimum layout height`,
+      async ({ page }) => {
+        if (blockFonts) await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
+        await openAt(page, width, MIN_LAYOUT_HEIGHT);
+        const network = await box(page.getByRole("region", { name: "The Neural Network" }));
+        const head = await box(page.locator(".looking-inside__network-head"));
+        expect(head.height).toBeGreaterThan(62);
+        const readoutBox = await box(page.getByTestId("readout-box"));
+        expect(readoutBox.y + readoutBox.height).toBeLessThanOrEqual(network.y + network.height);
+        // Read together, since the box measures its texts again as the layout settles.
+        await expect.poll(() => page.evaluate(() => {
+          const height = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().height;
+          return Math.abs(height(".message-card") - height(".looking-inside__network"));
+        })).toBeLessThan(0.5);
+      });
+  }
+
   test("stays beside the steps when a pixel narrower stacks the columns", async ({ page }) => {
-    await openAt(page, MIN_LAYOUT_WIDTH - 1, 900);
+    await openAt(page, TWO_COLUMN_WIDTH - 1, 900);
     const card = await box(page.getByRole("region", { name: "Message", exact: true }));
     const network = await box(page.getByRole("region", { name: "The Neural Network" }));
     expect(network.y).toBeGreaterThan(card.y + card.height);
@@ -611,3 +664,348 @@ test.describe("About", () => {
     await expect(about(page)).toBeVisible();
   });
 });
+
+test.describe("Step 1's word flights", () => {
+  const chips = (page: Page) => page.locator(".word-flight-overlay__chip");
+
+  async function openMessage(page: Page) {
+    await page.goto("/");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  }
+
+  async function cardWords(page: Page): Promise<string[]> {
+    return page.locator(".message-words__word").allTextContents();
+  }
+
+  test("fly the message's words into the input layer, then clear them", async ({ page }) => {
+    await openMessage(page);
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    const words = await cardWords(page);
+    expect(words).toContain(await chips(page).first().textContent());
+    await expect(page.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-current", "step");
+    await expect(chips(page)).toHaveCount(0, { timeout: 10_000 });
+  });
+
+  test("fly when the columns are stacked too", async ({ page }) => {
+    await page.setViewportSize({ width: 600, height: 900 });
+    await openMessage(page);
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    await expect(chips(page)).toHaveCount(0, { timeout: 10_000 });
+  });
+
+  test("are skipped with Animate off", async ({ page }) => {
+    await openMessage(page);
+    await page.getByRole("checkbox", { name: "Animate" }).uncheck();
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(page.getByRole("button", { name: "Step 1" })).toHaveAttribute("aria-current", "step");
+    // Poll over the time a flight would have taken to start.
+    for (let i = 0; i < 5; i++) {
+      await expect(chips(page)).toHaveCount(0);
+      await page.waitForTimeout(100);
+    }
+  });
+
+  test("vanish at once when the message changes", async ({ page }) => {
+    await openMessage(page);
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    await page.getByRole("button", { name: "Next message" }).click();
+    await expect(page.getByText("2 / 800", { exact: true })).toBeVisible();
+    await expect(chips(page)).toHaveCount(0);
+  });
+
+  test("re-aim at the neurons' new places when the window resizes", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openMessage(page);
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    await page.setViewportSize({ width: 600, height: 900 });
+    expect(await aLandingChipIsOnItsNeuron(page)).toBe(true);
+  });
+
+  test("re-aim at the neurons' new places when the diagram scrolls", async ({ page }) => {
+    // Narrow enough that the diagram scrolls sideways in its panel.
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.goto("/?interactive=looking-inside");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(chips(page).first()).toBeVisible({ timeout: 500 });
+    await page.locator(".network-diagram").evaluate(scroller => { scroller.scrollLeft = scroller.scrollWidth; });
+    expect(await page.locator(".network-diagram").evaluate(scroller => scroller.scrollLeft)).toBeGreaterThan(50);
+    expect(await aLandingChipIsOnItsNeuron(page)).toBe(true);
+  });
+
+  /** Waits for a chip about to land, which has faded a little, to sit on an input neuron. */
+  async function aLandingChipIsOnItsNeuron(page: Page) {
+    const near = await page.waitForFunction(() => {
+      const outlines = Array.from(document.querySelectorAll(".network-diagram__node[data-column='0']"), node => {
+        const rect = node.getBoundingClientRect();
+        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      });
+      for (const chip of document.querySelectorAll<HTMLElement>(".word-flight-overlay__chip")) {
+        if (Number(chip.style.opacity) >= 1) {
+          continue;
+        }
+        const rect = chip.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        if (outlines.some(o => Math.hypot(o.x - x, o.y - y) <= 20)) {
+          return true;
+        }
+      }
+      return false;
+    }, undefined, { timeout: 10_000, polling: "raf" });
+    return near.jsonValue();
+  }
+});
+
+test.describe("the neurons' readouts", () => {
+  const neuron = (page: Page, name: string) => page.getByRole("button", { name: new RegExp(`^${name},`) });
+  /** What the readout box says: the prompt or the readout. */
+  const readoutBox = (page: Page) => page.getByTestId("readout-box").getByRole("status");
+
+  /** Opens the view with Animate off, so a step ends at once, and plays the steps up to `step`. */
+  async function stepTo(page: Page, step: number) {
+    await page.goto("/");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+    await page.getByRole("checkbox", { name: "Animate" }).uncheck();
+    await page.getByRole("button", { name: `Step ${step}` }).click();
+    await expect(page.getByRole("button", { name: `Step ${step}` })).toHaveAttribute("aria-current", "step");
+  }
+
+  test("hovering a reached neuron dims the other connections in its gaps", async ({ page }) => {
+    await stepTo(page, 2);
+    await neuron(page, "Hidden Layer 1 Neuron 1").hover();
+    // From input 1 to Hidden Layer 1 Neuron 2: in the gap, but not touching the neuron.
+    await expect(page.getByTestId("edge-near-0-0-1")).toHaveAttribute("opacity", "0.1");
+    // From input 1 into Neuron 1 itself.
+    await expect(page.getByTestId("edge-near-0-0-0")).not.toHaveAttribute("opacity");
+  });
+
+  test("clicking a neuron pins its readout, and the keyboard can do the same", async ({ page }) => {
+    await stepTo(page, 4);
+    await expect(readoutBox(page)).toHaveText("Click any neuron in any layer to see how data flows.");
+
+    await page.getByRole("checkbox", { name: "Animate" }).focus();
+    // The speed slider is disabled and the diagram doesn't scroll, so the neurons are next.
+    await page.keyboard.press("Tab");
+    await expect(neuron(page, "Input Layer Neuron 1")).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(neuron(page, "Hidden Layer 1 Neuron 1")).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(readoutBox(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
+    await page.keyboard.press("Escape");
+    await expect(readoutBox(page)).toHaveText("Click any neuron in any layer to see how data flows.");
+
+    await neuron(page, "Hidden Layer 2 Neuron 1").click();
+    await expect(readoutBox(page)).toContainText("Hidden Layer 2 Neuron 1: Activation = ");
+    await page.getByRole("button", { name: "Clear" }).click();
+    await expect(neuron(page, "Hidden Layer 2 Neuron 1")).toBeFocused();
+    await expect(readoutBox(page)).toHaveText("Click any neuron in any layer to see how data flows.");
+  });
+
+  // The pill covers the output's circle, so most clicks on an output land on it.
+  test("a click on an output's pill focuses that neuron, so Escape then unpins it", async ({ page }) => {
+    await stepTo(page, 4);
+    const circle = (await page.getByTestId("neuron-target-3-1").boundingBox())!;
+    await page.mouse.click(circle.x + circle.width / 2, circle.y + circle.height / 2);
+    await expect(neuron(page, "Output Layer: Approach")).toHaveAttribute("aria-pressed", "true");
+    await expect(neuron(page, "Output Layer: Approach")).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(neuron(page, "Output Layer: Approach")).toHaveAttribute("aria-pressed", "false");
+  });
+
+  // Safari doesn't focus a button it clicks, and element.click() doesn't either.
+  test("keeps focus in the diagram when a step press that doesn't move focus leaves the neuron unreached",
+    async ({ page }) => {
+      await stepTo(page, 4);
+      await neuron(page, "Output Layer: Wait").focus();
+      await page.getByRole("button", { name: "Step 2" }).evaluate(button => (button as HTMLElement).click());
+      await expect(page.getByRole("button", { name: "Step 2" })).toHaveAttribute("aria-current", "step");
+      await expect(neuron(page, "Input Layer Neuron 1")).toBeFocused();
+    });
+
+  test.describe("the rings", () => {
+    const ring = (page: Page, column: number, unit: number) => page.getByTestId(`ring-${column}-${unit}`);
+    const dimmedEdges = (page: Page) => page.locator("[data-testid^='edge-'][opacity='0.1']");
+    /** colors.$ink, the pinned ring, and colors.$wait, the keyboard focus ring. */
+    const INK = "rgb(30, 36, 44)";
+    const FOCUS_BLUE = "rgb(58, 114, 190)";
+    const strokeOf = (page: Page, column: number, unit: number) => ring(page, column, unit)
+      .evaluate(circle => {
+        const style = getComputedStyle(circle);
+        return { stroke: style.stroke, opacity: style.opacity };
+      });
+
+    test("a click rings the pinned neuron in ink, not the focus blue", async ({ page }) => {
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await expect(neuron(page, "Hidden Layer 1 Neuron 1")).toHaveAttribute("aria-pressed", "true");
+      expect(await strokeOf(page, 1, 0)).toEqual({ stroke: INK, opacity: "1" });
+    });
+
+    // A dark theme's canvas would hide the ink rings, which forced colors leave as they are.
+    test("draws the rings in the theme's colors in a dark forced-colors theme", async ({ page }) => {
+      await page.emulateMedia({ forcedColors: "active", colorScheme: "dark" });
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await page.keyboard.press("ArrowDown");
+      await expect(neuron(page, "Hidden Layer 1 Neuron 2")).toBeFocused();
+      await neuron(page, "Input Layer Neuron 1").hover();
+      const theme = await page.evaluate(() => {
+        const probe = document.createElement("div");
+        document.body.append(probe);
+        const colorOf = (value: string) => { probe.style.color = value; return getComputedStyle(probe).color; };
+        const colors = { canvasText: colorOf("CanvasText"), highlight: colorOf("Highlight") };
+        probe.remove();
+        return colors;
+      });
+      expect((await strokeOf(page, 1, 0)).stroke).toBe(theme.canvasText);
+      expect((await strokeOf(page, 1, 1)).stroke).toBe(theme.highlight);
+      expect((await strokeOf(page, 0, 0)).stroke).toBe(theme.canvasText);
+    });
+
+    test("a click that unpins leaves no ring and no highlight once the mouse moves away", async ({ page }) => {
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await expect(neuron(page, "Hidden Layer 1 Neuron 1")).toHaveAttribute("aria-pressed", "false");
+      await page.mouse.move(0, 0);
+      await expect(ring(page, 1, 0)).toHaveCount(0);
+      await expect(dimmedEdges(page)).toHaveCount(0);
+      await expect(readoutBox(page)).toHaveText(/^Click any neuron in the Input Layer or Hidden Layer 1/);
+    });
+
+    test("clearing with the mouse leaves no ring and no highlight on the neuron it focuses", async ({ page }) => {
+      await stepTo(page, 4);
+      await page.getByTestId("pill-target-1").click();
+      await expect(readoutBox(page)).toContainText("Approach");
+      await page.getByRole("button", { name: "Clear" }).click();
+      await expect(neuron(page, "Output Layer: Approach")).toBeFocused();
+      await expect(ring(page, 3, 1)).toHaveCount(0);
+      await expect(dimmedEdges(page)).toHaveCount(0);
+    });
+
+    test("keyboard focus rings a neuron in blue, and a pin from the keyboard turns it ink", async ({ page }) => {
+      await stepTo(page, 4);
+      await page.getByRole("checkbox", { name: "Animate" }).focus();
+      await page.keyboard.press("Tab");
+      await expect(neuron(page, "Input Layer Neuron 1")).toBeFocused();
+      expect(await strokeOf(page, 0, 0)).toEqual({ stroke: FOCUS_BLUE, opacity: "1" });
+      await expect(dimmedEdges(page).first()).toBeAttached();
+      await page.keyboard.press("Enter");
+      await expect(neuron(page, "Input Layer Neuron 1")).toHaveAttribute("aria-pressed", "true");
+      expect(await strokeOf(page, 0, 0)).toEqual({ stroke: INK, opacity: "1" });
+
+      // Clearing from the keyboard sends focus back to the neuron, where the keyboard can see it.
+      await page.getByRole("button", { name: "Clear" }).focus();
+      await page.keyboard.press("Enter");
+      await expect(neuron(page, "Input Layer Neuron 1")).toBeFocused();
+      expect(await strokeOf(page, 0, 0)).toEqual({ stroke: FOCUS_BLUE, opacity: "1" });
+    });
+
+    test("a key pressed on a clicked neuron shows its focus", async ({ page }) => {
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await page.mouse.move(0, 0);
+      // Unpinning from the keyboard leaves the neuron focused, so the ring shows where focus is.
+      await page.keyboard.press("Enter");
+      await expect(neuron(page, "Hidden Layer 1 Neuron 1")).toHaveAttribute("aria-pressed", "false");
+      expect(await strokeOf(page, 1, 0)).toEqual({ stroke: FOCUS_BLUE, opacity: "1" });
+    });
+  });
+
+  const cutOff = (page: Page) => page.getByTestId("readout-box")
+    .evaluate(box => box.scrollHeight > box.clientHeight);
+
+  test.describe("at 200% zoom", () => {
+    // Zoom halves the viewport in CSS pixels and doubles the device pixels: see docs/accessibility.md.
+    test.use({ viewport: { width: 512, height: 281 }, deviceScaleFactor: 2 });
+
+    test("the readout is never cut off", async ({ page }) => {
+      await stepTo(page, 2);
+      await neuron(page, "Hidden Layer 1 Neuron 1").click();
+      await expect(readoutBox(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
+      expect(await cutOff(page)).toBe(false);
+    });
+  });
+
+  // Like Firefox's "Zoom text only": every font twice its size, nothing else.
+  test("the readout is never cut off when only the text is zoomed", async ({ page }) => {
+    await stepTo(page, 2);
+    await neuron(page, "Hidden Layer 1 Neuron 1").click();
+    await expect(readoutBox(page)).toContainText("Hidden Layer 1 Neuron 1: Activation = ");
+    await page.evaluate(() => {
+      const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"));
+      const sizes = elements.map(element => parseFloat(getComputedStyle(element).fontSize));
+      elements.forEach((element, i) => { element.style.fontSize = `${sizes[i] * 2}px`; });
+    });
+    expect(await cutOff(page)).toBe(false);
+  });
+
+  test("the box measures again when only its text is zoomed, while it shows nothing", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+    const heights = () => page.evaluate(() => ({
+      held: parseFloat(document.querySelector<HTMLElement>(".readout-box")!.style.minHeight),
+      tallest: Math.max(...Array.from(document.querySelectorAll<HTMLElement>(".readout-box__candidate"),
+        candidate => candidate.offsetHeight)),
+    }));
+    const before = await heights();
+    expect(before.held).toBe(before.tallest);
+    // The box is empty while Step 1 plays, about 5 s, so zooming its text doesn't resize it.
+    await page.getByRole("button", { name: "Step 1" }).click();
+    await expect(readoutBox(page)).toBeEmpty();
+    // Only the box's text, so nothing else that is observed changes size.
+    await page.addStyleTag({ content: ".readout-box, .readout-box__candidate { font-size: 26px !important; }" });
+    await expect.poll(async () => {
+      const after = await heights();
+      return after.held === after.tallest && after.tallest > before.tallest;
+    }, { timeout: 1_000 }).toBe(true);
+    // Measured while Step 1 still plays, not by the render its end brings.
+    await expect(readoutBox(page)).toBeEmpty();
+  });
+});
+
+test("the network's head holds its title, legend and controls in that order", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  const title = (await page.getByRole("heading", { name: "The Neural Network" }).boundingBox())!;
+  const legend = (await page.locator(".activation-legend").boundingBox())!;
+  const controls = (await page.locator(".animation-controls").boundingBox())!;
+  expect(title.x + title.width).toBeLessThanOrEqual(legend.x);
+  expect(legend.x + legend.width).toBeLessThanOrEqual(controls.x);
+  const center = (box: { y: number; height: number }) => box.y + box.height / 2;
+  expect(Math.abs(center(title) - center(legend))).toBeLessThanOrEqual(4);
+  expect(Math.abs(center(legend) - center(controls))).toBeLessThanOrEqual(4);
+});
+
+// As on a school network that blocks Google Fonts, at the minimum and designed widths and a narrow window.
+for (const width of [480, 990, 1024]) {
+  test(`with Google Fonts blocked, nothing in the network's head runs past it at ${width} px`, async ({ page }) => {
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/?interactive=looking-inside");
+    await expect(page.getByText("1 / 800", { exact: true })).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    const box = async (locator: Locator) => (await locator.boundingBox())!;
+    const head = await box(page.locator(".looking-inside__network-head"));
+    const title = await box(page.getByRole("heading", { name: "The Neural Network" }));
+    const legend = await box(page.locator(".activation-legend"));
+    const rule = await box(page.locator(".looking-inside__network-rule"));
+    const controls = await box(page.locator(".animation-controls"));
+    for (const [name, item] of Object.entries({ title, legend, rule, controls })) {
+      expect(item.x + item.width, name).toBeLessThanOrEqual(head.x + head.width - 14 + 0.5);
+    }
+    if (width === 480) {
+      expect(legend.y).toBeGreaterThanOrEqual(title.y + title.height);
+    }
+    if (controls.y >= title.y + title.height) {
+      expect(legend.y).toBeGreaterThanOrEqual(title.y + title.height);
+    }
+  });
+}

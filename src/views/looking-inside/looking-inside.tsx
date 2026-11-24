@@ -1,7 +1,8 @@
-import React, { useCallback, useId, useLayoutEffect, useMemo } from "react";
+import React, { useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
 import { ViewTitle } from "../../core/view-title/view-title";
+import { ActivationLegend } from "../../core/activation-legend/activation-legend";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { MessageCard } from "../../core/message-card/message-card";
 import { MessageWords } from "../../core/message-card/message-words";
@@ -11,10 +12,14 @@ import { alien3Dataset, alien3Network } from "../../core/datasets/alien3-dataset
 import { messageFilterFor, idsFor } from "../../core/filter/message-filter";
 import { FilterBar } from "../../core/filter/filter-bar";
 import { useMessageFilter } from "../../core/filter/use-message-filter";
+import { ForwardPass } from "../../core/network/forward";
 import { indexPasses } from "../../core/network/index-passes";
 import { Network } from "../../core/network/network";
 import { MIN_HEIGHT } from "../../core/network-diagram/layout";
 import { NetworkDiagram } from "../../core/network-diagram/network-diagram";
+import { focusNeuronButton, NeuronInteraction } from "../../core/network-diagram/neuron-targets";
+import { sameNeuron, NeuronRef } from "../../core/network-diagram/neuron";
+import { messageWords } from "../../core/message-text";
 import { validMessageId } from "../../core/state/message";
 import { LookingInsideState } from "./looking-inside-state";
 import { useSharedState, useViewState } from "../../core/state/view-state-context";
@@ -23,6 +28,9 @@ import { useDatasetIndex } from "../../core/use-dataset-index";
 import { StepPlayer } from "../../core/steps/step-player";
 import { StepButtonGroup } from "../../core/steps/step-button-group";
 import { LOOKING_INSIDE_BUTTONS, lookingInsideProgress, lookingInsideTimeline } from "./looking-inside-steps";
+import { WordFlightOverlay } from "./word-flight-overlay";
+import { ReadoutBox } from "./readout-box";
+import { promptText, readoutText } from "./readout-text";
 import about from "./about.md";
 import "./looking-inside.scss";
 
@@ -32,9 +40,30 @@ export const LOOKING_INSIDE_TITLE = "Looking Inside a Neural Network";
 /** Gives the stylesheet the diagram's smallest layout, which it sizes the network panel from. */
 const LAYOUT_STYLE = { "--diagram-min-height": `${MIN_HEIGHT}px` } as React.CSSProperties;
 
-/** The index's fitted network, or the error reading it. */
+/** What the student has pointed at in the diagram, for one message. */
+interface NeuronAttention {
+  /** The message this belongs to; another message's attention counts for nothing. */
+  messageId: string | undefined;
+  pinned?: NeuronRef;
+  hovered?: NeuronRef;
+  /** The neuron with keyboard focus: see `NeuronInteraction.onFocusChange`. */
+  focused?: NeuronRef;
+  /** The neuron that last had focus, from the keyboard or a click, which holds the Tab stop. */
+  lastFocused?: NeuronRef;
+}
+
+const NO_ATTENTION: NeuronAttention = { messageId: undefined };
+
+/** The five prompts, by the marker they are shown at. */
+const PROMPT_MARKERS = [0, 1, 2, 3, 4];
+
+/**
+ * The index's fitted network, or the error reading it. It also builds the index's filter, which the
+ * body uses, since a mount with the index already loaded renders the body before onLoaded would.
+ */
 function readNetwork(index: S3Index): { network: Network } | { error: Error } {
   try {
+    messageFilterFor(index);
     return { network: alien3Network(index) };
   } catch (error: unknown) {
     return { error: error instanceof Error ? error : new Error(String(error)) };
@@ -81,7 +110,6 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // A message's place among all of them, which its pass is stored by. Its place in `ids`
   // changes with the query.
   const placeById = useMemo(() => new Map(index.items.map((item, i) => [item.id, i])), [index]);
-  const timeline = useMemo(() => lookingInsideTimeline(network.layers.map(layer => layer.biases.length)), [network]);
   const { passes, scales } = indexPasses(network, index);
   const networkHeadId = useId();
   // Shown even before the store's correction lands, and while a query is being typed, so an id
@@ -90,6 +118,31 @@ const LookingInsideBody = observer(function LookingInsideBody(
   const listPosition = currentId === undefined ? -1 : ids.indexOf(currentId);
   // No message is shown when nothing matches: the empty list leaves the stored id in place.
   const shownId = listPosition < 0 ? undefined : currentId;
+  const shownText = shownId === undefined ? undefined : index.items[placeById.get(shownId)!].text;
+  const words = useMemo(() => (shownText === undefined ? [] : messageWords(shownText)), [shownText]);
+  const wordCount = words.length;
+  const place = shownId === undefined ? undefined : placeById.get(shownId);
+  // What is hovered, focused and pinned belongs to the message shown. Keeping its id beside it
+  // drops it all when the message changes, with no effect to clear it.
+  const [storedAttention, setAttention] = useState<NeuronAttention>(NO_ATTENTION);
+  if (storedAttention.messageId !== shownId) {
+    // Setting state during render resets it before anything renders with the old value, without the
+    // extra commit a useEffect would take. Once set, the check above is false, so it happens once.
+    setAttention({ messageId: shownId });
+  }
+  const attention = storedAttention;
+  // A change that leaves everything as it was returns the same state object, so React bails out before
+  // rendering the view's children.
+  const updateAttention = (change: Partial<NeuronAttention>) => setAttention(previous => {
+    const unchanged = (Object.keys(change) as Exclude<keyof NeuronAttention, "messageId">[])
+      .every(key => change[key] === previous[key] || sameNeuron(change[key], previous[key]));
+    return unchanged ? previous : { ...previous, ...change };
+  });
+  const diagramRef = useRef<HTMLDivElement>(null);
+  // The layout the word flights are drawn over and measured against.
+  const [layoutElement, setLayoutElement] = useState<HTMLElement | null>(null);
+  const timeline = useMemo(
+    () => lookingInsideTimeline(network.layers.map(layer => layer.biases.length), wordCount), [network, wordCount]);
   const player = useMemo(
     () => (shownId === undefined ? undefined : new StepPlayer(timeline, lookingInsideProgress(state, shownId), state)),
     [timeline, state, shownId]);
@@ -97,18 +150,82 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // run can't finish and store its marker after the change is committed.
   useLayoutEffect(() => () => player?.stop(), [player]);
 
+  const lastColumn = network.layers.length - 1;
+  const pass = place === undefined ? undefined : passes[place];
+  // Every text the box can show for this message, so it can hold the height of the tallest. An input
+  // neuron's readout has a second sentence from Step 2; every other neuron has one form.
+  const candidates = useMemo(() => {
+    if (!pass) return { prompts: [], readouts: [] };
+    const labels = alien3Dataset.classificationLabels;
+    const readouts: React.ReactNode[] = [];
+    network.layers.forEach((layer, column) => {
+      layer.biases.forEach((_, unit) => {
+        const markers = column === 0 ? [1, 2] : [column === lastColumn ? 4 : column + 1];
+        markers.forEach(marker => {
+          readouts.push(readoutText({ column, unit }, marker, pass.layers[column][unit], lastColumn, labels));
+        });
+      });
+    });
+    return { prompts: PROMPT_MARKERS.map(promptText), readouts };
+  }, [network, pass, lastColumn]);
+
   if (index.items.length === 0) {
     return <p>No messages.</p>;
   }
   const goTo = (to: number) => shared.setMessageId(ids[to]);
-  const place = shownId === undefined ? undefined : placeById.get(shownId);
   const shown = place === undefined ? undefined : index.items[place];
 
+  // What the marker says is reached is read where it is drawn, in an Observer, and in the handlers,
+  // so a run moving the marker doesn't render the view and its message card again. While a run plays
+  // the marker is the one it started from, so the neurons the run is reaching become live when it ends.
+  const ifReached = (neuron: NeuronRef | undefined) =>
+    neuron && player && neuron.column < player.marker ? neuron : undefined;
+  const interaction = (): NeuronInteraction => {
+    return {
+      reachedColumns: player?.marker ?? 0,
+      tabStop: attention.lastFocused,
+      rings: { hovered: attention.hovered, pinned: attention.pinned, focused: attention.focused },
+      onHover: hovered => updateAttention({ hovered }),
+      // A blur reports no neuron, and an arrow key moves focus with a blur and then a focus. Any focus
+      // takes the Tab stop; only keyboard focus rings (see `onFocusChange`).
+      onFocusChange: (neuron, visible) => updateAttention(
+        neuron ? { focused: visible ? neuron : undefined, lastFocused: neuron } : { focused: undefined }),
+      onToggle: neuron => updateAttention(
+        { pinned: sameNeuron(ifReached(attention.pinned), neuron) ? undefined : neuron }),
+      onClear: () => updateAttention({ pinned: undefined }),
+    };
+  };
+  const clearReadout = () => {
+    const pinned = ifReached(attention.pinned);
+    updateAttention({ pinned: undefined });
+    if (pinned) {
+      // The Clear button is about to leave the page, so focus goes back to where the student was.
+      focusNeuronButton(diagramRef.current, pinned);
+    }
+  };
+  // A step or Reset press clears the pin: the readout would describe a step that is about to change.
+  // Reset also forgets the neuron that last had focus, so the Tab stop doesn't go back to it when it
+  // is reached again.
+  const onStepPress = (key: string) => {
+    if (key === "reset") {
+      updateAttention({ pinned: undefined, hovered: undefined, focused: undefined, lastFocused: undefined });
+    } else if (attention.pinned) {
+      // Only when there is a pin to clear: a state update with nothing to change still renders the view.
+      updateAttention({ pinned: undefined });
+    }
+  };
+  const contentFor = (shownPlayer: StepPlayer<unknown>, shownPass: ForwardPass) => {
+    const pinned = ifReached(attention.pinned);
+    return pinned
+      ? readoutText(pinned, shownPlayer.marker, shownPass.layers[pinned.column][pinned.unit], lastColumn,
+        alien3Dataset.classificationLabels)
+      : shownPlayer.currentRun ? undefined : promptText(shownPlayer.marker);
+  };
   // The filter comes first: it sits over the card in both layouts. The card comes before the steps,
   // so the tab order matches the stacked layout as well as the wide one. When nothing matches the
   // card says so, and the steps and the network are left out, but the step row stays to hold About.
   return (
-    <div className="looking-inside__layout" style={LAYOUT_STYLE}>
+    <div className="looking-inside__layout" style={LAYOUT_STYLE} ref={setLayoutElement}>
       <div className="looking-inside__filter-row">
         <FilterBar {...bar} />
       </div>
@@ -125,7 +242,8 @@ const LookingInsideBody = observer(function LookingInsideBody(
         </MessageCard>
       </div>
       <div className="looking-inside__step-row">
-        {player && place !== undefined && <StepButtonGroup player={player} buttons={LOOKING_INSIDE_BUTTONS} />}
+        {player && place !== undefined &&
+          <StepButtonGroup player={player} buttons={LOOKING_INSIDE_BUTTONS} onPress={onStepPress} />}
         <div className="looking-inside__about">
           <AboutButton title={LOOKING_INSIDE_TITLE} markdown={about} />
         </div>
@@ -134,18 +252,35 @@ const LookingInsideBody = observer(function LookingInsideBody(
         <section className="looking-inside__network" aria-labelledby={networkHeadId}>
           <div className="looking-inside__network-head">
             <h2 id={networkHeadId} className="looking-inside__network-title">The Neural Network</h2>
-            <AnimationControls animated={state} />
+            <div className="looking-inside__network-tools">
+              <ActivationLegend />
+              <span className="looking-inside__network-rule" aria-hidden="true" />
+              <AnimationControls animated={state} />
+            </div>
           </div>
-          <div className="looking-inside__diagram">
+          <div className="looking-inside__diagram" ref={diagramRef}>
             <Observer>
               {() => (
                 <NetworkDiagram network={network} pass={passes[place]} scales={scales}
-                  outputLabels={alien3Dataset.classificationLabels} scene={player.scene}
-                  headingId={networkHeadId} />
+                  outputLabels={alien3Dataset.classificationLabels} scene={player.scene.network}
+                  headingId={networkHeadId} interaction={interaction()} />
+              )}
+            </Observer>
+          </div>
+          <div className="looking-inside__readout-box">
+            <Observer>
+              {() => (
+                <ReadoutBox content={contentFor(player, pass!)} candidates={candidates}
+                  idle={!ifReached(attention.pinned)}
+                  onClear={ifReached(attention.pinned) ? clearReadout : undefined} />
               )}
             </Observer>
           </div>
         </section>}
+      {player &&
+        <Observer>
+          {() => <WordFlightOverlay time={player.scene.step1Time} words={words} container={layoutElement} />}
+        </Observer>}
     </div>
   );
 });

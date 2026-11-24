@@ -141,6 +141,44 @@ describe("StepButtonGroup", () => {
     expect(player.currentFrame).toBeUndefined();
   });
 
+  it("reports each press, Reset included, before it plays", () => {
+    const markers: number[] = [];
+    const onPress = jest.fn();
+    const player = new StepPlayer(timeline, new TestProgress(1), new TestSettings());
+    onPress.mockImplementation(() => markers.push(player.marker));
+    render(<StepButtonGroup player={player} buttons={BUTTONS} onPress={onPress} />);
+
+    fireEvent.click(button("Later"));
+    expect(onPress).not.toHaveBeenCalled();
+
+    fireEvent.click(button("Next"));
+    act(() => jest.advanceTimersByTime(1100));
+    expect(player.marker).toBe(2);
+    fireEvent.click(button("Reset"));
+
+    expect(onPress.mock.calls).toEqual([["next"], ["reset"]]);
+    // Each press was reported while the marker still had its old value.
+    expect(markers).toEqual([1, 2]);
+  });
+
+  it("reports a press before it plays, even one whose run starts below the marker", () => {
+    const markers: number[] = [];
+    const player = new StepPlayer(timeline, new TestProgress(2), new TestSettings());
+    const onPress = jest.fn(() => markers.push(player.marker));
+    render(<StepButtonGroup player={player} buttons={BUTTONS} onPress={onPress} />);
+    // One always plays from 0 to 1.
+    fireEvent.click(button("One"));
+    expect(markers).toEqual([2]);
+  });
+
+  it("reports nothing for an unavailable Reset", () => {
+    const onPress = jest.fn();
+    const player = new StepPlayer(timeline, new TestProgress(0), new TestSettings());
+    render(<StepButtonGroup player={player} buttons={BUTTONS} onPress={onPress} />);
+    fireEvent.click(button("Reset"));
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
   it("does nothing when Reset is unavailable", () => {
     const player = showRow();
     const reset = jest.spyOn(player, "reset");

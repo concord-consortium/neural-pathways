@@ -1,7 +1,9 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { DIAGRAM_DEFAULT_SIZE, NetworkDiagram } from "./network-diagram";
 import { popScale } from "./network-drawing";
+import { formatActivation } from "./neuron";
+import { NeuronInteraction } from "./neuron-targets";
 import { layoutNetwork } from "./layout";
 import { emptyScene, fullScene, Scene } from "./scene";
 import { fixtureNetwork } from "../network/__fixtures__/alien3-network";
@@ -39,7 +41,7 @@ describe("NetworkDiagram", () => {
   it("is a group named by its panel's heading, and not a Tab stop while it doesn't scroll", () => {
     renderDiagram(emptyScene(SIZES));
     const group = screen.getByRole("group", { name: "The Neural Network" });
-    expect(group).toContainElement(screen.getByRole("img"));
+    expect(group).toContainElement(screen.getByRole("group", { name: "Network diagram" }));
     expect(group).not.toHaveAttribute("tabindex");
   });
 
@@ -52,7 +54,7 @@ describe("NetworkDiagram", () => {
     expect(screen.queryAllByTestId(/^weight-label-/)).toHaveLength(0);
     expect(screen.getByTestId("pill-0")).not.toHaveClass("network-diagram__pill--won");
     expect(screen.getByTestId("pill-1")).not.toHaveClass("network-diagram__pill--won");
-    expect(screen.getByRole("img", { name: "Network diagram" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Network diagram" })).toBeInTheDocument();
     for (const caption of ["Input Layer", "Hidden Layer 1", "Hidden Layer 2", "Output Layer"]) {
       expect(screen.getByText(caption)).toBeInTheDocument();
     }
@@ -155,13 +157,13 @@ describe("NetworkDiagram", () => {
     renderDiagram(fullScene(SIZES));
     expect(screen.getByTestId("pill-0")).toHaveClass("network-diagram__pill--won");
     expect(screen.getByTestId("pill-1")).not.toHaveClass("network-diagram__pill--won");
-    expect(screen.getByRole("img", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Network diagram. The network predicts Wait." })).toBeInTheDocument();
   });
 
   it("marks Approach when the network predicts it", () => {
     renderDiagram(fullScene(SIZES), approachPass);
     expect(screen.getByTestId("pill-1")).toHaveClass("network-diagram__pill--won");
-    expect(screen.getByRole("img", { name: /predicts Approach/ })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: /predicts Approach/ })).toBeInTheDocument();
   });
 
   it("pops the winning pill while the answer arrives, without naming it yet", () => {
@@ -171,7 +173,7 @@ describe("NetworkDiagram", () => {
     const pill = screen.getByTestId("pill-0");
     expect(pill).toHaveClass("network-diagram__pill--won");
     expect(pill).toHaveStyle({ transform: `scale(${popScale(0.3)})` });
-    expect(screen.getByRole("img", { name: "Network diagram" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Network diagram" })).toBeInTheDocument();
   });
 
   it("shows a gap's weight caption only when the scene asks", () => {
@@ -180,6 +182,337 @@ describe("NetworkDiagram", () => {
     renderDiagram(scene);
     expect(screen.getByTestId("weight-label-1")).toHaveTextContent("× weight");
     expect(screen.queryByTestId("weight-label-0")).not.toBeInTheDocument();
+  });
+});
+
+const DIAGRAM_NAME = "Network diagram. The network predicts Wait.";
+
+function makeInteraction(overrides: Partial<NeuronInteraction> = {}): NeuronInteraction {
+  return {
+    reachedColumns: 2, rings: {},
+    onHover: jest.fn(), onFocusChange: jest.fn(), onToggle: jest.fn(), onClear: jest.fn(),
+    ...overrides,
+  };
+}
+
+function renderInteractive(interaction: NeuronInteraction, scene: Scene = fullScene(SIZES)) {
+  return render(
+    <>
+      <h2 id="network-head">The Neural Network</h2>
+      <NetworkDiagram network={fixtureNetwork} pass={waitPass} scales={scales} outputLabels={LABELS} scene={scene}
+        headingId="network-head" interaction={interaction} />
+    </>,
+  );
+}
+
+describe("NetworkDiagram neuron targets", () => {
+  it("is a group with the diagram's label, holding the reached neurons as buttons", () => {
+    renderInteractive(makeInteraction());
+    expect(screen.getByRole("group", { name: DIAGRAM_NAME })).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    const buttons = screen.getAllByRole("button");
+    expect(buttons).toHaveLength(18);
+    expect(buttons[0]).toHaveAccessibleName(
+      `Input Layer Neuron 1, activation ${waitPass.layers[0][0].toFixed(2)}`);
+  });
+
+  it("names a negative activation with an ASCII minus, which every speech engine reads", () => {
+    renderInteractive(makeInteraction({ reachedColumns: 2 }));
+    const unit = waitPass.layers[1].findIndex(activation => activation < 0);
+    const value = waitPass.layers[1][unit];
+    expect(screen.getByRole("button", { name: new RegExp(`^Hidden Layer 1 Neuron ${unit + 1},`) }))
+      .toHaveAccessibleName(`Hidden Layer 1 Neuron ${unit + 1}, activation -${Math.abs(value).toFixed(2)}`);
+  });
+
+  it("draws no targets without an interaction", () => {
+    renderDiagram(fullScene(SIZES));
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    expect(screen.queryAllByTestId(/^neuron-target-/)).toHaveLength(0);
+  });
+
+  it("gives the Tab stop to one neuron only", () => {
+    renderInteractive(makeInteraction({ tabStop: { column: 0, unit: 3 } }));
+    const tabIndexes = screen.getAllByRole("button").map(b => b.getAttribute("tabindex"));
+    expect(tabIndexes.filter(t => t === "0")).toHaveLength(1);
+    expect(tabIndexes.filter(t => t === "-1")).toHaveLength(17);
+    expect(screen.getByRole("button", { name: /^Input Layer Neuron 4,/ })).toHaveAttribute("tabindex", "0");
+  });
+
+  it("leaves out an unreached Tab stop and rings, and gives the stop to the first input", () => {
+    renderInteractive(makeInteraction({
+      reachedColumns: 2, tabStop: { column: 2, unit: 0 },
+      rings: { pinned: { column: 2, unit: 0 }, hovered: { column: 3, unit: 1 }, focused: { column: 2, unit: 1 } },
+    }));
+    expect(screen.getByRole("button", { name: /^Input Layer Neuron 1,/ })).toHaveAttribute("tabindex", "0");
+    expect(screen.queryAllByTestId(/^ring-/)).toHaveLength(0);
+    expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
+    expect(screen.queryAllByTestId(/^edge-/).filter(edge => edge.hasAttribute("opacity"))).toHaveLength(0);
+  });
+
+  it("keeps the highlight on the pinned neuron while another is hovered", () => {
+    renderInteractive(makeInteraction({
+      reachedColumns: 4, rings: { pinned: { column: 1, unit: 0 }, hovered: { column: 2, unit: 0 } },
+    }));
+    // In the gap before the pinned neuron: an edge into it, and one into its neighbor.
+    expect(screen.getByTestId("edge-near-0-0-0")).not.toHaveAttribute("opacity");
+    expect(screen.getByTestId("edge-near-0-0-1")).toHaveAttribute("opacity", "0.1");
+  });
+
+  it("gives the highlight to keyboard focus over a pointer resting on another neuron", () => {
+    renderInteractive(makeInteraction({
+      reachedColumns: 4, rings: { focused: { column: 1, unit: 0 }, hovered: { column: 2, unit: 0 } },
+    }));
+    expect(screen.getByTestId("edge-near-0-0-0")).not.toHaveAttribute("opacity");
+    expect(screen.getByTestId("edge-near-0-0-1")).toHaveAttribute("opacity", "0.1");
+  });
+
+  it("moves focus to the Tab stop when the focused neuron stops being reached", () => {
+    const { rerender } = renderInteractive(makeInteraction({ reachedColumns: 4 }));
+    const output = screen.getByRole("button", { name: /^Output Layer: Wait,/ });
+    act(() => output.focus());
+    // As a step press that doesn't move focus does: the output's button goes, and focus stays put.
+    rerender(
+      <>
+        <h2 id="network-head">The Neural Network</h2>
+        <NetworkDiagram network={fixtureNetwork} pass={waitPass} scales={scales} outputLabels={LABELS}
+          scene={fullScene(SIZES)} headingId="network-head" interaction={makeInteraction({ reachedColumns: 2 })} />
+      </>,
+    );
+    expect(screen.getByRole("button", { name: /^Input Layer Neuron 1,/ })).toHaveFocus();
+  });
+
+  it("reports the focus gone when the focused neuron stops being reached and nothing is", () => {
+    const { rerender } = renderInteractive(makeInteraction({ reachedColumns: 4 }));
+    act(() => screen.getByRole("button", { name: /^Hidden Layer 1 Neuron 1,/ }).focus());
+    // As Step 1 with Animate on does from a later marker: the run starts from marker 0, so nothing is
+    // reached and there is no Tab stop to move focus to.
+    const unreached = makeInteraction({ reachedColumns: 0 });
+    rerender(
+      <>
+        <h2 id="network-head">The Neural Network</h2>
+        <NetworkDiagram network={fixtureNetwork} pass={waitPass} scales={scales} outputLabels={LABELS}
+          scene={fullScene(SIZES)} headingId="network-head" interaction={unreached} />
+      </>,
+    );
+    expect(unreached.onFocusChange).toHaveBeenCalledTimes(1);
+    expect(unreached.onFocusChange).toHaveBeenCalledWith(undefined, false);
+  });
+
+  it("marks the pinned neuron as pressed", () => {
+    renderInteractive(makeInteraction({ rings: { pinned: { column: 1, unit: 2 } } }));
+    const pressed = screen.getAllByRole("button", { pressed: true });
+    expect(pressed).toHaveLength(1);
+    expect(pressed[0]).toHaveAccessibleName(/^Hidden Layer 1 Neuron 3,/);
+  });
+
+  it("doesn't answer a click on neurons the steps haven't reached", () => {
+    const interaction = makeInteraction({ reachedColumns: 1 });
+    renderInteractive(interaction);
+    expect(screen.getAllByRole("button")).toHaveLength(10);
+    fireEvent.click(screen.getByTestId("neuron-target-1-0"));
+    fireEvent.click(screen.getByTestId("pill-target-1"));
+    expect(interaction.onToggle).not.toHaveBeenCalled();
+    expect(interaction.onClear).not.toHaveBeenCalled();
+  });
+
+  it("hears the pointer enter an unreached neuron or pill, so the hover shows once a run reaches it", () => {
+    const interaction = makeInteraction({ reachedColumns: 1 });
+    renderInteractive(interaction);
+    fireEvent.pointerEnter(screen.getByTestId("neuron-target-1-0"));
+    expect(interaction.onHover).toHaveBeenLastCalledWith({ column: 1, unit: 0 });
+    fireEvent.pointerEnter(screen.getByTestId("pill-target-1"));
+    expect(interaction.onHover).toHaveBeenLastCalledWith({ column: 3, unit: 1 });
+  });
+
+  it("hears the pointer leave an unreached neuron or pill, which a step press may have left unreached", () => {
+    const interaction = makeInteraction({ reachedColumns: 1 });
+    renderInteractive(interaction);
+    fireEvent.pointerLeave(screen.getByTestId("neuron-target-1-0"));
+    expect(interaction.onHover).toHaveBeenCalledTimes(1);
+    expect(interaction.onHover).toHaveBeenLastCalledWith(undefined);
+    fireEvent.pointerLeave(screen.getByTestId("pill-target-1"));
+    expect(interaction.onHover).toHaveBeenCalledTimes(2);
+    expect(interaction.onHover).toHaveBeenLastCalledWith(undefined);
+  });
+
+  it("toggles on click, Enter and Space, and clears on Escape and on empty space", () => {
+    const interaction = makeInteraction({ tabStop: { column: 0, unit: 0 } });
+    renderInteractive(interaction);
+    fireEvent.click(screen.getByTestId("neuron-target-0-0"));
+    expect(interaction.onToggle).toHaveBeenCalledWith({ column: 0, unit: 0 });
+    expect(interaction.onClear).not.toHaveBeenCalled();
+
+    const button = screen.getAllByRole("button")[0];
+    // fireEvent returns false when a handler called preventDefault: Space must not scroll the page.
+    expect(fireEvent.keyDown(button, { key: "Enter" })).toBe(false);
+    expect(fireEvent.keyDown(button, { key: " " })).toBe(false);
+    expect(interaction.onToggle).toHaveBeenCalledTimes(3);
+
+    // A held key's repeats neither toggle again nor scroll the page.
+    expect(fireEvent.keyDown(button, { key: " ", repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(button, { key: "Enter", repeat: true })).toBe(false);
+    expect(interaction.onToggle).toHaveBeenCalledTimes(3);
+
+    fireEvent.keyDown(button, { key: "Escape" });
+    expect(interaction.onClear).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("group", { name: DIAGRAM_NAME }));
+    expect(interaction.onClear).toHaveBeenCalledTimes(2);
+  });
+
+  it("reports hover and focus", () => {
+    const interaction = makeInteraction();
+    renderInteractive(interaction);
+    const button = screen.getAllByRole("button")[0];
+    fireEvent.pointerEnter(button);
+    expect(interaction.onHover).toHaveBeenLastCalledWith({ column: 0, unit: 0 });
+    fireEvent.pointerLeave(button);
+    expect(interaction.onHover).toHaveBeenLastCalledWith(undefined);
+    button.focus();
+    expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, true);
+    button.blur();
+    expect(interaction.onFocusChange).toHaveBeenLastCalledWith(undefined, false);
+  });
+
+  describe("telling keyboard focus from a click's", () => {
+    // jsdom matches :focus-visible on any focus, so each test says which focus it means.
+    const realMatches = Element.prototype.matches;
+    function focusVisibleIs(answer: boolean | "unsupported") {
+      jest.spyOn(Element.prototype, "matches").mockImplementation(function (this: Element, selector: string) {
+        if (selector !== ":focus-visible") {
+          return realMatches.call(this, selector);
+        }
+        if (answer === "unsupported") {
+          throw new SyntaxError(`'${selector}' is not a valid selector`);
+        }
+        return answer;
+      });
+    }
+    afterEach(() => jest.restoreAllMocks());
+
+    it("reports a click's focus as not visible", () => {
+      const interaction = makeInteraction();
+      renderInteractive(interaction);
+      focusVisibleIs(false);
+      screen.getAllByRole("button")[0].focus();
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, false);
+    });
+
+    it("reports keyboard focus as visible", () => {
+      const interaction = makeInteraction();
+      renderInteractive(interaction);
+      focusVisibleIs(true);
+      screen.getAllByRole("button")[0].focus();
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, true);
+    });
+
+    it("counts any focus as visible where :focus-visible isn't supported", () => {
+      const interaction = makeInteraction();
+      renderInteractive(interaction);
+      focusVisibleIs("unsupported");
+      screen.getAllByRole("button")[0].focus();
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, true);
+    });
+
+    it("makes a clicked neuron's focus visible when a key is pressed on it", () => {
+      const interaction = makeInteraction({ tabStop: { column: 0, unit: 0 } });
+      renderInteractive(interaction);
+      focusVisibleIs(false);
+      const button = screen.getAllByRole("button")[0];
+      button.focus();
+      fireEvent.keyDown(button, { key: "Enter" });
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, true);
+    });
+
+    it("makes an arrow key's move keyboard focus even where the browser doesn't match :focus-visible", () => {
+      const interaction = makeInteraction({ tabStop: { column: 0, unit: 0 } });
+      renderInteractive(interaction);
+      focusVisibleIs(false);
+      const buttons = screen.getAllByRole("button");
+      buttons[0].focus();
+      fireEvent.keyDown(buttons[0], { key: "ArrowDown" });
+      expect(buttons[1]).toHaveFocus();
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 1 }, true);
+    });
+  });
+
+  it("moves focus with the arrow keys", () => {
+    renderInteractive(makeInteraction({ tabStop: { column: 0, unit: 0 } }));
+    const buttons = screen.getAllByRole("button");
+    buttons[0].focus();
+    // Handled, so the arrow doesn't scroll the page or the diagram too.
+    expect(fireEvent.keyDown(buttons[0], { key: "ArrowDown" })).toBe(false);
+    expect(buttons[1]).toHaveFocus();
+  });
+
+  it("leaves Tab and Shift+Tab to the browser, so focus can leave the neurons", () => {
+    renderInteractive(makeInteraction({ tabStop: { column: 0, unit: 0 } }));
+    const button = screen.getAllByRole("button")[0];
+    button.focus();
+    // fireEvent returns false when a handler called preventDefault.
+    expect(fireEvent.keyDown(button, { key: "Tab" })).toBe(true);
+    expect(fireEvent.keyDown(button, { key: "Tab", shiftKey: true })).toBe(true);
+  });
+
+  it("makes each target wider than its circle and one row's pitch tall, so neighbors in a column touch", () => {
+    renderInteractive(makeInteraction());
+    const box = (id: string) => {
+      const rect = screen.getByTestId(id);
+      return { y: Number(rect.getAttribute("y")), width: Number(rect.getAttribute("width")),
+        height: Number(rect.getAttribute("height")) };
+    };
+    const first = box("neuron-target-0-0");
+    const second = box("neuron-target-0-1");
+    expect(first.width).toBeGreaterThan(2 * layout.radius);
+    expect(first.y + first.height).toBeCloseTo(second.y);
+    expect(first.y).toBeLessThan(layout.nodes[0][0].y - layout.radius);
+  });
+
+  it("leaves keys with Alt, Ctrl or Meta held to the browser", () => {
+    const interaction = makeInteraction({ tabStop: { column: 0, unit: 0 } });
+    renderInteractive(interaction);
+    const buttons = screen.getAllByRole("button");
+    buttons[0].focus();
+    for (const modifier of [{ altKey: true }, { ctrlKey: true }, { metaKey: true }]) {
+      // fireEvent returns false when a handler called preventDefault.
+      expect(fireEvent.keyDown(buttons[0], { key: "ArrowLeft", ...modifier })).toBe(true);
+      expect(fireEvent.keyDown(buttons[0], { key: "ArrowDown", ...modifier })).toBe(true);
+      expect(fireEvent.keyDown(buttons[0], { key: "Enter", ...modifier })).toBe(true);
+    }
+    expect(buttons[0]).toHaveFocus();
+    expect(interaction.onToggle).not.toHaveBeenCalled();
+  });
+
+  it("toggles when the button itself is clicked, as a screen reader's activation does", () => {
+    const interaction = makeInteraction();
+    renderInteractive(interaction);
+    fireEvent.click(screen.getByRole("button", { name: /^Hidden Layer 1 Neuron 1,/ }));
+    expect(interaction.onToggle).toHaveBeenCalledWith({ column: 1, unit: 0 });
+    expect(interaction.onClear).not.toHaveBeenCalled();
+  });
+
+  it("puts each output's pill inside its button, so a click on the pill focuses the neuron", () => {
+    renderInteractive(makeInteraction({ reachedColumns: 4 }));
+    expect(screen.getByRole("button", { name: /^Output Layer: Approach,/ }))
+      .toContainElement(screen.getByTestId("pill-target-1"));
+  });
+
+  it("lets the output pill stand in for its neuron", () => {
+    const interaction = makeInteraction({ reachedColumns: 4 });
+    renderInteractive(interaction);
+    fireEvent.pointerEnter(screen.getByTestId("pill-target-1"));
+    expect(interaction.onHover).toHaveBeenCalledWith({ column: 3, unit: 1 });
+    fireEvent.click(screen.getByTestId("pill-target-1"));
+    expect(interaction.onToggle).toHaveBeenCalledWith({ column: 3, unit: 1 });
+    expect(interaction.onClear).not.toHaveBeenCalled();
+  });
+
+  it("titles a neuron with its name before it's reached and its activation after", () => {
+    renderInteractive(makeInteraction({ reachedColumns: 2 }));
+    expect(screen.getByTestId("neuron-target-1-0"))
+      .toHaveTextContent(`Activation: ${formatActivation(waitPass.layers[1][0])}`);
+    expect(screen.getByTestId("neuron-target-2-0")).toHaveTextContent("Hidden Layer 2 Neuron 1");
+    expect(screen.getByTestId("neuron-target-3-1")).toHaveTextContent("Output Layer: Approach");
   });
 });
 
