@@ -312,13 +312,29 @@ async function zoomTextOnly(page: Page) {
   });
 }
 
+/** Undoes zoomTextOnly. */
+async function unzoomText(page: Page) {
+  await page.evaluate(() => {
+    document.querySelectorAll<HTMLElement>("body *").forEach(element => element.style.removeProperty("font-size"));
+  });
+}
+
 test("when only the text is zoomed, the words and the tooltip double, and the tooltip follows its word",
   async ({ page }) => {
     await openView(page);
     await showLongMessage(page);
+    // Which words move sideways when the text doubles depends on where the lines break, which can
+    // differ between machines, so the test zooms once to find one, and undoes it.
+    const lefts = () => coloredOptions(page, 1).evaluateAll(elements =>
+      elements.map(element => element.getBoundingClientRect().left));
+    const plainLefts = await lefts();
+    await zoomTextOnly(page);
+    const zoomedLefts = await lefts();
+    await unzoomText(page);
+    const moving = plainLefts.findIndex((left, i) => Math.abs(zoomedLefts[i] - left) > 1);
+    expect(moving).toBeGreaterThanOrEqual(0);
     // The focus, not the pointer, opens it, so the pointer can't land on another word as the text grows.
-    // The fourth colored word moves to another line when the text doubles.
-    const word = coloredOptions(page, 1).nth(3);
+    const word = coloredOptions(page, 1).nth(moving);
     await word.focus();
     const before = await box(word);
     await expect(tooltip(page)).toBeVisible();
