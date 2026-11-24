@@ -558,3 +558,32 @@ test("at the minimum layout width the head is one line, with both legends", asyn
   // The tools are taller than the title and centered on it, so they start above it, not below it.
   expect(tools.y).toBeLessThan(title.y + title.height);
 });
+
+test("picks in a canvas that scrolls sideways", async ({ page }) => {
+  await canvasIn(page, 600, NARROWEST_CANVAS);
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
+  await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+  await drawingGroup(page).evaluate(group => {
+    group.scrollLeft = group.scrollWidth;
+  });
+  const box = pathwayTarget(page, 3);
+  await box.click();
+  await expect(box).toHaveAttribute("aria-pressed", "true");
+});
+
+test("doesn't keep the pick on switching views, but keeps the pathways, with the loading legend already full width",
+  async ({ page }) => {
+    await openPathways(page);
+    const box = pathwayTarget(page, 2);
+    await box.click();
+    await expect(box).toHaveAttribute("aria-pressed", "true");
+    const nav = page.getByRole("navigation", { name: "Views" });
+    await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
+    await expect(page.getByText("1 / 800")).toBeVisible();
+    await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
+    await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+    await expect(page.getByRole("button", { pressed: true })).toHaveCount(0);
+    const legend = page.locator(".extract-pathways__loading-legend");
+    await expect(legend).not.toHaveAttribute("style", /width/);
+    await expect(legend).toHaveCSS("opacity", "1");
+  });

@@ -31,7 +31,17 @@ the deck.
 - `particles.ts`: the particles that carry the deck's readings to the bars: a seeded plan of their
   timing, their curves, and the gauges on the deck's faces they leave from.
 - `pathways-drawing.tsx`: the bars, the bar copies flying to the boxes, the boxes and the lines, in
-  SVG; and the particles, painted on the particle canvas over the SVG while they fly.
+  SVG, with the pick's loadings alone lit; and the particles, painted on the particle canvas over
+  the SVG while they fly.
+- `pick.ts`: what is picked, a lifted neuron or a pathway, and the rules for lighting and toggling it.
+- `pick-targets.tsx`: the buttons over the lifted neurons and the pathway boxes, their keys, and the
+  tip, on a transparent SVG over the drawing. Offered only at rest after Extract Pathways.
+- `loading-legend-reveal.ts`: how far the loading legend in the panel's head has slid open and faded
+  in, from the pathways' lines.
+
+The pick is the view's own state, in `ExtractPathwaysBody`: any step button or Reset clears it, and
+the drawing ignores it unless the pick targets are shown. The drawing's description names the
+picked neuron's or pathway's loadings.
 
 ## Size
 
@@ -60,8 +70,3 @@ Nothing in the view gives way as the window gets shorter, not even the padding, 
 down below 562 px. The standalone app has no top padding,
 and shows the view's title above the step row instead: 82 px for a 32 px heading's line and its
 0.67em margins, then a 9 px gap.
-
-## Still to come
-
-The view still needs:
-- picking a neuron or a pathway to see its loadings;

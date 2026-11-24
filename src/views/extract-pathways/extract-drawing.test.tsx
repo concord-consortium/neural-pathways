@@ -8,13 +8,14 @@ import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { collectAllPlan, collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
-import { ExtractDrawing } from "./extract-drawing";
+import { describeScene, ExtractDrawing } from "./extract-drawing";
 import { deckRestScene, ExtractScene, pathwaysRestScene, restScene } from "./extract-scene";
 import { extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { flightDuration } from "./flight";
 import { extractPathwaysSceneAt } from "./pathways-timeline";
 import { pathwaysLayout } from "./pathways-layout";
 import { TIP_LINES } from "./pick-targets";
+import { formatActivation } from "../../core/network-diagram/neuron";
 import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
@@ -258,6 +259,36 @@ describe("ExtractDrawing", () => {
     expect(screen.getAllByTestId("pathway-line")).toHaveLength(42);
     const dx = pathwaysLayout(geometry, 20, fixtureLoadings).liftedDx;
     expect(screen.getByTestId("lifted-column")).toHaveAttribute("transform", `translate(${dx},0)`);
+  });
+
+  describe("describeScene with a pick", () => {
+    const scene = pathwaysRestScene(SIZES, 20, fixtureLoadings);
+    const names = Array.from({ length: 14 }, (_, k) => `Hidden Layer ${k < 10 ? 1 : 2} Neuron ${k + 1}`);
+    const detail = { names, loadings: fixtureLoadings };
+    const signed = (value: number) => (value < 0 ? "" : "+") + formatActivation(value);
+    const base = "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 messages.";
+
+    it("is unchanged with no pick", () => {
+      expect(describeScene(scene, 14, undefined, detail)).toBe(base);
+    });
+
+    it("lists a picked neuron's three loadings, signed", () => {
+      const l = fixtureLoadings[0];
+      expect(describeScene(scene, 14, { kind: "neuron", index: 0 }, detail)).toBe(
+        `${base} ${names[0]}'s loadings: Pathway 1 ${signed(l[0])}, Pathway 2 ${signed(l[1])}, `
+        + `Pathway 3 ${signed(l[2])}.`);
+    });
+
+    it("lists a picked pathway's loadings on all 14 neurons", () => {
+      const text = describeScene(scene, 14, { kind: "pathway", index: 1 }, detail);
+      const list = fixtureLoadings.map((l, k) => `${names[k]} ${signed(l[1])}`).join(", ");
+      expect(text).toBe(`${base} Pathway 2's loadings: ${list}.`);
+    });
+
+    it("ignores a pick before the pathways are done", () => {
+      expect(describeScene(deckRestScene(SIZES, 20), 14, { kind: "pathway", index: 1 }, detail))
+        .toBe("The network's 14 hidden neurons lifted out, and all 20 messages collected.");
+    });
   });
 
   it("keeps describing the deck while Extract Pathways runs", () => {

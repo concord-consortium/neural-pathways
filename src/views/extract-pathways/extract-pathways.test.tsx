@@ -1,6 +1,7 @@
 import React from "react";
 import { fromSnapshot, SnapshotInOf } from "mobx-keystone";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { RULE_COLOR } from "../../core/colors";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { fixtureMetadata } from "../../core/network/__fixtures__/alien3-network";
@@ -224,6 +225,48 @@ describe("ExtractPathways", () => {
     expect(screen.getByText("Loading")).toBeVisible();
   });
 
+  describe("picking", () => {
+    const pathwayBox = () => screen.getByRole("button", { name: /^Pathway 2, show its loadings/ });
+    const pressedButtons = () => screen.queryAllByRole("button", { pressed: true });
+
+    async function showPathways() {
+      showView(fromSnapshot(ExtractPathwaysState, pathwaysDoneSnapshot as SnapshotInOf<ExtractPathwaysState>));
+      await screen.findByRole("img", { name: PATHWAYS });
+    }
+
+    it("has no targets before the pathways are done", async () => {
+      showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true }));
+      await screen.findByRole("img", { name: DECK });
+      expect(screen.queryByRole("button", { name: /show its loadings/ })).not.toBeInTheDocument();
+    });
+
+    it("clears the pick when any step is pressed, even Extract Pathways again with Animate off", async () => {
+      setReducedMotion(true);
+      await showPathways();
+      fireEvent.click(pathwayBox());
+      expect(pathwayBox()).toHaveAttribute("aria-pressed", "true");
+      fireEvent.click(button("Extract Pathways"));
+      expect(pathwayBox()).toHaveAttribute("aria-pressed", "false");
+    });
+
+    it("clears the pick on Reset", async () => {
+      setReducedMotion(true);
+      await showPathways();
+      fireEvent.click(pathwayBox());
+      fireEvent.click(button("Reset"));
+      await screen.findByRole("img", { name: "The network." });
+      fireEvent.click(button("Extract Pathways"));
+      expect(pressedButtons()).toHaveLength(0);
+    });
+
+    it("describes the pick in the drawing's name", async () => {
+      await showPathways();
+      fireEvent.click(pathwayBox());
+      const name = / Pathway 2's loadings: Hidden Layer 1 Neuron 1 [+\u2212]\d\.\d\d, /;
+      expect(screen.getByRole("img", { name })).toBeInTheDocument();
+    });
+  });
+
   it("builds the deck of every message with Collect All, and stores it", async () => {
     setReducedMotion(true);
     const { state } = showView();
@@ -283,6 +326,25 @@ describe("ExtractPathways", () => {
       expect(state.pathwaysDone).toBe(true);
       expect(drawing(PATHWAYS)).toBeInTheDocument();
       expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
+    });
+
+    it("plays Extract Pathways with no bar muted after a pick was cleared by Reset", async () => {
+      jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+      showView(fromSnapshot(ExtractPathwaysState, pathwaysDoneSnapshot as SnapshotInOf<ExtractPathwaysState>));
+      await screen.findByRole("img", { name: PATHWAYS });
+      fireEvent.click(screen.getByRole("button", { name: /^Pathway 2, show its loadings/ }));
+      expect(screen.getAllByTestId("pathway-line")).toHaveLength(14);
+      jest.useFakeTimers();
+      fireEvent.click(button("Reset"));
+      act(() => jest.advanceTimersByTime(0));
+      fireEvent.click(button("Extract Pathways"));
+      act(() => jest.advanceTimersByTime(3000));
+      expect(screen.getByTestId("particles")).toBeInTheDocument();
+      const fills = screen.getAllByTestId("loading-bar").map(bar => bar.getAttribute("fill"));
+      expect(fills).not.toContain(RULE_COLOR);
+      act(() => jest.advanceTimersByTime(EXTRACT_MS));
+      expect(drawing(PATHWAYS)).toBeInTheDocument();
+      expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
     });
 
     it("plays Setup, then a collection, storing each only when it ends", async () => {

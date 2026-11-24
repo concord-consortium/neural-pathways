@@ -5,6 +5,7 @@ import { Network } from "../../core/network/network";
 import { NetworkScales } from "../../core/network/network-scales";
 import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { COLUMN_CAPTIONS, MIN_GAUGE, NetworkDrawing } from "../../core/network-diagram/network-drawing";
+import { formatActivation } from "../../core/network-diagram/neuron";
 import { useElementSize } from "../../core/use-element-size";
 import { useKeyboardScrollable } from "../../core/use-keyboard-scrollable";
 import { DeckDrawing, rowClipId } from "./deck-drawing";
@@ -29,20 +30,38 @@ function hiddenNames(columnSizes: readonly number[]): string[] {
     Array.from({ length: n }, (_, k) => `${COLUMN_CAPTIONS[i + 1]} Neuron ${k + 1}`));
 }
 
+/** A loading with its sign always shown: a real minus, or a plus for zero and above. */
+const signedLoading = (value: number) => `${value < 0 ? "" : "+"}${formatActivation(value)}`;
+
+/** The picked neuron's loadings on the pathways, or the picked pathway's on the neurons. */
+function describePick(pick: NonNullable<Pick>, names: readonly string[], loadings: Loadings): string {
+  if (pick.kind === "neuron") {
+    const ofNeuron = loadings[pick.index].map((loading, p) => `Pathway ${p + 1} ${signedLoading(loading)}`);
+    return `${names[pick.index]}'s loadings: ${ofNeuron.join(", ")}.`;
+  }
+  const ofPathway = loadings.map((row, k) => `${names[k]} ${signedLoading(row[pick.index])}`);
+  return `Pathway ${pick.index + 1}'s loadings: ${ofPathway.join(", ")}.`;
+}
+
 const messages = (n: number) => `${n} message${n === 1 ? "" : "s"}`;
 
 /**
  * What the drawing shows, for screen readers. The lifted column and the deck columns still in
  * flight aren't counted. While Collect All builds the deck, it counts the messages collected by
  * hand, and once the deck is done it says all of them are. Once Extract Pathways is done it describes
- * the pathways; while it runs, the deck.
+ * the pathways; while it runs, the deck. With a pick and `detail`, the done pathways' description
+ * ends with the picked neuron's loadings on the three pathways, or the picked pathway's loadings
+ * on every neuron.
  */
-export function describeScene(scene: ExtractScene, hidden: number): string {
+export function describeScene(
+  scene: ExtractScene, hidden: number, pick?: Pick, detail?: { names: readonly string[]; loadings: Loadings },
+): string {
   const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
   const { deck } = scene;
   if (scene.pathways?.done && deck) {
-    return `The ${hidden} hidden neurons, with their loadings on three pathways drawn from all `
+    const summary = `The ${hidden} hidden neurons, with their loadings on three pathways drawn from all `
       + `${messages(deck.collected)}.`;
+    return pick && detail ? `${summary} ${describePick(pick, detail.names, detail.loadings)}` : summary;
   }
   if (deck) {
     return deck.done
@@ -188,11 +207,14 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
     from, to: deckPosition(deck, column, k), fromR: layout.radius, toR: deck.r,
   }));
   const pass = passes[(scene.shown ?? 1) - 1];
+  // A pick is only in force while its targets are shown, so a stale one never mutes a run.
+  const targetsShown = !!scene.pathways?.done && atRest;
+  const shownPick = targetsShown ? pick : undefined;
 
   return (
     <div ref={ref} className="extract-drawing" role="group" aria-labelledby={headingId} {...scrollerProps}>
-      <svg role="img" aria-label={describeScene(scene, hidden.length)} className="extract-drawing__svg"
-        width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <svg role="img" aria-label={describeScene(scene, hidden.length, shownPick, { names, loadings })}
+        className="extract-drawing__svg" width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         <defs>
           <clipPath id={clipId}><circle r={deck.r} /></clipPath>
           {deck.ys.map((y, row) => (
@@ -228,7 +250,9 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
               </g>
             );
           })}
-        {scene.pathways && <PathwaysLayer pathways={scene.pathways} layout={pathways} lifted={lifted} pick={pick} />}
+        {scene.pathways && (
+          <PathwaysLayer pathways={scene.pathways} layout={pathways} lifted={lifted} pick={shownPick} />
+        )}
         {scene.label && scene.networkOpacity > 0 && (
           <g opacity={scene.networkOpacity < 1 ? scene.networkOpacity : undefined}>
             <MessageLabel x={networkX + NETWORK_WIDTH / 2} n={scene.label.n} bounce={scene.label.bounce} />
@@ -239,7 +263,7 @@ export const ExtractDrawing: React.FC<ExtractDrawingProps> = ({
         <ParticleCanvas t={scene.pathways.particles} geometry={geometry} passes={passes} size={deckSize}
           layout={pathways} loadings={loadings} />
       )}
-      {scene.pathways?.done && atRest && (
+      {targetsShown && (
         <PickTargets width={width} height={height} lifted={lifted} layout={pathways} names={names} pick={pick}
           onPick={onPick} />
       )}

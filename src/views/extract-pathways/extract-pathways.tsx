@@ -101,7 +101,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
     <>
       <div className="extract-pathways__step-row">
         <div className="extract-pathways__steps">
-          <StepButtonGroup player={player} buttons={buttons} />
+          <StepButtonGroup player={player} buttons={buttons} onPress={() => setPick(undefined)} />
         </div>
         <div className="extract-pathways__about">
           <AboutButton title={EXTRACT_PATHWAYS_TITLE} markdown={about} />
