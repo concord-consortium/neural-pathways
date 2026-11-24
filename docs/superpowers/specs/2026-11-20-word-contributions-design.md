@@ -13,9 +13,9 @@ for its focus pathway, and the flow on the right of this view (NPW-39) lines up 
 
 Jira: [NPW-37](https://concord-consortium.atlassian.net/browse/NPW-37). It builds on NPW-35
 (filter) and NPW-36 (message card), and on the v1.4 design (NPW-74). The branch is
-`NPW-37-word-contributions`, from NPW-75's branch (`NPW-75-interactive-title-and-sizes`), which
-leaves the view titles out of the Interactives. NPW-23 (Looking Inside a Neural Network) is being
-built beside it on `NPW-23-looking-inside`.
+`NPW-37-word-contributions`. It started from NPW-75's branch, which leaves the view titles out of
+the Interactives, while NPW-23 (Looking Inside a Neural Network) was built beside it. Both have
+since merged to main, and main is merged into this branch.
 
 The source is prototype v1.4: `index.html` at commit `7acc4db` on the `neural-net-maker` branch of
 the demos repo ([live](https://models-resources.concord.org/demos/branch/neural-net-maker/),
@@ -45,8 +45,6 @@ chose its version A, v1.4's tooltip, which now also follows the keyboard focus.
 - Lining the readings up with the flow's rows (NPW-39). This story keeps v1.4's spacing between
   readings; NPW-39 may change it.
 - Anything on the right of the view: the flow, the steps, Animate and speed.
-- Switching Looking Inside a Neural Network to the shared card width. NPW-23 is changing its
-  stylesheet; that's a small follow-up once NPW-23 merges.
 - Renaming "Word Contribution". Jie asked for "Token score" or "Token influence"; v1.4 kept "Word
   Contribution", and so do we.
 - The Yelp data in the lab. The new index field is optional and the lab doesn't read it.
@@ -72,8 +70,6 @@ chose its version A, v1.4's tooltip, which now also follows the keyboard focus.
   diagram.
 - `src/core/` holds what more than one view uses. The ramp, the pathway reading, the legend and the
   word-score loading are all used again by later views, so they go there.
-- Don't edit `src/views/looking-inside/looking-inside.scss` on this branch; NPW-23 is changing it.
-  `src/core/README.md` will conflict a little with NPW-23, which adds an entry too.
 
 ## The data
 
@@ -129,16 +125,17 @@ Both were mocked up for Michael and Jie, who chose A.
 holding the filter row and, under it, the message card. As in v1.4, About sits beside the filter, at
 the right end of the filter row (`nnm-filterrow`, 5994–5999), not over a second column as in
 Looking Inside. The right side stays empty until NPW-39. It loads the index with
-`useDatasetIndex(alien3Dataset, { onLoaded })` and corrects the shared message and query as Looking
-Inside does, through `SharedState`, so the message and the query are the same in every view.
+`useDatasetIndex(alien3Dataset, { onLoaded })` and, as Looking Inside does, corrects the shared
+message against the shared query, through `SharedState`, so the message and the query are the same
+in every view.
 
 The card is the shared `MessageCard` (title, count, previous and next). Its body is the legend and
 then a scroller holding the three readings. Unlike Looking Inside, this card has no actual label and
 no observation notes (v1.4's 2B has neither).
 
 **The card width.** The 447 px is defined once, in a new `src/core/message-card/layout.scss` as
-`$width: 447px`, which this view's stylesheet uses. Looking Inside switches to it after NPW-23
-merges. (The `.scss` partial holds only the variable, so `@use` adds no CSS.)
+`$width: 447px`, which this view's stylesheet and Looking Inside's both use. (The `.scss` partial
+holds only the variable, so `@use` adds no CSS.)
 
 **Narrower than the card.** Below its minimum layout width the card takes the full width between
 the gutters, and the words wrap.
@@ -169,8 +166,8 @@ bar (`.nnm-readhead` and `.nnm-legend`, 1757–1832):
 It is `role="img"` named "Word contribution, from minus 0.2598 to plus 0.2598". The prototype's name
 adds "shared by all three pathways"; we drop it, since NPW-27 shows the legend over one reading.
 
-It is not NPW-23's activation legend (`src/core/activation-legend/`, not on this branch), which
-captions two neuron swatches. Their captions may be worth sharing once both are merged.
+It is not NPW-23's activation legend (`src/core/activation-legend/`), which captions two neuron
+swatches. Their captions may be worth sharing.
 
 ### The color ramp
 
@@ -272,8 +269,10 @@ it does score on (as in the mockup). The listbox's name gives the reading's path
 readers add the position ("3 of 25") themselves. A word that is zero on every pathway is just the
 word.
 
-The current word has no mark of its own beyond the focus ring: with the tooltip, there is nothing
-to show once the focus has left the readings.
+The current word has no mark of its own. The focus ring shows only for keyboard focus
+(`:focus-visible`), so a clicked word has its tooltip and nothing else, and once the focus has left
+the readings nothing on screen shows which word is current. Whether it should keep a mark, as a
+pinned neuron in Looking Inside a Neural Network keeps its ring, is a design question in NPW-61.
 
 Every word is an option, colored or not, so the arrow keys never skip and the position matches the
 message.
@@ -365,11 +364,13 @@ Jest:
 - `rampLevel` at and around each cut; `wordFill` for both signs, each step, values past the
   maximum, and white text only on step 4.
 - `colors.scss` and `colors.ts` hold the same ramp.
-- The generator writes `word_score_max` equal to the largest |score| in its buckets; the round trip
-  test reads it back.
-- `alien3WordScoreMax` returns the value, and throws when it is missing, zero or negative.
+- The generator writes `word_score_max` equal to the largest |score| in its buckets, counting a
+  negative score by its size; the round trip test reads it back, and checks that every generated
+  message's SHAP words line up with its text.
+- `alien3WordScoreMax` returns the value, and throws when it is missing, zero, negative or NaN.
 - `useWordScores`: drops `[CLS]` and `[SEP]`, lines up with `messageWords`, errors on a mismatch,
-  caches buckets, and errors on a failed fetch.
+  caches buckets, and errors on a failed fetch, saying which of the two failed. Scores or a failure
+  that arrive after the message changed are ignored.
 - The legend: its text, the U+2212 minus, and its name.
 - `PathwayReading`: colors only nonzero words, a listbox named by its pathway, each option's name
   for a scoring word, a zero word and a word that is zero everywhere, the roving tabindex, each key
@@ -378,13 +379,14 @@ Jest:
   focus, follows whichever of the pointer and the focus moved last, and Escape hides it until the
   next word.
 - The view: the filter and About above the card, the count, three readings, the shared current
-  word, cleared on message change, and the error and loading states.
+  word, cleared on message change, and the error and loading states, including a fit without three
+  pathways and bad filter attributes on a mount with the index already loaded.
 
 Playwright:
 
 - The tooltip appears on hover and on keyboard focus, stays while the pointer moves onto it, hides
-  on Escape, follows its word when the readings scroll, and isn't clipped by the scroller or the
-  card's sides.
+  on Escape, follows its word when the readings scroll, hides while its word is scrolled above or
+  below the readings, and isn't clipped by the scroller or the card's sides.
 - Tab order: filter, About, card navigation, then one stop per reading, with no stop on the
   readings' scroller even when it overflows; Tab into the next reading lands on the same word.
 - At the minimum layout size nothing scrolls but the readings, and the page doesn't scroll down; at
