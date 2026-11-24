@@ -56,6 +56,15 @@ describe("PickTargets", () => {
       .toBeInTheDocument();
   });
 
+  it("keeps the lifted neurons' tooltips, which the targets cover, without describing the buttons", () => {
+    renderTargets();
+    neuronButtons().forEach((button, k) => {
+      // eslint-disable-next-line testing-library/no-node-access -- the tooltip is the hit rect's <title>
+      expect(button.querySelector("rect > title")).toHaveTextContent(NAMES[k]);
+      expect(button).not.toHaveAccessibleDescription();
+    });
+  });
+
   it("makes each group one Tab stop", () => {
     renderTargets();
     expect(neuronButtons().filter(button => button.tabIndex === 0)).toEqual([neuronButtons()[0]]);

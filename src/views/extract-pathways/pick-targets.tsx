@@ -123,7 +123,10 @@ export function PickTargets({ width, height, lifted, layout, names, pick, onPick
           <g key={`neuron-${k}`} className="pick-targets__neuron"
             {...buttonProps(target, lifted.ys.length, `${names[k]}, show its loadings on the three pathways`)}>
             <rect className="pick-targets__hit" x={x - lifted.r - TARGET_EXTRA_WIDTH / 2} y={y - pitch / 2}
-              width={lifted.r * 2 + TARGET_EXTRA_WIDTH} height={pitch} />
+              width={lifted.r * 2 + TARGET_EXTRA_WIDTH} height={pitch}>
+              {/* The copy's tooltip, which the target covers. On the rect, so the button's name isn't repeated. */}
+              <title>{names[k]}</title>
+            </rect>
             {/* The picked neuron's own ring shows already. */}
             {!samePick(pick, target) && (
               <circle className="pick-targets__hover-ring" cx={x} cy={y} r={lifted.r + PICK_RING_GAP} />

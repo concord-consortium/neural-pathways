@@ -401,6 +401,27 @@ test("picks a box and a neuron by mouse", async ({ page }) => {
   await expect(page.getByTestId("pick-ring")).toBeVisible();
 });
 
+test("shows the focus ring once a key is pressed after a click", async ({ page }) => {
+  await openPathways(page);
+  // A key on the clicked button itself.
+  const neuron = neuronTarget(page, "Hidden Layer 1 Neuron 3");
+  await neuron.click();
+  await expect(neuron).toBeFocused();
+  expect(await focusRingShows(neuron)).toBe(false);
+  await page.keyboard.press("Enter");
+  await expect(neuron).toHaveAttribute("aria-pressed", "false");
+  expect(await focusRingShows(neuron)).toBe(true);
+
+  // A key that moves the focus on from the clicked button.
+  const clicked = neuronTarget(page, "Hidden Layer 1 Neuron 5");
+  await clicked.click();
+  expect(await focusRingShows(clicked)).toBe(false);
+  await page.keyboard.press("ArrowDown");
+  const next = neuronTarget(page, "Hidden Layer 1 Neuron 6");
+  await expect(next).toBeFocused();
+  expect(await focusRingShows(next)).toBe(true);
+});
+
 test("picks by keyboard", async ({ page }) => {
   await openPathways(page);
   await page.getByRole("slider", { name: "Animation speed" }).focus();
