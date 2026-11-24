@@ -50,7 +50,8 @@ function readoutSentence(
 }
 
 /**
- * A pinned neuron's readout: its name and activation, then a sentence on where the value comes from.
+ * A pinned neuron's readout: its name and activation, then a sentence on where the value goes or
+ * comes from.
  * An output neuron has no head, only the sentence, which names its class.
  */
 export function readoutText(

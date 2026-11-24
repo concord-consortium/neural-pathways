@@ -356,7 +356,7 @@ test.describe("the card and network panels", () => {
   const belowNotesText = (notes: Locator) => notes.evaluate(el =>
     el.getBoundingClientRect().bottom - el.querySelector("p")!.getBoundingClientRect().bottom);
 
-  // On a short window the card's body has to give up height, and its head mustn't.
+  // On a short window the card's body has to give up height, and its head must not.
   for (const height of [1000, 450]) {
     test(`have heads of the same height on a ${height} px window`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height });
@@ -807,7 +807,7 @@ test.describe("the neurons' readouts", () => {
   });
 
   // The pill covers the output's circle, so most clicks on an output land on it.
-  test("a click on an output's circle focuses that neuron, so Escape then unpins it", async ({ page }) => {
+  test("a click on an output's pill focuses that neuron, so Escape then unpins it", async ({ page }) => {
     await stepTo(page, 4);
     const circle = (await page.getByTestId("neuron-target-3-1").boundingBox())!;
     await page.mouse.click(circle.x + circle.width / 2, circle.y + circle.height / 2);
@@ -984,10 +984,7 @@ test("the network's head holds its title, legend and controls in that order", as
   expect(Math.abs(center(legend) - center(controls))).toBeLessThanOrEqual(4);
 });
 
-// As on a school network that blocks Google Fonts, in an Interactive. 990 is the minimum layout width;
-// 1024 the designed width, where the wider fallback font still wraps the head; 480 is a narrow window.
-// Every item must stay inside the head's side padding, and when the head wraps the legend drops below
-// the title with the controls rather than staying on the title's line.
+// As on a school network that blocks Google Fonts, at the minimum and designed widths and a narrow window.
 for (const width of [480, 990, 1024]) {
   test(`with Google Fonts blocked, nothing in the network's head runs past it at ${width} px`, async ({ page }) => {
     await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());

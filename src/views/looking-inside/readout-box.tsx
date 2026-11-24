@@ -17,10 +17,9 @@ interface ReadoutBoxProps {
 
 /**
  * The prompt or a pinned neuron's readout. The box holds the height of its tallest possible text as
- * a `min-height`, so that showing a different text never resizes the diagram. The height is
- * measured from an off-layout twin of the box holding every candidate, laid out at the box's width
- * and font size. It is a `min-height` and nothing is clipped, so text that outgrows it before the
- * next measurement grows the box instead of being cut off.
+ * a `min-height`, so that showing a different text never resizes the diagram, and text that outgrows
+ * it before the next measurement grows the box instead of being cut off. The height is measured from
+ * an off-layout twin of the box holding every candidate, laid out at the box's width and font size.
  */
 export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idle, onClear }) => {
   const boxRef = useRef<HTMLDivElement>(null);

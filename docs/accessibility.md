@@ -133,15 +133,14 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
 - Extract the Neural Pathways' minimum layout height, 598 px, doesn't fit the designed size yet, so
   in an Interactive 562 px tall its page scrolls down.
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
-  and where a network blocks it they fall back to a wider sans-serif. In the fallback font the legend
-  and the Animate controls (207 px rather than 184 px) are wider, so Looking Inside a Neural
-  Network's head wraps up to about 1,115 px, where with the web fonts it is on one line from about
-  981 px. Wrapped, the legend and the controls drop below the title together, and the head is 89 px
-  tall rather than 62, at 990 px and at 910 px alike. Its items wrap rather than overflow, so nothing runs
-  past the panel at 910 px or at 480 px, and the panels' smallest grows with the head, so the page
-  scrolls down sooner. Only the
-  messages' font, Spline Sans Mono, is served with the app so far. Serving the other two the same way
-  would close this gap.
+  and where a network blocks it they fall back to a wider sans-serif. In the fallback font the
+  legend is wider, and so are the Animate controls, 207 px rather than 184 px, so Looking Inside a
+  Neural Network's head wraps up to about 1,115 px, where with the web fonts it is on one line from
+  about 981 px. Wrapped, the legend and the controls drop below the title together, and the head is
+  89 px tall rather than 62, at 990 px and at 910 px alike. Its items wrap rather than overflow, so
+  nothing runs past the panel at 910 px or at 480 px, and the panels' smallest grows with the head,
+  so the page scrolls down sooner. Only the messages' font, Spline Sans Mono, is served with the app
+  so far. Serving the other two the same way would close this gap.
 
 **Scrollers.** A scroller must work from the keyboard
 ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). It may scroll

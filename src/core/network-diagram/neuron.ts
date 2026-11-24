@@ -8,7 +8,7 @@ export interface NeuronRef {
 export interface NeuronRings {
   hovered?: NeuronRef;
   pinned?: NeuronRef;
-  /** Keyboard focus only: a neuron a click focused has no focus ring. */
+  /** Keyboard focus only: see `NeuronInteraction.onFocusChange`. */
   focused?: NeuronRef;
 }
 

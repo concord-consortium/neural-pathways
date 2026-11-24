@@ -46,7 +46,7 @@ interface NeuronAttention {
   messageId: string | undefined;
   pinned?: NeuronRef;
   hovered?: NeuronRef;
-  /** The neuron with keyboard focus (`:focus-visible`), not one a click focused. */
+  /** The neuron with keyboard focus: see `NeuronInteraction.onFocusChange`. */
   focused?: NeuronRef;
   /** The neuron that last had focus, from the keyboard or a click, which holds the Tab stop. */
   lastFocused?: NeuronRef;
@@ -141,7 +141,6 @@ const LookingInsideBody = observer(function LookingInsideBody(
   const diagramRef = useRef<HTMLDivElement>(null);
   // The layout the word flights are drawn over and measured against.
   const [layoutElement, setLayoutElement] = useState<HTMLElement | null>(null);
-  // The flights depend on how many words the message has, so the timeline does too.
   const timeline = useMemo(
     () => lookingInsideTimeline(network.layers.map(layer => layer.biases.length), wordCount), [network, wordCount]);
   const player = useMemo(
@@ -181,7 +180,6 @@ const LookingInsideBody = observer(function LookingInsideBody(
   // the marker is the one it started from, so the neurons the run is reaching become live when it ends.
   const ifReached = (neuron: NeuronRef | undefined) =>
     neuron && player && neuron.column < player.marker ? neuron : undefined;
-  // The diagram leaves out whatever isn't reached.
   const interaction = (): NeuronInteraction => {
     return {
       reachedColumns: player?.marker ?? 0,
@@ -206,7 +204,8 @@ const LookingInsideBody = observer(function LookingInsideBody(
     }
   };
   // A step or Reset press clears the pin: the readout would describe a step that is about to change.
-  // Reset also takes the Tab stop back, since the neuron that held it is no longer reached.
+  // Reset also forgets the neuron that last had focus, so the Tab stop doesn't go back to it when it
+  // is reached again.
   const onStepPress = (key: string) => {
     if (key === "reset") {
       updateAttention({ pinned: undefined, hovered: undefined, focused: undefined, lastFocused: undefined });

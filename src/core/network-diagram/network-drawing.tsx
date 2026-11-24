@@ -306,7 +306,7 @@ interface RingsProps {
 }
 
 /**
- * A ring 3.5 px outside each hovered, pinned or focused neuron's circle. When one neuron has several,
+ * A ring RING_GAP outside each hovered, pinned or focused neuron's circle. When one neuron has several,
  * one ring takes every class.
  */
 function Rings({ layout, rings }: RingsProps) {

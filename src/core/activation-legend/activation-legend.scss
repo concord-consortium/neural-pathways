@@ -17,14 +17,12 @@
   color: colors.$ink-2;
 }
 
-// line-height 1 keeps the row as tall as its swatches rather than the line box of its signs. The
-// minimum height is a neuron's diameter.
+// The minimum height is a swatch's diameter.
 .activation-legend__row {
   display: flex;
   align-items: center;
   gap: 6px;
   min-height: 22px;
-  line-height: 1;
 }
 
 .activation-legend__minus {

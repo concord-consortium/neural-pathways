@@ -102,7 +102,6 @@ describe("WordFlightOverlay", () => {
     // eslint-disable-next-line testing-library/no-node-access
     const outlines = Array.from(container.querySelectorAll<HTMLElement>(".network-diagram__node"));
     outlines.forEach((outline, unit) => { outline.dataset.rect = `200,${20 + unit * 20}`; });
-    // A scroll event doesn't bubble, so the overlay has to catch it on the way down.
     act(() => { outlines[0].dispatchEvent(new Event("scroll")); });
     expect(before - parseFloat(screen.queryAllByText(/./)[0].style.left)).toBeGreaterThan(90);
   });

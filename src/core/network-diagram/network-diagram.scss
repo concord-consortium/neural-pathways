@@ -46,7 +46,7 @@
   stroke-width: 1;
 }
 
-// Never a CSS outline: an SVG element's outline is square. Where one neuron has several rings, source
+// Never a CSS outline: an SVG element's outline is square. Where one ring has several classes, source
 // order picks the look: focus wins over hover, and the pin wins over both, since it is the stronger
 // state and the one that lasts.
 .network-diagram__ring {

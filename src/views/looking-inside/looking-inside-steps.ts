@@ -27,10 +27,10 @@ export interface LookingInsideScene {
 }
 
 /**
- * The forward pass's phases as Looking Inside a Neural Network plays them: Step k is phase k, so
- * marker k is k steps done, and the segment to it plays phase k. Step 1 is the message's words
- * flying to the input neurons. Its length depends only on the number of inputs; the inputs' fill
- * depends on the word count, so the timeline is made per message.
+ * Looking Inside a Neural Network's timeline, where marker k is k steps done. Step 1 is the message's
+ * words flying to the input neurons; Steps 2–4 play phases 2–4 of `forward-pass-phases.ts`. Step 1's
+ * length depends only on the number of inputs; the inputs' fill depends on the word count, so the
+ * timeline is made per message.
  */
 export function lookingInsideTimeline(
   columnSizes: readonly number[], wordCount: number,

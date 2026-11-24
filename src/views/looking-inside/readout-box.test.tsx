@@ -123,8 +123,6 @@ describe("ReadoutBox", () => {
       const stack = screen.getByTestId("readout-measure-stack");
       expect(within(stack).getAllByTestId("readout-candidate")).toHaveLength(2);
       expect(observed).toEqual(expect.arrayContaining([screen.getByTestId("readout-box"), stack]));
-      // Not the twin, whose height is held at 0 so that the stack adds nothing to the page: it never
-      // resizes.
       expect(observed).not.toContain(screen.getByTestId("readout-measure"));
     });
   });

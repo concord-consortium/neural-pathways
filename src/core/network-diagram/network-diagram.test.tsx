@@ -343,7 +343,7 @@ describe("NetworkDiagram neuron targets", () => {
     expect(interaction.onClear).not.toHaveBeenCalled();
 
     const button = screen.getAllByRole("button")[0];
-    // fireEvent returns false when a handler called preventDefault: Space mustn't scroll the page.
+    // fireEvent returns false when a handler called preventDefault: Space must not scroll the page.
     expect(fireEvent.keyDown(button, { key: "Enter" })).toBe(false);
     expect(fireEvent.keyDown(button, { key: " " })).toBe(false);
     expect(interaction.onToggle).toHaveBeenCalledTimes(3);

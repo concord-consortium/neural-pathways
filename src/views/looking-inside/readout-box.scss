@@ -2,7 +2,7 @@
 @use "../../core/fonts" as fonts;
 
 // The box's own padding and border, shared with the measuring twin's candidates so that the tallest
-// candidate's offsetHeight is exactly the min-height to hold.
+// candidate's height is exactly the min-height to hold.
 @mixin readout-frame {
   display: flex;
   box-sizing: border-box;
@@ -74,15 +74,13 @@
   }
 }
 
-// An off-layout copy of every text the box can show, at the box's width and type.
+// An off-layout twin of the box, holding every text the box can show, at the box's width and type.
 .readout-box__measure {
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
-  // No height of its own, so its tall stack of candidates adds nothing to the page's scrollable
-  // area. The stack inside is still laid out at its own height, and the box observes it, since it
-  // grows with the font.
+  // No height of its own, so its tall stack of candidates adds nothing to the page's scrollable area.
   height: 0;
   overflow: hidden;
   visibility: hidden;
@@ -92,7 +90,6 @@
 .readout-box__candidate {
   @include readout-frame;
 
-  // A prompt is measured in the italic it is shown in; a readout is upright.
   &--idle {
     @include readout-idle;
   }

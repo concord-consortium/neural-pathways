@@ -1,24 +1,24 @@
 import { flightEaseX, flightEaseY } from "../../core/network-diagram/easing";
-import { chipsAt, inputFillAt, landingTime, passDuration, passStart, step1Duration } from "./word-flights";
+import { chipsAt, inputFillAt, landingTime, roundDuration, roundStart, step1Duration } from "./word-flights";
 
 describe("Step 1's timing", () => {
-  it("gives each input a pass that shortens to a floor", () => {
-    expect([0, 1, 2, 6, 9].map(passDuration)).toEqual([1400, 980, 686, 170, 170]);
-    expect(passDuration(5)).toBeCloseTo(235.298, 3);
-    expect(passStart(0)).toBe(0);
-    expect(passStart(2)).toBe(2380);
+  it("gives each input a round that shortens to a floor", () => {
+    expect([0, 1, 2, 6, 9].map(roundDuration)).toEqual([1400, 980, 686, 170, 170]);
+    expect(roundDuration(5)).toBeCloseTo(235.298, 3);
+    expect(roundStart(0)).toBe(0);
+    expect(roundStart(2)).toBe(2380);
   });
-  it("ends 180 ms after the last pass, whatever the word count", () => {
+  it("ends 180 ms after the last round, whatever the word count", () => {
     expect(step1Duration(10)).toBeCloseTo(4977.638, 3);
   });
-  it("lands the nearest chip at 70% of the pass and the farthest at its end", () => {
+  it("lands the nearest chip at 70% of the round and the farthest at its end", () => {
     expect(landingTime(0, 0, 5)).toBeCloseTo(980);
     expect(landingTime(0, 4, 5)).toBeCloseTo(1400);
     expect(landingTime(1, 0, 5)).toBeCloseTo(1400 + 686);
   });
-  it("lands a one-word message's only chip at the end of each pass", () => {
+  it("lands a one-word message's only chip at the end of each round", () => {
     expect(landingTime(0, 0, 1)).toBe(1400);
-    expect(landingTime(2, 0, 1)).toBeCloseTo(passStart(2) + 686);
+    expect(landingTime(2, 0, 1)).toBeCloseTo(roundStart(2) + 686);
   });
   it("fills each input a share per landing, eased, and exactly to 1 once the last has eased in", () => {
     expect(inputFillAt(0, 10, 4)).toEqual(new Array(10).fill(0));
@@ -34,20 +34,20 @@ describe("Step 1's timing", () => {
 describe("chipsAt", () => {
   const words = [{ x: 0, y: 0 }, { x: 100, y: 0 }];
   const inputs = [{ x: 300, y: 200 }, { x: 300, y: 230 }];
-  it("starts every chip of a pass on its word at the pass's start", () => {
+  it("starts every chip of a round on its word at the round's start", () => {
     const chips = chipsAt(0, words, inputs);
     expect(chips.map(c => [c.word, c.unit, c.x, c.y, c.opacity, c.scale]))
       .toEqual(expect.arrayContaining([[0, 0, 0, 0, 1, 1], [1, 0, 100, 0, 1, 1]]));
     expect(chips).toHaveLength(2);
   });
-  it("orders a pass's chips nearest first, so the farther word lands last", () => {
+  it("orders a round's chips nearest first, so the farther word lands last", () => {
     // Word 1 is nearer input 0 (283 px against 361), so its chip lands first and word 0's is
     // still flying.
     const nearLands = landingTime(0, 0, 2);
     expect(chipsAt(nearLands, words, inputs).map(c => c.word)).toEqual([0]);
   });
   it("moves a chip along x and y by their own curves, so its path bends", () => {
-    // Word 0 is the farther from input 0, so it lands at the pass's end: halfway at 700 ms.
+    // Word 0 is the farther from input 0, so it lands at the round's end: halfway at 700 ms.
     const chip = chipsAt(landingTime(0, 1, 2) / 2, words, inputs).find(c => c.word === 0)!;
     expect(chip.x).toBeCloseTo(300 * flightEaseX(0.5));
     expect(chip.y).toBeCloseTo(200 * flightEaseY(0.5));
