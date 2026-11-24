@@ -5,7 +5,6 @@ import { forward } from "../../core/network/forward";
 import { networkScales } from "../../core/network/network-scales";
 import { signColor } from "../../core/colors";
 import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
-import { formatActivation } from "../../core/network-diagram/neuron";
 import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { collectAllPlan, collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
@@ -266,7 +265,7 @@ describe("ExtractDrawing", () => {
     const names = Array.from({ length: 14 }, (_, k) =>
       (k < 8 ? `Hidden Layer 1 Neuron ${k + 1}` : `Hidden Layer 2 Neuron ${k - 7}`));
     const detail = { names, loadings: fixtureLoadings };
-    const signed = (value: number) => (value < 0 ? "" : "+") + formatActivation(value);
+    const signed = (value: number) => (value < 0 ? "" : "+") + value.toFixed(2);
     const base = "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 messages.";
 
     it("is unchanged with no pick", () => {
@@ -284,6 +283,13 @@ describe("ExtractDrawing", () => {
       const text = describeScene(scene, 14, { kind: "pathway", index: 1 }, detail);
       const list = fixtureLoadings.map((l, k) => `${names[k]} ${signed(l[1])}`).join(", ");
       expect(text).toBe(`${base} Pathway 2's loadings: ${list}.`);
+    });
+
+    it("speaks a negative loading with an ASCII minus", () => {
+      const text = describeScene(scene, 14, { kind: "pathway", index: 1 }, detail);
+      expect(fixtureLoadings.some(l => l[1] < 0)).toBe(true);
+      expect(text).toMatch(/ -\d\.\d\d/);
+      expect(text).not.toContain("−");
     });
 
     it("ignores a pick before the pathways are done", () => {

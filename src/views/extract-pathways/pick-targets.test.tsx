@@ -87,6 +87,12 @@ describe("PickTargets", () => {
     expect(fireEvent.keyDown(screen.getByRole("button", { name: pathwayName(0) }), { key: " " })).toBe(false);
     expect(onPick).toHaveBeenLastCalledWith({ kind: "pathway", index: 0 });
     onPick.mockClear();
+    // A held key's repeats neither toggle again nor scroll the page.
+    expect(fireEvent.keyDown(screen.getByRole("button", { name: pathwayName(0) }), { key: " ", repeat: true }))
+      .toBe(false);
+    expect(fireEvent.keyDown(screen.getByRole("button", { name: neuronName(4) }), { key: "Enter", repeat: true }))
+      .toBe(false);
+    expect(onPick).not.toHaveBeenCalled();
     fireEvent.keyDown(screen.getByRole("button", { name: pathwayName(2) }), { key: "Escape" });
     expect(onPick).toHaveBeenCalledTimes(1);
     expect(onPick).toHaveBeenCalledWith(undefined);

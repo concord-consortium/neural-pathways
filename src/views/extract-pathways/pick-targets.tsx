@@ -73,7 +73,10 @@ export function PickTargets({ width, height, lifted, layout, names, pick, onPick
     }
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      onPick(togglePick(pick, target));
+      // A held key repeats, and a native button acts only once.
+      if (!event.repeat) {
+        onPick(togglePick(pick, target));
+      }
     } else if (event.key === "Escape") {
       onPick(undefined);
     } else {
