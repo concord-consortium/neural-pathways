@@ -118,13 +118,18 @@ describe("WordFlightOverlay", () => {
     disconnect.mockRestore();
   });
 
-  it("draws nothing of an earlier run before the new run has measured", () => {
-    const { rerender } = render(<WordFlightOverlay time={0} words={WORDS} container={makeContainer()} />);
-    expect(screen.queryAllByText(/./)).toHaveLength(WORDS.length);
-    rerender(<WordFlightOverlay time={undefined} words={WORDS} container={makeContainer()} />);
-    // The new run's observer hasn't reported yet.
+  it("draws a run's first frame before the observer reports", () => {
     reportsOnObserve = false;
-    rerender(<WordFlightOverlay time={0} words={["only"]} container={makeContainer()} />);
-    expect(screen.queryAllByText(/./)).toHaveLength(0);
+    expect(chips(0)).toHaveLength(WORDS.length);
+  });
+
+  it("draws the chips where the browser has no ResizeObserver", () => {
+    const observer = Object.getOwnPropertyDescriptor(globalThis, "ResizeObserver")!;
+    delete (globalThis as any).ResizeObserver;
+    try {
+      expect(chips(0)).toHaveLength(WORDS.length);
+    } finally {
+      Object.defineProperty(globalThis, "ResizeObserver", observer);
+    }
   });
 });

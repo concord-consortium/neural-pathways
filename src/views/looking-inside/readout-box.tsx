@@ -29,7 +29,8 @@ export const ReadoutBox: React.FC<ReadoutBoxProps> = ({ content, candidates, idl
 
   const measure = () => {
     const tallest = Array.from(stackRef.current?.children ?? [])
-      .reduce((max, child) => Math.max(max, (child as HTMLElement).offsetHeight), 0);
+      // Rounded up, so a fractional height never leaves the box a fraction short of its text.
+      .reduce((max, child) => Math.max(max, Math.ceil(child.getBoundingClientRect().height)), 0);
     setHeight(tallest);
   };
 

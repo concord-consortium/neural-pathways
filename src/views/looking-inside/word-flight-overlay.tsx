@@ -38,23 +38,23 @@ export const WordFlightOverlay: React.FC<{
   const flying = time !== undefined;
   const [geometry, setGeometry] = useState<Geometry>();
 
-  // A layout effect, so the first frame of a run is measured before it is drawn.
   useLayoutEffect(() => {
     if (!flying || !container) {
       return undefined;
     }
     const remeasure = () => setGeometry(measure(container));
-    // Observing reports the container's size at once, which measures for the start of the run.
-    const observer = new ResizeObserver(remeasure);
-    observer.observe(container);
+    // Measured here, in a layout effect, so the run's first frame is drawn from it. An observer's
+    // report comes too late for that frame.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- measuring the laid-out words needs the DOM
+    remeasure();
+    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(remeasure);
+    observer?.observe(container);
     // Scrolling the diagram moves the neurons without resizing anything. A scroll event doesn't
     // bubble, but the capture phase sees it.
     container.addEventListener("scroll", remeasure, { capture: true, passive: true });
     return () => {
-      observer.disconnect();
+      observer?.disconnect();
       container.removeEventListener("scroll", remeasure, { capture: true });
-      // Forget the measurement, so the next run draws nothing until it has measured its own.
-      setGeometry(undefined);
     };
   }, [flying, container]);
 

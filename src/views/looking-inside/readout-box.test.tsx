@@ -60,33 +60,55 @@ describe("ReadoutBox", () => {
     let resized: () => void;
     let observed: Element[];
     let heights: Record<string, number>;
-    const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
+    let disconnect: jest.Mock;
+    const getBoundingClientRect = Element.prototype.getBoundingClientRect;
 
     beforeEach(() => {
       heights = { short: 40, tall: 60 };
       observed = [];
+      disconnect = jest.fn();
       (globalThis as any).ResizeObserver = class {
         constructor(callback: () => void) { resized = callback; }
         observe = (element: Element) => observed.push(element);
-        disconnect = jest.fn();
+        disconnect = disconnect;
       };
-      Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
-        configurable: true,
-        get(this: HTMLElement) {
-          return this.classList.contains("readout-box__candidate") ? heights[this.textContent ?? ""] ?? 0 : 0;
-        }
-      });
+      Element.prototype.getBoundingClientRect = function (this: Element) {
+        const height = this.classList.contains("readout-box__candidate") ? heights[this.textContent ?? ""] ?? 0 : 0;
+        return { height } as DOMRect;
+      };
     });
 
     afterEach(() => {
       delete (globalThis as any).ResizeObserver;
-      if (offsetHeight) Object.defineProperty(HTMLElement.prototype, "offsetHeight", offsetHeight);
+      Element.prototype.getBoundingClientRect = getBoundingClientRect;
     });
 
     it("holds the tallest candidate as min-height", () => {
       render(<ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle />);
       expect(screen.getByTestId("readout-box").style.minHeight).toBe("60px");
       expect(screen.getByTestId("readout-box").style.height).toBe("");
+    });
+
+    it("rounds a fractional height up, so the text never grows the box", () => {
+      heights.tall = 75.4;
+      render(<ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle />);
+      expect(screen.getByTestId("readout-box").style.minHeight).toBe("76px");
+    });
+
+    it("measures the new candidates when they change", () => {
+      heights.taller = 80;
+      const { rerender } = render(
+        <ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle />);
+      rerender(<ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["taller"] }} idle />);
+      expect(screen.getByTestId("readout-box").style.minHeight).toBe("80px");
+    });
+
+    it("stops observing when it unmounts", () => {
+      const { unmount } = render(
+        <ReadoutBox content="short" candidates={{ prompts: ["short"], readouts: ["tall"] }} idle />);
+      expect(disconnect).not.toHaveBeenCalled();
+      unmount();
+      expect(disconnect).toHaveBeenCalledTimes(1);
     });
 
     it("measures again when the observed layout resizes", () => {
