@@ -128,7 +128,76 @@ that works, it replaces the constructed data.
 A real trained model could support a more advanced follow-on activity. Once students identify
 the hidden factors, they could retrain the model with those factors and watch the bias shrink.
 
-## Open questions
+## Ideas under consideration
+
+Nothing in this section is decided. It records ideas from the discussion so far, so they don't
+have to be worked out again.
+
+### Hidden factors resource stress could stand in for
 
 The model stays unfair about resource stress, so students find the same trait they find today.
-What's still open is which hidden factors resource stress stands in for.
+Two hidden factors have been proposed for it to stand in for. Each one makes it a bad time to
+approach:
+
+| Factor | Why it makes approaching a bad idea | Stressed groups | Other groups |
+|---|---|---|---|
+| `hungry`: the group hasn't eaten recently | Hungry groups are short-tempered with newcomers | most | few |
+| `guarding_supplies`: the group is protecting a store of food or water | Guarding groups treat newcomers as a threat | many | few |
+
+Resource stress itself would have no effect on the right answer. Stressed groups that have
+eaten and aren't guarding anything are as approachable as anyone, and those are the groups the
+model would wrongly tell observers to wait for. `hungry` alone is the closest match to the
+food-and-quiet example. With both, students have more than one stand-in to find.
+
+Two side effects to check:
+
+- `food_present`, a visible attribute that currently correlates with nothing, would start to
+  correlate with the right answer, because groups guarding supplies have food present.
+- `young_present`, an existing hidden attribute, could replace `guarding_supplies`: groups
+  protecting hungry young are wary of newcomers. Its link to resource stress is weaker, though.
+
+### A goal: the right answer is in the conversation itself
+
+A model should be able to work out the unbiased answer from the conversation text alone. Then
+the bias comes from how the model was built, not from information it never had. For the
+hidden factors above, that means the conversations themselves must carry cues for hunger and
+guarding, and not only the observer's notes.
+
+### A two-part model
+
+One way for a model to miss cues that are in the text is to build it in two parts:
+
+1. The first part reads a conversation and produces a list of at least 15 named
+   characteristics, such as `resource_stressed`. It is trained against characteristics that
+   people labeled in the training conversations.
+2. The second part sees only that list, and predicts whether it's a good time to approach.
+
+If the people labeling the conversations never thought to label hunger or guarding, the first
+part never extracts them, even though the cues are in the text. Of the characteristics the
+second part can see, resource stress is the one that goes with being hungry or guarding, so
+the second part learns "stressed means wait." Adding hunger and guarding to the list and
+retraining would remove most of the bias, which is the follow-on activity described above.
+
+Machine learning research has a name for this design: a concept bottleneck model (Koh et al.,
+"Concept Bottleneck Models," ICML 2020). Both parts would be small enough to actually train,
+so this could reach the goal of a trained model and not just the fallback.
+
+For the story to hold up:
+
+- **The two parts are trained separately, and the second sees each characteristic as present
+  or absent.** If they're trained together, or the second part sees probabilities, information
+  about hunger can leak through the other characteristics. The research calls this concept
+  leakage.
+- **There's a reason the list leaves hunger out.** For example, resource stress is easy to label
+  from what a conversation is about, and nobody thought to label hunger.
+- **Only resource stress stands in for the hidden factors.** If another characteristic also
+  goes with hunger or guarding, the second part leans on it too, which blurs the story.
+
+Open questions about this design:
+
+- **Which neurons the pathways come from.** Factor analysis on the list of characteristics is the
+  obvious choice, but those values have names. If students can see "resource_stressed" on a
+  value, there is nothing left to discover. Either the activity hides the names, or the
+  pathways come from another layer, such as the first part's hidden layer.
+- **Whether this is the right approach at all.** It explains the bias well, but it may be more
+  machinery than the activity needs.
