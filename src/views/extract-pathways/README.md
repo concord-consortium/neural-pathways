@@ -7,9 +7,9 @@ the deck.
 ## What's here
 
 - `extract-pathways.tsx`: the view. It loads the alien3 messages and shows the step row above
-  one full-width panel holding the drawing. The panel's head holds the activation legend, the loading
-  legend (hidden until Extract Pathways' lines arrive, then sliding in), a divider and the shared
-  Animate and speed controls. There is no filter and no message panel.
+  one full-width panel holding the drawing. The panel's head holds the activation legend, the
+  loading legend (hidden until Extract Pathways' lines arrive, then sliding in), a divider and the
+  shared Animate and speed controls. There is no filter and no message panel.
 - `extract-pathways-state.ts`: the view's saved state, `ExtractPathwaysState`: whether Setup is
   done, how many messages are collected, whether the deck and the pathways are done, and
   Animate and the speed. A stage still playing isn't stored.
@@ -34,7 +34,8 @@ the deck.
 - `pathways-drawing.tsx`: the bars, the bar copies flying to the boxes, the boxes and the lines, in
   SVG, with the pick's loadings alone lit; and the particles, painted on the particle canvas over
   the SVG while they fly.
-- `pick.ts`: what is picked, a lifted neuron or a pathway, and the rules for lighting and toggling it.
+- `pick.ts`: what is picked, a lifted neuron or a pathway, and the rules for lighting and
+  toggling a pick.
 - `pick-targets.tsx`: the buttons over the lifted neurons and the pathway boxes, their keys, and the
   tip, on a transparent SVG over the drawing. Offered only at rest after Extract Pathways.
 - `loading-legend-reveal.ts`: how far the loading legend in the panel's head has slid open and faded
