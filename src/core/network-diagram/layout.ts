@@ -26,13 +26,21 @@ export interface NetworkLayout {
 }
 
 export const MIN_WIDTH = 380;
-export const MIN_HEIGHT = 300;
+/**
+ * The smallest height the diagram is laid out in: the least that draws a 10-neuron column, the
+ * tallest in the app's network, at radius 12, the most the layout draws. That takes 30 px between
+ * neighbors and TOP and BOTTOM's 61 px: 9 × 30 + 61 = 331.
+ */
+export const MIN_HEIGHT = 331;
 /** The most space between neighboring nodes. */
 const STEP_MAX = 30;
 /** Room above the first node, for the captions. */
 const TOP = 44;
-/** Room below the last node. */
-const BOTTOM = 14;
+/**
+ * Room below the last node for its ring: 3.5 px outside a circle of radius 12 at most, and half the
+ * ring's 2 px stroke (RING_GAP in network-drawing.tsx).
+ */
+const BOTTOM = 17;
 const PAD = 4;
 /** About half the width of "Input Layer" in 12px Lato. The prototype measured it; jsdom can't. */
 const FIRST_CAPTION_HALF = 30;

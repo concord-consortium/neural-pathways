@@ -55,7 +55,20 @@ one thing, or one name for two things, settle it and add it here.
 - **edge:** a drawn connection between two nodes, colored and weighted by its signal.
 - **wire:** the gray line under an edge, drawn whether or not the edge is.
 - **phase:** one of the four parts of a message's forward pass: the input fill, then a fan of
-  edges into each later column. Looking Inside a Neural Network's Step *k* plays phase *k*.
+  edges into each later column. Looking Inside a Neural Network's Steps 2–4 play phases 2–4; its
+  Step 1 is the word flights in place of the input fill.
+- **reached:** a neuron whose step has ended: column *c* once the marker is at least *c* + 1. Only
+  reached neurons answer hover, click and the keyboard.
+- **pin:** make a reached neuron's readout show, by clicking it or pressing Enter or Space on it; the
+  pinned neuron is the one shown. Not "select".
+- **readout:** the text about the pinned neuron.
+- **prompt:** what the readout box says when nothing is pinned and no step plays: what to do next.
+- **readout box:** the box under the network that shows the prompt or the readout (`ReadoutBox`).
+- **chip:** a word in flight to an input neuron at Step 1: each round sends one per word. Not
+  "copy", which is Extract the Neural Pathways', or "fly" or "flier".
+- **round:** one input neuron's turn at Step 1, when a chip flies to it from each of the message's
+  words. The rounds run back to back, each shorter than the last. Not "pass", which is the forward
+  pass.
 - **spotlight:** `hiddenLayerSpotlight`, how strongly the hidden layers' nodes are picked out;
   everything else fades to 1 − its strength. Not "dim" for the field. "Dim" and "undim" name the
   spotlight rising and falling, as in the prototype's `dimRest` and `undim`.

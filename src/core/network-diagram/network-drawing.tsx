@@ -5,6 +5,7 @@ import { magnitudeBand, NetworkScales } from "../network/network-scales";
 import { signColor } from "../colors";
 import { clamp01, cubicBezier } from "./easing";
 import { NetworkLayout, PILL_GAP } from "./layout";
+import { NeuronRef, NeuronRings, OUTPUT_ORDER, rowOf, sameNeuron, unitAt } from "./neuron";
 import { Scene } from "./scene";
 import "./network-diagram.scss";
 
@@ -13,8 +14,6 @@ import "./network-diagram.scss";
  * the word-count vector before it the input.
  */
 export const COLUMN_CAPTIONS = ["Input Layer", "Hidden Layer 1", "Hidden Layer 2", "Output Layer"];
-/** Output units top to bottom: Approach (class 1) above Wait (class 0), as in the prototype. */
-export const OUTPUT_ORDER = [1, 0];
 /** Stroke widths for the thin, mid and thick bands. */
 const EDGE_WIDTHS = [1, 2, 3];
 /** The winning pill grows by this much on every side. */
@@ -40,11 +39,6 @@ export function popScale(answer: number): number {
   return 1;
 }
 
-/** The unit drawn in a row: rows are units, except in the output column, which follows OUTPUT_ORDER. */
-function unitAt(column: number, row: number, lastColumn: number): number {
-  return column === lastColumn ? OUTPUT_ORDER[row] : row;
-}
-
 /** An opacity attribute, left off at full strength. */
 function opacity(value: number): number | undefined {
   return value >= 1 ? undefined : value;
@@ -66,7 +60,19 @@ export interface NetworkDrawingProps {
   /** Class labels by class index, such as alien3Dataset.classificationLabels. */
   outputLabels: Record<number, string>;
   scene: Scene;
+  /**
+   * A neuron whose edges to show at full strength, drawn above the rest. The other edges in the gaps
+   * on either side of it dim.
+   */
+  highlighted?: NeuronRef;
+  /** The neurons to ring: for hover, pin and keyboard focus. */
+  rings?: NeuronRings;
 }
+
+/** What the other edges in a highlighted neuron's gaps dim to. */
+const DIMMED_EDGE_OPACITY = 0.1;
+/** A ring sits this far outside its node's circle. */
+export const RING_GAP = 3.5;
 
 /**
  * One message's pass through the network as an SVG group, laid out by `layout` and drawn as
@@ -82,7 +88,7 @@ export interface NetworkDrawingProps {
  * NetworkDiagram does.
  */
 export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
-  { network, layout, pass, scales, outputLabels, scene },
+  { network, layout, pass, scales, outputLabels, scene, highlighted, rings },
 ) => {
   const clipPrefix = `network-clip-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const lastColumn = layout.nodes.length - 1;
@@ -95,6 +101,8 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
     column === lastColumn ? pass.layers[column][unit] / scales.logitScale : pass.layers[column][unit];
 
   const edges: React.ReactElement[] = [];
+  /** The highlighted neuron's own edges, pushed after the others so they draw on top. */
+  const highlightedEdges: React.ReactElement[] = [];
   for (let gap = 0; gap < lastColumn; gap++) {
     const thresholds = scales.edgeThresholds[gap];
     const weights = network.layers[gap + 1].weights;
@@ -116,15 +124,24 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
         const my = (from.y + to.y) / 2;
         const half = Math.hypot(mx - x1, my - from.y);
         const id = `${gap}-${source}-${target}`;
-        edges.push(
+        const touched = highlighted !== undefined
+          && ((gap === highlighted.column - 1 && target === highlighted.unit)
+            || (gap === highlighted.column && source === highlighted.unit));
+        const inHighlightedGaps = highlighted !== undefined
+          && (gap === highlighted.column - 1 || gap === highlighted.column);
+        const edgeOpacity = inHighlightedGaps && !touched ? DIMMED_EDGE_OPACITY : undefined;
+        const list = touched ? highlightedEdges : edges;
+        list.push(
           <line key={`near-${id}`} data-testid={`edge-near-${id}`} className="network-diagram__edge"
+            opacity={edgeOpacity}
             x1={x1} y1={from.y} x2={mx} y2={my}
             stroke={signColor(activation)} strokeWidth={EDGE_WIDTHS[magnitudeBand(activation, thresholds)]}
             strokeDasharray={half} strokeDashoffset={half * (1 - near)} />,
         );
         if (far > 0) {
-          edges.push(
+          list.push(
             <line key={`far-${id}`} data-testid={`edge-far-${id}`} className="network-diagram__edge"
+              opacity={edgeOpacity}
               x1={mx} y1={my} x2={x2} y2={to.y}
               stroke={signColor(contribution)} strokeWidth={EDGE_WIDTHS[magnitudeBand(contribution, thresholds)]}
               strokeDasharray={half} strokeDashoffset={half * (1 - far)} />,
@@ -172,11 +189,12 @@ export const NetworkDrawing: React.FC<NetworkDrawingProps> = (
         })}
       </g>
       <Wires layout={layout} opacity={opacity(surroundOpacity)} />
-      <g className="network-diagram__edges" opacity={opacity(surroundOpacity)}>{edges}</g>
+      <g className="network-diagram__edges" opacity={opacity(surroundOpacity)}>{edges}{highlightedEdges}</g>
       <Discs layout={layout} clipPrefix={clipPrefix} />
       <g className="network-diagram__gauges">{gauges}</g>
       <Outlines layout={layout} surroundOpacity={surroundOpacity} />
-      <g className="network-diagram__labels" opacity={opacity(surroundOpacity)}>
+      <Rings layout={layout} rings={rings} />
+      <g className="network-diagram__labels" opacity={opacity(surroundOpacity)} aria-hidden="true">
         {outputNodes.map((node, row) => {
           const unit = OUTPUT_ORDER[row];
           return (
@@ -265,6 +283,7 @@ const Outlines = React.memo(function Outlines({ layout, surroundOpacity }: Outli
     const unit = unitAt(c, row, lastColumn);
     outlines.push(
       <circle key={`${c}-${unit}`} data-testid={`node-${c}-${unit}`} className="network-diagram__node"
+        data-column={c} data-unit={unit}
         cx={node.x} cy={node.y} r={layout.radius} opacity={nodeOpacity(c, lastColumn, surroundOpacity)} />,
     );
   }));
@@ -273,10 +292,54 @@ const Outlines = React.memo(function Outlines({ layout, surroundOpacity }: Outli
       <g className="network-diagram__nodes">{outlines}</g>
       {layout.columnX.map((x, c) => (
         <text key={c} x={x} y={layout.captionY} textAnchor="middle" className="network-diagram__caption"
-          opacity={opacity(surroundOpacity)}>
+          opacity={opacity(surroundOpacity)} aria-hidden="true">
           {COLUMN_CAPTIONS[c]}
         </text>
       ))}
     </>
   );
 });
+
+interface RingsProps {
+  layout: NetworkLayout;
+  rings: NeuronRings | undefined;
+}
+
+/**
+ * A ring RING_GAP outside each hovered, pinned or focused neuron's circle. When one neuron has several,
+ * one ring takes every class.
+ */
+function Rings({ layout, rings }: RingsProps) {
+  if (!rings) {
+    return null;
+  }
+  const lastColumn = layout.nodes.length - 1;
+  const reasons: [keyof NeuronRings, NeuronRef | undefined][] = [
+    ["hovered", rings.hovered], ["pinned", rings.pinned], ["focused", rings.focused],
+  ];
+  const ringed: { neuron: NeuronRef; classes: string[] }[] = [];
+  for (const [reason, neuron] of reasons) {
+    if (!neuron) {
+      continue;
+    }
+    const entry = ringed.find(other => sameNeuron(other.neuron, neuron));
+    const modifier = `network-diagram__ring--${reason}`;
+    if (entry) {
+      entry.classes.push(modifier);
+    } else {
+      ringed.push({ neuron, classes: [modifier] });
+    }
+  }
+  return (
+    <g className="network-diagram__rings">
+      {ringed.map(({ neuron, classes }) => {
+        const node = layout.nodes[neuron.column][rowOf(neuron.column, neuron.unit, lastColumn)];
+        return (
+          <circle key={`${neuron.column}-${neuron.unit}`} data-testid={`ring-${neuron.column}-${neuron.unit}`}
+            className={["network-diagram__ring", ...classes].join(" ")}
+            cx={node.x} cy={node.y} r={layout.radius + RING_GAP} />
+        );
+      })}
+    </g>
+  );
+}

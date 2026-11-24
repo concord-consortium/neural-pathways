@@ -115,7 +115,7 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
   views are built to meet 1.4.10 and 2.1.1 there, and checked in Chromium, but may be too cumbersome
   to be useful to students. At 320 px Extract the Neural Pathways' steps wrap into three rows, with
   About on a fourth, above a canvas that scrolls sideways, and Looking Inside a Neural Network
-  stacks into a page about 1,030 px tall in an Interactive
+  stacks into a page about 1,210 px tall in an Interactive
   ([its README](../src/views/looking-inside/README.md) has the heights).
 - An Activity Player page that has a responsive section is as wide as the window, with no minimum
   width for the page or its iframes, so an Interactive there is only as wide as the window allows,
@@ -133,11 +133,14 @@ directions. It allows content that needs a two-dimensional layout, such as a dia
 - Extract the Neural Pathways' minimum layout height, 598 px, doesn't fit the designed size yet, so
   in an Interactive 562 px tall its page scrolls down.
 - The minimum layout sizes assume the web fonts. Lato and Barlow Condensed come from Google Fonts,
-  and where a network blocks it they fall back to a wider sans-serif. Then, from Looking Inside a
-  Neural Network's minimum layout width, 910 px, to about 935 px, Animate and the speed wrap below
-  the network panel's title, and the head grows from 62 to 89 px. Only the messages' font, Spline
-  Sans Mono, is served with the app so far. Serving the other two the same way would close this
-  gap.
+  and where a network blocks it they fall back to a wider sans-serif. In the fallback font the
+  legend is wider, and so are the Animate controls, 207 px rather than 184 px, so Looking Inside a
+  Neural Network's head wraps up to about 1,115 px, where with the web fonts it is on one line from
+  about 981 px. Wrapped, the legend and the controls drop below the title together, and the head is
+  89 px tall rather than 62, at 990 px and at 910 px alike. Its items wrap rather than overflow, so
+  nothing runs past the panel at 910 px or at 480 px, and the panels' smallest grows with the head,
+  so the page scrolls down sooner. Only the messages' font, Spline Sans Mono, is served with the app
+  so far. Serving the other two the same way would close this gap.
 
 **Scrollers.** A scroller must work from the keyboard
 ([2.1.1 Keyboard](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html), A). It may scroll
@@ -151,6 +154,9 @@ scroller with nothing focusable in it reachable by Tab; Safari doesn't.
   by the same heading, and About's text is, inside its dialog. Otherwise it is a `region` named by
   its heading, or by the button in its heading, as the observation notes are. A `region` inside a
   landmark with the same name would list the landmark twice.
+- A drawing that holds controls is not an `img`, which hides everything inside it from assistive
+  technology. The network diagram's SVG is a `group` labeled "Network diagram", holding a button for
+  each reached neuron. Its own text, which the buttons' names make redundant, is `aria-hidden`.
 - A scroller clips what is drawn outside it, so keep the drawing inside its own box, down to a
   fraction of a pixel. The network diagram leaves room for its winning pill to grow as it pops.
 

@@ -1,0 +1,26 @@
+@use "../../core/colors" as colors;
+@use "../../core/fonts" as fonts;
+
+// Over the layout's panels, for the chips to fly between them. Clicks pass through to what is below.
+.word-flight-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: visible;
+  pointer-events: none;
+}
+
+// A chip: a word in flight, as the prototype draws it. Its position is its center.
+.word-flight-overlay__chip {
+  position: absolute;
+  padding: 2px 5px;
+  border: 1px solid colors.$rule;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 2px 8px -3px rgba(30, 36, 44, 0.45);
+  color: colors.$ink;
+  font-family: fonts.$message-font;
+  font-size: 12.5px;
+  line-height: 1;
+  white-space: nowrap;
+}

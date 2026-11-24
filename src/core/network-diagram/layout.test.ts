@@ -1,14 +1,14 @@
 import { layoutNetwork, MIN_HEIGHT, MIN_WIDTH } from "./layout";
-import { PILL_GROW, popScale } from "./network-drawing";
+import { PILL_GROW, popScale, RING_GAP } from "./network-drawing";
 
 const SIZES = [10, 8, 6, 2];
 /** The largest scale the winning pill pops to, about 1.1. */
 const POP_PEAK = Math.max(...Array.from({ length: 1001 }, (_, i) => popScale(i / 1000)));
-/** Half the pill's 2 px stroke, which is drawn outside its box. */
+/** Half the 2 px stroke of a pill or a ring, which is drawn outside its shape. */
 const HALF_STROKE = 1;
 
 describe.each([
-  [380, 300],
+  [MIN_WIDTH, MIN_HEIGHT],
   [537, 440],
   [1200, 900],
 ])("layoutNetwork at %i × %i", (width, height) => {
@@ -31,6 +31,14 @@ describe.each([
         expect(node.x + r).toBeLessThanOrEqual(layout.width);
         expect(node.y - r).toBeGreaterThan(layout.captionY);
         expect(node.y + r).toBeLessThanOrEqual(layout.height);
+      }
+    }
+  });
+
+  it("leaves room in the drawing for each node's ring", () => {
+    for (const column of layout.nodes) {
+      for (const node of column) {
+        expect(node.y + r + RING_GAP + HALF_STROKE).toBeLessThanOrEqual(layout.height);
       }
     }
   });
@@ -87,11 +95,15 @@ describe("layoutNetwork", () => {
     expect(layout.height).toBe(MIN_HEIGHT);
   });
 
+  it("draws the neurons at radius 12, the most it draws, in the smallest layout", () => {
+    expect(layoutNetwork(SIZES, MIN_WIDTH, MIN_HEIGHT).radius).toBe(12);
+  });
+
   it("spaces nodes 30 apart at most and centers the diagram in a tall space", () => {
     const layout = layoutNetwork(SIZES, 537, 1000);
     const first = layout.nodes[0];
     expect(first[1].y - first[0].y).toBeCloseTo(30);
     const middle = (first[0].y + first[first.length - 1].y) / 2;
-    expect(Math.abs(middle - (44 + (1000 - 14)) / 2)).toBeLessThan(1);
+    expect(Math.abs(middle - (44 + (1000 - 17)) / 2)).toBeLessThan(1);
   });
 });

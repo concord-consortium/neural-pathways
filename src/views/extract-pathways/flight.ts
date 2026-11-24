@@ -1,4 +1,4 @@
-import { cubicBezier } from "../../core/network-diagram/easing";
+import { cubicBezier, flightEaseX, flightEaseY } from "../../core/network-diagram/easing";
 import { Point } from "../../core/network-diagram/layout";
 
 // The timings, distances and curves below are the prototype's, at its "Medium" speed, so each can
@@ -11,9 +11,8 @@ export const LAND_GAP = 80;
 /** How far a copy passes its mark before settling back. */
 export const SETTLE_PX = 7;
 export const SETTLE_MS = 190;
-// x and y ease differently, so the path curves.
-export const easeX = cubicBezier(0.7, 0, 0.75, 0.75);
-const easeY = cubicBezier(0.45, 0.05, 0.3, 1);
+export const easeX = flightEaseX;
+const easeY = flightEaseY;
 export const settleEase = cubicBezier(0.25, 0.9, 0.35, 1);
 
 /** How long a flight of `count` copies takes, until the last has settled. */

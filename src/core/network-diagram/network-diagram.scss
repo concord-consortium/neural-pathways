@@ -29,6 +29,11 @@
 
 .network-diagram__edge {
   fill: none;
+  transition: opacity 0.18s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
 .network-diagram__discs circle {
@@ -39,6 +44,55 @@
   fill: none;
   stroke: colors.$node-outline;
   stroke-width: 1;
+}
+
+// Never a CSS outline: an SVG element's outline is square. Where one ring has several classes, source
+// order picks the look: focus wins over hover, and the pin wins over both, since it is the stronger
+// state and the one that lasts.
+.network-diagram__ring {
+  fill: none;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.network-diagram__ring--hovered {
+  stroke: colors.$ink;
+  opacity: 0.5;
+}
+
+.network-diagram__ring--focused {
+  stroke: colors.$wait;
+  opacity: 1;
+}
+
+.network-diagram__ring--pinned {
+  stroke: colors.$ink;
+  opacity: 1;
+}
+
+// Forced colors leave an SVG stroke as it is, and a dark theme's canvas would hide the ink rings.
+// The same precedence, in the theme's colors.
+@media (forced-colors: active) {
+  .network-diagram__ring--hovered {
+    stroke: CanvasText;
+  }
+
+  .network-diagram__ring--focused {
+    stroke: Highlight;
+  }
+
+  .network-diagram__ring--pinned {
+    stroke: CanvasText;
+  }
+}
+
+// The hit rectangles are invisible; the ring shows focus, so the <g> buttons get no outline of their own.
+.network-diagram__targets g:focus {
+  outline: none;
+}
+
+.network-diagram__target--reached {
+  cursor: pointer;
 }
 
 .network-diagram__caption,
