@@ -29,7 +29,15 @@ export interface NeuronInteraction {
   onClear(): void;
 }
 
-/** Each target is this much wider than its circle, half each side, so the pointer needn't be exactly on it. */
+/**
+ * An activation for a neuron's name, with an ASCII minus: some speech engines skip U+2212, which
+ * `formatActivation` shows, depending on their punctuation setting. The prototype's label does the same.
+ */
+function spokenActivation(value: number): string {
+  return value.toFixed(2);
+}
+
+/** Each target is this much wider than its circle, half each side, so the pointer doesn't have to be exactly on it. */
 const TARGET_EXTRA_WIDTH = 10;
 
 /**
@@ -91,7 +99,8 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
   // A step press can leave the focused neuron unreached without moving focus, as a click on a step
   // button does in Safari, which doesn't focus the button. Its button is gone, and focus would fall to
   // the page, so it goes to the Tab stop instead. The browser may not have let go of the old button
-  // yet, or may have dropped focus without a blur.
+  // yet, or may have dropped focus without a blur. With nothing reached there is no Tab stop, so the
+  // view hears that the focus is gone, as a blur would have told it.
   useLayoutEffect(() => {
     const lost = focusedRef.current;
     if (!lost || lost.column < reachedColumns) {
@@ -100,8 +109,13 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
     focusedRef.current = undefined;
     const active = document.activeElement;
     const dropped = !active || active === document.body || layerRef.current?.contains(active);
-    if (dropped && tabStop) {
+    if (!dropped) {
+      return;
+    }
+    if (tabStop) {
       focusNeuron(tabStop);
+    } else {
+      onFocusChange(undefined, false);
     }
   });
 
@@ -115,7 +129,10 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
     onFocusChange(neuron, true);
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      onToggle(neuron);
+      // A held key repeats, and a native button acts only once.
+      if (!event.repeat) {
+        onToggle(neuron);
+      }
     } else if (event.key === "Escape") {
       onClear();
     } else {
@@ -123,6 +140,9 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
       if (next) {
         event.preventDefault();
         focusNeuron(next);
+        // The keys moved it, so it is keyboard focus whether or not the browser matches
+        // :focus-visible for focus set by script.
+        onFocusChange(next, true);
       }
     }
   };
@@ -163,7 +183,7 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
       };
       targets.push(reached ? (
         <g key={`${c}-${unit}`} role="button" aria-pressed={sameNeuron(rings.pinned, neuron)}
-          aria-label={`${neuronName(neuron, lastColumn, outputLabels)}, activation ${formatActivation(value)}`}
+          aria-label={`${neuronName(neuron, lastColumn, outputLabels)}, activation ${spokenActivation(value)}`}
           tabIndex={sameNeuron(tabStop, neuron) ? 0 : -1} data-column={c} data-unit={unit}
           onClick={onClick}
           onPointerEnter={() => onHover(neuron)} onPointerLeave={() => onHover(undefined)}
@@ -179,9 +199,11 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
           {shapes}
         </g>
       ) : (
-        // It still hears the pointer leave: a step press from the keyboard can leave the neuron under
-        // the pointer unreached, and its hover would otherwise come back when it is reached again.
-        <g key={`${c}-${unit}`} aria-hidden="true" onClick={onClick} onPointerLeave={() => onHover(undefined)}>
+        // It still hears the pointer: a run can reach the neuron under a resting pointer, which sends no
+        // second enter, and a step press from the keyboard can leave it unreached under the pointer.
+        // `reachedInteraction` keeps its hover from showing until it is reached.
+        <g key={`${c}-${unit}`} aria-hidden="true" onClick={onClick}
+          onPointerEnter={() => onHover(neuron)} onPointerLeave={() => onHover(undefined)}>
           {shapes}
         </g>
       ));

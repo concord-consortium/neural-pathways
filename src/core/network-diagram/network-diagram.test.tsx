@@ -213,7 +213,15 @@ describe("NetworkDiagram neuron targets", () => {
     const buttons = screen.getAllByRole("button");
     expect(buttons).toHaveLength(18);
     expect(buttons[0]).toHaveAccessibleName(
-      `Input Layer Neuron 1, activation ${formatActivation(waitPass.layers[0][0])}`);
+      `Input Layer Neuron 1, activation ${waitPass.layers[0][0].toFixed(2)}`);
+  });
+
+  it("names a negative activation with an ASCII minus, which every speech engine reads", () => {
+    renderInteractive(makeInteraction({ reachedColumns: 2 }));
+    const unit = waitPass.layers[1].findIndex(activation => activation < 0);
+    const value = waitPass.layers[1][unit];
+    expect(screen.getByRole("button", { name: new RegExp(`^Hidden Layer 1 Neuron ${unit + 1},`) }))
+      .toHaveAccessibleName(`Hidden Layer 1 Neuron ${unit + 1}, activation -${Math.abs(value).toFixed(2)}`);
   });
 
   it("draws no targets without an interaction", () => {
@@ -273,6 +281,23 @@ describe("NetworkDiagram neuron targets", () => {
     expect(screen.getByRole("button", { name: /^Input Layer Neuron 1,/ })).toHaveFocus();
   });
 
+  it("reports the focus gone when the focused neuron stops being reached and nothing is", () => {
+    const { rerender } = renderInteractive(makeInteraction({ reachedColumns: 4 }));
+    act(() => screen.getByRole("button", { name: /^Hidden Layer 1 Neuron 1,/ }).focus());
+    // As Step 1 with Animate on does from a later marker: the run starts from marker 0, so nothing is
+    // reached and there is no Tab stop to move focus to.
+    const unreached = makeInteraction({ reachedColumns: 0 });
+    rerender(
+      <>
+        <h2 id="network-head">The Neural Network</h2>
+        <NetworkDiagram network={fixtureNetwork} pass={waitPass} scales={scales} outputLabels={LABELS}
+          scene={fullScene(SIZES)} headingId="network-head" interaction={unreached} />
+      </>,
+    );
+    expect(unreached.onFocusChange).toHaveBeenCalledTimes(1);
+    expect(unreached.onFocusChange).toHaveBeenCalledWith(undefined, false);
+  });
+
   it("marks the pinned neuron as pressed", () => {
     renderInteractive(makeInteraction({ rings: { pinned: { column: 1, unit: 2 } } }));
     const pressed = screen.getAllByRole("button", { pressed: true });
@@ -280,17 +305,23 @@ describe("NetworkDiagram neuron targets", () => {
     expect(pressed[0]).toHaveAccessibleName(/^Hidden Layer 1 Neuron 3,/);
   });
 
-  it("doesn't answer for neurons the steps haven't reached", () => {
+  it("doesn't answer a click on neurons the steps haven't reached", () => {
     const interaction = makeInteraction({ reachedColumns: 1 });
     renderInteractive(interaction);
     expect(screen.getAllByRole("button")).toHaveLength(10);
     fireEvent.click(screen.getByTestId("neuron-target-1-0"));
-    fireEvent.pointerEnter(screen.getByTestId("neuron-target-1-0"));
     fireEvent.click(screen.getByTestId("pill-target-1"));
-    fireEvent.pointerEnter(screen.getByTestId("pill-target-1"));
     expect(interaction.onToggle).not.toHaveBeenCalled();
     expect(interaction.onClear).not.toHaveBeenCalled();
-    expect(interaction.onHover).not.toHaveBeenCalled();
+  });
+
+  it("hears the pointer enter an unreached neuron or pill, so the hover shows once a run reaches it", () => {
+    const interaction = makeInteraction({ reachedColumns: 1 });
+    renderInteractive(interaction);
+    fireEvent.pointerEnter(screen.getByTestId("neuron-target-1-0"));
+    expect(interaction.onHover).toHaveBeenLastCalledWith({ column: 1, unit: 0 });
+    fireEvent.pointerEnter(screen.getByTestId("pill-target-1"));
+    expect(interaction.onHover).toHaveBeenLastCalledWith({ column: 3, unit: 1 });
   });
 
   it("hears the pointer leave an unreached neuron or pill, which a step press may have left unreached", () => {
@@ -315,6 +346,11 @@ describe("NetworkDiagram neuron targets", () => {
     // fireEvent returns false when a handler called preventDefault: Space mustn't scroll the page.
     expect(fireEvent.keyDown(button, { key: "Enter" })).toBe(false);
     expect(fireEvent.keyDown(button, { key: " " })).toBe(false);
+    expect(interaction.onToggle).toHaveBeenCalledTimes(3);
+
+    // A held key's repeats neither toggle again nor scroll the page.
+    expect(fireEvent.keyDown(button, { key: " ", repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(button, { key: "Enter", repeat: true })).toBe(false);
     expect(interaction.onToggle).toHaveBeenCalledTimes(3);
 
     fireEvent.keyDown(button, { key: "Escape" });
@@ -387,6 +423,17 @@ describe("NetworkDiagram neuron targets", () => {
       fireEvent.keyDown(button, { key: "Enter" });
       expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 0 }, true);
     });
+
+    it("makes an arrow key's move keyboard focus even where the browser doesn't match :focus-visible", () => {
+      const interaction = makeInteraction({ tabStop: { column: 0, unit: 0 } });
+      renderInteractive(interaction);
+      focusVisibleIs(false);
+      const buttons = screen.getAllByRole("button");
+      buttons[0].focus();
+      fireEvent.keyDown(buttons[0], { key: "ArrowDown" });
+      expect(buttons[1]).toHaveFocus();
+      expect(interaction.onFocusChange).toHaveBeenLastCalledWith({ column: 0, unit: 1 }, true);
+    });
   });
 
   it("moves focus with the arrow keys", () => {
@@ -396,6 +443,15 @@ describe("NetworkDiagram neuron targets", () => {
     // Handled, so the arrow doesn't scroll the page or the diagram too.
     expect(fireEvent.keyDown(buttons[0], { key: "ArrowDown" })).toBe(false);
     expect(buttons[1]).toHaveFocus();
+  });
+
+  it("leaves Tab and Shift+Tab to the browser, so focus can leave the neurons", () => {
+    renderInteractive(makeInteraction({ tabStop: { column: 0, unit: 0 } }));
+    const button = screen.getAllByRole("button")[0];
+    button.focus();
+    // fireEvent returns false when a handler called preventDefault.
+    expect(fireEvent.keyDown(button, { key: "Tab" })).toBe(true);
+    expect(fireEvent.keyDown(button, { key: "Tab", shiftKey: true })).toBe(true);
   });
 
   it("makes each target wider than its circle and one row's pitch tall, so neighbors in a column touch", () => {
