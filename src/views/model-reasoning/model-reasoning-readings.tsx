@@ -19,9 +19,7 @@ interface ModelReasoningReadingsProps {
  * all. They share the current word, so Tab from one reading to the next lands on the same word. Key
  * this by the message, so a new message starts with no current word.
  *
- * The scroller isn't a Tab stop of its own once the scores load: everything in it but the Pathway
- * rows is then in the listboxes, which Tab and the arrow keys reach, and a focused word scrolls into
- * view. While they load, a browser may briefly make it one (see docs/accessibility.md).
+ * docs/accessibility.md says why the scroller isn't a Tab stop of its own.
  */
 export const ModelReasoningReadings: React.FC<ModelReasoningReadingsProps> = ({ words, scores, max }) => {
   const [current, setCurrent] = useState<number | undefined>(undefined);
