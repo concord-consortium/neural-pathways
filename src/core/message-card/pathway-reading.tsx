@@ -98,7 +98,8 @@ export const PathwayReading: React.FC<PathwayReadingProps> = ({
               <span
                 ref={element => { optionRefs.current[i] = element; }}
                 role="option"
-                className={`pathway-reading__word${fill ? " pathway-reading__word--colored" : ""}`}
+                className={"pathway-reading__word" + (fill ? " pathway-reading__word--colored" : "")
+                  + (note ? " pathway-reading__word--noted" : "")}
                 aria-label={note && noteName(note)}
                 aria-selected={i === current}
                 tabIndex={i === tabStop ? 0 : -1}

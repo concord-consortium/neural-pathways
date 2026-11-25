@@ -89,6 +89,12 @@ describe("PathwayReading", () => {
     expect(within(listbox).getByRole("option", { name: "sooma, minus 0.2000" })).toBe(options()[3]);
   });
 
+  it("marks every word with a tooltip, colored or not, for the help cursor", () => {
+    render(<Harness />);
+    expect(options().map(option => option.classList.contains("pathway-reading__word--noted")))
+      .toEqual([true, false, true, true]);
+  });
+
   it("makes the first word the only Tab stop until one is current, then the current word", () => {
     const { rerender } = render(
       <PathwayReading pathway={0} words={words} scores={scores} max={max} current={undefined}
