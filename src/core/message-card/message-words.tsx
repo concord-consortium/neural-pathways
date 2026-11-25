@@ -11,7 +11,7 @@ import "./message-words.scss";
 export const MessageWords: React.FC<{ text: string }> = ({ text }) => (
   <p className="message-words">
     {messageWords(text).map((word, i) => (
-      // A word can repeat, so its place is its key.
+      // A word can repeat, so its index is its key.
       <React.Fragment key={i}>
         {i > 0 && " "}
         <span className="message-words__word">{word}</span>

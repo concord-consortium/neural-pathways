@@ -247,7 +247,7 @@ Looking Inside; its word flights look for `.message-words__word` in that view on
 ### The keyboard and screen readers
 
 Each reading's words are a single-choice listbox named by its pathway ("Pathway 1"), with each word
-an option. There is one **current word** for all three readings, the same position in each, so
+an option. There is one **current word** for all three readings, the same index in each, so
 Tab from one reading to the next lands on the same word and its score there can be compared.
 
 | Input | Does |
@@ -353,8 +353,8 @@ Add to `docs/glossary.md`, under Messages:
   it Word Contribution, which is the name students see.
 - **scale maximum:** the largest |word score| in a fit's SHAP buckets (`word_score_max`), the
   legend's ends.
-- **current word:** the word last focused or clicked in a reading, the same position in all three
-  readings, which holds each reading's Tab stop. Not "selected" in prose, though it is
+- **current word:** the word last focused or clicked in a reading, the same word, by its index, in all
+  three readings, which holds each reading's Tab stop. Not "selected" in prose, though it is
   `aria-selected` in the markup.
 
 ## Testing

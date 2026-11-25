@@ -15,12 +15,12 @@ interface PathwayReadingProps {
   scores: number[][] | undefined;
   /** The scale maximum. */
   max: number;
-  /** The current word's position, shared by the caller's readings. */
+  /** The current word's index, shared by the caller's readings. */
   current: number | undefined;
   onCurrentChange: (index: number) => void;
 }
 
-/** The position a key moves the current word to, or undefined for a key the reading doesn't use. */
+/** The index a key moves the current word to, or undefined for a key the reading doesn't use. */
 function keyTarget(key: string, index: number, count: number): number | undefined {
   switch (key) {
     case "ArrowRight":
@@ -47,7 +47,7 @@ export const PathwayReading: React.FC<PathwayReadingProps> = ({
 }) => {
   const rowId = useId();
   const events = useWordTooltipEvents();
-  // The options by position, since a word can repeat.
+  // The options by index, since a word can repeat.
   const optionRefs = useRef<(HTMLSpanElement | null)[]>([]);
   // The current word, or the first when there is none or it is past the end, so the reading always
   // has a Tab stop.
@@ -92,7 +92,7 @@ export const PathwayReading: React.FC<PathwayReadingProps> = ({
           const fill = value ? wordFill(value, max) : undefined;
           const target = (element: HTMLElement) => ({ element, note });
           return (
-            // A word can repeat, so its place is its key.
+            // A word can repeat, so its index is its key.
             <React.Fragment key={i}>
               {i > 0 && " "}
               <span

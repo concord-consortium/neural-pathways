@@ -179,7 +179,7 @@ describe("PathwayReading", () => {
     expect(sooma).toHaveAttribute("aria-selected", "true");
   });
 
-  it("moves by position when a word repeats", () => {
+  it("moves by index when a word repeats", () => {
     render(<Harness words={["aa", "bb", "aa"]} scores={[[0.1, 0, 0], [0, 0, 0], [0.1, 0, 0]]} />);
     act(() => options()[0].focus());
     fireEvent.keyDown(options()[0], { key: "ArrowRight" });
