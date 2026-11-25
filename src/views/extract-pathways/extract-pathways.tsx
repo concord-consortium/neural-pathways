@@ -145,8 +145,8 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
 
 /**
  * The loading legend, which slides open and fades in with the pathways' lines. It stays out of the
- * layout until they start, so the activation legend has the head to itself. Reads the player's scene
- * on its own, so the view's body doesn't re-render while a run plays.
+ * layout until they start, so no gap opens for it beside the activation legend. Reads the player's
+ * scene on its own, as the drawing does.
  */
 const LoadingLegendSlot = observer(function LoadingLegendSlot({ player }: { player: StepPlayer<ExtractScene> }) {
   const [setNatural, natural] = useElementSize<HTMLDivElement>({ width: 0, height: 0 });
@@ -157,7 +157,8 @@ const LoadingLegendSlot = observer(function LoadingLegendSlot({ player }: { play
   } else if (reveal.width === 1) {
     style = { opacity: reveal.opacity };
   } else {
-    // Until the legend is measured it takes no width, so the head doesn't hold its full width for a frame.
+    // Until the legend is measured it takes no width, so the head doesn't hold its full width for a
+    // frame.
     style = { overflow: "hidden", opacity: reveal.opacity, width: reveal.width * natural.width };
   }
   return (

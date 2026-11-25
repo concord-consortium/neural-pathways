@@ -79,7 +79,7 @@ $step-row-width: 596px + 2 * (86px + 10px);
 }
 
 // The loading legend's slide: the view sets its width and opacity inline while the pathways' lines
-// draw. It lets go of its flex-basis so the width set is the width taken, and it can't shrink.
+// draw. It can't shrink, so the width the view sets is the width it takes.
 .extract-pathways__loading-legend {
   flex: none;
 }

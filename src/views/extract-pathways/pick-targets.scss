@@ -16,12 +16,12 @@
   cursor: pointer;
 }
 
-// The buttons are invisible; their rings and outlines show focus, so they get no outline of their own.
+// The buttons are invisible: drawn rings and outlines show focus, since an SVG element's CSS outline
+// is square.
 .pick-targets g:focus {
   outline: none;
 }
 
-// Never a CSS outline on the rings: an SVG element's outline is square.
 .pick-targets__hover-ring,
 .pick-targets__focus {
   fill: none;
@@ -53,11 +53,11 @@
   stroke-width: 3;
 }
 
-// Keyboard focus only, so a click leaves no ring; outside the pick ring and the picked outline.
 .pick-targets__focus {
   stroke: colors.$wait;
 }
 
+// Keyboard focus only, so a click leaves no ring.
 .pick-targets g:focus-visible .pick-targets__focus {
   visibility: visible;
 }
@@ -70,7 +70,7 @@
   fill: colors.$ink-2;
 }
 
-// Forced colors leave an SVG stroke as it is, and a dark theme's canvas would hide the ink.
+// In the theme's colors, as `network-diagram.scss` explains.
 @media (forced-colors: active) {
   .pick-targets__hover-ring,
   .pick-targets__box:hover .pick-targets__box-outline,

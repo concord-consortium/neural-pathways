@@ -17,7 +17,10 @@ const FOCUS_RING_GAP = 6.5;
  * box, clear of the picked outline, which reaches 1.5 px outside.
  */
 const FOCUS_BOX_GAP = 3;
-/** The tip's room from its left edge to the canvas's right edge, and how far left of that it starts. */
+/**
+ * The tip's room from its left edge to the canvas's right edge, and how far left of that it
+ * starts.
+ */
 const TIP_ROOM = 186;
 const TIP_INSET = 5;
 const TIP_FIRST_BASELINE = 30;
@@ -57,8 +60,8 @@ interface PickTargetsProps {
  * The pick targets and the tip, on a transparent SVG over the drawing, so the drawing keeps its
  * description. The 14 lifted neurons are one Tab stop and the three pathway boxes another (a roving
  * tabindex each); the arrow keys, Home and End move within a group, Enter and Space toggle, and
- * Escape clears. Hover and keyboard focus are drawn here, by CSS, so a click leaves no focus ring; the
- * pick itself is drawn by `PathwaysLayer`.
+ * Escape clears. Hover and keyboard focus are drawn here in CSS (`:focus-visible`, so a click leaves
+ * no ring); the pick itself is drawn by `PathwaysLayer`.
  */
 export function PickTargets({ width, height, lifted, layout, names, pick, onPick }: PickTargetsProps) {
   const layerRef = useRef<SVGSVGElement>(null);
@@ -69,7 +72,7 @@ export function PickTargets({ width, height, lifted, layout, names, pick, onPick
   const onKeyDown = (
     event: React.KeyboardEvent, target: NonNullable<PathwaysPick>, count: number,
   ) => {
-    // Leave browser and OS shortcuts such as Alt+Left (Back) alone.
+    // Leave browser and OS shortcuts such as Ctrl+Home or Cmd+Up (top of the page) alone.
     if (event.altKey || event.ctrlKey || event.metaKey) {
       return;
     }
@@ -130,7 +133,8 @@ export function PickTargets({ width, height, lifted, layout, names, pick, onPick
             {...buttonProps(target, lifted.ys.length, `${names[k]}, show its loadings on the three pathways`)}>
             <rect className="pick-targets__hit" x={x - lifted.r - TARGET_EXTRA_WIDTH / 2} y={y - pitch / 2}
               width={lifted.r * 2 + TARGET_EXTRA_WIDTH} height={pitch}>
-              {/* The copy's tooltip, which the target covers. On the rect, so the button's name isn't repeated. */}
+              {/* The copy's tooltip, which the target covers. On the rect, so the button's name
+                  isn't repeated. */}
               <title>{names[k]}</title>
             </rect>
             {/* The picked neuron's own ring shows already. */}

@@ -2,7 +2,7 @@
 @use "../legend";
 
 // The caption over a row of two stacked bars, each with its sign beside it: the negative bar runs
-// left from the middle, the positive one right. Where it sits in its row is up to the row.
+// left from the middle, the positive one right.
 .loading-legend {
   @include legend.legend;
   white-space: nowrap;

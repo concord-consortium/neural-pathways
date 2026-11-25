@@ -11,14 +11,15 @@ describe("minCanvasWidth", () => {
     return deckPosition(g.deck, MAX_COLLECTED - 1, 0).x - g.deck.r;
   };
 
-  it("is set by the strips: the ten columns collected by hand keep 10 clear, and a few pixels less does not", () => {
+  it("is set by the strips: the ten columns collected by hand keep 10 clear, and 4 px less does not", () => {
     expect(minCanvasWidth(SIZES)).toBe(NARROWEST);
     expect(clearLeftOfCollected(NARROWEST)).toBeGreaterThanOrEqual(10);
-    // The strips are sized in whole half-strips, so the bound is not tight to the pixel.
+    // The layout rounds the network's and the deck's x to whole pixels, so a canvas up to 3 px
+    // narrower still keeps 10 clear.
     expect(clearLeftOfCollected(NARROWEST - 4)).toBeLessThan(10);
   });
 
-  it("leaves the room for the finished deck of 800 with 10 px to spare beyond its 10 clear each side", () => {
+  it("leaves the finished deck of 800 more than 10 px to spare in all, beyond its 10 clear each side", () => {
     const g = canvasLayout(SIZES, NARROWEST);
     const needed = 7.6 * 99 + 2 * 10;
     expect(g.lifted.x - g.lifted.r).toBeGreaterThan(needed + 10);

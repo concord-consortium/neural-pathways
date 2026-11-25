@@ -49,7 +49,7 @@ const aboutCenter = (transform: string): React.CSSProperties =>
 interface PathwaysLayerProps {
   pathways: PathwaysScene;
   layout: PathwaysLayout;
-  /** The lifted column, whose neurons the pick ring goes round. */
+  /** The lifted column, whose neurons the pick ring goes around. */
   lifted: ColumnGeometry;
   /** Only its loadings are shown in color, with their lines; all of them when nothing is picked. */
   pick: PathwaysPick;

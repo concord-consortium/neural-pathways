@@ -46,8 +46,8 @@ $head-height: $head-control-height + $head-padding-top + $head-padding-bottom + 
   flex-wrap: wrap;
 }
 
-// The title in a head with controls: the head's font rather than a heading's. It takes no margin;
-// the tools group takes the row's slack, which pushes it to the right.
+// The title in a head with controls: the head's font rather than a heading's. It takes no margin:
+// `panel-head-tools` takes the row's slack.
 @mixin panel-head-title {
   margin: 0;
   font: inherit;

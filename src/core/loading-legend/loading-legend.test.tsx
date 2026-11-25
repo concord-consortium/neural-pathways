@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { LoadingLegend } from "./loading-legend";
 
 describe("LoadingLegend", () => {
-  it("names the key and its signs", () => {
+  it("names the legend and its signs", () => {
     render(<LoadingLegend />);
     expect(screen.getByText("Loading")).toBeInTheDocument();
     expect(screen.getByText("−")).toBeInTheDocument();

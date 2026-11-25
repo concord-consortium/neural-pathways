@@ -1,8 +1,7 @@
 @use "../colors" as colors;
 @use "../legend";
 
-// The caption over a row of two miniature neurons, each followed by its sign. Where it sits in its
-// row is up to the row.
+// The caption over a row of two miniature neurons, each followed by its sign.
 .activation-legend {
   @include legend.legend;
 }

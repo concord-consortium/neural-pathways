@@ -21,11 +21,7 @@ test("Setup lifts the hidden neurons out of the network, animated", async ({ pag
 
 /** What an Interactive takes from the canvas's width: its 16 px gutters and the panel's borders. */
 const INTERACTIVE_EXTRA = 34;
-/**
- * The narrowest the canvas is laid out (`minCanvasWidth`): the strips for the deck's columns
- * collected by hand set it, and the finished deck fits its room with a little to spare. It depends
- * on the network's layer sizes.
- */
+/** The narrowest the canvas is laid out (`minCanvasWidth`), for these layer sizes. */
 const NARROWEST_CANVAS = 881;
 
 /**
@@ -497,7 +493,8 @@ test("draws the pick and focus in system colors in forced colors", async ({ page
 test("the loading legend's bars keep a white backing in a dark forced-colors theme", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active", colorScheme: "dark" });
   await openPathways(page);
-  const background = (locator: Locator) => locator.evaluate(element => getComputedStyle(element).backgroundColor);
+  const background = (locator: Locator) =>
+    locator.evaluate(element => getComputedStyle(element).backgroundColor);
   // So the check below can fail: the panel behind the legend is dark.
   expect(await background(page.locator(".extract-pathways__network"))).not.toBe("rgb(255, 255, 255)");
   expect(await background(page.locator(".loading-legend__bars"))).toBe("rgb(255, 255, 255)");
@@ -525,7 +522,7 @@ test.describe("with Google Fonts blocked", () => {
     }
     await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
     await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
-    // Done, so the loading legend is at its full width: shown, and no longer held to a width.
+    // Done, so the loading legend is at its full width: shown, and not held to a width.
     await expect(page.getByText("Loading", { exact: true })).toBeVisible();
     await expect(page.locator(".extract-pathways__loading-legend")).not.toHaveAttribute("style", /width/);
     const head = (await page.locator(".extract-pathways__network-head").boundingBox())!;

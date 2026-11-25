@@ -1,8 +1,10 @@
 @use "./colors" as colors;
 @use "./fonts" as fonts;
 
-// A key's caption over its row: centered, in the label font, with the row below it. Where the key
-// sits in its own row is up to the row.
+// A legend: its caption centered over its row, in the label font. Where the legend sits in its own
+// row is up to the row. The legend and its row are flex, which drops the spaces between their pieces
+// from the layout, but the markup keeps them, so a screen reader doesn't run the caption and signs
+// together.
 @mixin legend {
   display: flex;
   flex-direction: column;
