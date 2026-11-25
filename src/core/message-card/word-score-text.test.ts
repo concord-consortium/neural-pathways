@@ -17,7 +17,7 @@ describe("word score text", () => {
   });
 
   describe("wordScoreNote", () => {
-    it("gives the score when the word scores in the pathway", () => {
+    it("gives the score when the word scores on the pathway", () => {
       expect(wordScoreNote("tarrak", [0.0624, 0, 0], 0)).toEqual({ kind: "score", word: "tarrak", value: 0.0624 });
     });
 

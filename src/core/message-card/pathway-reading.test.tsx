@@ -69,7 +69,7 @@ describe("PathwayReading", () => {
     expect(oradda.style.backgroundColor).toBe("");
   });
 
-  it("colors a word in every reading it scores in", () => {
+  it("colors a word in every reading whose pathway it scores on", () => {
     render(<Harness pathways={[0, 1, 2]} />);
     expect(options(1)[2].style.backgroundColor).toBe("");
     expect(options(2)[2]).toHaveStyle({ backgroundColor: wordFill(0.26, max).background });
