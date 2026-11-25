@@ -2,7 +2,7 @@
 
 NPW-24. Builds on NPW-33 (Setup, Collect a Message), NPW-48 (Collect All Messages, Extract
 Pathways), NPW-38 (Animate and speed), NPW-44 (About) and NPW-75 (the Interactive leaves out the
-title). Stacked on NPW-23 (PR #54), which builds the activation legend this story uses.
+title), and on NPW-23 (PR #54), which builds the activation legend this story uses.
 
 ## Overview
 
@@ -54,9 +54,9 @@ branch: `buildLines`, `pwLit`, `pwApply`, `pwPick`, `makeInteractive` (around li
 
 ## Approaches to the height
 
-The view needs 598 px as an Interactive today: 9 px top padding, the 44 px step row, a 9 px gap, the
-panel (80 px of head, padding and border, plus the 440 px canvas), and 16 px bottom padding. That's
-36 px too tall for 562.
+With a 440 px canvas the view needs 598 px as an Interactive: 9 px top padding, the 44 px step row,
+a 9 px gap, the panel (80 px of head, padding and border, plus the 440 px canvas), and 16 px bottom
+padding. That's 36 px too tall for 562.
 
 - **A. A fixed 404 px canvas (chosen).** Change `CANVAS_HEIGHT` from 440 to 404. Everything else
   is laid out from it, so the lifted column and the deck get slightly tighter, and the minimum
@@ -67,7 +67,7 @@ panel (80 px of head, padding and border, plus the 440 px canvas), and 16 px bot
   bigger deck needs more width: at 600 px tall the minimum canvas width would pass 1,200 px. With
   the deck capped, a taller canvas only adds empty space above and below the picture.
 
-At 404 px, the network's neurons stay 12 px, the lifted column's are 11.1 px and 26 px apart (from
+At 404 px, the network's neurons stay 12 px, the lifted column's are 11.1 px and 25.8 px apart (from
 12 px and 28 px), and the deck's are 7.6 px (from 8.3 px).
 
 ## Decisions
@@ -75,7 +75,7 @@ At 404 px, the network's neurons stay 12 px, the lifted column's are 11.1 px and
 | # | Decision | Whose |
 |---|---|---|
 | 1 | Fixed 404 px canvas (approach A) | Scott |
-| 2 | Stack on NPW-23's branch and use its `ActivationLegend` | Scott |
+| 2 | Start from NPW-23's branch, rebase onto `main` once #54 merges, and use its `ActivationLegend` | Scott |
 | 3 | The pick isn't saved or kept across switching views; it is React state in the view | Claude's call, per `docs/view-state.md` |
 | 4 | The loading legend is `LoadingLegend` in `src/core/loading-legend/`, beside `ActivationLegend`, since Investigate the Neural Pathways shows it too | Claude's call |
 | 5 | The pick targets are on a transparent SVG layer over the drawing, so the drawing keeps `role="img"` and its description | Claude's call |
@@ -101,18 +101,22 @@ Extract Pathways, the targets and the tip are removed too.
 ## The pick
 
 ```ts
-/** What is picked: a lifted neuron (0–13) or a pathway (0–2). */
-type Pick = { kind: "neuron"; index: number } | { kind: "pathway"; index: number } | undefined;
+/** What is picked: a lifted neuron (0–13) or a pathway (0–2), or nothing. */
+type PathwaysPick = { kind: "neuron" | "pathway"; index: number } | undefined;
 
 /** Whether loading (neuron, pathway) is lit: everything when nothing is picked. The prototype's pwLit. */
-function isLit(pick: Pick, neuron: number, pathway: number): boolean;
+function isLit(pick: PathwaysPick, neuron: number, pathway: number): boolean;
+
+/** Whether two picks are the same item, or both nothing. */
+function samePick(a: PathwaysPick, b: PathwaysPick): boolean;
 
 /** Picking the picked item again clears; anything else picks it. The prototype's pwPick. */
-function togglePick(pick: Pick, next: NonNullable<Pick>): Pick;
+function togglePick(pick: PathwaysPick, next: NonNullable<PathwaysPick>): PathwaysPick;
 ```
 
-Both are pure functions in a new `pick.ts` in the view's folder, so the drawing and the description
-read one rule for what is lit.
+These are pure functions in a new `pick.ts` in the view's folder, so the drawing, the targets and
+the description read one rule for what is lit. The type isn't named `Pick`, which would hide
+TypeScript's `Pick<T, K>`.
 
 ### What a pick changes in the drawing
 
@@ -121,7 +125,7 @@ read one rule for what is lit.
 | Loading bars | Each in its sign's color | Neuron *k*'s three in their colors; the rest `RULE_COLOR` | Each neuron's bar for *p* in its color; the rest `RULE_COLOR` |
 | Lines | All 42 | Neuron *k*'s 3 | Pathway *p*'s 14 |
 | Neuron *k* | — | A ring: radius `lifted.r + 3.5`, no fill, `$ink`, 2 px | — |
-| Box *p* | 2 px `$ink-2` outline (as now, `.extract-drawing__box`) | — | Outline `$ink`, 3 px |
+| Box *p* | 2 px `$ink-2` outline (`.extract-drawing__box`) | — | Outline `$ink`, 3 px |
 | Zero rules, labels, other boxes | Unchanged | Unchanged | Unchanged |
 
 The muting is immediate, as in the prototype (no transition). The bars already take a `muted` mix
@@ -168,15 +172,15 @@ boxes. The targets move with the drawing when it scrolls, since they are inside 
 
 `describeScene` gains the pick. At rest after Extract Pathways:
 
-- Nothing picked: as now ("The 14 hidden neurons, with their loadings on three pathways drawn from
-  all 800 messages."), unchanged.
+- Nothing picked: unchanged ("The 14 hidden neurons, with their loadings on three pathways drawn
+  from all 800 messages."), unchanged.
 - Neuron *k*: that, then "Hidden Layer 1 Neuron 3's loadings: Pathway 1 +0.62, Pathway 2 −0.05,
   Pathway 3 +0.11."
 - Pathway *p*: that, then "Pathway 2's loadings: Hidden Layer 1 Neuron 1 +0.10, …" for all 14.
 
-Loadings to two decimals with a real minus sign, as `formatActivation` formats activations. The
-description is the drawing's `aria-label`, so it is read on demand, not announced; `aria-pressed`
-announces the change of pick.
+Loadings to two decimals with an ASCII minus (`spokenNumber`), since some speech engines skip
+U+2212, as Looking Inside's neuron names do. The description is the drawing's `aria-label`, so it is
+read on demand, not announced; `aria-pressed` announces the change of pick.
 
 ### The tip
 
@@ -193,7 +197,7 @@ how they are linked.
 Lato 13 px italic, `$ink-2`, lines 16 px apart. Left edge at `min(boxes' x, width − 186) − 5`,
 first baseline at y = 30, as in the prototype. It is hidden from assistive technology as text and
 names the targets group instead. The builder checks it clears the boxes and the canvas's right edge
-at the minimum layout width in both fonts.
+at the minimum layout width; a Playwright test checks it in the fallback font, the wider one.
 
 ## The panel head
 
@@ -224,26 +228,26 @@ technology; the caption and signs are read. Colors stay in forced colors, like t
 
 Before the pathways are extracted the key takes no room: not displayed, so the head's gap doesn't
 open beside it. As Extract Pathways' lines arrive (`scene.pathways.lines` going 0 to 1), the key
-widens from 0 to its measured width, and its opacity fades in from a third of the way to the end,
-as `showLoadKey` does (widen over the whole, fade over 0.7 of it starting at 0.35). At rest after
-Extract Pathways it is shown in full. Driving it from `lines` means speed, Animate off and reduced
-motion apply as they do to the lines, and coming back to the view shows it at once.
+widens from 0 to its measured width, and its opacity fades in from 0.35 of the way through, as
+`showLoadKey` does (widen over the whole, fade over 0.7 of it starting at 0.35), so it reaches 0.93
+as the lines end. At rest after Extract Pathways it is shown in full. Driving it from `lines` means
+speed, Animate off and reduced motion apply as they do to the lines, and coming back to the view
+shows it at once.
 
 The key is shown when `pathwaysDone` (or the scene's `pathways.lines > 0`), and hidden otherwise,
 including after Reset.
 
 ### Without the web font
 
-In a 480 px window the Animate controls are 207 px wide in the fallback font, not 184, and run past
-the head today. With Google Fonts blocked (`page.route(/fonts\.(googleapis|gstatic)\.com/, …)`), at
-480 px and at the minimum layout width, nothing in the head may extend past its right edge, and the
-tools group must start below the title when it doesn't fit beside it. The head may wrap to more
-lines in the fallback font, and the page may then scroll down at 562 px: that is accepted, as in
-Looking Inside's README.
+In a 480 px window the Animate controls are 207 px wide in the fallback font, not 184. With Google
+Fonts blocked (`page.route(/fonts\.(googleapis|gstatic)\.com/, …)`), at 480 px and at the minimum
+layout width, nothing in the head may extend past its right edge, and the tools group must start
+below the title when it doesn't fit beside it. The head may wrap to more lines in the fallback font,
+and the page may then scroll down at 562 px: that is accepted, as in Looking Inside's README.
 
 ## The 562 px height
 
-`CANVAS_HEIGHT` becomes 404. With the web fonts loaded, at the minimum layout width, the
+`CANVAS_HEIGHT` is 404, down from 440. With the web fonts loaded, at the minimum layout width, the
 Interactive is then 9 + 44 + 9 + (80 + 404) + 16 = 562 px, provided the head stays one line there
 with both keys shown. The builder confirms that, and that the minimum layout width (now computed by
 `minCanvasWidth` at the new height) still holds the head on one line; if it doesn't, the minimum
@@ -260,7 +264,7 @@ these run at the new width.
 | `setupDone`, `collected`, `deckDone`, `pathwaysDone`, Animate, speed | `ExtractPathwaysState` | the step player, `AnimationControls` | everything | per step | switching views, reload | yes (unchanged) |
 | The pick | `ExtractPathwaysBody` (`useState`) | targets' click and keys; cleared by any step press | drawing, targets, description | per click | nothing: lost on switching views | no |
 | Each group's roving Tab stop | the targets layer | focus and click | targets | per focus | nothing | no |
-| Hovered target | the targets layer | pointer | the hover ring and outline | per pointer move | nothing | no |
+| Hovered target | the browser (CSS `:hover`, where there is hover) | pointer | the hover ring and outline | per pointer move | nothing | no |
 | The loading legend's reveal | derived from `player.scene` | — | `LoadingLegend`'s wrapper | per frame while lines play | — | no |
 
 `docs/view-state.md`'s "Deliberately not kept" gains the Extract the Neural Pathways pick.
@@ -277,7 +281,8 @@ Switching views and back lands in "At rest, nothing picked" if the pathways are 
 
 ## Glossary additions (`docs/glossary.md`)
 
-- **pick:** the one lifted neuron or pathway whose loadings are shown alone, or none. `Pick`.
+- **pick:** the one lifted neuron or pathway whose loadings are shown alone, or none.
+  `PathwaysPick`.
 - **tip:** the three-line instruction over the pathway boxes.
 - **loading legend:** `LoadingLegend`, the head's key for the loading bars, beside the activation
   legend. The story and the prototype call it the loading key; code and docs say loading legend.
@@ -302,15 +307,20 @@ Switching views and back lands in "At rest, nothing picked" if the pathways are 
 - The targets layer: 14 + 3 buttons with names and `aria-pressed`; one Tab stop per group; arrow,
   Home/End, Enter/Space, Escape; modified keys ignored; absent unless at rest after Extract
   Pathways.
-- `describeScene` with each kind of pick.
+- `describeScene` with each kind of pick, a negative loading spoken with an ASCII minus.
 - `LoadingLegend` renders its caption and signs, with the bars hidden from assistive technology.
+- The view: the pick cleared by any step press and by Reset; no targets and no loading legend
+  before the pathways are done; the legend sliding open and fading in partway through the lines;
+  focus moving from a target to the pressed step.
 - The geometry tests updated for 404 px.
 
 ### Playwright
 - Pick a neuron and a box by mouse, then by keyboard; pick again and Escape clear.
-- The pick is cleared by Reset, and not kept on switching views; the stage still is.
-- The loading legend is hidden before Extract Pathways and shown after, including on coming back.
-- `MIN_LAYOUT_HEIGHT` becomes 562: no scroll at 562, a scroll at 561, at the minimum layout width.
+- The pick isn't kept on switching views; the stage and the full-width loading legend are.
+- The pick and focus in system colors in forced colors, and the loading legend's bars on their own
+  white in a dark forced-colors theme.
+- Pressing a box draws its outline on a touch screen, with no hover.
+- `MIN_LAYOUT_HEIGHT` is 562: no scroll at 562, a scroll at 561, at the minimum layout width.
 - Fonts blocked: at 480 px and at the minimum layout width, nothing in the head overruns it.
 - The existing tests still pass: deck fits, labels fit, step row, About, Animate and speed.
 
@@ -324,7 +334,9 @@ Extract Pathways, a picked neuron, a picked pathway, the tip, the head with both
   new minimum layout size, and "Still to come" removed.
 - `docs/view-state.md`: the pick under "Deliberately not kept".
 - `docs/glossary.md`: the terms above.
-- `src/core/README.md`: `loading-legend/`.
+- `src/core/README.md`: `loading-legend/` and `legend.scss`.
+- `docs/accessibility.md`: the 562 px height, and the head's sizes in the fallback font.
+- Looking Inside's README: Extract's canvas height.
 
 ## Left to the builder
 
@@ -335,7 +347,8 @@ Extract Pathways, a picked neuron, a picked pathway, the tip, the head with both
 
 ## PRs
 
-One PR, based on `NPW-23-looking-inside`, retargeted to `main` once PR #54 merges.
+One PR. The branch started from `NPW-23-looking-inside` and was rebased onto `main` once PR #54
+merged.
 
 ## Out of scope
 
