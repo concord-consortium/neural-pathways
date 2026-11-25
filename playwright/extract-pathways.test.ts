@@ -474,6 +474,15 @@ test("draws the pick and focus in system colors in forced colors", async ({ page
   expect(await systemColor("Highlight")).not.toBe("rgb(58, 114, 190)");
 });
 
+test("the loading legend's bars keep a white backing in a dark forced-colors theme", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active", colorScheme: "dark" });
+  await openPathways(page);
+  const background = (locator: Locator) => locator.evaluate(element => getComputedStyle(element).backgroundColor);
+  // So the check below can fail: the panel behind the legend is dark.
+  expect(await background(page.locator(".extract-pathways__network"))).not.toBe("rgb(255, 255, 255)");
+  expect(await background(page.locator(".loading-legend__bars"))).toBe("rgb(255, 255, 255)");
+});
+
 // As on a school network that blocks Google Fonts, where Lato and Barlow Condensed fall back to
 // wider fonts.
 test.describe("with Google Fonts blocked", () => {

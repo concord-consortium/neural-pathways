@@ -13,7 +13,8 @@
 }
 
 // The zero line is drawn once, down the middle of the pair, so it runs unbroken through the gap
-// between the bars. Like the bars' colors, it is meant to stay in forced colors.
+// between the bars. The bars' colors and the zero line are meant to stay in forced colors, like the
+// drawing's.
 .loading-legend__bars {
   position: relative;
   display: flex;
@@ -33,12 +34,10 @@
   }
 }
 
-// A bar's colored half is a gradient. The colors are meant to stay in forced colors, like the
-// drawing's.
+// A bar's colored half is a gradient.
 .loading-legend__bar {
   width: 88px;
   height: 6px;
-  forced-color-adjust: none;
 
   &--negative {
     background: linear-gradient(to right, colors.$negative 50%, transparent 50%);
@@ -46,5 +45,15 @@
 
   &--positive {
     background: linear-gradient(to right, transparent 50%, colors.$positive 50%);
+  }
+}
+
+// Forced colors keep the bars' colors but replace the panel's white, and on a dark theme's canvas
+// the negative bar's navy is too dark to see (WCAG 1.4.11). So the bars bring their own white, as
+// the activation legend's swatches do.
+@media (forced-colors: active) {
+  .loading-legend__bars {
+    padding: 2px;
+    background: #fff;
   }
 }
