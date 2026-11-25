@@ -344,6 +344,44 @@ describe("ExtractPathways", () => {
       expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
     });
 
+    it("slides the loading legend open and fades it in while the lines draw", async () => {
+      jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+      // jsdom measures nothing, so the legend's natural width comes from a stand-in observer.
+      const NATURAL_WIDTH = 200;
+      const ResizeObserverStub = class {
+        constructor(private readonly callback: ResizeObserverCallback) {}
+        observe(element: Element) {
+          if (element.classList.contains("extract-pathways__loading-legend-natural")) {
+            const entry = { contentRect: { width: NATURAL_WIDTH, height: 40 } } as ResizeObserverEntry;
+            this.callback([entry], this as unknown as ResizeObserver);
+          }
+        }
+        disconnect() { /* nothing to let go of */ }
+      };
+      const original = window.ResizeObserver;
+      window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
+      try {
+        showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true }));
+        await screen.findByRole("img", { name: DECK });
+        jest.useFakeTimers();
+        fireEvent.click(button("Extract Pathways"));
+        // Three quarters of the way through the lines.
+        act(() => jest.advanceTimersByTime(EXTRACT_MS - 130));
+        // eslint-disable-next-line testing-library/no-node-access -- the slot is the legend's styled wrapper
+        const slot = document.querySelector<HTMLElement>(".extract-pathways__loading-legend")!;
+        const width = parseFloat(slot.style.width);
+        const opacity = parseFloat(slot.style.opacity);
+        expect(width).toBeGreaterThan(0);
+        expect(width).toBeLessThan(NATURAL_WIDTH);
+        expect(opacity).toBeGreaterThan(0);
+        expect(opacity).toBeLessThan(1);
+        // The legend fades in behind the lines, so less of it is opaque than is open.
+        expect(opacity).toBeLessThan(width / NATURAL_WIDTH);
+      } finally {
+        window.ResizeObserver = original;
+      }
+    });
+
     it("plays Extract Pathways with no bar muted after a pick was cleared by Reset", async () => {
       jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
       showView(fromSnapshot(ExtractPathwaysState, pathwaysDoneSnapshot as SnapshotInOf<ExtractPathwaysState>));
