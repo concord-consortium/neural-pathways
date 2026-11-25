@@ -159,11 +159,10 @@ scroller with nothing focusable in it reachable by Tab; Safari doesn't.
   `region` inside a landmark with the same name would list the landmark twice.
 - A scroller whose content is all in listboxes, apart from their labels, doesn't use
   `useKeyboardScrollable`, and has no role or name, since Tab and the arrow keys reach every option
-  and a focused option scrolls into view. Making it a Tab stop as well would only add a stop. Neural
-  Pathway View of Model Reasoning's readings are one once their scores have loaded (see
-  `model-reasoning-readings.tsx`). While the scores load, their scroller holds plain words, and when
-  it overflows Chromium and Firefox may make it a Tab stop with no name. That is accepted, since it
-  lasts only for the fetch.
+  and a focused option scrolls into view. Neural Pathway View of Model Reasoning's readings' scroller
+  is one once their scores have loaded. While the scores load, it holds plain words, and when it
+  overflows Chromium and Firefox may make it a Tab stop with no name. That is accepted, since it lasts
+  only for the fetch.
 - A drawing that holds controls is not an `img`, which hides everything inside it from assistive
   technology. The network diagram's SVG is a `group` labeled "Network diagram", holding a button for
   each reached neuron. Its own text, which the buttons' names make redundant, is `aria-hidden`.
