@@ -1,28 +1,13 @@
 @use "../colors" as colors;
-@use "../fonts" as fonts;
+@use "../legend";
 
-// The caption over a row of two miniature neurons, each followed by its sign. Where it sits in its
-// row is up to the row.
+// The caption over a row of two miniature neurons, each followed by its sign.
 .activation-legend {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  font-family: fonts.$label-font;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: colors.$ink-2;
+  @include legend.legend;
 }
 
-// The minimum height is a swatch's diameter.
 .activation-legend__row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 22px;
+  @include legend.legend-row;
 }
 
 .activation-legend__minus {

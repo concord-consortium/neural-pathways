@@ -2,7 +2,7 @@ import { layoutNetwork, NetworkLayout, Point } from "../../core/network-diagram/
 import { deckWidth, MAX_DECK } from "./deck-layout";
 import { MAX_COLLECTED } from "./extract-steps";
 
-export const CANVAS_HEIGHT = 440;
+export const CANVAS_HEIGHT = 404;
 export const NETWORK_WIDTH = 537;
 /** The baseline of "Message n" and "Hidden Layer Neurons". */
 export const LABEL_Y = 22;
@@ -93,10 +93,12 @@ export function extractGeometry(columnSizes: readonly number[], hostWidth: numbe
 
 /**
  * The narrowest the canvas is laid out. It holds the network with a strip each side for the deck's
- * columns collected by hand, and the finished deck of 800 in its room left of the lifted column,
- * with DECK_PAD_SIDE clear each side. A narrower panel scrolls
- * the drawing sideways rather than scaling it down, since text scaled to fit stops growing when
- * the page is zoomed (WCAG 1.4.4).
+ * columns collected by hand, each with DECK_PAD_SIDE clear, and the finished deck of 800 in its
+ * room left of the lifted column, with DECK_PAD_SIDE clear each side. The function enforces both
+ * bounds: it starts from the width the strips need and widens until the finished deck fits. At the
+ * canvas's 404 px height the strips set the minimum, and the deck fits its room with about 11 px
+ * to spare. A narrower panel scrolls the drawing sideways rather than scaling it down, since text
+ * scaled to fit stops growing when the page is zoomed (WCAG 1.4.4).
  *
  * The prototype has no minimum: it widens its canvas to whatever the panel has.
  */

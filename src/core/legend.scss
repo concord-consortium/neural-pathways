@@ -1,0 +1,29 @@
+@use "./colors" as colors;
+@use "./fonts" as fonts;
+
+// A legend: its caption centered over its row, in the label font. Where the legend sits in its own
+// row is up to the row. The legend and its row are flex, which drops the spaces between their pieces
+// from the layout, but the markup keeps them, so a screen reader doesn't run the caption and signs
+// together.
+@mixin legend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: fonts.$label-font;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: colors.$ink-2;
+}
+
+// A legend's row: the swatches and their signs on one line. The minimum height is a miniature
+// neuron's diameter, so legends side by side have their captions on one line.
+@mixin legend-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+}

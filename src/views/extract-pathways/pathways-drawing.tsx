@@ -2,17 +2,20 @@ import React, { useLayoutEffect, useMemo, useRef } from "react";
 import { RULE_COLOR, signColor } from "../../core/colors";
 import { ForwardPass } from "../../core/network/forward";
 import { cubicBezier } from "../../core/network-diagram/easing";
-import { ExtractGeometry } from "./extract-geometry";
+import { ColumnGeometry, ExtractGeometry } from "./extract-geometry";
 import { PathwaysScene } from "./extract-scene";
 import { easeX } from "./flight";
 import { faceSources, PARTICLE_R, particleAt, particlePlan, particleTarget, SOURCE_STEP } from "./particles";
 import { BAR_HEIGHT, BOX_SIDE, LABEL_GAP, Loadings, PathwaysLayout } from "./pathways-layout";
 import { COPY_END_SCALE } from "./pathways-timeline";
+import { isLit, PathwaysPick } from "./pick";
 
 /** The box's kick (the prototype's d1a-boxkick): keyframes of time and scale, each eased. */
 const KICK_KEYFRAMES: readonly [number, number][] = [[0, 1], [0.38, 1.1], [0.7, 0.98], [1, 1]];
 const kickEase = cubicBezier(0.34, 1.1, 0.5, 1);
-const BOX_CORNER = 6;
+export const BOX_CORNER = 6;
+/** How far outside a picked neuron its ring is drawn. */
+export const PICK_RING_GAP = 3.5;
 
 /** `from` mixed toward `to` by `t`, both #RRGGBB; exactly each at 0 and 1. */
 export function mixColor(from: string, to: string, t: number): string {
@@ -43,11 +46,21 @@ export function kickScale(p: number): number {
 const aboutCenter = (transform: string): React.CSSProperties =>
   ({ transformBox: "fill-box", transformOrigin: "center", transform });
 
+interface PathwaysLayerProps {
+  pathways: PathwaysScene;
+  layout: PathwaysLayout;
+  /** The lifted column, whose neurons the pick ring goes around. */
+  lifted: ColumnGeometry;
+  /** Only its loadings are shown in color, with their lines; all of them when nothing is picked. */
+  pick: PathwaysPick;
+}
+
 /**
  * The lines, the zero rules, the loading bars, the boxes with their labels, and the bar copies
- * in flight, bottom to top, as `pathways` says. Nothing until the particles start.
+ * in flight, bottom to top, as `pathways` says, with the pick's loadings alone lit. Nothing until
+ * the particles start.
  */
-export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; layout: PathwaysLayout }) {
+export function PathwaysLayer({ pathways, layout, lifted, pick }: PathwaysLayerProps) {
   const { bars } = pathways;
   if (!bars) {
     return null;
@@ -59,7 +72,7 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
         <g data-testid="pathway-lines" opacity={pathways.lines < 1 ? pathways.lines : undefined}>
           {layout.bars.map((bar, b) => {
             const box = layout.boxes[bar.pathway];
-            return (
+            return isLit(pick, bar.neuron, bar.pathway) && (
               <line key={b} data-testid="pathway-line" className="extract-drawing__line"
                 x1={bar.zero} y1={bar.y} x2={box.x} y2={box.cy} />
             );
@@ -72,18 +85,20 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
       ))}
       {layout.bars.map((bar, b) => {
         const width = bar.length * bars[b].grown;
+        const lit = isLit(pick, bar.neuron, bar.pathway);
         return (
           <rect key={b} data-testid="loading-bar" x={bar.loading >= 0 ? bar.zero : bar.zero - width}
             y={bar.y - BAR_HEIGHT / 2} width={width} height={BAR_HEIGHT}
-            fill={mixColor(signColor(bar.loading), RULE_COLOR, bars[b].muted)} />
+            fill={mixColor(signColor(bar.loading), RULE_COLOR, lit ? bars[b].muted : 1)} />
         );
       })}
       {layout.boxes.map((box, p) => {
         const { opacity, kick } = pathways.boxes[p];
+        const picked = pick?.kind === "pathway" && pick.index === p;
         return opacity > 0 && (
           <g key={p} data-testid="pathway-box" opacity={opacity < 1 ? opacity : undefined}>
-            <rect className="extract-drawing__box" x={box.x} y={box.cy - BOX_SIDE / 2} width={BOX_SIDE}
-              height={BOX_SIDE} rx={BOX_CORNER}
+            <rect className={picked ? "extract-drawing__box extract-drawing__box--picked" : "extract-drawing__box"}
+              x={box.x} y={box.cy - BOX_SIDE / 2} width={BOX_SIDE} height={BOX_SIDE} rx={BOX_CORNER}
               style={kick === undefined ? undefined : aboutCenter(`scale(${kickScale(kick)})`)} />
             <text className="extract-drawing__label extract-drawing__pathway" x={box.x + BOX_SIDE + LABEL_GAP}
               y={box.cy + 4}>
@@ -92,6 +107,10 @@ export function PathwaysLayer({ pathways, layout }: { pathways: PathwaysScene; l
           </g>
         );
       })}
+      {pick?.kind === "neuron" && (
+        <circle data-testid="pick-ring" className="extract-drawing__pick-ring" cx={lifted.x + layout.liftedDx}
+          cy={lifted.ys[pick.index]} r={lifted.r + PICK_RING_GAP} />
+      )}
       {flying?.copies.map((copy, neuron) => {
         const bar = layout.bars[neuron * layout.boxes.length + flying.pathway];
         const box = layout.boxes[flying.pathway];

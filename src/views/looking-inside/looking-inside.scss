@@ -1,4 +1,3 @@
-@use "../../core/colors" as colors;
 @use "../../core/message-card/layout";
 @use "../../core/panel";
 
@@ -119,27 +118,15 @@ $two-columns-width: layout.$width + 10px + $step-row-width;
 
 .looking-inside__network-title {
   @include panel.panel-head-title;
-  margin-right: 0;
 }
 
-// The legend, the rule and the controls, which move as one: the group takes the row's slack, which
-// keeps the title at the left and the group at the right, and when the head is too narrow for one
-// line the whole group drops below the title. It wraps inside too, in a head narrower than the
-// group itself.
+// The legend, the rule and the controls, which move as one.
 .looking-inside__network-tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  margin-left: auto;
+  @include panel.panel-head-tools;
 }
 
 .looking-inside__network-rule {
-  flex-shrink: 0;
-  width: 1px;
-  height: 24px;
-  background: colors.$rule;
+  @include panel.panel-head-rule;
 }
 
 // The panel's height less the head and the readout box, and never smaller than the diagram's smallest

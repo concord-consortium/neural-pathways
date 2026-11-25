@@ -46,3 +46,11 @@ export function neuronName(neuron: NeuronRef, lastColumn: number, outputLabels: 
 export function formatActivation(value: number): string {
   return (value < 0 ? "\u2212" : "") + Math.abs(value).toFixed(2);
 }
+
+/**
+ * A number to two decimals for a screen reader, with an ASCII minus: some speech engines skip
+ * U+2212, which `formatActivation` shows, depending on their punctuation setting.
+ */
+export function spokenNumber(value: number): string {
+  return value.toFixed(2);
+}

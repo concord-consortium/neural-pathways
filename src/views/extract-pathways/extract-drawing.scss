@@ -74,6 +74,26 @@
   stroke-width: 2;
 }
 
+.extract-drawing__box--picked {
+  stroke: colors.$ink;
+  stroke-width: 3;
+}
+
+// The ring around a picked neuron.
+.extract-drawing__pick-ring {
+  fill: none;
+  stroke: colors.$ink;
+  stroke-width: 2;
+}
+
+// In the theme's colors, as `network-diagram.scss` explains.
+@media (forced-colors: active) {
+  .extract-drawing__pick-ring,
+  .extract-drawing__box--picked {
+    stroke: CanvasText;
+  }
+}
+
 .extract-drawing__pathway {
   font-size: 13px;
 }

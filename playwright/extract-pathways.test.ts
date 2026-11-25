@@ -21,11 +21,8 @@ test("Setup lifts the hidden neurons out of the network, animated", async ({ pag
 
 /** What an Interactive takes from the canvas's width: its 16 px gutters and the panel's borders. */
 const INTERACTIVE_EXTRA = 34;
-/**
- * The narrowest the canvas is laid out (`minCanvasWidth`): the finished deck needs the room. It
- * depends on the network's layer sizes.
- */
-const NARROWEST_CANVAS = 959;
+/** The narrowest the canvas is laid out (`minCanvasWidth`), for these layer sizes. */
+const NARROWEST_CANVAS = 881;
 
 /**
  * Opens the view as an Interactive `width` wide, waits until the canvas is laid out at
@@ -58,7 +55,7 @@ test("an Interactive just wide enough holds the canvas at full size without scro
 });
 
 /** The shortest Interactive the view fits without scrolling down: see the README's Size section. */
-const MIN_LAYOUT_HEIGHT = 598;
+const MIN_LAYOUT_HEIGHT = 562;
 
 /**
  * Opens the view as an Interactive at the minimum layout width and `height` tall, and says whether
@@ -363,3 +360,264 @@ test("Extract Pathways flies its particles on the particle canvas, and removes i
   await expect(page.getByTestId("particles")).toHaveCount(0, { timeout: 10_000 });
   await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible({ timeout: 15_000 });
 });
+
+/** Opens the view and draws the pathways at once, with reduced motion. */
+async function openPathways(page: Page) {
+  await open(page);
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
+  await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+}
+
+const neuronTarget = (page: Page, name: string) =>
+  page.getByRole("button", { name: `${name}, show its loadings on the three pathways` });
+const pathwayTarget = (page: Page, n: number) =>
+  page.getByRole("button", { name: `Pathway ${n}, show its loadings on the 14 neurons` });
+
+/** Whether a target's focus ring shows. */
+const focusRingShows = (target: Locator) =>
+  target.locator(".pick-targets__focus").evaluate(ring => getComputedStyle(ring).visibility === "visible");
+
+test.describe("on a touch screen, with no hover", () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  test("pressing a box draws its outline as thick as a pick", async ({ page }) => {
+    await openPathways(page);
+    expect(await page.evaluate(() => matchMedia("(hover: hover)").matches)).toBe(false);
+    const outline = pathwayTarget(page, 1).locator(".pick-targets__box-outline");
+    const box = (await outline.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    const drawn = await outline.evaluate(rect => {
+      const style = getComputedStyle(rect);
+      return { stroke: style.stroke, width: style.strokeWidth };
+    });
+    await page.mouse.up();
+    // $ink in src/core/colors.scss.
+    expect(drawn).toEqual({ stroke: "rgb(30, 36, 44)", width: "3px" });
+  });
+});
+
+test("picks a box and a neuron by mouse", async ({ page }) => {
+  await openPathways(page);
+  const box = pathwayTarget(page, 2);
+  await box.click();
+  await expect(box).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("pathway-line")).toHaveCount(14);
+  // A click leaves no focus ring.
+  await expect(box).toBeFocused();
+  expect(await focusRingShows(box)).toBe(false);
+  await box.click();
+  await expect(box).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByTestId("pathway-line")).toHaveCount(42);
+
+  const neuron = neuronTarget(page, "Hidden Layer 1 Neuron 3");
+  await neuron.click();
+  await expect(neuron).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("pathway-line")).toHaveCount(3);
+  await expect(page.getByTestId("pick-ring")).toBeVisible();
+});
+
+test("shows the focus ring once a key is pressed after a click", async ({ page }) => {
+  await openPathways(page);
+  // A key on the clicked button itself.
+  const neuron = neuronTarget(page, "Hidden Layer 1 Neuron 3");
+  await neuron.click();
+  await expect(neuron).toBeFocused();
+  expect(await focusRingShows(neuron)).toBe(false);
+  await page.keyboard.press("Enter");
+  await expect(neuron).toHaveAttribute("aria-pressed", "false");
+  expect(await focusRingShows(neuron)).toBe(true);
+
+  // A key that moves the focus on from the clicked button.
+  const clicked = neuronTarget(page, "Hidden Layer 1 Neuron 5");
+  await clicked.click();
+  expect(await focusRingShows(clicked)).toBe(false);
+  await page.keyboard.press("ArrowDown");
+  const next = neuronTarget(page, "Hidden Layer 1 Neuron 6");
+  await expect(next).toBeFocused();
+  expect(await focusRingShows(next)).toBe(true);
+});
+
+test("picks by keyboard", async ({ page }) => {
+  await openPathways(page);
+  await page.getByRole("slider", { name: "Animation speed" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(neuronTarget(page, "Hidden Layer 1 Neuron 1")).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  const second = neuronTarget(page, "Hidden Layer 1 Neuron 2");
+  await expect(second).toBeFocused();
+  await expect(second).toHaveAttribute("aria-pressed", "true");
+  // Picked and focused, it shows both rings.
+  await expect(page.getByTestId("pick-ring")).toBeVisible();
+  expect(await focusRingShows(second)).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(second).toHaveAttribute("aria-pressed", "false");
+
+  await page.keyboard.press("Tab");
+  const box = pathwayTarget(page, 1);
+  await expect(box).toBeFocused();
+  expect(await focusRingShows(box)).toBe(true);
+  await page.keyboard.press(" ");
+  await expect(box).toHaveAttribute("aria-pressed", "true");
+});
+
+test("draws the pick and focus in system colors in forced colors", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await openPathways(page);
+  /** What the browser resolves a system color to, read from a probe styled with it. */
+  const systemColor = (color: string) => page.evaluate(name => {
+    const probe = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    probe.style.stroke = name;
+    document.body.append(probe);
+    const resolved = getComputedStyle(probe).stroke;
+    probe.remove();
+    return resolved;
+  }, color);
+  const stroke = (locator: Locator) => locator.evaluate(element => getComputedStyle(element).stroke);
+
+  await pathwayTarget(page, 2).click();
+  expect(await stroke(page.locator(".extract-drawing__box--picked"))).toBe(await systemColor("CanvasText"));
+
+  await page.getByRole("slider", { name: "Animation speed" }).focus();
+  await page.keyboard.press("Tab");
+  const neuron = neuronTarget(page, "Hidden Layer 1 Neuron 1");
+  await expect(neuron).toBeFocused();
+  expect(await focusRingShows(neuron)).toBe(true);
+  expect(await stroke(neuron.locator(".pick-targets__focus"))).toBe(await systemColor("Highlight"));
+  // So the check above can fail: Highlight isn't the focus color drawn without forced colors, which
+  // is $wait (#3A72BE) in src/core/colors.scss.
+  expect(await systemColor("Highlight")).not.toBe("rgb(58, 114, 190)");
+});
+
+test("the loading legend's bars keep a white backing in a dark forced-colors theme", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active", colorScheme: "dark" });
+  await openPathways(page);
+  const background = (locator: Locator) =>
+    locator.evaluate(element => getComputedStyle(element).backgroundColor);
+  // So the check below can fail: the panel behind the legend is dark.
+  expect(await background(page.locator(".extract-pathways__network"))).not.toBe("rgb(255, 255, 255)");
+  expect(await background(page.locator(".loading-legend__bars"))).toBe("rgb(255, 255, 255)");
+});
+
+// As on a school network that blocks Google Fonts, where Lato and Barlow Condensed fall back to
+// wider fonts.
+test.describe("with Google Fonts blocked", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort());
+  });
+
+  /**
+   * Opens the view at `width`, as an Interactive if `interactive`, draws the pathways, and returns
+   * the boxes of the head's parts.
+   */
+  async function headAt(page: Page, width: number, interactive = false) {
+    await page.setViewportSize({ width, height: 900 });
+    if (interactive) {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/?interactive=extract-pathways");
+      await expect(page.getByRole("img", { name: "The network." })).toBeVisible();
+    } else {
+      await open(page);
+    }
+    await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
+    await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+    // Done, so the loading legend is at its full width: shown, and not held to a width.
+    await expect(page.getByText("Loading", { exact: true })).toBeVisible();
+    await expect(page.locator(".extract-pathways__loading-legend")).not.toHaveAttribute("style", /width/);
+    const head = (await page.locator(".extract-pathways__network-head").boundingBox())!;
+    const title = (await page.getByRole("heading", { name: "The Neural Network → Activated Pathways" }).boundingBox())!;
+    const tools = (await page.locator(".extract-pathways__network-tools").boundingBox())!;
+    const parts = {
+      title,
+      activation: (await page.locator(".activation-legend").boundingBox())!,
+      loading: (await page.locator(".loading-legend").boundingBox())!,
+      controls: (await page.locator(".animation-controls").boundingBox())!,
+    };
+    return { head, title, tools, parts };
+  }
+
+  function expectInside(head: { x: number; width: number }, parts: Record<string, { x: number; width: number }>) {
+    for (const [name, box] of Object.entries(parts)) {
+      expect(box.x + box.width, name).toBeLessThanOrEqual(head.x + head.width);
+    }
+  }
+
+  test("nothing in the head runs past it at 480 px", async ({ page }) => {
+    const { head, parts } = await headAt(page, 480);
+    expectInside(head, parts);
+  });
+
+  test("nothing in the head runs past it at the minimum layout width", async ({ page }) => {
+    const { head, parts } = await headAt(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, true);
+    expectInside(head, parts);
+  });
+
+  test("the tools drop below the title when they don't fit beside it", async ({ page }) => {
+    const { title, tools } = await headAt(page, 480);
+    expect(tools.y).toBeGreaterThanOrEqual(title.y + title.height);
+  });
+
+  test("keeps the tip inside the canvas and clear of the boxes in the fallback font", async ({ page }) => {
+    await headAt(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, true);
+    const canvas = page.getByRole("img", { name: PATHWAYS });
+    await expect(canvas).toHaveAttribute("width", String(NARROWEST_CANVAS));
+    const canvasBox = (await canvas.boundingBox())!;
+    const tip = (await page.getByTestId("pick-tip").boundingBox())!;
+    const firstBox = (await page.locator(".extract-drawing__box").first().boundingBox())!;
+    expect(tip.x + tip.width).toBeLessThanOrEqual(canvasBox.x + canvasBox.width);
+    expect(tip.y + tip.height).toBeLessThan(firstBox.y);
+  });
+});
+
+test("at the minimum layout width the head is one line, with both legends", async ({ page }) => {
+  await canvasIn(page, NARROWEST_CANVAS + INTERACTIVE_EXTRA, NARROWEST_CANVAS);
+  await page.evaluate(() => document.fonts.ready);
+  const headBox = () => page.locator(".extract-pathways__network-head").boundingBox();
+  const before = (await headBox())!;
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
+  await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+  await expect(page.getByText("Loading", { exact: true })).toBeVisible();
+  await expect(page.locator(".extract-pathways__loading-legend")).not.toHaveAttribute("style", /width/);
+  expect((await headBox())!.height).toBe(before.height);
+  const title = (await page.getByRole("heading", { name: "The Neural Network → Activated Pathways" }).boundingBox())!;
+  const tools = (await page.locator(".extract-pathways__network-tools").boundingBox())!;
+  // The tools are taller than the title and centered on it, so they start above it, not below it.
+  expect(tools.y).toBeLessThan(title.y + title.height);
+});
+
+test("picks in a canvas that scrolls sideways", async ({ page }) => {
+  await canvasIn(page, 600, NARROWEST_CANVAS);
+  await page.getByRole("button", { name: "Extract Pathways", exact: true }).click();
+  await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+  await drawingGroup(page).evaluate(group => {
+    group.scrollLeft = group.scrollWidth;
+  });
+  // A real mouse click at the drawn box's center, so a target that sits off its box after the scroll
+  // would miss. Clicking the target itself would scroll it into view and hide that.
+  const drawn = page.locator(".extract-drawing__box").nth(2);
+  const drawnBox = (await drawn.boundingBox())!;
+  const box = pathwayTarget(page, 3);
+  const centerX = drawnBox.x + drawnBox.width / 2;
+  const centerY = drawnBox.y + drawnBox.height / 2;
+  await page.mouse.click(centerX, centerY);
+  await expect(box).toHaveAttribute("aria-pressed", "true");
+});
+
+test("doesn't keep the pick on switching views, but keeps the pathways, with the loading legend already full width",
+  async ({ page }) => {
+    await openPathways(page);
+    const box = pathwayTarget(page, 2);
+    await box.click();
+    await expect(box).toHaveAttribute("aria-pressed", "true");
+    const nav = page.getByRole("navigation", { name: "Views" });
+    await nav.getByRole("link", { name: "Looking Inside a Neural Network" }).click();
+    await expect(page.getByText("1 / 800")).toBeVisible();
+    await nav.getByRole("link", { name: "Extract the Neural Pathways" }).click();
+    await expect(page.getByRole("img", { name: PATHWAYS })).toBeVisible();
+    await expect(page.getByRole("button", { pressed: true })).toHaveCount(0);
+    await expect(pathwayTarget(page, 2)).toHaveAttribute("aria-pressed", "false");
+    const legend = page.locator(".extract-pathways__loading-legend");
+    await expect(legend).not.toHaveAttribute("style", /width/);
+    await expect(legend).toHaveCSS("opacity", "1");
+  });

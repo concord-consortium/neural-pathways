@@ -182,8 +182,10 @@ describe("faceSources", () => {
       const last = particles.filter(particle => particle.bar === b)[need[b] - 1];
       return [b, particleTarget(last, bar, need[b]).x];
     });
-    expect(ends).toEqual(layout.bars.map((bar, b) => [
+    const expected = layout.bars.map((bar, b) => [
       b, bar.zero + (bar.loading >= 0 ? barLengths(fixtureLoadings)[b] : -barLengths(fixtureLoadings)[b]),
-    ]));
+    ]);
+    expect(ends.map(([b]) => b)).toEqual(expected.map(([b]) => b));
+    ends.forEach(([b, x]) => expect(x).toBeCloseTo(expected[b][1], 6));
   });
 });

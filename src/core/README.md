@@ -74,7 +74,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   through the network as a function of time, which Looking Inside a Neural Network plays as its
   steps and Extract the Neural Pathways replays.
 
-  A view that lets the student pick neurons passes `NetworkDiagram` an `interaction`
+  A view that lets the student pin neurons passes `NetworkDiagram` an `interaction`
   (`NeuronInteraction`) and owns its state; the diagram leaves out the neurons the steps haven't
   reached, and `NetworkDrawing` stays stateless. `neuron.ts` names neurons, `neuron-navigation.ts`
   moves between them by key, and `neuron-targets.tsx` makes the reached ones buttons.
@@ -90,6 +90,11 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   Activation" over a miniature blue neuron for "−" and an orange one for "+". The swatches are
   `aria-hidden` and keep their colors in forced-colors mode, as the diagram does; the caption and
   signs are the text. A view places it in its own head.
+- `loading-legend/`: `LoadingLegend`, the legend for a loading bar: the caption "Loading" over two
+  stacked bars, one running left from the middle for "−" and one running right for "+". The bars are
+  `aria-hidden` and keep their colors in forced-colors mode, on a white backing of their own; the
+  caption and signs are the text. A
+  view places it in its own head, beside `ActivationLegend`.
 - `animation-controls/`: the Animate checkbox and the Slow/Medium/Fast speed slider, for any view
   whose state is `Animated`. The step player reads the same two values from the state the view
   gives it, so a view places the control and passes its state to both.
@@ -134,6 +139,8 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   `alignWordScores` drops the model's `[CLS]` and `[SEP]` markers and checks the rest are the
   message's words (`messageWords`), one for one. `useWordScores` loads a message's scores under a
   fit, keeping one bucket cache per dataset so stepping back and forth doesn't fetch again.
+- `legend.scss`: the styles the activation and loading legends share, the caption over its row and
+  the row itself.
 - `use-element-size.ts`: an element's size, kept current with a ResizeObserver.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and

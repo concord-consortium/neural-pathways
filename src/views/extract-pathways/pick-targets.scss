@@ -1,0 +1,84 @@
+@use "../../core/colors" as colors;
+@use "../../core/fonts" as fonts;
+
+// Over the drawing and the particle canvas. Only the targets take the pointer.
+.pick-targets {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.pick-targets__hit {
+  fill: transparent;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+// The buttons are invisible: drawn rings and outlines show focus, since an SVG element's CSS outline
+// is square.
+.pick-targets g:focus {
+  outline: none;
+}
+
+.pick-targets__hover-ring,
+.pick-targets__focus {
+  fill: none;
+  stroke-width: 2;
+  visibility: hidden;
+}
+
+.pick-targets__hover-ring {
+  stroke: colors.$ink;
+  opacity: 0.5;
+}
+
+// Only where there is a real hover: on a touch screen a tap would leave the ring behind.
+@media (hover: hover) {
+  .pick-targets__neuron:hover .pick-targets__hover-ring {
+    visibility: visible;
+  }
+
+  // Over the box's own outline, darkening it.
+  .pick-targets__box:hover .pick-targets__box-outline {
+    stroke: colors.$ink;
+    stroke-width: 2;
+  }
+}
+
+// As thick as a pick while pressed, on a touch screen too, where no hover has drawn the outline.
+.pick-targets__box:active .pick-targets__box-outline {
+  stroke: colors.$ink;
+  stroke-width: 3;
+}
+
+.pick-targets__focus {
+  stroke: colors.$wait;
+}
+
+// Keyboard focus only, so a click leaves no ring.
+.pick-targets g:focus-visible .pick-targets__focus {
+  visibility: visible;
+}
+
+// The prototype's d1a-loadtip.
+.pick-targets__tip {
+  font-family: fonts.$body-font;
+  font-size: 13px;
+  font-style: italic;
+  fill: colors.$ink-2;
+}
+
+// In the theme's colors, as `network-diagram.scss` explains.
+@media (forced-colors: active) {
+  .pick-targets__hover-ring,
+  .pick-targets__box:hover .pick-targets__box-outline,
+  .pick-targets__box:active .pick-targets__box-outline {
+    stroke: CanvasText;
+  }
+
+  .pick-targets__focus {
+    stroke: Highlight;
+  }
+}

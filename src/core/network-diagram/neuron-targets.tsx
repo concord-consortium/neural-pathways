@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useRef } from "react";
 import { ForwardPass } from "../network/forward";
 import { NetworkLayout } from "./layout";
 import {
-  formatActivation, neuronName, NeuronRef, NeuronRings, sameNeuron, unitAt
+  formatActivation, neuronName, NeuronRef, NeuronRings, sameNeuron, spokenNumber, unitAt
 } from "./neuron";
 import { neuronAfterKey } from "./neuron-navigation";
 
@@ -27,14 +27,6 @@ export interface NeuronInteraction {
   onFocusChange(neuron: NeuronRef | undefined, visible: boolean): void;
   onToggle(neuron: NeuronRef): void;
   onClear(): void;
-}
-
-/**
- * An activation for a neuron's name, with an ASCII minus: some speech engines skip U+2212, which
- * `formatActivation` shows, depending on their punctuation setting. The prototype's label does the same.
- */
-function spokenActivation(value: number): string {
-  return value.toFixed(2);
 }
 
 /** Each target is this much wider than its circle, half each side, so the pointer doesn't have to be exactly on it. */
@@ -183,7 +175,7 @@ export const NeuronTargets: React.FC<NeuronTargetsProps> = ({ layout, pass, outp
       };
       targets.push(reached ? (
         <g key={`${c}-${unit}`} role="button" aria-pressed={sameNeuron(rings.pinned, neuron)}
-          aria-label={`${neuronName(neuron, lastColumn, outputLabels)}, activation ${spokenActivation(value)}`}
+          aria-label={`${neuronName(neuron, lastColumn, outputLabels)}, activation ${spokenNumber(value)}`}
           tabIndex={sameNeuron(tabStop, neuron) ? 0 : -1} data-column={c} data-unit={unit}
           onClick={onClick}
           onPointerEnter={() => onHover(neuron)} onPointerLeave={() => onHover(undefined)}

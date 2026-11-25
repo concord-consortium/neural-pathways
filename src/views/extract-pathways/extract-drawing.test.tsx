@@ -8,12 +8,13 @@ import { MIN_GAUGE } from "../../core/network-diagram/network-drawing";
 import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { collectAllPlan, collectAllSceneAt, HANDOVER_MS } from "./collect-all-timeline";
 import { collectDuration, collectSceneAt } from "./collect-timeline";
-import { ExtractDrawing } from "./extract-drawing";
+import { describeScene, ExtractDrawing } from "./extract-drawing";
 import { deckRestScene, ExtractScene, pathwaysRestScene, restScene } from "./extract-scene";
 import { extractGeometry, minCanvasWidth } from "./extract-geometry";
 import { flightDuration } from "./flight";
 import { extractPathwaysSceneAt } from "./pathways-timeline";
 import { pathwaysLayout } from "./pathways-layout";
+import { TIP_LINES } from "./pick-targets";
 import { setupSceneAt } from "./setup-timeline";
 
 const SIZES = [10, 8, 6, 2];
@@ -23,11 +24,11 @@ const scales = networkScales(fixtureNetwork, passes);
 // jsdom has no ResizeObserver, so the drawing lays out at its narrowest.
 const geometry = extractGeometry(SIZES, 0);
 
-function renderDrawing(scene: ExtractScene) {
+function renderDrawing(scene: ExtractScene, atRest = true) {
   return render(
     <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS} scene={scene}
       headingId="panel-head" deckSize={passes.length}
-      loadings={fixtureLoadings} />,
+      loadings={fixtureLoadings} pick={undefined} onPick={jest.fn()} atRest={atRest} />,
   );
 }
 
@@ -78,7 +79,7 @@ describe("ExtractDrawing", () => {
         <h2 id="panel-head">The Neural Network → Activated Pathways</h2>
         <ExtractDrawing network={fixtureNetwork} passes={passes} scales={scales} outputLabels={LABELS}
           scene={restScene(SIZES, 0)} headingId="panel-head" deckSize={passes.length}
-          loadings={fixtureLoadings} />
+          loadings={fixtureLoadings} pick={undefined} onPick={jest.fn()} atRest />
       </>,
     );
     const group = screen.getByRole("group", { name: "The Neural Network → Activated Pathways" });
@@ -99,8 +100,8 @@ describe("ExtractDrawing", () => {
     const width = String(minCanvasWidth(SIZES));
     const svg = screen.getByRole("img", { name: "The network." });
     expect(svg).toHaveAttribute("width", width);
-    expect(svg).toHaveAttribute("height", "440");
-    expect(svg).toHaveAttribute("viewBox", `0 0 ${width} 440`);
+    expect(svg).toHaveAttribute("height", "404");
+    expect(svg).toHaveAttribute("viewBox", `0 0 ${width} 404`);
   });
 
   it("stands the 14 lifted copies in their column once Setup is done, named by their neurons", () => {
@@ -229,7 +230,8 @@ describe("ExtractDrawing", () => {
     const scene = collectAllSceneAt(SIZES, 3, 800, close.start + close.duration / 2);
     render(
       <ExtractDrawing network={fixtureNetwork} passes={deckPasses} scales={scales} outputLabels={LABELS}
-        scene={scene} headingId="panel-head" deckSize={800} loadings={fixtureLoadings} />,
+        scene={scene} headingId="panel-head" deckSize={800} loadings={fixtureLoadings} pick={undefined}
+        onPick={jest.fn()} atRest />,
     );
     const places = scene.deck!.sets.map((_, index) => screen.getByTestId(`deck-place-${index}`))
       .map((place, index) => [index, placeOf(place).x, place.getAttribute("opacity")]);
@@ -258,6 +260,45 @@ describe("ExtractDrawing", () => {
     expect(screen.getByTestId("lifted-column")).toHaveAttribute("transform", `translate(${dx},0)`);
   });
 
+  describe("describeScene with a pick", () => {
+    const scene = pathwaysRestScene(SIZES, 20, fixtureLoadings);
+    const names = Array.from({ length: 14 }, (_, k) =>
+      (k < 8 ? `Hidden Layer 1 Neuron ${k + 1}` : `Hidden Layer 2 Neuron ${k - 7}`));
+    const detail = { names, loadings: fixtureLoadings };
+    const signed = (value: number) => (value < 0 ? "" : "+") + value.toFixed(2);
+    const base = "The 14 hidden neurons, with their loadings on three pathways drawn from all 20 messages.";
+
+    it("is unchanged with no pick", () => {
+      expect(describeScene(scene, 14, undefined, detail)).toBe(base);
+    });
+
+    it("lists a picked neuron's three loadings, signed", () => {
+      // Not the first neuron, so the picked one's loadings and name are the ones listed.
+      const l = fixtureLoadings[9];
+      expect(describeScene(scene, 14, { kind: "neuron", index: 9 }, detail)).toBe(
+        `${base} Hidden Layer 2 Neuron 2's loadings: Pathway 1 ${signed(l[0])}, Pathway 2 ${signed(l[1])}, `
+        + `Pathway 3 ${signed(l[2])}.`);
+    });
+
+    it("lists a picked pathway's loadings on all 14 neurons", () => {
+      const text = describeScene(scene, 14, { kind: "pathway", index: 1 }, detail);
+      const list = fixtureLoadings.map((l, k) => `${names[k]} ${signed(l[1])}`).join(", ");
+      expect(text).toBe(`${base} Pathway 2's loadings: ${list}.`);
+    });
+
+    it("speaks a negative loading with an ASCII minus", () => {
+      const text = describeScene(scene, 14, { kind: "pathway", index: 1 }, detail);
+      expect(fixtureLoadings.some(l => l[1] < 0)).toBe(true);
+      expect(text).toMatch(/ -\d\.\d\d/);
+      expect(text).not.toContain("−");
+    });
+
+    it("ignores a pick before the pathways are done", () => {
+      expect(describeScene(deckRestScene(SIZES, 20), 14, { kind: "pathway", index: 1 }, detail))
+        .toBe("The network's 14 hidden neurons lifted out, and all 20 messages collected.");
+    });
+  });
+
   it("keeps describing the deck while Extract Pathways runs", () => {
     jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
     try {
@@ -284,6 +325,41 @@ describe("ExtractDrawing", () => {
     const share = columnX(900) / dx;
     expect(share).toBeGreaterThan(0);
     expect(share).toBeLessThan(1);
+  });
+
+  it("offers the pick targets and the tip at rest after Extract Pathways, over the drawing", () => {
+    renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings));
+    const targets = screen.getByRole("group", { name: TIP_LINES.join(" ") });
+    expect(screen.getAllByRole("button", { name: /, show its loadings on / })).toHaveLength(17);
+    // Over the drawing's SVG, as its last layer, and the same size.
+    const svg = screen.getByRole("img");
+    // eslint-disable-next-line testing-library/no-node-access -- the drawing's layers, bottom to top
+    const layers = [...svg.parentElement!.children];
+    expect(layers.indexOf(targets)).toBe(layers.length - 1);
+    expect(targets).toHaveAttribute("width", svg.getAttribute("width"));
+    expect(targets).toHaveAttribute("height", svg.getAttribute("height"));
+  });
+
+  it("names the neuron targets as the lifted copies are named", () => {
+    renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings));
+    expect(screen.getByRole("button", { name: "Hidden Layer 2 Neuron 6, show its loadings on the three pathways" }))
+      .toBeInTheDocument();
+  });
+
+  it("offers no pick targets while a step plays, or before the pathways are done", () => {
+    jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    try {
+      const { unmount } = renderDrawing(pathwaysRestScene(SIZES, 20, fixtureLoadings), false);
+      expect(screen.queryByRole("group", { name: TIP_LINES.join(" ") })).not.toBeInTheDocument();
+      unmount();
+      const view = renderDrawing(extractPathwaysSceneAt(SIZES, 20, fixtureLoadings, 3000));
+      expect(screen.queryByRole("group", { name: TIP_LINES.join(" ") })).not.toBeInTheDocument();
+      view.unmount();
+      renderDrawing(deckRestScene(SIZES, 20));
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    } finally {
+      jest.restoreAllMocks();
+    }
   });
 
   it("shows the particle canvas only while the particles fly", () => {

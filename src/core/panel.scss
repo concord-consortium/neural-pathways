@@ -46,9 +46,30 @@ $head-height: $head-control-height + $head-padding-top + $head-padding-bottom + 
   flex-wrap: wrap;
 }
 
-// The title in a head with controls: the head's font rather than a heading's, and the row's slack,
-// which pushes the controls to the right.
+// The title in a head with controls: the head's font rather than a heading's. It takes no margin:
+// `panel-head-tools` takes the row's slack.
 @mixin panel-head-title {
-  margin: 0 auto 0 0;
+  margin: 0;
   font: inherit;
+}
+
+// The legend, rule and controls of a head, which move as one: the group takes the row's slack, which
+// keeps the title at the left and the group at the right, and when the head is too narrow for one
+// line the whole group drops below the title. It wraps inside too, in a head narrower than the
+// group itself.
+@mixin panel-head-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-left: auto;
+}
+
+// A short vertical rule between the legends and the controls.
+@mixin panel-head-rule {
+  flex-shrink: 0;
+  width: 1px;
+  height: 24px;
+  background: colors.$rule;
 }

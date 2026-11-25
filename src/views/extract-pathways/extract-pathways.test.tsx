@@ -1,5 +1,7 @@
 import React from "react";
+import { fromSnapshot, SnapshotInOf } from "mobx-keystone";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { RULE_COLOR } from "../../core/colors";
 import { fetchIndex } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { fixtureMetadata } from "../../core/network/__fixtures__/alien3-network";
@@ -14,6 +16,7 @@ import { collectAllDuration } from "./collect-all-timeline";
 import { collectDuration } from "./collect-timeline";
 import { ExtractPathways } from "./extract-pathways";
 import { ExtractPathwaysState } from "./extract-pathways-state";
+import pathwaysDoneSnapshot from "./__fixtures__/extract-pathways-state.v1-pathways-done.json";
 import { EXTRACT_MS } from "./pathways-timeline";
 import { setupDuration } from "./setup-timeline";
 
@@ -203,6 +206,83 @@ describe("ExtractPathways", () => {
     expect(within(panel).getByRole("slider", { name: "Animation speed" })).toBeDisabled();
   });
 
+  it("shows the activation legend in the panel's head", async () => {
+    showView();
+    await screen.findByRole("img", { name: "The network." });
+    const panel = screen.getByRole("region", { name: "The Neural Network → Activated Pathways" });
+    expect(within(panel).getByText("Neuron Activation")).toBeInTheDocument();
+  });
+
+  it("keeps the loading legend out of the layout until the pathways are drawn", async () => {
+    showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true, pathwaysDone: false }));
+    await screen.findByRole("img", { name: DECK });
+    expect(screen.getByText("Loading")).not.toBeVisible();
+  });
+
+  it("shows the loading legend once the pathways are drawn", async () => {
+    showView(fromSnapshot(ExtractPathwaysState, pathwaysDoneSnapshot as SnapshotInOf<ExtractPathwaysState>));
+    await screen.findByRole("img", { name: PATHWAYS });
+    expect(screen.getByText("Loading")).toBeVisible();
+  });
+
+  describe("picking", () => {
+    const pathwayBox = () => screen.getByRole("button", { name: /^Pathway 2, show its loadings/ });
+    const pressedButtons = () => screen.queryAllByRole("button", { pressed: true });
+
+    async function showPathways() {
+      showView(fromSnapshot(ExtractPathwaysState, pathwaysDoneSnapshot as SnapshotInOf<ExtractPathwaysState>));
+      await screen.findByRole("img", { name: PATHWAYS });
+    }
+
+    it("has no targets before the pathways are done", async () => {
+      showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true }));
+      await screen.findByRole("img", { name: DECK });
+      expect(screen.queryByRole("button", { name: /show its loadings/ })).not.toBeInTheDocument();
+    });
+
+    it("clears the pick when any step is pressed, even Extract Pathways again with Animate off", async () => {
+      setReducedMotion(true);
+      await showPathways();
+      fireEvent.click(pathwayBox());
+      expect(pathwayBox()).toHaveAttribute("aria-pressed", "true");
+      fireEvent.click(button("Extract Pathways"));
+      expect(pathwayBox()).toHaveAttribute("aria-pressed", "false");
+    });
+
+    it("moves focus from a target to the pressed step, as a click in Safari doesn't", async () => {
+      await showPathways();
+      act(() => pathwayBox().focus());
+      // fireEvent.click doesn't move focus, as Safari's click doesn't.
+      fireEvent.click(button("Reset"));
+      expect(button("Reset")).toHaveFocus();
+    });
+
+    it("leaves focus alone on a step press from elsewhere", async () => {
+      await showPathways();
+      const about = screen.getByRole("button", { name: /About/ });
+      act(() => about.focus());
+      fireEvent.click(button("Reset"));
+      expect(about).toHaveFocus();
+    });
+
+    it("no pick survives Reset and a new extraction", async () => {
+      setReducedMotion(true);
+      await showPathways();
+      fireEvent.click(pathwayBox());
+      fireEvent.click(button("Reset"));
+      await screen.findByRole("img", { name: "The network." });
+      fireEvent.click(button("Extract Pathways"));
+      expect(pressedButtons()).toHaveLength(0);
+    });
+
+    it("describes the pick in the drawing's name", async () => {
+      await showPathways();
+      fireEvent.click(pathwayBox());
+      const name = / Pathway 2's loadings: Hidden Layer 1 Neuron 1 [+-]\d\.\d\d, /;
+      expect(screen.getByRole("img", { name })).toBeInTheDocument();
+    });
+  });
+
   it("builds the deck of every message with Collect All, and stores it", async () => {
     setReducedMotion(true);
     const { state } = showView();
@@ -262,6 +342,63 @@ describe("ExtractPathways", () => {
       expect(state.pathwaysDone).toBe(true);
       expect(drawing(PATHWAYS)).toBeInTheDocument();
       expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
+    });
+
+    it("slides the loading legend open and fades it in while the lines draw", async () => {
+      jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+      // jsdom measures nothing, so the legend's natural width comes from a stand-in observer.
+      const NATURAL_WIDTH = 200;
+      const ResizeObserverStub = class {
+        constructor(private readonly callback: ResizeObserverCallback) {}
+        observe(element: Element) {
+          if (element.classList.contains("extract-pathways__loading-legend-natural")) {
+            const entry = { contentRect: { width: NATURAL_WIDTH, height: 40 } } as ResizeObserverEntry;
+            this.callback([entry], this as unknown as ResizeObserver);
+          }
+        }
+        disconnect() { /* nothing to let go of */ }
+      };
+      const original = window.ResizeObserver;
+      window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
+      try {
+        showView(new ExtractPathwaysState({ setupDone: true, collected: 20, deckDone: true }));
+        await screen.findByRole("img", { name: DECK });
+        jest.useFakeTimers();
+        fireEvent.click(button("Extract Pathways"));
+        // Three quarters of the way through the lines.
+        act(() => jest.advanceTimersByTime(EXTRACT_MS - 130));
+        // eslint-disable-next-line testing-library/no-node-access -- the slot is the legend's styled wrapper
+        const slot = document.querySelector<HTMLElement>(".extract-pathways__loading-legend")!;
+        const width = parseFloat(slot.style.width);
+        const opacity = parseFloat(slot.style.opacity);
+        expect(width).toBeGreaterThan(0);
+        expect(width).toBeLessThan(NATURAL_WIDTH);
+        expect(opacity).toBeGreaterThan(0);
+        expect(opacity).toBeLessThan(1);
+        // The legend fades in behind the lines, so less of it is opaque than is open.
+        expect(opacity).toBeLessThan(width / NATURAL_WIDTH);
+      } finally {
+        window.ResizeObserver = original;
+      }
+    });
+
+    it("plays Extract Pathways with no bar muted after a pick was cleared by Reset", async () => {
+      jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+      showView(fromSnapshot(ExtractPathwaysState, pathwaysDoneSnapshot as SnapshotInOf<ExtractPathwaysState>));
+      await screen.findByRole("img", { name: PATHWAYS });
+      fireEvent.click(screen.getByRole("button", { name: /^Pathway 2, show its loadings/ }));
+      expect(screen.getAllByTestId("pathway-line")).toHaveLength(14);
+      jest.useFakeTimers();
+      fireEvent.click(button("Reset"));
+      act(() => jest.advanceTimersByTime(0));
+      fireEvent.click(button("Extract Pathways"));
+      act(() => jest.advanceTimersByTime(3000));
+      expect(screen.getByTestId("particles")).toBeInTheDocument();
+      const fills = screen.getAllByTestId("loading-bar").map(bar => bar.getAttribute("fill"));
+      expect(fills).not.toContain(RULE_COLOR);
+      act(() => jest.advanceTimersByTime(EXTRACT_MS));
+      expect(drawing(PATHWAYS)).toBeInTheDocument();
+      expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
     });
 
     it("plays Setup, then a collection, storing each only when it ends", async () => {

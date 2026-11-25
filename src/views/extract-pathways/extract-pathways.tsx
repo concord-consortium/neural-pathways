@@ -1,22 +1,28 @@
-import React, { useId, useLayoutEffect, useMemo } from "react";
+import React, { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
 import { ViewTitle } from "../../core/view-title/view-title";
+import { ActivationLegend } from "../../core/activation-legend/activation-legend";
 import { AnimationControls } from "../../core/animation-controls/animation-controls";
 import { alien3Dataset, alien3Loadings, alien3Network } from "../../core/datasets/alien3-dataset";
 import { indexPasses } from "../../core/network/index-passes";
+import { LoadingLegend } from "../../core/loading-legend/loading-legend";
 import { Network } from "../../core/network/network";
 import { useViewState } from "../../core/state/view-state-context";
 import { StepPlayer } from "../../core/steps/step-player";
 import { StepButtonGroup } from "../../core/steps/step-button-group";
 import { S3Index } from "../../core/types/s3-data";
 import { useDatasetIndex } from "../../core/use-dataset-index";
+import { useElementSize } from "../../core/use-element-size";
 import { deckSize } from "./deck-layout";
 import { ExtractDrawing } from "./extract-drawing";
 import { ExtractPathwaysState } from "./extract-pathways-state";
 import { extractButtons, extractProgress, MAX_COLLECTED } from "./extract-steps";
+import { ExtractScene } from "./extract-scene";
 import { extractTimeline } from "./extract-timeline";
+import { loadingLegendReveal } from "./loading-legend-reveal";
 import { checkLoadingsShape, Loadings } from "./pathways-layout";
+import { PathwaysPick } from "./pick";
 import about from "./about.md";
 import "./extract-pathways.scss";
 
@@ -85,6 +91,17 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
   // Stop the player when the view unmounts. A layout effect, so no existing run can finish and
   // store its marker after the view is gone.
   useLayoutEffect(() => () => player.stop(), [player]);
+  const [pick, setPick] = useState<PathwaysPick>();
+  const stepsRef = useRef<HTMLDivElement>(null);
+
+  // Any step press clears the pick, and most also remove the targets. Safari doesn't focus a clicked
+  // button, so focus on a target would fall to the page; it goes to the pressed button, as elsewhere.
+  const onStepPress = (key: string) => {
+    if (document.activeElement?.closest(".pick-targets")) {
+      stepsRef.current?.querySelector<HTMLButtonElement>(`[data-key="${key}"]`)?.focus();
+    }
+    setPick(undefined);
+  };
 
   if (passes.length === 0) {
     return <p>No messages.</p>;
@@ -93,8 +110,8 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
   return (
     <>
       <div className="extract-pathways__step-row">
-        <div className="extract-pathways__steps">
-          <StepButtonGroup player={player} buttons={buttons} />
+        <div ref={stepsRef} className="extract-pathways__steps">
+          <StepButtonGroup player={player} buttons={buttons} onPress={onStepPress} />
         </div>
         <div className="extract-pathways__about">
           <AboutButton title={EXTRACT_PATHWAYS_TITLE} markdown={about} />
@@ -103,18 +120,52 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
       <section className="extract-pathways__network" aria-labelledby={panelHeadId}>
         <div className="extract-pathways__network-head">
           <h2 id={panelHeadId} className="extract-pathways__network-title">{PANEL_TITLE}</h2>
-          <AnimationControls animated={state} />
+          <div className="extract-pathways__network-tools">
+            <ActivationLegend />
+            <LoadingLegendSlot player={player} />
+            <span className="extract-pathways__network-rule" aria-hidden="true" />
+            <AnimationControls animated={state} />
+          </div>
         </div>
         <div className="extract-pathways__drawing">
+          {/* Reads the player on its own, so the view's body doesn't re-render while a run plays. */}
           <Observer>
             {() => (
               <ExtractDrawing network={network} passes={passes} scales={scales}
                 outputLabels={alien3Dataset.classificationLabels} scene={player.scene} headingId={panelHeadId}
-                deckSize={size} loadings={loadings} />
+                deckSize={size} loadings={loadings} pick={pick} onPick={setPick}
+                atRest={player.currentRun === undefined} />
             )}
           </Observer>
         </div>
       </section>
     </>
+  );
+});
+
+/**
+ * The loading legend, which slides open and fades in with the pathways' lines. It stays out of the
+ * layout until they start, so no gap opens for it beside the activation legend. Reads the player's
+ * scene on its own, as the drawing does.
+ */
+const LoadingLegendSlot = observer(function LoadingLegendSlot({ player }: { player: StepPlayer<ExtractScene> }) {
+  const [setNatural, natural] = useElementSize<HTMLDivElement>({ width: 0, height: 0 });
+  const reveal = loadingLegendReveal(player.scene);
+  let style: React.CSSProperties;
+  if (!reveal) {
+    style = { display: "none" };
+  } else if (reveal.width === 1) {
+    style = { opacity: reveal.opacity };
+  } else {
+    // Until the legend is measured it takes no width, so the head doesn't hold its full width for a
+    // frame.
+    style = { overflow: "hidden", opacity: reveal.opacity, width: reveal.width * natural.width };
+  }
+  return (
+    <div className="extract-pathways__loading-legend" style={style}>
+      <div ref={setNatural} className="extract-pathways__loading-legend-natural">
+        <LoadingLegend />
+      </div>
+    </div>
   );
 });
