@@ -98,8 +98,9 @@ as chips in flight or a step still running. Extract the Neural Pathways keeps th
 completed, but not one in progress. Looking Inside a Neural Network's pinned neuron, and the neuron
 holding the keyboard's Tab stop, are its component's state: not saved, not an undo step, and not
 kept across a view switch or a message change. A step press clears the pin, and Reset clears both.
-Extract the Neural Pathways' pick, a neuron or a pathway shown alone, works the same way: any step
-button or Reset clears it, and it isn't kept across a view switch. Two things are kept only for the
+Extract the Neural Pathways' pick, a neuron or a pathway shown alone, works the same way, as do its
+targets' Tab stops: any step button or Reset clears the pick, the Tab stops start over whenever the
+targets come back, and none of it is kept across a view switch. Two things are kept only for the
 life of the page, as volatile fields (`@observable accessor`, not `tProp`), so they survive
 switching views but are never saved or an undo step:
 - a query still being typed, in `SharedState.queryDraft`;

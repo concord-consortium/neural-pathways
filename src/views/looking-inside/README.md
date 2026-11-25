@@ -76,8 +76,8 @@ The minimum layout height, 562 px, adds up from the top:
   the fallback font, the panels' smallest grows with it and the page scrolls sooner.
 
 `layout.ts` explains how `MIN_HEIGHT` is found. The readout box holds three lines of its longest
-text at 990 px wide. Extract the Neural Pathways lays the network out taller, in its 404 px canvas,
-so `MIN_HEIGHT` doesn't change it.
+text at 990 px wide. Extract the Neural Pathways lays the network out taller, in its 404 px canvas
+(`CANVAS_HEIGHT` in `extract-geometry.ts`), so `MIN_HEIGHT` doesn't change it.
 
 The view's 16 px bottom padding is the first thing to go as the window gets shorter, so it isn't
 counted. The standalone app has no top padding, and shows the view's title above the filter bar

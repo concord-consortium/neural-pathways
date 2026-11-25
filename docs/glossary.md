@@ -110,8 +110,9 @@ one thing, or one name for two things, settle it and add it here.
   playing isn't stored.
 - **loading bar:** one loading, drawn beside the lifted column: three to a neuron, one per
   pathway, from zero toward its sign, in proportion to its loading's size, in its sign's color.
-- **loading legend:** `LoadingLegend`, the head's key for the loading bars, beside the activation
-  legend. The story and the prototype call it the loading key; code and docs say loading legend.
+- **loading legend:** `LoadingLegend`, the head's legend for the loading bars' direction and color,
+  beside the activation legend. The story and the prototype call it the loading key; code and docs
+  say loading legend.
 - **particle:** one dot carrying a reading from the deck's faces to a loading bar while Extract
   Pathways builds the bars.
 - **particle canvas:** the `<canvas>` over the SVG that the particles are painted on while they fly.
