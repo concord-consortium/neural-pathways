@@ -137,20 +137,6 @@ describe("alien3Loadings", () => {
       .toThrow("The alien3 data has no loadings. Run npm run generate:alien to generate it.");
   });
 
-  it("names the fits when the index has more than one", () => {
-    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
-    const metadata = { ...fixtureMetadata, fa_fits: { [name]: fit, other: fit } };
-    expect(() => alien3Loadings({ metadata, items: [] })).toThrow(
-      `The alien3 data has more than one factor-analysis fit (${name}, other). `
-      + "Run npm run generate:alien to generate it.");
-  });
-
-  it("says so when the index has no factor-analysis fit", () => {
-    const metadata = { ...fixtureMetadata, fa_fits: {} };
-    expect(() => alien3Loadings({ metadata, items: [] }))
-      .toThrow("The alien3 data has no factor-analysis fit. Run npm run generate:alien to generate it.");
-  });
-
   it("says so when the fit's loadings are empty", () => {
     const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
     const metadata = { ...fixtureMetadata, fa_fits: { [name]: { ...fit, loadings: [] } } };
@@ -172,6 +158,20 @@ describe("alien3FitName", () => {
   it("names the one fit", () => {
     expect(alien3FitName({ metadata: fixtureMetadata, items: [] })).toBe("alien-fa-3");
   });
+
+  it("says so when the index has no factor-analysis fit", () => {
+    const metadata = { ...fixtureMetadata, fa_fits: {} };
+    expect(() => alien3FitName({ metadata, items: [] }))
+      .toThrow("The alien3 data has no factor-analysis fit. Run npm run generate:alien to generate it.");
+  });
+
+  it("names the fits when the index has more than one", () => {
+    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
+    const metadata = { ...fixtureMetadata, fa_fits: { [name]: fit, other: fit } };
+    expect(() => alien3FitName({ metadata, items: [] })).toThrow(
+      `The alien3 data has more than one factor-analysis fit (${name}, other). `
+      + "Run npm run generate:alien to generate it.");
+  });
 });
 
 describe("alien3WordScoreMax", () => {
@@ -190,19 +190,5 @@ describe("alien3WordScoreMax", () => {
 
   it.each([undefined, 0, -0.1, NaN])("says so when the maximum is %s", value => {
     expect(() => alien3WordScoreMax(withMax(value))).toThrow(missing);
-  });
-
-  it("says so when the index has no factor-analysis fit", () => {
-    const metadata = { ...fixtureMetadata, fa_fits: {} };
-    expect(() => alien3WordScoreMax({ metadata, items: [] }))
-      .toThrow("The alien3 data has no factor-analysis fit. Run npm run generate:alien to generate it.");
-  });
-
-  it("names the fits when the index has more than one", () => {
-    const [name, fit] = Object.entries(fixtureMetadata.fa_fits)[0];
-    const metadata = { ...fixtureMetadata, fa_fits: { [name]: fit, other: fit } };
-    expect(() => alien3WordScoreMax({ metadata, items: [] })).toThrow(
-      `The alien3 data has more than one factor-analysis fit (${name}, other). `
-      + "Run npm run generate:alien to generate it.");
   });
 });
