@@ -106,7 +106,8 @@ test("the tooltip stays while the pointer moves onto it, and hides on Escape", a
   await expect(next).toBeFocused();
 });
 
-test("the tooltip follows its word when the readings scroll", async ({ page }) => {
+test("the tooltip follows its word when the readings scroll, and hides once the word scrolls above them",
+  async ({ page }) => {
   await openView(page);
   await showLongMessage(page);
   // A colored word far enough down the scroller to stay in view when it scrolls 40 px, and far enough
