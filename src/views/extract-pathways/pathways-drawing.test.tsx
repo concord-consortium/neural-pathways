@@ -155,6 +155,13 @@ describe("PathwaysLayer", () => {
         expect([p, square.classList.contains("extract-drawing__box--picked")]).toEqual([p, p === 1]);
       });
     });
+
+    it("outlines no box when a neuron with a pathway's index is picked", () => {
+      drawPicked({ kind: "neuron", index: 1 });
+      expect(screen.getAllByTestId("pathway-box")).toHaveLength(3);
+      // eslint-disable-next-line testing-library/no-node-access -- the outline is a class on the box's square
+      expect(document.querySelectorAll(".extract-drawing__box--picked")).toHaveLength(0);
+    });
   });
 
   it("flies bar copies of the flying pathway's bars, in their colors, to the middle of its box", () => {
