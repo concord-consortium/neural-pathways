@@ -1,4 +1,4 @@
-import React, { useId, useLayoutEffect, useMemo, useState } from "react";
+import React, { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Observer, observer } from "mobx-react-lite";
 import { AboutButton } from "../../core/about/about-button";
 import { ViewTitle } from "../../core/view-title/view-title";
@@ -92,6 +92,16 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
   // store its marker after the view is gone.
   useLayoutEffect(() => () => player.stop(), [player]);
   const [pick, setPick] = useState<Pick>();
+  const stepsRef = useRef<HTMLDivElement>(null);
+
+  // Any step press clears the pick, and most also remove the targets. Safari doesn't focus a clicked
+  // button, so focus on a target would fall to the page; it goes to the pressed button, as elsewhere.
+  const onStepPress = (key: string) => {
+    if (document.activeElement?.closest(".pick-targets")) {
+      stepsRef.current?.querySelector<HTMLButtonElement>(`[data-key="${key}"]`)?.focus();
+    }
+    setPick(undefined);
+  };
 
   if (passes.length === 0) {
     return <p>No messages.</p>;
@@ -100,8 +110,8 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
   return (
     <>
       <div className="extract-pathways__step-row">
-        <div className="extract-pathways__steps">
-          <StepButtonGroup player={player} buttons={buttons} onPress={() => setPick(undefined)} />
+        <div ref={stepsRef} className="extract-pathways__steps">
+          <StepButtonGroup player={player} buttons={buttons} onPress={onStepPress} />
         </div>
         <div className="extract-pathways__about">
           <AboutButton title={EXTRACT_PATHWAYS_TITLE} markdown={about} />

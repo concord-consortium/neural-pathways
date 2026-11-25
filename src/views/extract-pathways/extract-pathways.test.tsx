@@ -249,6 +249,22 @@ describe("ExtractPathways", () => {
       expect(pathwayBox()).toHaveAttribute("aria-pressed", "false");
     });
 
+    it("moves focus from a target to the pressed step, as a click in Safari doesn't", async () => {
+      await showPathways();
+      act(() => pathwayBox().focus());
+      // fireEvent.click doesn't move focus, as Safari's click doesn't.
+      fireEvent.click(button("Reset"));
+      expect(button("Reset")).toHaveFocus();
+    });
+
+    it("leaves focus alone on a step press from elsewhere", async () => {
+      await showPathways();
+      const about = screen.getByRole("button", { name: /About/ });
+      act(() => about.focus());
+      fireEvent.click(button("Reset"));
+      expect(about).toHaveFocus();
+    });
+
     it("no pick survives Reset and a new extraction", async () => {
       setReducedMotion(true);
       await showPathways();

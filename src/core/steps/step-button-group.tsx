@@ -9,7 +9,7 @@ interface StepButtonGroupProps {
   buttons: readonly StepButton[];
   /**
    * Called with the pressed button's key, or "reset" for Reset, before the press plays or resets.
-   * Not called for an unavailable button.
+   * Not called for an unavailable button. Each button carries its key as `data-key`.
    */
   onPress?: (key: string) => void;
 }
@@ -35,7 +35,7 @@ export const StepButtonGroup = observer(function StepButtonGroup({ player, butto
         const segment = button.segmentToPlayWhenAt(marker) ?? (isRunning ? currentRun : undefined);
         const current = isRunning || (!currentRun && !!button.showAsCurrentWhenAt?.(marker));
         return (
-          <button key={button.key} type="button" className="step-button-group__step"
+          <button key={button.key} type="button" className="step-button-group__step" data-key={button.key}
             aria-current={current ? "step" : undefined}
             aria-disabled={!segment}
             onClick={segment && (() => {
@@ -46,7 +46,7 @@ export const StepButtonGroup = observer(function StepButtonGroup({ player, butto
           </button>
         );
       })}
-      <button type="button" className="step-button-group__reset" aria-disabled={nothingShown}
+      <button type="button" className="step-button-group__reset" data-key="reset" aria-disabled={nothingShown}
         onClick={nothingShown ? undefined : () => {
           onPress?.("reset");
           player.reset();
