@@ -5,7 +5,7 @@
 $positive: #A84A2C;
 $negative: #1F4E8F;
 
-// The signed legend gradient, from the negative end through white to the positive end.
+// The legend gradient's stops: RAMP_STOPS in colors.ts.
 $ramp-stops: #1F4E8F, #C8D6E9, #FFFFFF, #EFD3C4, #A84A2C;
 
 // The two classes. The text shades are darker so they pass contrast on white and on the soft fill.
