@@ -41,6 +41,9 @@ export interface S3FaFit {
   scaler_scale?: number[];     // neuron_count
   pathway_score_min: number[]; // n_pathways
   pathway_score_max: number[]; // n_pathways
+  // The alien data has it; the Yelp data doesn't. The largest |word score| in the fit's SHAP
+  // buckets, the ends of the Word Contribution legend.
+  word_score_max?: number;
 }
 
 export interface S3Item {

@@ -70,6 +70,7 @@ Each key is a Factor Analysis fit name like `train-fa-6` (fit on train split, 6 
 | `scaler_scale` | StandardScaler scale per neuron, length 780 |
 | `pathway_score_min` | Minimum pathway score across all reviews, per pathway (length `n_pathways`) |
 | `pathway_score_max` | Maximum pathway score across all reviews, per pathway (length `n_pathways`) |
+| `word_score_max` | Optional; only the alien data has it. The largest absolute word score in the fit's SHAP buckets, a single number |
 
 Current fits: `train-fa-6`, `test-fa-7`, `dev-fa-6`.
 

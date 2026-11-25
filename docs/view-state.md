@@ -92,14 +92,14 @@ them. Neural Pathway View of Model Reasoning will be the third.
 
 ## Deliberately not kept
 
-Hover and anything shown only on hover, the About modal, scroll positions, and anything in the
-middle of an animation, such as chips in flight or a step still running. Extract the Neural Pathways
-keeps the stages it has completed, but not one in progress. Looking Inside a Neural Network's pinned
-neuron, and the neuron holding the keyboard's Tab stop, are its component's state: not saved, not an
-undo step, and not kept across a view switch or a message change. A step press clears the pin, and
-Reset clears both. Two things are kept only for the life of the page, as volatile fields
-(`@observable accessor`, not `tProp`), so they survive switching views but are never saved or an
-undo step:
+Hover and anything shown only on hover, the About modal, scroll positions, the current word in
+Neural Pathway View of Model Reasoning's readings, and anything in the middle of an animation, such
+as chips in flight or a step still running. Extract the Neural Pathways keeps the stages it has
+completed, but not one in progress. Looking Inside a Neural Network's pinned neuron, and the neuron
+holding the keyboard's Tab stop, are its component's state: not saved, not an undo step, and not
+kept across a view switch or a message change. A step press clears the pin, and Reset clears both.
+Two things are kept only for the life of the page, as volatile fields (`@observable accessor`, not
+`tProp`), so they survive switching views but are never saved or an undo step:
 - a query still being typed, in `SharedState.queryDraft`;
 - whether a view's observation notes are open, in its own state, as in
   `LookingInsideState.notesOpen`.

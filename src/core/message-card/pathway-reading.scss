@@ -1,0 +1,42 @@
+@use "../colors" as colors;
+@use "../fonts" as fonts;
+
+.pathway-reading {
+  padding: 0 5px;
+  border-radius: 5px;
+}
+
+.pathway-reading__pathway {
+  padding-bottom: 4px;
+  border-bottom: 1px solid colors.$reading-rule;
+  margin-bottom: 5px;
+  color: colors.$ink-2;
+  font-family: fonts.$body-font;
+  font-size: 12.5px;
+}
+
+.pathway-reading__words {
+  margin: 0;
+  color: colors.$ink;
+  font-family: fonts.$message-font;
+  font-size: 13px;
+  line-height: 1.85;
+  word-break: break-word;
+}
+
+.pathway-reading__word {
+  padding: 1px 2px;
+  border-radius: 3px;
+  margin: 0 -1px;
+
+  // An outline, not a box-shadow, so forced-colors mode keeps it.
+  &:focus-visible {
+    outline: 2px solid colors.$wait;
+    outline-offset: 1px;
+  }
+}
+
+// Any word with a tooltip, colored or not.
+.pathway-reading__word--noted {
+  cursor: help;
+}

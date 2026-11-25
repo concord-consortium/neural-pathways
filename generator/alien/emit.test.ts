@@ -10,7 +10,7 @@ import { buildCorpus } from "./conversations";
 import { solveAttributes } from "./attributes";
 import { solveOutcomes } from "./outcomes";
 import { TemplateNoteRenderer, renderNotes } from "./notes";
-import { buildDataset, conversationId, conversationText, writeDataset } from "./emit";
+import { buildDataset, conversationId, conversationText, wordScoreMax, writeDataset } from "./emit";
 import { buildActivations } from "./activations";
 
 const config = { ...fourPathwayConfig, conversationCount: 200 };
@@ -62,6 +62,20 @@ describe("buildDataset", () => {
       expect(fit.pathway_score_min[p]).toBeLessThan(0);
       expect(fit.pathway_score_max[p]).toBeGreaterThan(0);
     }
+  });
+
+  it("sets the word score maximum to the largest |score| in the SHAP buckets", () => {
+    const fit = dataset.index.metadata.fa_fits[config.fitName];
+    let largest = 0;
+    for (const bucket of dataset.shapBuckets.values()) {
+      for (const review of bucket.reviews) {
+        for (const { scores } of review.words) {
+          for (const score of scores) largest = Math.max(largest, Math.abs(score));
+        }
+      }
+    }
+    expect(largest).toBeGreaterThan(0);
+    expect(fit.word_score_max).toBe(largest);
   });
 
   it("reports explained variance from the loadings, summing to the configured total", () => {
@@ -160,6 +174,22 @@ describe("buildDataset", () => {
       expect(bucket).toMatch(/^[0-9a-f]{2}$/);
       for (const entry of contents.reviews) expect(entry.id.slice(0, 2)).toBe(bucket);
     }
+  });
+});
+
+describe("wordScoreMax", () => {
+  it("counts a negative score by its size", () => {
+    const review = (scores: number[][]) =>
+      ({ id: "x", words: scores.map(s => ({ word: "w", scores: s })), base_values: [], unmasked_values: [] });
+    const buckets = [
+      { reviews: [review([[0.1, -0.2], [0.05, 0]])] },
+      { reviews: [review([[0.3, -0.7]]), review([[0, 0.4]])] },
+    ];
+    expect(wordScoreMax(buckets)).toBe(0.7);
+  });
+
+  it("is 0 with no words", () => {
+    expect(wordScoreMax([])).toBe(0);
   });
 });
 

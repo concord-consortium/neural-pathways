@@ -1,0 +1,72 @@
+@use "../colors" as colors;
+@use "../fonts" as fonts;
+
+.word-tooltip-area {
+  position: relative;
+}
+
+// Placed by WordTooltipArea, 6px above the word, which its tail fills.
+// One line, unless that is wider than the area, as it can be at 320 px with the text zoomed: then it
+// wraps. max-content, so the left it was last placed at doesn't narrow it.
+.word-tooltip {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 100%;
+  padding: 4px 8px;
+  // Transparent, so it shows only in forced-colors mode, which paints it.
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: colors.$ink;
+  color: #fff;
+  font-family: fonts.$body-font;
+  font-size: 12.5px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+
+  // Fills the gap down to the word, so the pointer can move from the word straight onto any part of
+  // the tooltip without leaving both.
+  &::before {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    height: 7px;
+    content: "";
+  }
+
+  // The tail: a 6px triangle under the tooltip, centered on the word.
+  &::after {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: var(--word-tooltip-tail, 50%);
+    border: 6px solid transparent;
+    border-top-color: colors.$ink;
+    border-bottom-width: 0;
+    content: "";
+    transform: translateX(-50%);
+
+    // Forced colors repaints the transparent sides too, which would draw a bar. With
+    // forced-color-adjust: none, the triangle keeps its transparent sides, and its top takes the color
+    // of the tooltip's border.
+    @media (forced-colors: active) {
+      forced-color-adjust: none;
+      border-top-color: CanvasText;
+    }
+  }
+}
+
+// Opened by the focus, it lets the pointer through to the words it covers. Only one the pointer opened
+// must take the pointer, so the pointer can move onto it. The hover bridge inherits this, so it lets
+// the pointer through as well.
+.word-tooltip--focused {
+  pointer-events: none;
+}
+
+.word-tooltip__value {
+  font-family: fonts.$mono;
+}

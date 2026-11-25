@@ -100,6 +100,14 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   `ObservationNotes` (the observer's notes, under a heading that opens and closes them; the view
   keeps whether they are open). A view that needs a different body adds a part rather than a flag
   on the shell.
+
+  For word scores, `WordContributionLegend` is the key to the word colors, a bar from minus to plus
+  the scale maximum. `PathwayReading` is one pathway's reading of a message: its words colored by
+  their scores on that pathway, as a listbox. The caller holds the current word, so several
+  readings can share it. `WordTooltipArea` goes around a card's readings and shows one tooltip for
+  them all, over the word the pointer or the focus moved to last.
+
+  `layout.scss`: `$width`, the card's width in the lesson's two-column layouts.
 - `fonts.scss`: the font stacks, and where each font comes from. A stylesheet uses its variables
   rather than spelling a stack out.
 - `alien-icons/`: `AlienIcon` and the alien attributes' icons, one `.svg` file per attribute,
@@ -119,7 +127,13 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   the shared `query` and its volatile draft, `queryDraft`, and gives a view the ids to step
   through. The lab explorer keeps its own search: its fields differ.
 - `colors.ts`, `colors.scss`, `panel.scss`, `button.scss`: the lesson's colors, the panel look, and
-  how an unavailable button looks.
+  how an unavailable button looks. The colors include the ramp words are colored on: `FILL_POS`
+  and `FILL_NEG`, five steps each, palest first; `rampLevel`, which step a share of the scale maximum (0 to 1) falls on; `wordFill`,
+  a word's background and text color for its score; and `RAMP_STOPS`, the legend's gradient.
+- `word-scores.ts` and `use-word-scores.ts`: a message's word scores, from the SHAP data.
+  `alignWordScores` drops the model's `[CLS]` and `[SEP]` markers and checks the rest are the
+  message's words (`messageWords`), one for one. `useWordScores` loads a message's scores under a
+  fit, keeping one bucket cache per dataset so stepping back and forth doesn't fetch again.
 - `use-element-size.ts`: an element's size, kept current with a ResizeObserver.
 
 Comments here sometimes mention the Yelp and 4-pathway alien datasets, and the lab tools and

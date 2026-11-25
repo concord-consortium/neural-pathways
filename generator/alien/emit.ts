@@ -26,6 +26,20 @@ export interface ShapBucketWire {
   reviews: S3ShapItem[];
 }
 
+/** The largest |score| of any word in the buckets, for the scale's ends. */
+export function wordScoreMax(shapBuckets: Iterable<ShapBucketWire>): number {
+  // Loops, not Math.max(...scores): the spread of every word score could overflow the stack.
+  let max = 0;
+  for (const bucket of shapBuckets) {
+    for (const review of bucket.reviews) {
+      for (const { scores } of review.words) {
+        for (const score of scores) max = Math.max(max, Math.abs(score));
+      }
+    }
+  }
+  return max;
+}
+
 export interface ActivationBucketWire {
   reviews: { id: string; activations: number[] }[];
 }
@@ -203,6 +217,7 @@ export function buildDataset(input: BuildDatasetInput): Dataset {
             corpus.scores.reduce((min, row) => Math.min(min, row[p]), Infinity)),
           pathway_score_max: corpus.scores[0].map((_, p) =>
             corpus.scores.reduce((max, row) => Math.max(max, row[p]), -Infinity)),
+          word_score_max: wordScoreMax(shapBuckets.values()),
         },
       },
       review_sets: {

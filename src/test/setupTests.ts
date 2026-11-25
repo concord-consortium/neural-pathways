@@ -11,3 +11,9 @@ if (typeof HTMLDialogElement !== "undefined") {
     this.dispatchEvent(new Event("close"));
   };
 }
+
+// jsdom has no PointerEvent, and the plain Event that stands in for it drops `relatedTarget`, which
+// says where the pointer went. A MouseEvent keeps it.
+if (typeof window !== "undefined") {
+  window.PointerEvent ??= MouseEvent as unknown as typeof PointerEvent;
+}

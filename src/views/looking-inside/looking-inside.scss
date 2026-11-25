@@ -1,4 +1,5 @@
 @use "../../core/colors" as colors;
+@use "../../core/message-card/layout";
 @use "../../core/panel";
 
 $diagram-padding: 8px;
@@ -8,7 +9,7 @@ $diagram-padding: 8px;
 $step-row-width: 421px;
 // The two columns at their narrowest: the card's 447 px, the 10 px gap and the step row, 878 px of
 // view width. Below this the columns stack.
-$two-columns-width: 447px + 10px + $step-row-width;
+$two-columns-width: layout.$width + 10px + $step-row-width;
 
 // At least the window's height, so the layout can fill what the title, or the top padding in an
 // Interactive, leaves of it. --view-top-padding: see app.scss.
@@ -43,7 +44,7 @@ $two-columns-width: 447px + 10px + $step-row-width;
   display: grid;
   flex: 1 1 0;
   min-height: 0;
-  grid-template-columns: 447px minmax($step-row-width, 1fr);
+  grid-template-columns: layout.$width minmax($step-row-width, 1fr);
   grid-template-rows: auto minmax(min-content, 800px);
   grid-template-areas:
     "filter-row   step-row"
