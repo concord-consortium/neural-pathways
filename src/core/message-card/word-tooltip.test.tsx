@@ -71,7 +71,7 @@ describe("WordTooltipArea", () => {
     expect(tooltip()).toHaveClass("word-tooltip--focused");
   });
 
-  it("keeps the tooltip of a clicked word under the pointer as the pointer's", () => {
+  it("keeps the tooltip of a word focused under the pointer as the pointer's", () => {
     const { tooltip } = renderArea(tarrak);
     const a = screen.getByText("tarrak");
     fireEvent.pointerEnter(a);

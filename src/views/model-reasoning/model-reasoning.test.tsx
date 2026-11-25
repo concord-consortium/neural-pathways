@@ -185,7 +185,6 @@ describe("ModelReasoning", () => {
     await readings();
     const word = options(1)[3];
     act(() => word.focus());
-    fireEvent.click(word);
     for (const pathway of [2, 3]) {
       expect(options(pathway)[3].tabIndex).toBe(0);
       expect(options(pathway)[3]).toHaveAttribute("aria-selected", "true");
@@ -197,7 +196,6 @@ describe("ModelReasoning", () => {
     await readings();
     const word = options(1)[3];
     act(() => word.focus());
-    fireEvent.click(word);
     nextMessage();
     await readings();
     for (const pathway of [1, 2, 3]) {

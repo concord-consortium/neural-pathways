@@ -170,14 +170,13 @@ describe("PathwayReading", () => {
     }
   });
 
-  it("makes a clicked word current and focuses it", () => {
+  it("makes a focused word current", () => {
     const onCurrentChange = jest.fn();
     render(<Harness onCurrentChange={onCurrentChange} />);
-    // A browser focuses a clicked option, since it has a tabindex; jsdom's click doesn't, so the test
-    // focuses it as the browser would.
+    // A browser focuses a clicked option, since it has a tabindex, so this is what a click does. jsdom's
+    // click doesn't focus; the Playwright tests click for real.
     const sooma = options()[3];
     act(() => sooma.focus());
-    fireEvent.click(sooma);
     expect(onCurrentChange).toHaveBeenLastCalledWith(3);
     expect(sooma).toHaveFocus();
     expect(sooma).toHaveAttribute("aria-selected", "true");
@@ -217,12 +216,11 @@ describe("PathwayReading", () => {
     expect(tooltip()).toHaveTextContent("tarrak: +0.0624");
   });
 
-  it("moves the tooltip with the arrow keys from a clicked word under the pointer, and after Escape", () => {
+  it("moves the tooltip with the arrow keys from a word focused under the pointer, and after Escape", () => {
     render(<Harness />);
     const [, , oradda, sooma] = options();
     fireEvent.pointerEnter(oradda);
     act(() => oradda.focus());
-    fireEvent.click(oradda);
     fireEvent.keyDown(oradda, { key: "ArrowRight" });
     expect(sooma).toHaveFocus();
     expect(tooltip()).toHaveTextContent("sooma: −0.2000");
@@ -233,12 +231,12 @@ describe("PathwayReading", () => {
     expect(tooltip()).toHaveTextContent("oradda: a Pathway 2 word");
   });
 
-  it("shows no tooltip once the arrow keys move from a clicked word to one that is zero everywhere", () => {
+  it("shows no tooltip once the arrow keys move from a word focused under the pointer to one that is zero " +
+    "everywhere", () => {
     render(<Harness />);
     const [tarrak, blikka, oradda] = options();
     fireEvent.pointerEnter(tarrak);
     act(() => tarrak.focus());
-    fireEvent.click(tarrak);
     fireEvent.keyDown(tarrak, { key: "ArrowRight" });
     expect(blikka).toHaveFocus();
     expect(tooltip()).toBeNull();
@@ -261,7 +259,6 @@ describe("PathwayReading", () => {
   it("shares the current word between two readings", () => {
     render(<Harness pathways={[0, 1]} />);
     act(() => options(1)[2].focus());
-    fireEvent.click(options(1)[2]);
     expect(options(2).map(option => option.tabIndex)).toEqual([-1, -1, 0, -1]);
     expect(options(2)[2]).toHaveAttribute("aria-selected", "true");
   });
