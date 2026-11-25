@@ -3,13 +3,13 @@ import { signedScore, spokenScore } from "./word-score-text";
 import "./word-contribution-legend.scss";
 
 interface WordContributionLegendProps {
-  /** The largest absolute word score, which the ends of the bar stand for. */
+  /** The scale maximum, which the ends of the bar stand for. */
   max: number;
 }
 
 /**
- * The key to the word colors: a bar from the most negative score through white to the most
- * positive. It is one image to a screen reader, named with the spoken range.
+ * The key to the word colors: a bar from minus to plus the scale maximum, through white. It is one
+ * image to a screen reader, named with the spoken range.
  */
 export const WordContributionLegend: React.FC<WordContributionLegendProps> = ({ max }) => (
   <div
