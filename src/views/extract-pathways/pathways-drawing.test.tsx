@@ -8,7 +8,7 @@ import { finishedPathways, PathwaysScene } from "./extract-scene";
 import { extractGeometry } from "./extract-geometry";
 import { kickScale, mixColor, ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
 import { faceSources, PARTICLE_R, particleAt, particlePlan, particleTarget } from "./particles";
-import { Pick } from "./pick";
+import { PathwaysPick } from "./pick";
 import { BOX_SIDE, pathwaysLayout } from "./pathways-layout";
 import { COPY_END_SCALE } from "./pathways-timeline";
 
@@ -104,7 +104,7 @@ describe("PathwaysLayer", () => {
   });
 
   describe("with a pick", () => {
-    const drawPicked = (pick: Pick) => render(
+    const drawPicked = (pick: PathwaysPick) => render(
       <svg>
         <PathwaysLayer pathways={finishedPathways(fixtureLoadings)} layout={layout} lifted={geometry.lifted}
           pick={pick} />

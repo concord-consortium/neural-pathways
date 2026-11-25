@@ -1,4 +1,4 @@
-import { isLit, Pick, samePick, togglePick } from "./pick";
+import { isLit, PathwaysPick, samePick, togglePick } from "./pick";
 
 describe("isLit", () => {
   it("lights everything when nothing is picked", () => {
@@ -6,13 +6,13 @@ describe("isLit", () => {
   });
 
   it("lights a picked neuron's three loadings and no other", () => {
-    const pick: Pick = { kind: "neuron", index: 3 };
+    const pick: PathwaysPick = { kind: "neuron", index: 3 };
     [0, 1, 2].forEach(pathway => expect(isLit(pick, 3, pathway)).toBe(true));
     expect(isLit(pick, 4, 0)).toBe(false);
   });
 
   it("lights a picked pathway's 14 loadings and no other", () => {
-    const pick: Pick = { kind: "pathway", index: 1 };
+    const pick: PathwaysPick = { kind: "pathway", index: 1 };
     for (let neuron = 0; neuron < 14; neuron++) {
       expect(isLit(pick, neuron, 1)).toBe(true);
     }
@@ -22,7 +22,7 @@ describe("isLit", () => {
 
 describe("togglePick", () => {
   it("picks, clears on the same pick again, and switches to a different one", () => {
-    const neuron: NonNullable<Pick> = { kind: "neuron", index: 2 };
+    const neuron: NonNullable<PathwaysPick> = { kind: "neuron", index: 2 };
     const picked = togglePick(undefined, neuron);
     expect(picked).toEqual(neuron);
     expect(togglePick(picked, { ...neuron })).toBeUndefined();

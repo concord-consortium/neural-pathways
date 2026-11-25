@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { fixtureLoadings } from "../../core/network/__fixtures__/alien3-network";
 import { extractGeometry } from "./extract-geometry";
 import { pathwaysLayout } from "./pathways-layout";
-import { Pick, togglePick } from "./pick";
+import { PathwaysPick, togglePick } from "./pick";
 import { PickTargets, stepAfterKey, TIP_LINES } from "./pick-targets";
 
 const SIZES = [10, 8, 6, 2];
@@ -12,7 +12,9 @@ const layout = pathwaysLayout(geometry, 20, fixtureLoadings);
 const NAMES = Array.from({ length: 14 }, (_, k) =>
   (k < 8 ? `Hidden Layer 1 Neuron ${k + 1}` : `Hidden Layer 2 Neuron ${k - 7}`));
 
-function renderTargets(pick: Pick = undefined, onPick: (next: Pick) => void = jest.fn()) {
+function renderTargets(
+  pick: PathwaysPick = undefined, onPick: (next: PathwaysPick) => void = jest.fn(),
+) {
   return render(
     <PickTargets width={geometry.width} height={geometry.height} lifted={geometry.lifted} layout={layout}
       names={NAMES} pick={pick} onPick={onPick} />,
@@ -73,7 +75,7 @@ describe("PickTargets", () => {
   });
 
   it("toggles with a click, Enter and Space, and clears with Escape", () => {
-    const pick: Pick = { kind: "neuron", index: 2 };
+    const pick: PathwaysPick = { kind: "neuron", index: 2 };
     const onPick = jest.fn();
     renderTargets(pick, onPick);
     fireEvent.click(screen.getByRole("button", { name: neuronName(2) }));

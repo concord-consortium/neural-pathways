@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { ColumnGeometry } from "./extract-geometry";
 import { BOX_SIDE, PathwaysLayout } from "./pathways-layout";
 import { BOX_CORNER, PICK_RING_GAP } from "./pathways-drawing";
-import { Pick, samePick, togglePick } from "./pick";
+import { PathwaysPick, samePick, togglePick } from "./pick";
 import "./pick-targets.scss";
 
 /** The tip, a line to an entry. It also names the targets, since it says what they are for. */
@@ -49,8 +49,8 @@ interface PickTargetsProps {
   layout: PathwaysLayout;
   /** The lifted neurons' names, as their copies give them. */
   names: readonly string[];
-  pick: Pick;
-  onPick(next: Pick): void;
+  pick: PathwaysPick;
+  onPick(next: PathwaysPick): void;
 }
 
 /**
@@ -63,10 +63,12 @@ interface PickTargetsProps {
 export function PickTargets({ width, height, lifted, layout, names, pick, onPick }: PickTargetsProps) {
   const layerRef = useRef<SVGSVGElement>(null);
   const [stops, setStops] = useState({ neuron: 0, pathway: 0 });
-  const moveStop = (kind: NonNullable<Pick>["kind"], index: number) =>
+  const moveStop = (kind: NonNullable<PathwaysPick>["kind"], index: number) =>
     setStops(current => (current[kind] === index ? current : { ...current, [kind]: index }));
 
-  const onKeyDown = (event: React.KeyboardEvent, target: NonNullable<Pick>, count: number) => {
+  const onKeyDown = (
+    event: React.KeyboardEvent, target: NonNullable<PathwaysPick>, count: number,
+  ) => {
     // Leave browser and OS shortcuts such as Alt+Left (Back) alone.
     if (event.altKey || event.ctrlKey || event.metaKey) {
       return;
@@ -92,7 +94,7 @@ export function PickTargets({ width, height, lifted, layout, names, pick, onPick
   };
 
   /** The props every target's button takes. */
-  const buttonProps = (target: NonNullable<Pick>, count: number, label: string) => ({
+  const buttonProps = (target: NonNullable<PathwaysPick>, count: number, label: string) => ({
     role: "button",
     "aria-label": label,
     "aria-pressed": samePick(pick, target),

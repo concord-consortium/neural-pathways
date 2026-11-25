@@ -22,7 +22,7 @@ import { ExtractScene } from "./extract-scene";
 import { extractTimeline } from "./extract-timeline";
 import { loadingLegendReveal } from "./loading-legend-reveal";
 import { checkLoadingsShape, Loadings } from "./pathways-layout";
-import { Pick } from "./pick";
+import { PathwaysPick } from "./pick";
 import about from "./about.md";
 import "./extract-pathways.scss";
 
@@ -91,7 +91,7 @@ const ExtractPathwaysBody = observer(function ExtractPathwaysBody({ index, netwo
   // Stop the player when the view unmounts. A layout effect, so no existing run can finish and
   // store its marker after the view is gone.
   useLayoutEffect(() => () => player.stop(), [player]);
-  const [pick, setPick] = useState<Pick>();
+  const [pick, setPick] = useState<PathwaysPick>();
   const stepsRef = useRef<HTMLDivElement>(null);
 
   // Any step press clears the pick, and most also remove the targets. Safari doesn't focus a clicked

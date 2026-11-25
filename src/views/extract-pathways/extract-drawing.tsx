@@ -16,7 +16,7 @@ import { ExtractScene } from "./extract-scene";
 import { Flight, flightDuration, Placed, placeCopy } from "./flight";
 import { ParticleCanvas, PathwaysLayer } from "./pathways-drawing";
 import { Loadings, pathwaysLayout } from "./pathways-layout";
-import { Pick } from "./pick";
+import { PathwaysPick } from "./pick";
 import { PickTargets } from "./pick-targets";
 import "./extract-drawing.scss";
 
@@ -36,7 +36,9 @@ function hiddenNames(columnSizes: readonly number[]): string[] {
 const signedLoading = (value: number) => `${value < 0 ? "" : "+"}${value.toFixed(2)}`;
 
 /** The picked neuron's loadings on the pathways, or the picked pathway's on the neurons. */
-function describePick(pick: NonNullable<Pick>, names: readonly string[], loadings: Loadings): string {
+function describePick(
+  pick: NonNullable<PathwaysPick>, names: readonly string[], loadings: Loadings,
+): string {
   if (pick.kind === "neuron") {
     const ofNeuron = loadings[pick.index].map((loading, p) => `Pathway ${p + 1} ${signedLoading(loading)}`);
     return `${names[pick.index]}'s loadings: ${ofNeuron.join(", ")}.`;
@@ -56,7 +58,8 @@ const messages = (n: number) => `${n} message${n === 1 ? "" : "s"}`;
  * on every neuron.
  */
 export function describeScene(
-  scene: ExtractScene, hidden: number, pick?: Pick, detail?: { names: readonly string[]; loadings: Loadings },
+  scene: ExtractScene, hidden: number, pick?: PathwaysPick,
+  detail?: { names: readonly string[]; loadings: Loadings },
 ): string {
   const lifted = `The network, with its ${hidden} hidden neurons lifted out`;
   const { deck } = scene;
@@ -165,9 +168,9 @@ interface ExtractDrawingProps {
   /** The alien3 factor-analysis fit's loadings, [neuron][pathway], which the loading bars draw. */
   loadings: Loadings;
   /** The neuron or pathway whose loadings are shown alone, if any. */
-  pick: Pick;
+  pick: PathwaysPick;
   /** Picks a neuron or a pathway, or clears the pick, from the pick targets. */
-  onPick(next: Pick): void;
+  onPick(next: PathwaysPick): void;
   /** No step is playing. The pick targets are offered only at rest after Extract Pathways. */
   atRest: boolean;
 }
