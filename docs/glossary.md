@@ -32,6 +32,8 @@ one thing, or one name for two things, settle it and add it here.
 - **current word:** the word last focused or clicked in a reading, the same position in all three
   readings, which holds each reading's Tab stop. Not "selected" in prose, though it is
   `aria-selected` in the markup.
+- **tail:** the small triangle under a word's tooltip, over the word. Not "pointer", which is the
+  mouse pointer.
 
 ## The step system
 

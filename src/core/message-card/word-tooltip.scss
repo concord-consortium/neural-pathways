@@ -5,7 +5,7 @@
   position: relative;
 }
 
-// Placed by WordTooltipArea, 6px above the word, which its pointer fills.
+// Placed by WordTooltipArea, 6px above the word, which its tail fills.
 // One line, unless that is wider than the area, as it can be at 320 px with the text zoomed: then it
 // wraps. max-content, so the left it was last placed at doesn't narrow it.
 .word-tooltip {
@@ -39,11 +39,11 @@
     content: "";
   }
 
-  // The pointer: a 6px triangle under the tooltip, centered on the word.
+  // The tail: a 6px triangle under the tooltip, centered on the word.
   &::after {
     position: absolute;
     top: calc(100% + 1px);
-    left: var(--word-tooltip-pointer, 50%);
+    left: var(--word-tooltip-tail, 50%);
     border: 6px solid transparent;
     border-top-color: colors.$ink;
     border-bottom-width: 0;

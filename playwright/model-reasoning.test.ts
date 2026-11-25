@@ -58,8 +58,8 @@ async function tabToFirstColoredWord(page: Page) {
   return word;
 }
 
-/** Where the tooltip's pointer is centered: at its left, which is measured from inside the border. */
-const pointerCenter = (page: Page) => tooltip(page).evaluate(el =>
+/** Where the tooltip's tail is centered: at its left, which is measured from inside the border. */
+const tailCenter = (page: Page) => tooltip(page).evaluate(el =>
   el.getBoundingClientRect().left + el.clientLeft + parseFloat(getComputedStyle(el, "::after").left));
 
 /** Whether the element at the tooltip's center is the tooltip, so nothing clips or covers it there. */
@@ -195,7 +195,7 @@ test("the tooltip of a word on the first line stays inside the card", async ({ p
 
 // The long message has many lines, so some colored word starts a line and some ends one, close
 // enough to the readings' sides that a tooltip centered on it would run past them.
-test("the tooltip of a word at either side is kept inside the readings, its pointer over the word",
+test("the tooltip of a word at either side is kept inside the readings, its tail over the word",
   async ({ page }) => {
     await openView(page);
     await showLongMessage(page);
@@ -221,7 +221,7 @@ test("the tooltip of a word at either side is kept inside the readings, its poin
       // Kept within the readings from side to side. It may rise above them, over the legend.
       expect(tooltipBox.x).toBeGreaterThanOrEqual(areaBox.x - 0.5);
       expect(tooltipBox.x + tooltipBox.width).toBeLessThanOrEqual(areaBox.x + areaBox.width + 0.5);
-      expect(await pointerCenter(page)).toBeCloseTo(wordCenter, 0);
+      expect(await tailCenter(page)).toBeCloseTo(wordCenter, 0);
       expect(await tooltipOnTop(page)).toBe(true);
     }
   });
@@ -344,12 +344,12 @@ test("when only the text is zoomed, the words and the tooltip double, and the to
     await expect(tooltip(page)).toBeVisible();
     const after = await box(word);
     expect(after.x).not.toBeCloseTo(before.x, 0);
-    // Still 6 px above the word, its pointer over the word, and inside the card.
+    // Still 6 px above the word, its tail over the word, and inside the card.
     await expect.poll(async () => {
       const tooltipBox = await box(tooltip(page));
       return Math.abs((await box(word)).y - tooltipBox.y - tooltipBox.height - 6);
     }).toBeLessThanOrEqual(1);
-    expect(await pointerCenter(page)).toBeCloseTo(after.x + after.width / 2, 0);
+    expect(await tailCenter(page)).toBeCloseTo(after.x + after.width / 2, 0);
     expect(within(await box(tooltip(page)), await box(card(page)))).toBe(true);
   });
 
@@ -387,12 +387,12 @@ test("in forced-colors mode the focused word has an outline and the tooltip a bo
   expect(border.style).toBe("solid");
   expect(border.width).toBeGreaterThanOrEqual(1);
   expect(border.color).not.toBe(await tooltip(page).evaluate(el => getComputedStyle(el).backgroundColor));
-  // The pointer is its top border. Sides painted the same color would draw a bar.
-  const pointer = await tooltip(page).evaluate(el => {
+  // The tail is its top border. Sides painted the same color would draw a bar.
+  const tail = await tooltip(page).evaluate(el => {
     const style = getComputedStyle(el, "::after");
     return { top: style.borderTopColor, left: style.borderLeftColor, right: style.borderRightColor };
   });
-  expect(pointer.top).toBe(border.color);
-  expect(pointer.left).not.toBe(pointer.top);
-  expect(pointer.right).not.toBe(pointer.top);
+  expect(tail.top).toBe(border.color);
+  expect(tail.left).not.toBe(tail.top);
+  expect(tail.right).not.toBe(tail.top);
 });

@@ -81,25 +81,25 @@ const visibleTarget = (state: TooltipState): NotedTarget | undefined => {
   return target && hasNote(target) && !state.dismissed.includes(target.element) ? target : undefined;
 };
 
-// The gap between the word and the tooltip, which the tooltip's pointer fills.
-const POINTER_SIZE = 6;
+// The gap between the word and the tooltip, which the tooltip's tail fills.
+const TAIL_SIZE = 6;
 
 /** Runs last, so it reads the tooltip's final left: where the word's center is from that left. */
-const pointerLeft: Middleware = {
-  name: "pointerLeft",
+const tailLeft: Middleware = {
+  name: "tailLeft",
   fn: ({ x, rects }) => ({ data: { left: rects.reference.x + rects.reference.width / 2 - x } }),
 };
 
 /**
- * Places the tooltip centered over the word and kept inside the area's sides, with its pointer over
+ * Places the tooltip centered over the word and kept inside the area's sides, with its tail over
  * the word. It is hidden while the word is scrolled wholly out of view.
  */
 async function placeTooltip(tooltip: HTMLElement, word: HTMLElement, area: HTMLElement) {
   const { x, y, middlewareData } = await computePosition(word, tooltip, {
     placement: "top",
-    middleware: [offset(POINTER_SIZE), shift({ boundary: area }), hide(), pointerLeft],
+    middleware: [offset(TAIL_SIZE), shift({ boundary: area }), hide(), tailLeft],
   });
-  return { x, y, pointer: middlewareData.pointerLeft.left as number, hidden: !!middlewareData.hide?.referenceHidden };
+  return { x, y, tail: middlewareData.tailLeft.left as number, hidden: !!middlewareData.hide?.referenceHidden };
 }
 
 /**
@@ -116,14 +116,14 @@ function useTooltipPlacement(tooltipRef: React.RefObject<HTMLElement | null>,
     }
     let active = true;
     const place = () => {
-      void placeTooltip(tooltip, word, area).then(({ x, y, pointer, hidden }) => {
+      void placeTooltip(tooltip, word, area).then(({ x, y, tail, hidden }) => {
         if (!active) {
           return;
         }
         tooltip.style.left = `${x}px`;
         tooltip.style.top = `${y}px`;
-        // The pointer's left is measured from inside the tooltip's border.
-        tooltip.style.setProperty("--word-tooltip-pointer", `${pointer - tooltip.clientLeft}px`);
+        // The tail's left is measured from inside the tooltip's border.
+        tooltip.style.setProperty("--word-tooltip-tail", `${tail - tooltip.clientLeft}px`);
         tooltip.style.visibility = hidden ? "hidden" : "";
       });
     };

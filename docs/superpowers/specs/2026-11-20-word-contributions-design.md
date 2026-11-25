@@ -308,8 +308,8 @@ and hides while that word is scrolled out of the scroller's view.
   word, the pointer or the focus moves to another word, or Escape.
 
 **Where and how it's drawn.** `WordTooltipArea` (`src/core/message-card/word-tooltip.tsx`) draws
-it. It is centered over the word, with a small pointer under it, and kept inside the readings from
-side to side, with its pointer still over the word. floating-ui (`computePosition` and
+it. It is centered over the word, with a small tail under it, and kept inside the readings from
+side to side, with its tail still over the word. floating-ui (`computePosition` and
 `autoUpdate`) places it, and places it again when the word or the tooltip moves or changes size,
 as after a text-only zoom. It is at most as wide as the readings, and wraps when it would be wider,
 as at 320 px with the text zoomed. It is `$ink` with white Lato 12.5 px text, as in the mockup. It
