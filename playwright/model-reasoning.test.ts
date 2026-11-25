@@ -359,14 +359,12 @@ test("at 320 px with only the text zoomed, every tooltip wraps to stay inside th
   // A tooltip is drawn again when the focus moves to it from a word with none, so a rule sets its
   // doubled size.
   await page.addStyleTag({ content: ".word-tooltip { font-size: 25px; }" });
-  const count = await options(page, 1).count();
-  let checked = 0;
-  for (let i = 0; i < count; i++) {
+  // A word has a tooltip exactly when it has a score to name.
+  const noted = await options(page, 1).evaluateAll(elements =>
+    elements.flatMap((element, i) => (element.hasAttribute("aria-label") ? [i] : [])));
+  expect(noted.length).toBeGreaterThan(0);
+  for (const i of noted) {
     await options(page, 1).nth(i).focus();
-    if (await tooltip(page).count() === 0) {
-      continue;
-    }
-    checked++;
     await expect(tooltip(page)).toBeVisible();
     const areaBox = await box(page.locator(".word-tooltip-area"));
     await expect.poll(async () => {
@@ -374,7 +372,6 @@ test("at 320 px with only the text zoomed, every tooltip wraps to stay inside th
       return tooltipBox.x >= areaBox.x - 0.5 && tooltipBox.x + tooltipBox.width <= areaBox.x + areaBox.width + 0.5;
     }).toBe(true);
   }
-  expect(checked).toBeGreaterThan(0);
 });
 
 test("in forced-colors mode the focused word has an outline and the tooltip a border", async ({ page }) => {
