@@ -32,7 +32,7 @@ const WordTooltipContext = createContext<WordTooltipEvents>(noEvents);
 export const useWordTooltipEvents = (): WordTooltipEvents => useContext(WordTooltipContext);
 
 interface TooltipState {
-  /** The word the pointer moved to, unless the focus has moved to another word since. */
+  /** The word the pointer moved to, unless the focus has moved to another word or Escape was pressed since. */
   hovered?: WordTarget;
   focused?: WordTarget;
   /**
@@ -55,7 +55,9 @@ function reduceTooltip(state: TooltipState, action: TooltipAction): TooltipState
   if (action.type === "dismiss") {
     const dismissed = [state.hovered?.element, state.focused?.element]
       .filter((element): element is HTMLElement => !!element);
-    return { ...state, dismissed };
+    // The pointer is forgotten too, since a tooltip Escape removes never sees the pointer leave it.
+    // Otherwise the next one the focus opens on that word would take the pointer as if it opened it.
+    return { ...state, hovered: undefined, dismissed };
   }
   const { target } = action;
   const next = action.type === "hover" ? { ...state, hovered: target } : { ...state, focused: target };

@@ -180,6 +180,17 @@ describe("WordTooltipArea", () => {
     expect(tooltip()).toHaveTextContent("vosh: +0.1234");
   });
 
+  it("after Escape over the tooltip, lets the pointer through one the focus then opens on that word", () => {
+    const { tooltip } = renderArea(tarrak);
+    const word = screen.getByText("tarrak");
+    fireEvent.pointerEnter(word);
+    fireEvent.pointerLeave(word, { relatedTarget: tooltip() });
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(tooltip()).toBeNull();
+    act(() => word.focus());
+    expect(tooltip()).toHaveClass("word-tooltip--focused");
+  });
+
   it("isn't hidden by a key other than Escape", () => {
     const { tooltip } = renderArea(tarrak);
     const word = screen.getByText("tarrak");
