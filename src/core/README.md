@@ -128,7 +128,7 @@ it is a real rewrite, the `lab` original may stay until nothing in `lab` needs i
   through. The lab explorer keeps its own search: its fields differ.
 - `colors.ts`, `colors.scss`, `panel.scss`, `button.scss`: the lesson's colors, the panel look, and
   how an unavailable button looks. The colors include the ramp words are colored on: `FILL_POS`
-  and `FILL_NEG`, five steps each, palest first; `rampLevel`, which step a value falls on; `wordFill`,
+  and `FILL_NEG`, five steps each, palest first; `rampLevel`, which step a share of the scale maximum (0 to 1) falls on; `wordFill`,
   a word's background and text color for its score; and `RAMP_STOPS`, the legend's gradient.
 - `word-scores.ts` and `use-word-scores.ts`: a message's word scores, from the SHAP data.
   `alignWordScores` drops the model's `[CLS]` and `[SEP]` markers and checks the rest are the
