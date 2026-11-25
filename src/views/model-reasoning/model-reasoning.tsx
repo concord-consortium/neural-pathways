@@ -23,8 +23,7 @@ export const MODEL_REASONING_TITLE = "Neural Pathway View of Model Reasoning";
 
 /**
  * The index's fit, whose word scores the view loads, and its scale maximum, or the error reading them.
- * It also builds the index's filter, which the body uses, since a mount with the index already loaded
- * renders the body before onLoaded would.
+ * It also builds the index's filter, as looking-inside.tsx's readNetwork does, for the same reason.
  */
 function readScale(index: S3Index): { fitName: string; max: number } | { error: Error } {
   try {
