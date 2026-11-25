@@ -50,8 +50,9 @@
     content: "";
     transform: translateX(-50%);
 
-    // Forced colors repaints the transparent sides too, which would draw a bar. Left alone, the
-    // triangle keeps its transparent sides, and its top takes the color of the tooltip's border.
+    // Forced colors repaints the transparent sides too, which would draw a bar. With
+    // forced-color-adjust: none, the triangle keeps its transparent sides, and its top takes the color
+    // of the tooltip's border.
     @media (forced-colors: active) {
       forced-color-adjust: none;
       border-top-color: CanvasText;
@@ -59,8 +60,9 @@
   }
 }
 
-// Opened by the focus, it lets the pointer through to the words it covers. The hover bridge inherits
-// this, so it lets the pointer through as well.
+// Opened by the focus, it lets the pointer through to the words it covers. Only one the pointer opened
+// must take the pointer, so the pointer can move onto it. The hover bridge inherits this, so it lets
+// the pointer through as well.
 .word-tooltip--focused {
   pointer-events: none;
 }
