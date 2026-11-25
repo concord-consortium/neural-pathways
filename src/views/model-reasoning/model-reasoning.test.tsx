@@ -95,6 +95,21 @@ describe("ModelReasoning", () => {
     }
   });
 
+  it("falls back to the first message for an unknown id, and stores it", async () => {
+    const shared = new SharedState({ messageId: "000000000000" });
+    showView(shared);
+    expect(await screen.findByText("1 / 3")).toBeInTheDocument();
+    expect(shared.messageId).toBe(items[0].id);
+  });
+
+  it("says so when there are no messages, and leaves the saved message alone", async () => {
+    mockedFetchIndex.mockResolvedValue({ ...index, items: [] });
+    const shared = new SharedState({ messageId: items[1].id });
+    showView(shared);
+    expect(await screen.findByText("No messages.")).toBeInTheDocument();
+    expect(shared.messageId).toBe(items[1].id);
+  });
+
   it("shows the words uncolored while their scores load", async () => {
     mockedFetchShap.mockReturnValue(new Promise(() => undefined));
     showView();
