@@ -102,10 +102,7 @@ async function placeTooltip(tooltip: HTMLElement, word: HTMLElement, area: HTMLE
   return { x, y, tail: middlewareData.tailLeft.left as number, hidden: !!middlewareData.hide?.referenceHidden };
 }
 
-/**
- * Places the tooltip over the word, and again whenever the word or the tooltip moves or changes size,
- * or anything around the word scrolls.
- */
+/** Places the tooltip over the word, kept current by floating-ui's autoUpdate. */
 function useTooltipPlacement(tooltipRef: React.RefObject<HTMLElement | null>,
   areaRef: React.RefObject<HTMLElement | null>, word: HTMLElement | undefined) {
   useLayoutEffect(() => {
@@ -141,10 +138,11 @@ interface WordTooltipAreaProps {
 }
 
 /**
- * A box around a card's readings that shows one tooltip for them all: the score of the word the
- * pointer or the focus moved to last, or, once the pointer leaves it, of the focused word. The tooltip
- * is drawn in this box, outside the readings' scroller, so the scroller doesn't clip it. Key the area
- * by the message, so a new message starts with no tooltip.
+ * A box around a card's readings that shows one tooltip for them all, for the word the pointer or the
+ * focus moved to last, or, once the pointer leaves it, for the focused word: the word's score, or the
+ * pathway it scores on when it is zero here. The tooltip is drawn in this box, outside the readings'
+ * scroller, so the scroller doesn't clip it. Key the area by the message, so a new message starts with
+ * no tooltip.
  *
  * It meets WCAG 1.4.13: Escape hides it without moving the focus, until the pointer or the focus next
  * moves to a word; the pointer can move onto one the pointer opened; and it stays until the pointer
@@ -174,8 +172,7 @@ export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, chi
   useTooltipPlacement(tooltipRef, areaRef, shown?.element);
 
   // Escape hides the tooltip wherever the focus is, since a tooltip the pointer opened shows while the
-  // focus is outside the area. The key is left to reach anything else that wants it, and the focus
-  // stays where it is.
+  // focus is outside the area. The key is left to reach anything else that wants it.
   const showing = !!shown;
   useEffect(() => {
     if (!showing) {
@@ -195,8 +192,7 @@ export const WordTooltipArea: React.FC<WordTooltipAreaProps> = ({ className, chi
       <div ref={areaRef} className={`word-tooltip-area${className ? ` ${className}` : ""}`}>
         {children}
         {shown &&
-          // One the focus opened lets the pointer through to the words it covers. Only one the pointer
-          // opened must take the pointer, so the pointer can move onto it.
+          // See word-tooltip.scss for why one the focus opened lets the pointer through.
           <div ref={tooltipRef} className={`word-tooltip${state.hovered ? "" : " word-tooltip--focused"}`}
             aria-hidden="true" onPointerLeave={() => dispatch({ type: "hover", target: undefined })}>
             {shown.note.word}:{" "}
