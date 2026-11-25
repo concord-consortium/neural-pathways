@@ -1,4 +1,4 @@
-import { formatActivation, neuronName, rowOf, sameNeuron, unitAt } from "./neuron";
+import { formatActivation, neuronName, rowOf, sameNeuron, spokenNumber, unitAt } from "./neuron";
 
 const LABELS = { 0: "wait", 1: "approach" };
 
@@ -17,6 +17,11 @@ describe("neuron helpers", () => {
     expect(formatActivation(0.4251)).toBe("0.43");
     expect(formatActivation(-0.001)).toBe("\u22120.00");
     expect(formatActivation(0)).toBe("0.00");
+  });
+
+  it("speaks a number with an ASCII minus", () => {
+    expect(spokenNumber(-0.4249)).toBe("-0.42");
+    expect(spokenNumber(0.4251)).toBe("0.43");
   });
 
   it("maps between rows and units, reversing only the output column", () => {

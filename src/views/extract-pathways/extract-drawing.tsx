@@ -5,6 +5,7 @@ import { Network } from "../../core/network/network";
 import { NetworkScales } from "../../core/network/network-scales";
 import { clamp01, cubicBezier, ease } from "../../core/network-diagram/easing";
 import { COLUMN_CAPTIONS, MIN_GAUGE, NetworkDrawing } from "../../core/network-diagram/network-drawing";
+import { spokenNumber } from "../../core/network-diagram/neuron";
 import { useElementSize } from "../../core/use-element-size";
 import { useKeyboardScrollable } from "../../core/use-keyboard-scrollable";
 import { DeckDrawing, rowClipId } from "./deck-drawing";
@@ -29,11 +30,8 @@ function hiddenNames(columnSizes: readonly number[]): string[] {
     Array.from({ length: n }, (_, k) => `${COLUMN_CAPTIONS[i + 1]} Neuron ${k + 1}`));
 }
 
-/**
- * A loading with its sign always shown, a minus or a plus for zero and above. The minus is ASCII:
- * some speech engines skip U+2212, depending on their punctuation setting.
- */
-const signedLoading = (value: number) => `${value < 0 ? "" : "+"}${value.toFixed(2)}`;
+/** A loading for a screen reader, with its sign always shown: a minus below zero, a plus from zero up. */
+const signedLoading = (value: number) => `${value < 0 ? "" : "+"}${spokenNumber(value)}`;
 
 /** The picked neuron's loadings on the pathways, or the picked pathway's on the neurons. */
 function describePick(
