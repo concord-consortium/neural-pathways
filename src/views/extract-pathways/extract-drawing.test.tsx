@@ -273,9 +273,10 @@ describe("ExtractDrawing", () => {
     });
 
     it("lists a picked neuron's three loadings, signed", () => {
-      const l = fixtureLoadings[0];
-      expect(describeScene(scene, 14, { kind: "neuron", index: 0 }, detail)).toBe(
-        `${base} ${names[0]}'s loadings: Pathway 1 ${signed(l[0])}, Pathway 2 ${signed(l[1])}, `
+      // Not the first neuron, so the picked one's loadings and name are the ones listed.
+      const l = fixtureLoadings[9];
+      expect(describeScene(scene, 14, { kind: "neuron", index: 9 }, detail)).toBe(
+        `${base} Hidden Layer 2 Neuron 2's loadings: Pathway 1 ${signed(l[0])}, Pathway 2 ${signed(l[1])}, `
         + `Pathway 3 ${signed(l[2])}.`);
     });
 
