@@ -1,5 +1,6 @@
 import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { wordTooltip } from "./test-helpers";
 import { useWordTooltipEvents, WordTooltipArea } from "./word-tooltip";
 import type { WordScoreNote } from "./word-score-text";
 
@@ -30,10 +31,7 @@ const renderArea = (...notes: WordScoreNote[]) => {
       {notes.map(note => <Word key={note.word} note={note} />)}
     </WordTooltipArea>
   );
-  // The tooltip is aria-hidden, with no role or name to find it by.
-  // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
-  const tooltip = () => view.container.querySelector<HTMLElement>(".word-tooltip");
-  return { ...view, tooltip };
+  return { ...view, tooltip: wordTooltip };
 };
 
 describe("WordTooltipArea", () => {

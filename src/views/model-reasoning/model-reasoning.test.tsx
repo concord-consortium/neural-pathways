@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { fetchIndex, fetchShap } from "../../core/data-loader";
 import fixture from "../../core/network/__fixtures__/alien3-messages.json";
 import { fixtureMetadata } from "../../core/network/__fixtures__/alien3-network";
+import { wordTooltip } from "../../core/message-card/test-helpers";
 import { SharedState } from "../../core/state/shared-state";
 import { ViewStateProvider } from "../../core/state/view-state-context";
 import { ItemShapData, S3FaFit, S3Index, S3Item } from "../../core/types/s3-data";
@@ -64,10 +65,6 @@ const wordsOf = (i: number) => items[i].text.split(/\s+/).join(" ");
 const options = (pathway: number) =>
   within(screen.getByRole("listbox", { name: `Pathway ${pathway}` })).getAllByRole("option");
 const readings = () => screen.findAllByRole("listbox");
-
-// The tooltip is aria-hidden, with no role or name to find it by.
-// eslint-disable-next-line testing-library/no-node-access
-const tooltip = () => document.querySelector<HTMLElement>(".word-tooltip");
 
 describe("ModelReasoning", () => {
   beforeEach(() => {
@@ -208,9 +205,9 @@ describe("ModelReasoning", () => {
     showView();
     await readings();
     fireEvent.pointerEnter(options(1)[0]);
-    expect(tooltip()).not.toBeNull();
+    expect(wordTooltip()).not.toBeNull();
     nextMessage();
-    expect(tooltip()).toBeNull();
+    expect(wordTooltip()).toBeNull();
     await readings();
   });
 

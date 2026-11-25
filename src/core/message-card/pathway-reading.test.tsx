@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { wordFill } from "../colors";
 import { PathwayReading } from "./pathway-reading";
+import { wordTooltip } from "./test-helpers";
 import { WordTooltipArea } from "./word-tooltip";
 
 const words = ["tarrak", "blikka", "oradda", "sooma"];
@@ -41,10 +42,6 @@ const Harness: React.FC<HarnessProps> = props => {
 
 const options = (pathway = 1) =>
   within(screen.getByRole("listbox", { name: `Pathway ${pathway}` })).getAllByRole("option");
-
-// The tooltip is aria-hidden, with no role or name to find it by.
-// eslint-disable-next-line testing-library/no-node-access
-const tooltip = () => document.querySelector<HTMLElement>(".word-tooltip");
 
 describe("PathwayReading", () => {
   it("shows plain words, and no listbox, while the scores load", () => {
@@ -196,24 +193,24 @@ describe("PathwayReading", () => {
     render(<Harness />);
     const [tarrak, blikka] = options();
     fireEvent.pointerEnter(tarrak);
-    expect(tooltip()).toHaveTextContent("tarrak: +0.0624");
+    expect(wordTooltip()).toHaveTextContent("tarrak: +0.0624");
     fireEvent.pointerLeave(tarrak, { relatedTarget: document.body });
-    expect(tooltip()).toBeNull();
+    expect(wordTooltip()).toBeNull();
     fireEvent.pointerEnter(blikka);
-    expect(tooltip()).toBeNull();
+    expect(wordTooltip()).toBeNull();
     fireEvent.pointerLeave(blikka, { relatedTarget: document.body });
     act(() => tarrak.focus());
-    expect(tooltip()).toHaveTextContent("tarrak: +0.0624");
+    expect(wordTooltip()).toHaveTextContent("tarrak: +0.0624");
     act(() => tarrak.blur());
-    expect(tooltip()).toBeNull();
+    expect(wordTooltip()).toBeNull();
   });
 
   it("keeps the tooltip while the pointer moves from the word onto it", () => {
     render(<Harness />);
     const tarrak = options()[0];
     fireEvent.pointerEnter(tarrak);
-    fireEvent.pointerLeave(tarrak, { relatedTarget: tooltip() });
-    expect(tooltip()).toHaveTextContent("tarrak: +0.0624");
+    fireEvent.pointerLeave(tarrak, { relatedTarget: wordTooltip() });
+    expect(wordTooltip()).toHaveTextContent("tarrak: +0.0624");
   });
 
   it("moves the tooltip with the arrow keys from a word focused under the pointer, and after Escape", () => {
@@ -223,12 +220,12 @@ describe("PathwayReading", () => {
     act(() => oradda.focus());
     fireEvent.keyDown(oradda, { key: "ArrowRight" });
     expect(sooma).toHaveFocus();
-    expect(tooltip()).toHaveTextContent("sooma: −0.2000");
+    expect(wordTooltip()).toHaveTextContent("sooma: −0.2000");
     fireEvent.keyDown(sooma, { key: "Escape" });
-    expect(tooltip()).toBeNull();
+    expect(wordTooltip()).toBeNull();
     fireEvent.keyDown(sooma, { key: "ArrowLeft" });
     expect(oradda).toHaveFocus();
-    expect(tooltip()).toHaveTextContent("oradda: a Pathway 2 word");
+    expect(wordTooltip()).toHaveTextContent("oradda: a Pathway 2 word");
   });
 
   it("shows no tooltip once the arrow keys move from a word focused under the pointer to one that is zero " +
@@ -239,21 +236,21 @@ describe("PathwayReading", () => {
     act(() => tarrak.focus());
     fireEvent.keyDown(tarrak, { key: "ArrowRight" });
     expect(blikka).toHaveFocus();
-    expect(tooltip()).toBeNull();
+    expect(wordTooltip()).toBeNull();
     fireEvent.keyDown(blikka, { key: "ArrowRight" });
     expect(oradda).toHaveFocus();
-    expect(tooltip()).toHaveTextContent("oradda: a Pathway 2 word");
+    expect(wordTooltip()).toHaveTextContent("oradda: a Pathway 2 word");
   });
 
   it("shows no tooltip while the pointer is over a word that is zero everywhere, even with another focused", () => {
     render(<Harness />);
     const [tarrak, blikka] = options();
     act(() => tarrak.focus());
-    expect(tooltip()).toHaveTextContent("tarrak: +0.0624");
+    expect(wordTooltip()).toHaveTextContent("tarrak: +0.0624");
     fireEvent.pointerEnter(blikka);
-    expect(tooltip()).toBeNull();
+    expect(wordTooltip()).toBeNull();
     fireEvent.pointerLeave(blikka, { relatedTarget: document.body });
-    expect(tooltip()).toHaveTextContent("tarrak: +0.0624");
+    expect(wordTooltip()).toHaveTextContent("tarrak: +0.0624");
   });
 
   it("shares the current word between two readings", () => {
