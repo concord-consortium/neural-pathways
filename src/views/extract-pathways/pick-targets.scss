@@ -47,8 +47,9 @@
   }
 }
 
-// As thick as a pick while pressed.
+// As thick as a pick while pressed, on a touch screen too, where no hover has drawn the outline.
 .pick-targets__box:active .pick-targets__box-outline {
+  stroke: colors.$ink;
   stroke-width: 3;
 }
 
@@ -72,7 +73,8 @@
 // Forced colors leave an SVG stroke as it is, and a dark theme's canvas would hide the ink.
 @media (forced-colors: active) {
   .pick-targets__hover-ring,
-  .pick-targets__box:hover .pick-targets__box-outline {
+  .pick-targets__box:hover .pick-targets__box-outline,
+  .pick-targets__box:active .pick-targets__box-outline {
     stroke: CanvasText;
   }
 

@@ -381,6 +381,26 @@ const pathwayTarget = (page: Page, n: number) =>
 const focusRingShows = (target: Locator) =>
   target.locator(".pick-targets__focus").evaluate(ring => getComputedStyle(ring).visibility === "visible");
 
+test.describe("on a touch screen, with no hover", () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  test("pressing a box draws its outline as thick as a pick", async ({ page }) => {
+    await openPathways(page);
+    expect(await page.evaluate(() => matchMedia("(hover: hover)").matches)).toBe(false);
+    const outline = pathwayTarget(page, 1).locator(".pick-targets__box-outline");
+    const box = (await outline.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    const drawn = await outline.evaluate(rect => {
+      const style = getComputedStyle(rect);
+      return { stroke: style.stroke, width: style.strokeWidth };
+    });
+    await page.mouse.up();
+    // $ink in src/core/colors.scss.
+    expect(drawn).toEqual({ stroke: "rgb(30, 36, 44)", width: "3px" });
+  });
+});
+
 test("picks a box and a neuron by mouse", async ({ page }) => {
   await openPathways(page);
   const box = pathwayTarget(page, 2);
