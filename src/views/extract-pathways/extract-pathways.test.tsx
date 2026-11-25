@@ -278,7 +278,7 @@ describe("ExtractPathways", () => {
     it("describes the pick in the drawing's name", async () => {
       await showPathways();
       fireEvent.click(pathwayBox());
-      const name = / Pathway 2's loadings: Hidden Layer 1 Neuron 1 [+\u2212]\d\.\d\d, /;
+      const name = / Pathway 2's loadings: Hidden Layer 1 Neuron 1 [+-]\d\.\d\d, /;
       expect(screen.getByRole("img", { name })).toBeInTheDocument();
     });
   });
